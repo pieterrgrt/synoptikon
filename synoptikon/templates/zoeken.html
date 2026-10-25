@@ -7,6 +7,9 @@
   <button class="knop primair">Zoek</button>
 </form>
 <p class="hint">Full-text in alle talen; accenten worden genegeerd (délivrance = delivrance). Woorden worden als prefix gezocht.</p>
+{% if artikelen %}
+<p class="melding">Artikel: {% for r in artikelen %}<a href="{{ r.url }}">{{ r.citeer }}</a>{% if not loop.last %} of {% endif %}{% endfor %} — plaats in de systematiek en corresponderende artikelen in de andere stelsels.</p>
+{% endif %}
 {% if resultaat %}
 <p class="stil">{{ resultaat.aantal }} treffers.</p>
 {% macro groep(titel, treffers) %}

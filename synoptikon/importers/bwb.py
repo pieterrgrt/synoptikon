@@ -1,10 +1,18 @@
 """NL: wetten.overheid.nl, BWB-XML ("toestand").
 
-Download: https://wetten.overheid.nl/xml.php?regelingID=BWBR0005291 geeft de
-geldende toestand als XML. Het BW is per boek een eigen regeling:
-Boek 3 = BWBR0005291, Boek 5 = BWBR0005288, Boek 6 = BWBR0005289,
-Boek 7 = BWBR0005290. De artikelnummers worden als "3:84" opgeslagen zodra
-het boeknummer uit de structuur bekend is.
+Download: wetten.overheid.nl kent geen directe XML-URL meer (het oude
+`xml.php?regelingID=` geeft 404). `https://wetten.overheid.nl/BWBR0005291/`
+verwijst door naar de geldende versie (`/BWBR0005291/2025-07-01`); een POST
+van het exportformulier naar `/BWBR0005291/2025-07-01/0` levert de toestand
+als XML. Het BW is per boek een eigen regeling:
+
+    Boek 1 BWBR0002656   Boek 4 BWBR0002761   Boek 7  BWBR0005290
+    Boek 2 BWBR0003045   Boek 5 BWBR0005288   Boek 7A BWBR0006000
+    Boek 3 BWBR0005291   Boek 6 BWBR0005289   Boek 8  BWBR0005034
+                                              Boek 10 BWBR0030068
+
+De artikelnummers worden als "3:84" opgeslagen zodra het boeknummer uit de
+structuur bekend is (Boek 7A als "7A:1576").
 """
 from __future__ import annotations
 
@@ -15,7 +23,7 @@ from datetime import date
 from . import Artikel, Geparseerd
 from .http import client
 
-URL = "https://wetten.overheid.nl/xml.php?regelingID={id}"
+BASIS = "https://wetten.overheid.nl"
 
 _STRUCTUUR = ("boek", "deel", "titeldeel", "hoofdstuk", "afdeling", "paragraaf", "sub-paragraaf")
 
@@ -67,9 +75,13 @@ def parse(xml_bytes: bytes, wet_id: str, bron_url: str | None = None) -> Geparse
     for el in root.iter():
         if "}" in el.tag:
             el.tag = el.tag.split("}", 1)[1]
+    # meta-data (jci-verwijzingen e.d.) zit in de elementen zelf en zou anders in de tekst belanden.
+    for ouder in root.iter():
+        for kind in [k for k in ouder if k.tag == "meta-data"]:
+            ouder.remove(kind)
 
     titel = _tekst(root.find(".//citeertitel")) or _tekst(root.find(".//intitule")) or wet_id
-    versie = root.get("inwerkingtredingsdatum") or root.get("geldigheidsdatum") or ""
+    versie = root.get("inwerkingtreding") or root.get("inwerkingtredingsdatum") or root.get("geldigheidsdatum") or ""
     meta = root.find(".//meta-data")
     if not versie and meta is not None:
         versie = _tekst(meta.find(".//inwerkingtredingsdatum")) or _tekst(meta.find(".//geldigheidsdatum"))
@@ -85,7 +97,7 @@ def parse(xml_bytes: bytes, wet_id: str, bron_url: str | None = None) -> Geparse
             if tag in _STRUCTUUR:
                 label, nr, kop_titel = _kop(kind)
                 stuk = " ".join(x for x in (label, nr) if x) + (f" {kop_titel}" if kop_titel else "")
-                loop(kind, pad + [stuk.strip()], nr if tag == "boek" and nr else boek)
+                loop(kind, pad + [stuk.strip()], nr.upper() if tag == "boek" and nr else boek)
             elif tag == "artikel":
                 _label, nr, kop_titel = _kop(kind)
                 if not nr:
@@ -105,8 +117,17 @@ def parse(xml_bytes: bytes, wet_id: str, bron_url: str | None = None) -> Geparse
 
 
 def haal_op(wet_id: str) -> Geparseerd:
-    url = URL.format(id=wet_id)
     with client() as c:
-        r = c.get(url)
+        pagina = c.get(f"{BASIS}/{wet_id}/")
+        pagina.raise_for_status()
+        pad = pagina.url.path.rstrip("/")
+        if pad.count("/") == 2:  # /BWBR…/datum → /BWBR…/datum/0
+            pad += "/0"
+        r = c.post(
+            BASIS + pad,
+            data={"hiddenBWBId": wet_id, "hfExportOnderdeelID": pad, "exportopties": "rbXml", "exportopties2": "rbZonderAfbeeldingen", "btnExporteerOK": "Exporteer"},
+        )
         r.raise_for_status()
-    return parse(r.content, wet_id, url)
+        if not r.content.lstrip().startswith(b"<?xml"):
+            raise ValueError(f"wetten.overheid.nl gaf geen XML voor {wet_id} ({r.headers.get('content-type')})")
+    return parse(r.content, wet_id, f"{BASIS}{pad}")

@@ -7,6 +7,8 @@ from sqlalchemy.orm import Session, selectinload
 
 from ..db import get_session
 from ..models import Antwoord, AntwoordBron, Bron, Stelsel, Systematiek, Vraag
+from ..services import correspondentie as corr
+from ..services.artikelen import herken, plaatser, ref_uit_bron
 from ..services.helpers import actieve_stelsels, leeg_naar_none
 from . import render
 
@@ -39,16 +41,14 @@ def stelsel_actief(code: str, actief: str = Form("0"), db: Session = Depends(get
 
 
 @router.get("/stelsels/{code}")
-def systematiek(request: Request, code: str, vraag: str | None = None, db: Session = Depends(get_session)):
+def systematiek(request: Request, code: str, vraag: str | None = None, artikel: str = "", db: Session = Depends(get_session)):
     stelsel = db.get(Stelsel, code)
     if stelsel is None:
         raise HTTPException(404)
-    wortels = db.scalars(
-        select(Systematiek)
-        .where(Systematiek.stelsel_code == code, Systematiek.parent_id.is_(None))
-        .options(selectinload(Systematiek.kinderen).selectinload(Systematiek.kinderen).selectinload(Systematiek.kinderen).selectinload(Systematiek.bronnen))
-        .order_by(Systematiek.volgorde)
+    alle_knopen = db.scalars(
+        select(Systematiek).where(Systematiek.stelsel_code == code).options(selectinload(Systematiek.kinderen), selectinload(Systematiek.bronnen)).order_by(Systematiek.volgorde)
     ).all()
+    wortels = [k for k in alle_knopen if k.parent_id is None]
     vraag_obj = db.scalar(select(Vraag).where(Vraag.slug == vraag).options(selectinload(Vraag.antwoorden).selectinload(Antwoord.bronnen).selectinload(AntwoordBron.bron))) if vraag else None
     gemarkeerd: dict[int, list[Bron]] = {}
     los: list[Bron] = []
@@ -62,7 +62,19 @@ def systematiek(request: Request, code: str, vraag: str | None = None, db: Sessi
     # Alle bronnen (wet) zonder systematiekknoop, om ze te kunnen plaatsen.
     ongeplaatst = db.scalars(select(Bron).where(Bron.stelsel_code == code, Bron.soort == "wet", Bron.systematiek_id.is_(None))).all()
     vragen = db.scalars(select(Vraag).order_by(Vraag.titel)).all()
-    alle_knopen = db.scalars(select(Systematiek).where(Systematiek.stelsel_code == code).order_by(Systematiek.volgorde)).all()
+    # Knopen die open staan: de paden naar gemarkeerde bronnen, of naar het opgezochte artikel.
+    open_ids: set[int] = set()
+    for kid in gemarkeerd:
+        k = db.get(Systematiek, kid)
+        open_ids.update(x.id for x in (k.pad() if k else []))
+    gezocht, gemarkeerd_artikel = None, None
+    if artikel.strip():
+        refs = herken(artikel, code)
+        if refs:
+            gezocht = refs[0]
+            pad = plaatser(db, code).pad(gezocht.nummer)
+            open_ids.update(k.id for k in pad)
+            gemarkeerd_artikel = pad[-1].id if pad else None
     return render(
         request,
         "systematiek.html",
@@ -75,6 +87,12 @@ def systematiek(request: Request, code: str, vraag: str | None = None, db: Sessi
         los=los,
         ongeplaatst=ongeplaatst,
         alle_knopen=alle_knopen,
+        open_ids=open_ids,
+        tellingen=corr.tellingen(corr.Context(db), code),
+        artikel=artikel,
+        gezocht=gezocht,
+        gezocht_knoop=gemarkeerd_artikel if gezocht else None,
+        vraag_slug=vraag_obj.slug if vraag_obj else None,
     )
 
 
@@ -104,3 +122,42 @@ def bron_plaats(code: str, bron_id: int = Form(...), systematiek_id: str = Form(
         raise HTTPException(404)
     bron.systematiek_id = int(systematiek_id) if systematiek_id.strip() else None
     return RedirectResponse(f"/stelsels/{code}", status_code=303)
+
+
+@router.post("/stelsels/{code}/plaats-automatisch")
+def bronnen_automatisch_plaatsen(code: str, db: Session = Depends(get_session)):
+    """Plaatst ongeplaatste wetsbronnen op grond van hun artikelnummer."""
+    pl = plaatser(db, code)
+    for bron in db.scalars(select(Bron).where(Bron.stelsel_code == code, Bron.soort == "wet", Bron.systematiek_id.is_(None))).all():
+        ref = ref_uit_bron(bron)
+        pad = pl.pad(ref.nummer) if ref and not ref.wet else []
+        if pad:
+            bron.systematiek_id = pad[-1].id
+    return RedirectResponse(f"/stelsels/{code}", status_code=303)
+
+
+@router.get("/stelsels/{code}/knoop/{knoop_id}")
+def knoop(request: Request, code: str, knoop_id: int, db: Session = Depends(get_session)):
+    """Eén knoop: wat staat erin, en waar staan de corresponderende artikelen in de andere stelsels?"""
+    k = db.get(Systematiek, knoop_id)
+    if k is None or k.stelsel_code != code:
+        raise HTTPException(404)
+    ctx = corr.Context(db)
+    stelsels = actieve_stelsels(db)
+    eigen = corr.leden_in_knoop(ctx, k)
+    thema_s = []
+    for c, a in eigen:
+        if c not in thema_s:
+            thema_s.append(c)
+    namen = {s.code: s.naam for s in db.scalars(select(Stelsel)).all()}
+    return render(
+        request,
+        "knoop.html",
+        k=k,
+        stelsel=db.get(Stelsel, code),
+        eigen=eigen,
+        thema_s=thema_s,
+        tegenhangers=corr.tegenhangers(ctx, k, [s.code for s in stelsels]),
+        namen=namen,
+        stelsels=stelsels,
+    )

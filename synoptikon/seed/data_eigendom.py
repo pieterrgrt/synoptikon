@@ -253,7 +253,7 @@ VRAAG = {
                         "Néanmoins, celui qui a perdu ou auquel il a été volé une chose peut la revendiquer pendant trois ans à compter du jour de la perte ou du vol, contre celui dans les mains duquel il la trouve ; sauf à celui-ci son recours contre celui duquel il la tient."
                     ),
                     "vindplaats_type": "LEGIARTI", "vindplaats": "LEGIARTI000019017433", "url": _LEGI + "LEGIARTI000019017433",
-                    "geldig_van": "2008-06-19", "systematiek": "CC-III-XXI-III-3", "rol": "bescherming derden",
+                    "geldig_van": "2008-06-19", "systematiek": "CC-III-XXI-II-3", "rol": "bescherming derden",
                     "notitie": "Vóór 2008: art. 2279. Dubbele functie (*fonction probatoire* en *fonction acquisitive*). 'Titre' betekent hier *rechtsgrond/eigendomsbewijs*, niet de Nederlandse 'titel' van art. 3:84 — tweede faux ami. Vgl. art. 3:86 lid 3 BW (drie jaar bij diefstal) en § 935 BGB (geen gutgläubiger Erwerb bij abhanden gekommene Sachen, zonder termijn).",
                     "vertalingen": {
                         "nl": "Ten aanzien van roerende zaken geldt bezit als titel. Niettemin kan hij die een zaak heeft verloren of van wie een zaak is gestolen, haar gedurende drie jaar vanaf de dag van het verlies of de diefstal opeisen van degene in wiens handen hij haar aantreft; onverminderd diens verhaal op degene van wie hij haar heeft verkregen.",
