@@ -7,7 +7,7 @@ from .systematiek_nl import BW
 # Seedcodes die niet meer bestaan (de handgeschreven BW-boom is vervangen door
 # een uit de officiële XML gegenereerde). Een volgende `seed` verplaatst hun
 # bronnen naar de knoop waar het artikelnummer nu valt en verwijdert ze.
-VERVALLEN = ["BW-3-11-1", "BW-3-11-2", "BW-7A-BRUIKLEEN", "BW-7A-MAATSCHAP", "BW-7A-VERBRUIKLEEN"]
+VERVALLEN = ["BGB-4-1-6-3", "BW-3-11-1", "BW-3-11-2", "BW-7A-BRUIKLEEN", "BW-7A-MAATSCHAP", "BW-7A-VERBRUIKLEEN"]
 
 # code, naam, taal, toelichting, actief
 STELSELS = [
