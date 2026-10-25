@@ -4,6 +4,10 @@
 <div class="paginakop">
   <h1>{{ stelsel.naam }} <span class="stil">systematiek</span></h1>
   <div class="acties">
+    <form method="get" class="inline sys-zoek">
+      {% if vraag %}<input type="hidden" name="vraag" value="{{ vraag.slug }}">{% endif %}
+      <input type="search" name="artikel" value="{{ artikel }}" placeholder="{{ {'NL': '3:84', 'DE': '§ 929', 'FR': '1196'}.get(stelsel.code, 'artikel') }}" aria-label="Artikel opzoeken in de systematiek">
+    </form>
     <form method="get" class="inline">
       <select name="vraag" class="auto-submit">
         <option value="">— markeer bronnen van een vraag —</option>
@@ -14,14 +18,16 @@
 </div>
 <nav class="stelsel-tabs">{% for s in stelsels %}<a href="/stelsels/{{ s.code }}{% if vraag %}?vraag={{ vraag.slug }}{% endif %}" {% if s.code == stelsel.code %}aria-current="page"{% endif %}>{{ s.naam }}</a>{% endfor %}</nav>
 
+{% if artikel %}<p class="melding">{% if gezocht %}<a href="{{ gezocht.url }}">{{ gezocht.citeer }}</a>{% if gezocht_knoop %} staat in de gemarkeerde knoop.{% else %} valt buiten de ingevoerde systematiek.{% endif %} <a href="{{ gezocht.url }}">Corresponderende artikelen →</a>{% else %}Geen artikelnummer herkend in “{{ artikel }}”.{% endif %}</p>{% endif %}
 {% if vraag %}<p class="melding">Gemarkeerd: bronnen van <a href="/vragen/{{ vraag.slug }}">{{ vraag.titel }}</a> in dit stelsel. Vergelijk met de andere stelsels via de tabs hierboven: zo worden structuurverschillen zichtbaar.</p>{% endif %}
 
+{% macro label(k) %}<span class="sys-label"><span class="sys-naam">{{ k.label }}</span>{% if k.bereik %} <span class="sys-bereik">{{ k.bereik }}</span>{% endif %}</span>{% if tellingen.get(k.id) %} <a class="sys-teller" href="/stelsels/{{ stelsel.code }}/knoop/{{ k.id }}" title="{{ tellingen[k.id] }} thema's met corresponderende artikelen in andere stelsels">⇄ {{ tellingen[k.id] }}</a>{% endif %}{% endmacro %}
 {% macro knoop(k, diepte) %}
-<li class="sys-knoop diepte-{{ diepte }} {% if k.id in gemarkeerd %}bevat-markering{% endif %}">
-  <div class="sys-label"><span class="sys-naam">{{ k.label }}</span>{% if k.bereik %} <span class="sys-bereik">{{ k.bereik }}</span>{% endif %}</div>
+<li class="sys-knoop diepte-{{ diepte }} {% if k.id in gemarkeerd or k.id == gezocht_knoop %}bevat-markering{% endif %}">
+  {% if k.kinderen %}<details {% if diepte == 0 and not open_ids or k.id in open_ids %}open{% endif %}><summary>{{ label(k) }}</summary>{% else %}<div class="sys-blad">{{ label(k) }}</div>{% endif %}
   {% if k.id in gemarkeerd %}<ul class="sys-bronnen">{% for b in gemarkeerd[k.id] %}<li class="gemarkeerd"><a href="/bronnen/{{ b.id }}">{{ b.citeertitel }}</a>{% if b.titel %} <span class="stil">{{ b.titel }}</span>{% endif %}</li>{% endfor %}</ul>
   {% elif not vraag and k.bronnen %}<ul class="sys-bronnen">{% for b in k.bronnen %}<li><a href="/bronnen/{{ b.id }}">{{ b.citeertitel }}</a>{% if b.titel %} <span class="stil">{{ b.titel }}</span>{% endif %}</li>{% endfor %}</ul>{% endif %}
-  {% if k.kinderen %}<ul class="sys-lijst">{% for kind in k.kinderen %}{{ knoop(kind, diepte + 1) }}{% endfor %}</ul>{% endif %}
+  {% if k.kinderen %}<ul class="sys-lijst">{% for kind in k.kinderen %}{{ knoop(kind, diepte + 1) }}{% endfor %}</ul></details>{% endif %}
 </li>
 {% endmacro %}
 
@@ -47,6 +53,7 @@
 {% if ongeplaatst %}
 <details class="blok">
   <summary>Wetsbronnen plaatsen ({{ ongeplaatst | length }} ongeplaatst)</summary>
+  <form method="post" action="/stelsels/{{ stelsel.code }}/plaats-automatisch" class="compact"><button class="knop klein">Automatisch plaatsen op artikelnummer</button></form>
   {% for b in ongeplaatst %}
   <form method="post" action="/stelsels/{{ stelsel.code }}/plaats" class="rij compact">
     <input type="hidden" name="bron_id" value="{{ b.id }}">

@@ -20,6 +20,7 @@
   <footer class="bron-voet">
     {% if b.vindplaats %}<span class="vindplaats">{{ b.vindplaats_type }} {{ b.vindplaats }}</span>{% endif %}
     {% if b.url %}<a href="{{ b.url }}" rel="noopener" target="_blank">officiële bron ↗</a>{% endif %}
+    {% set r = artikel_ref(b) %}{% if r %}<a href="{{ r.url }}" title="Plaats in de systematiek en corresponderende artikelen in andere stelsels">⇄ vergelijk</a>{% endif %}
     {% if b.systematiek %}<a class="stil" href="/stelsels/{{ b.stelsel_code }}?vraag={{ vraag.slug }}">{{ b.systematiek.pad() | map(attribute='label') | join(' › ') }}</a>{% endif %}
     {% if bewerkbaar %}
     <details class="inline-bewerk">

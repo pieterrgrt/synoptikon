@@ -293,11 +293,11 @@ input:focus, select:focus, textarea:focus { outline: 2px solid var(--accent); ou
 .sys-lijst.wortel { padding-left: 0; border-left: 0; }
 .sys-knoop { margin: .3rem 0; }
 .sys-label { font-family: var(--serif); padding: .15rem .4rem; border-radius: var(--radius); display: inline-block; }
-.diepte-0 > .sys-label { font-size: 1.2rem; font-weight: 500; }
-.diepte-1 > .sys-label { font-size: 1.05rem; }
-.diepte-2 > .sys-label, .diepte-3 > .sys-label { font-size: .95rem; color: var(--inkt-2); }
+.diepte-0 > details > summary > .sys-label, .diepte-0 > .sys-blad > .sys-label { font-size: 1.2rem; font-weight: 500; }
+.diepte-1 > details > summary > .sys-label, .diepte-1 > .sys-blad > .sys-label { font-size: 1.05rem; }
+:is(.diepte-2, .diepte-3, .diepte-4, .diepte-5, .diepte-6) > details > summary > .sys-label, :is(.diepte-2, .diepte-3, .diepte-4, .diepte-5, .diepte-6) > .sys-blad > .sys-label { font-size: .95rem; color: var(--inkt-2); }
 .sys-bereik { font-family: var(--sans); color: var(--inkt-3); font-size: .78rem; margin-left: .4rem; }
-.bevat-markering > .sys-label { background: var(--accent-zacht); color: var(--inkt); }
+.bevat-markering > details > summary > .sys-label, .bevat-markering > .sys-blad > .sys-label { background: var(--accent-zacht); color: var(--inkt); }
 .sys-bronnen { list-style: none; padding-left: 1.6rem; margin: .1rem 0 .3rem; font-size: .9rem; }
 .sys-bronnen li.gemarkeerd::before { content: "▸ "; color: var(--accent); }
 .wettekst .bron { max-width: 70ch; }
@@ -325,3 +325,36 @@ input:focus, select:focus, textarea:focus { outline: 2px solid var(--accent); ou
   .tabel th:nth-child(n+5), .tabel td:nth-child(n+5) { display: none; }
   .kaart-wrap { height: 70vh; }
 }
+
+/* Systematiek: inklapbare boom, tellers */
+.sys-knoop > details > summary { list-style: none; cursor: pointer; color: inherit; font-size: inherit; }
+.sys-knoop > details > summary::-webkit-details-marker { display: none; }
+.sys-knoop > details > summary::before { content: "▸"; display: inline-block; width: 1rem; color: var(--inkt-3); font-size: .8rem; transition: transform .1s; }
+.sys-knoop > details[open] > summary::before { transform: rotate(90deg); }
+.sys-blad { padding-left: 1rem; }
+.sys-teller { font-size: .75rem; color: var(--accent); margin-left: .3rem; white-space: nowrap; }
+.sys-zoek input { width: 9rem; }
+
+/* Artikelen en correspondentie */
+.pad { font-size: .85rem; color: var(--inkt-3); margin: .2rem 0 1rem; }
+.pad a { color: var(--inkt-2); }
+.pad .sep { margin: 0 .3rem; }
+.thema { border-top: 1px solid var(--lijn); padding-top: .8rem; margin-top: 1.4rem; }
+.thema h3 { margin-bottom: .2rem; }
+.thema-kolommen { display: grid; grid-template-columns: repeat(auto-fit, minmax(16rem, 1fr)); gap: 1.2rem; margin-top: .6rem; }
+.thema-kolom h4 { font-family: var(--sans); font-size: .78rem; text-transform: uppercase; letter-spacing: .08em; color: var(--inkt-3); margin: 0 0 .4rem; border-bottom: 2px solid var(--inkt); padding-bottom: .2rem; }
+.lid { margin-bottom: .9rem; }
+.lid .opmerking { font-size: .88rem; color: var(--inkt-2); margin: .15rem 0; }
+.lid .pad { margin: .1rem 0; font-size: .78rem; }
+.lid .origineel { font-size: .92rem; }
+.lid details summary { font-size: .78rem; }
+.lid.geen .citeertitel { color: var(--inkt-3); font-weight: 400; font-style: italic; }
+.rol.faux-ami, .rol.faux { color: var(--rel-faux_ami); border-color: var(--rel-faux_ami); }
+.rol.deels { color: var(--rel-deels); border-color: var(--rel-deels); }
+.ref-lijst { list-style: none; padding: 0; margin: 0; }
+.ref-lijst li { margin: .1rem 0; }
+.ref-lijst .detail { color: var(--inkt-3); font-size: .85em; }
+.buren { display: flex; flex-wrap: wrap; gap: .3rem .8rem; font-size: .9rem; }
+.tegenhanger { margin: .5rem 0 1rem; }
+.tegenhanger .pad { margin: 0 0 .2rem; color: var(--inkt-2); font-family: var(--serif); font-size: .95rem; }
+.kandidaten { display: flex; gap: .6rem; flex-wrap: wrap; }

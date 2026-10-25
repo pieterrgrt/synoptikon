@@ -17,6 +17,7 @@
     {% if bron.geldig_van or bron.geldig_tot %}<span>geldig {{ bron.geldig_van or '…' }} – {{ bron.geldig_tot or 'heden' }}</span>{% endif %}
     {% if bron.url %}<a href="{{ bron.url }}" target="_blank" rel="noopener">officiële bron ↗</a>{% endif %}
     {% if bron.systematiek %}<a href="/stelsels/{{ bron.stelsel_code }}">{{ bron.systematiek.pad() | map(attribute='label') | join(' › ') }}</a>{% endif %}
+    {% set r = artikel_ref(bron) %}{% if r %}<a href="{{ r.url }}">⇄ corresponderende artikelen</a>{% endif %}
     {% if artikel %}<span class="stil">tekst uit {{ artikel.wettekst.titel }}, versie {{ artikel.wettekst.versie }}</span>{% endif %}
   </footer>
   {% if bron.opmerking %}<p class="stil">{{ bron.opmerking }}</p>{% endif %}

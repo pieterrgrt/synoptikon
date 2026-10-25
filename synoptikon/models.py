@@ -34,6 +34,15 @@ Keuzes, kort gemotiveerd:
   gaat altijd uit de database, nooit live.
 
 * **Concordantie** koppelt oude aan nieuwe nummering, met datum en grond.
+
+* **Correspondentie** is een thema ("vereisten voor overdracht") met per
+  stelsel de artikelen die die functie vervullen (`CorrespondentieArtikel`).
+  Groepen in plaats van paren: drie stelsels geven anders drie paren per
+  thema, en bij een vierde stelsel zes. Een artikel kan in meerdere thema's
+  staan; een lid zonder nummer betekent "geen wettelijke regeling". Artikelen
+  worden niet als Bron opgeslagen maar als (stelsel, wet, nummer), zodat ook
+  artikelen zonder ingevoerde tekst kunnen corresponderen; de plaats in de
+  systematiek volgt uit het nummer (`services/artikelen.py`).
 """
 from __future__ import annotations
 
@@ -311,6 +320,49 @@ class Concordantie(Base):
     toelichting: Mapped[str | None] = mapped_column(Text)
 
     stelsel: Mapped[Stelsel] = relationship()
+
+
+class Correspondentie(Base):
+    """Thema waarbinnen artikelen uit verschillende stelsels functioneel overeenkomen."""
+
+    __tablename__ = "correspondentie"
+
+    id: Mapped[int] = mapped_column(primary_key=True)
+    titel: Mapped[str] = mapped_column(String(200), unique=True)
+    rechtsgebied: Mapped[str | None] = mapped_column(String(120))
+    toelichting: Mapped[str | None] = mapped_column(Text)  # markdown
+    aangemaakt: Mapped[datetime] = mapped_column(DateTime, default=now)
+
+    artikelen: Mapped[list["CorrespondentieArtikel"]] = relationship(
+        back_populates="correspondentie", cascade="all, delete-orphan", order_by="CorrespondentieArtikel.volgorde"
+    )
+
+    def voor(self, stelsel: str) -> list["CorrespondentieArtikel"]:
+        return [a for a in self.artikelen if a.stelsel_code == stelsel]
+
+
+class CorrespondentieArtikel(Base):
+    __tablename__ = "correspondentie_artikel"
+
+    id: Mapped[int] = mapped_column(primary_key=True)
+    correspondentie_id: Mapped[int] = mapped_column(ForeignKey("correspondentie.id", ondelete="CASCADE"))
+    stelsel_code: Mapped[str] = mapped_column(ForeignKey("stelsel.code"))
+    wet: Mapped[str | None] = mapped_column(String(40))  # None = hoofdwet (BW, BGB, C. civ.)
+    nummer: Mapped[str | None] = mapped_column(String(40))  # "3:84", "929", "1112-1"; None = geen regeling
+    tot: Mapped[str | None] = mapped_column(String(40))  # einde van een bereik ("1136" bij 1132–1136)
+    detail: Mapped[str | None] = mapped_column(String(60))  # "lid 3", "Abs. 2", "al. 5"
+    rol: Mapped[str | None] = mapped_column(String(80))  # "hoofdregel", "deels", "faux ami", …
+    opmerking: Mapped[str | None] = mapped_column(Text)
+    volgorde: Mapped[int] = mapped_column(Integer, default=0)
+
+    correspondentie: Mapped[Correspondentie] = relationship(back_populates="artikelen")
+    stelsel: Mapped[Stelsel] = relationship()
+
+    @property
+    def ref(self):
+        from .services.artikelen import Ref
+
+        return Ref(self.stelsel_code, self.nummer, self.wet, self.tot, self.detail)
 
 
 class Wettekst(Base):

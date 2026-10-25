@@ -16,6 +16,7 @@
   <nav class="nav">
     <a href="/" {% if request.url.path == '/' %}aria-current="page"{% endif %}>Vragen</a>
     <a href="/begrippen" {% if request.url.path.startswith('/begrippen') %}aria-current="page"{% endif %}>Begrippen</a>
+    <a href="/artikelen" {% if request.url.path.startswith('/artikelen') %}aria-current="page"{% endif %}>Artikelen</a>
     <a href="/stelsels" {% if request.url.path.startswith('/stelsels') %}aria-current="page"{% endif %}>Stelsels</a>
     <a href="/bronnen" {% if request.url.path.startswith('/bronnen') %}aria-current="page"{% endif %}>Bronnen</a>
     <a href="/invoer" {% if request.url.path.startswith('/invoer') %}aria-current="page"{% endif %}>Invoer</a>

@@ -1,0 +1,45 @@
+{% extends "base.html" %}
+{% import "_artikel.html" as m %}
+{% block titel %}{{ c.titel }} · Synoptikon{% endblock %}
+{% block inhoud %}
+<p class="kruimel"><a href="/artikelen">Artikelen</a>{% if c.rechtsgebied %} › {{ c.rechtsgebied }}{% endif %}</p>
+<h1>{{ c.titel }}</h1>
+{% if c.toelichting %}<div class="omschrijving">{{ c.toelichting | md }}</div>{% endif %}
+
+<div class="thema-kolommen">
+{% for code, leden in kolommen.items() %}
+  <div class="thema-kolom">
+    <h4>{{ namen.get(code, code) }}</h4>
+    {% for l in leden %}
+      {{ m.lid(l) }}
+      <form method="post" action="/artikelen/thema/{{ c.id }}/artikel/{{ l.artikel.id }}/verwijderen" class="inline" data-bevestig="{{ l.ref.citeer }} uit dit thema halen?"><button class="knop-tekst klein">× uit thema</button></form>
+    {% else %}<p class="stil leeg">Nog niets.</p>{% endfor %}
+  </div>
+{% endfor %}
+</div>
+
+<details class="blok">
+  <summary>Artikel toevoegen</summary>
+  <form method="post" action="/artikelen/thema/{{ c.id }}/artikel" class="formulier compact">
+    <div class="rij">
+      <label>Stelsel <select name="stelsel_code">{% for s in stelsels %}<option value="{{ s.code }}">{{ s.code }}</option>{% endfor %}</select></label>
+      <label>Artikel <input name="verwijzing" required placeholder="6:162 · § 823 Abs. 1 · art. 1240 · art. 1132–1136 · § 1 ProdHaftG · —"></label>
+      <label>Rol <input name="rol" placeholder="hoofdregel · deels · faux ami · geen regeling"></label>
+    </div>
+    <label>Opmerking <span class="hint">markdown; bij "—" waar het dan wel geregeld is</span><input name="opmerking"></label>
+    <div class="acties"><button class="knop klein primair">Toevoegen</button></div>
+  </form>
+</details>
+<details class="blok">
+  <summary>Thema bewerken</summary>
+  <form method="post" action="/artikelen/thema/{{ c.id }}/bewerken" class="formulier compact">
+    <div class="rij">
+      <label>Titel <input name="titel" value="{{ c.titel }}" required></label>
+      <label>Rechtsgebied <input name="rechtsgebied" value="{{ c.rechtsgebied or '' }}"></label>
+    </div>
+    <label>Toelichting <textarea name="toelichting" rows="3">{{ c.toelichting or '' }}</textarea></label>
+    <div class="acties"><button class="knop klein primair">Opslaan</button></div>
+  </form>
+  <form method="post" action="/artikelen/thema/{{ c.id }}/verwijderen" data-bevestig="Thema verwijderen? De artikelen zelf blijven bestaan." class="gevaar-zone"><button class="knop klein gevaar">Thema verwijderen</button></form>
+</details>
+{% endblock %}

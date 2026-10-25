@@ -20,6 +20,8 @@ from ..models import (
     BegripRelatie,
     Bron,
     Concordantie,
+    Correspondentie,
+    CorrespondentieArtikel,
     Stelsel,
     Systematiek,
     Vertaling,
@@ -27,7 +29,9 @@ from ..models import (
     VraagBegrip,
 )
 from . import data_eigendom, data_precontractueel
+from .correspondenties import CORRESPONDENTIES
 from .stelsels import CONCORDANTIES, STELSELS, SYSTEMATIEK
+from .systematiek_fr import HERNOEMD
 
 
 def _stelsels(db: Session) -> None:
@@ -38,15 +42,27 @@ def _stelsels(db: Session) -> None:
 
 
 def _systematiek(db: Session) -> dict[str, Systematiek]:
+    """Legt de systematiekbomen aan of werkt ze bij.
+
+    Knopen worden op code herkend; label, bereik, ouder en volgorde volgen de
+    seed, zodat een bestaande database bij een nieuwe `synoptikon seed` de
+    volledige boom krijgt. Zelf toegevoegde knopen (andere codes) blijven
+    staan, net als de bronnen die aan een knoop hangen.
+    """
     index: dict[str, Systematiek] = {k.code: k for k in db.scalars(select(Systematiek)).all()}
+    for oud, nieuw in HERNOEMD.items():
+        if oud in index and nieuw not in index:
+            index[nieuw] = index.pop(oud)
+            index[nieuw].code = nieuw
 
     def voeg_toe(code: str, knopen: list, parent: Systematiek | None):
         for i, (kcode, label, bereik, kinderen) in enumerate(knopen):
             knoop = index.get(kcode)
             if knoop is None:
-                knoop = Systematiek(stelsel_code=code, parent=parent, code=kcode, label=label, bereik=bereik, volgorde=(i + 1) * 10)
+                knoop = Systematiek(stelsel_code=code, code=kcode)
                 db.add(knoop)
                 index[kcode] = knoop
+            knoop.parent, knoop.label, knoop.bereik, knoop.volgorde = parent, label, bereik or None, (i + 1) * 10
             voeg_toe(code, kinderen, knoop)
 
     for code, knopen in SYSTEMATIEK.items():
@@ -61,6 +77,36 @@ def _concordanties(db: Session) -> None:
         if (code, wet, oud) in bestaand:
             continue
         db.add(Concordantie(stelsel_code=code, wet=wet, oud=oud, nieuw=nieuw, datum=date.fromisoformat(datum) if datum else None, grond=grond, toelichting=toelichting))
+    db.flush()
+
+
+def _correspondenties(db: Session) -> None:
+    """Thema's met corresponderende artikelen; aanvullend, nooit overschrijvend.
+
+    Bestaande thema's (zelfde titel) krijgen alleen artikelen erbij die er nog
+    niet in staan, zodat eigen aanpassingen blijven staan.
+    """
+    from ..services.artikelen import lees
+
+    bestaand = {c.titel: c for c in db.scalars(select(Correspondentie)).all()}
+    for spec in CORRESPONDENTIES:
+        c = bestaand.get(spec["titel"])
+        if c is None:
+            c = Correspondentie(titel=spec["titel"], rechtsgebied=spec.get("rechtsgebied"), toelichting=spec.get("toelichting"))
+            db.add(c)
+        aanwezig = {(a.stelsel_code, a.wet, a.nummer, a.tot) for a in c.artikelen}
+        for i, lid in enumerate(spec["artikelen"]):
+            stelsel, verwijzing, rol, opmerking = (*lid, None, None)[:4]
+            ref = lees(stelsel, verwijzing)
+            if ref is None:
+                raise ValueError(f"Onleesbare verwijzing in correspondentie {spec['titel']!r}: {stelsel} {verwijzing}")
+            if (ref.stelsel, ref.wet, ref.nummer, ref.tot) in aanwezig:
+                continue
+            c.artikelen.append(
+                CorrespondentieArtikel(
+                    stelsel_code=stelsel, wet=ref.wet, nummer=ref.nummer, tot=ref.tot, detail=ref.detail, rol=rol, opmerking=opmerking, volgorde=(i + 1) * 10
+                )
+            )
     db.flush()
 
 
@@ -138,6 +184,7 @@ def seed(db: Session, overschrijf: bool = False) -> int:
     _stelsels(db)
     systematiek = _systematiek(db)
     _concordanties(db)
+    _correspondenties(db)
     n = 0
     for spec in (data_eigendom.VRAAG, data_precontractueel.VRAAG):
         if _vraag(db, systematiek, spec, overschrijf) is not None:

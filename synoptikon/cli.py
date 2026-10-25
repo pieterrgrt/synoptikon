@@ -74,6 +74,33 @@ def cmd_import(args) -> int:
     with database.session() as s:
         w = store.sla_op(s, bron.upper(), g)
         print(f"{w.stelsel_code} {w.titel} (versie {w.versie}): {len(w.artikelen)} artikelen opgeslagen.")
+        if args.systematiek:
+            _systematiek(s, w)
+    return 0
+
+
+def _systematiek(s, w) -> None:
+    from .services.systematiek import bouw_uit_wettekst
+
+    r = bouw_uit_wettekst(s, w)
+    print(f"Systematiek {w.stelsel_code} uit {w.titel}: {r.nieuw} knopen toegevoegd, {r.bijgewerkt} bereiken bijgewerkt ({r.artikelen} artikelen met pad).")
+
+
+def cmd_systematiek(args) -> int:
+    from sqlalchemy import select
+
+    from .models import Wettekst
+
+    database.init_db()
+    with database.session() as s:
+        q = select(Wettekst).where(Wettekst.stelsel_code == args.stelsel.upper(), Wettekst.wet_id == args.id)
+        if args.versie:
+            q = q.where(Wettekst.versie == args.versie)
+        w = s.scalars(q.order_by(Wettekst.opgehaald.desc())).first()
+        if w is None:
+            print(f"Geen geïmporteerde wettekst {args.stelsel.upper()} {args.id}; importeer eerst met `synoptikon import`.", file=sys.stderr)
+            return 1
+        _systematiek(s, w)
     return 0
 
 
@@ -109,7 +136,13 @@ def main(argv: list[str] | None = None) -> int:
     s.add_argument("--artikelen", help="FR: kommagescheiden artikelnummers, bijv. 1196,2276")
     s.add_argument("--datum", help="FR: geldigheidsdatum JJJJ-MM-DD")
     s.add_argument("--taal", help="EU: taalcode van de EUR-Lex-versie (standaard NL)")
+    s.add_argument("--systematiek", action="store_true", help="na het importeren de systematiekboom aanvullen uit de wettekst")
     s.set_defaults(fn=cmd_import)
+    s = sub.add_parser("systematiek", help="systematiekboom aanvullen uit een geïmporteerde wettekst: nl BWBR0005291, de bgb, fr LEGITEXT…")
+    s.add_argument("stelsel", choices=["nl", "de", "fr", "eu"])
+    s.add_argument("id")
+    s.add_argument("--versie", help="specifieke versie (standaard de laatst opgehaalde)")
+    s.set_defaults(fn=cmd_systematiek)
     sub.add_parser("rebuild-fts", help="zoekindex opnieuw opbouwen").set_defaults(fn=cmd_rebuild_fts)
     s = sub.add_parser("serve", help="ontwikkelserver starten")
     s.add_argument("--host", default="127.0.0.1")

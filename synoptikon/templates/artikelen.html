@@ -1,0 +1,53 @@
+{% extends "base.html" %}
+{% import "_artikel.html" as m %}
+{% block titel %}Artikelen · Synoptikon{% endblock %}
+{% block inhoud %}
+<h1>Artikelen</h1>
+<form method="get" class="formulier compact zoekgroot">
+  <input type="search" name="q" value="{{ q }}" autofocus placeholder="3:84 · § 929 BGB · art. 1196 C. civ. · 6:162">
+  <select name="stelsel" style="width:auto" aria-label="Stelsel"><option value="">stelsel herkennen</option>{% for s in stelsels %}<option value="{{ s.code }}" {% if s.code == f_stelsel %}selected{% endif %}>{{ s.code }}</option>{% endfor %}</select>
+  <button class="knop primair">Opzoeken</button>
+</form>
+<p class="hint">Een artikelnummer toont de plaats in de systematiek en de corresponderende artikelen in de andere stelsels. NL herken je aan de dubbele punt (3:84), DE aan § of BGB, FR aan C. civ. of een streepje (1112-1); een kaal nummer kan DE of FR zijn.</p>
+{% if q %}
+  {% if kandidaten %}
+  <p class="kandidaten">Bedoel je {% for r in kandidaten %}<a class="knop klein" href="{{ r.url }}">{{ r.citeer }}</a>{% endfor %}</p>
+  {% else %}
+  <p class="melding">Geen artikelnummer herkend in “{{ q }}”. Zoek je tekst, gebruik dan <a href="/zoeken?q={{ q | urlencode }}">zoeken</a>.</p>
+  {% endif %}
+{% endif %}
+
+<h2>Correspondentietabel <span class="stil">({{ aantal }} thema's)</span></h2>
+<p class="hint">Per functionele vraag de artikelen die haar beantwoorden. Klik op een artikel voor de plaats in de systematiek en de tekst, op een thema voor de synopse op artikelniveau.</p>
+{% for gebied, thema_s in groepen.items() %}
+<section class="blok">
+  <h3 class="gebied">{{ gebied }}</h3>
+  <table class="tabel">
+    <thead><tr><th>Thema</th>{% for s in kolommen %}<th>{{ s.code }}</th>{% endfor %}</tr></thead>
+    <tbody>
+    {% for c in thema_s %}
+    <tr>
+      <td><a href="/artikelen/thema/{{ c.id }}">{{ c.titel }}</a></td>
+      {% for s in kolommen %}
+      <td><ul class="ref-lijst">{% for a in c.voor(s.code) %}<li>{% if a.nummer is none %}<span class="stil" title="{{ a.opmerking or '' }}">—</span>{% else %}<a href="{{ a.ref.url }}" title="{{ a.rol or '' }}{% if a.opmerking %}: {{ a.opmerking }}{% endif %}">{{ a.ref.citeer }}</a>{% endif %}</li>{% endfor %}</ul></td>
+      {% endfor %}
+    </tr>
+    {% endfor %}
+    </tbody>
+  </table>
+</section>
+{% endfor %}
+
+<details class="blok">
+  <summary>Nieuw thema</summary>
+  <form method="post" action="/artikelen/thema" class="formulier compact">
+    <div class="rij">
+      <label>Titel <input name="titel" required placeholder="Functionele vraag, bijv. 'Verjaring van de koopprijs'"></label>
+      <label>Rechtsgebied <input name="rechtsgebied" list="rechtsgebieden"></label>
+    </div>
+    <datalist id="rechtsgebieden">{% for g in groepen %}<option value="{{ g }}">{% endfor %}</datalist>
+    <label>Toelichting <span class="hint">markdown</span><textarea name="toelichting" rows="2"></textarea></label>
+    <div class="acties"><button class="knop klein primair">Aanmaken</button></div>
+  </form>
+</details>
+{% endblock %}

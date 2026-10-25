@@ -16,7 +16,8 @@ from .config import settings
 from .db import init_db
 from .models import RELATIE_TYPES
 from .routes import auth as auth_routes
-from .routes import begrippen, bronnen, invoer, stelsels, vragen, wetteksten, zoeken
+from .routes import artikelen, begrippen, bronnen, invoer, stelsels, vragen, wetteksten, zoeken
+from .services.artikelen import ref_uit_bron
 
 HIER = Path(__file__).parent
 
@@ -27,6 +28,7 @@ templates.env.globals["RELATIE_TYPES"] = RELATIE_TYPES
 templates.env.globals["versie"] = __version__
 templates.env.globals["ui_lang"] = settings.ui_lang
 templates.env.globals["auth_mode"] = settings.auth_mode
+templates.env.globals["artikel_ref"] = ref_uit_bron
 
 
 @asynccontextmanager
@@ -68,5 +70,5 @@ def gezond():
     return {"status": "ok", "versie": __version__}
 
 
-for router in (auth_routes.router, vragen.router, bronnen.router, begrippen.router, stelsels.router, zoeken.router, invoer.router, wetteksten.router):
+for router in (auth_routes.router, vragen.router, bronnen.router, begrippen.router, stelsels.router, artikelen.router, zoeken.router, invoer.router, wetteksten.router):
     app.include_router(router)
