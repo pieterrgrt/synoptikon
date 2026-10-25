@@ -19,22 +19,37 @@ from itsdangerous import BadSignature, URLSafeTimedSerializer
 from .config import settings
 
 COOKIE = "synoptikon_sessie"
-_PREFIX = "scrypt$"
+# Formaat: scrypt:<salt>:<digest>, base64url zonder padding. Bewust geen "$"
+# of "=": Docker Compose leest "$x" in .env als variabele en zou de hash
+# verminken. Het oude formaat met "$" wordt nog herkend.
+_PREFIX = "scrypt:"
+
+
+def _b64(b: bytes) -> str:
+    return base64.urlsafe_b64encode(b).decode().rstrip("=")
+
+
+def _unb64(s: str) -> bytes:
+    s = s.strip()
+    s += "=" * (-len(s) % 4)
+    # Nieuw formaat is base64url; het oude gebruikte standaard base64 ("+", "/").
+    return base64.b64decode(s) if "+" in s or "/" in s else base64.urlsafe_b64decode(s)
 
 
 def hash_password(wachtwoord: str) -> str:
     salt = secrets.token_bytes(16)
     digest = hashlib.scrypt(wachtwoord.encode(), salt=salt, n=2**14, r=8, p=1, dklen=32)
-    return _PREFIX + base64.b64encode(salt).decode() + "$" + base64.b64encode(digest).decode()
+    return _PREFIX + _b64(salt) + ":" + _b64(digest)
 
 
 def verify_password(wachtwoord: str, opgeslagen: str | None) -> bool:
-    if not opgeslagen or not opgeslagen.startswith(_PREFIX):
+    opgeslagen = (opgeslagen or "").strip().strip("'\"")
+    if not opgeslagen.startswith(("scrypt:", "scrypt$")):
         return False
     try:
-        _, salt_b64, digest_b64 = opgeslagen.split("$")
-        salt = base64.b64decode(salt_b64)
-        verwacht = base64.b64decode(digest_b64)
+        _, salt_s, digest_s = opgeslagen.replace("$", ":").split(":")
+        salt = _unb64(salt_s)
+        verwacht = _unb64(digest_s)
     except (ValueError, TypeError):
         return False
     digest = hashlib.scrypt(wachtwoord.encode(), salt=salt, n=2**14, r=8, p=1, dklen=32)
