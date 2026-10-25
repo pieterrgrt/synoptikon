@@ -89,9 +89,11 @@ uit als je de app achter nginx basic auth zet. Strikte CSP (`script-src
 `scripts/fetch_fonts.sh` ververst ze.
 
 **Pictogram.** De Σ uit Source Serif 4 (gewicht 600, opsz 8) als omtrek in
-`static/favicon.svg`, dus onafhankelijk van geïnstalleerde lettertypen;
+`static/favicon.svg`, dus onafhankelijk van geïnstalleerde lettertypen; in
+dark mode (van browser of systeem) lichtrood op donker, zoals de app zelf.
 `favicon.ico` (16/32/48), `apple-touch-icon.png` (180) en de manifest-iconen
-(192/512) zijn daaruit gerenderd. `/favicon.ico` en `/apple-touch-icon.png`
+(192/512) zijn daaruit gerenderd, in de lichte variant. Pas je de SVG aan,
+verhoog dan `?v=` in `templates/_iconen.html`. `/favicon.ico` en `/apple-touch-icon.png`
 zijn ook zonder login bereikbaar, zodat een startpagina, dashboard of
 telefoonbeginscherm het pictogram kan ophalen.
 

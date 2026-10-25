@@ -27,6 +27,7 @@ def test_pictogrammen_zonder_login(anoniem):
     ]:
         r = anoniem.get(pad, follow_redirects=False)
         assert r.status_code == 200 and r.headers["content-type"].startswith(soort), pad
+    assert "prefers-color-scheme: dark" in anoniem.get("/static/favicon.svg").text
     for icoon in anoniem.get("/static/manifest.json").json()["icons"]:
         assert anoniem.get(icoon["src"]).status_code == 200
     html = anoniem.get("/").text  # belandt op de loginpagina
