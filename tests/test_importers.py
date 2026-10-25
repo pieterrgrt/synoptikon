@@ -83,3 +83,19 @@ def test_store_en_zoekindex():
         from synoptikon.models import Wettekst
 
         assert len(s.scalars(select(Wettekst).where(Wettekst.wet_id == "bgb")).all()) == 1
+
+
+def test_bwb_parse_huidig_formaat():
+    """Zoals wetten.overheid.nl het nu levert: inwerkingtreding op de wortel, meta-data in de elementen, boek 7a."""
+    xml = b"""<?xml version="1.0" encoding="UTF-8"?><toestand bwb-id="BWBR0006000" inwerkingtreding="2025-07-01">
+<wetgeving><citeertitel status="officieel">Burgerlijk Wetboek Boek 7A<meta-data><jcis/>196925728</meta-data></citeertitel>
+<wet-besluit><wettekst><boek><kop><label>Boek</label><nr>7a</nr><titel>Bijzondere overeenkomsten; vervolg</titel></kop>
+<titeldeel><kop><label>titel</label><nr>Negende</nr><titel>Van maatschap</titel></kop>
+<artikel status="goed"><kop><label>Artikel</label><nr>1655</nr></kop><al>Maatschap is eene overeenkomst.</al>
+<meta-data><jcis><jci verwijzing="jci1.3:c:BWBR0006000"/></jcis>2025-07-01</meta-data></artikel>
+</titeldeel></boek></wettekst></wet-besluit></wetgeving></toestand>"""
+    g = bwb.parse(xml, "BWBR0006000")
+    assert g.titel == "Burgerlijk Wetboek Boek 7A" and g.versie == "2025-07-01"
+    (a,) = g.artikelen
+    assert a.nummer == "7A:1655" and a.tekst == "Maatschap is eene overeenkomst."
+    assert a.pad == "Boek 7a Bijzondere overeenkomsten; vervolg › titel Negende Van maatschap"

@@ -30,7 +30,7 @@ from ..models import (
 )
 from . import data_eigendom, data_precontractueel
 from .correspondenties import CORRESPONDENTIES
-from .stelsels import CONCORDANTIES, STELSELS, SYSTEMATIEK
+from .stelsels import CONCORDANTIES, STELSELS, SYSTEMATIEK, VERVALLEN
 from .systematiek_fr import HERNOEMD
 
 
@@ -68,7 +68,30 @@ def _systematiek(db: Session) -> dict[str, Systematiek]:
     for code, knopen in SYSTEMATIEK.items():
         voeg_toe(code, knopen, None)
     db.flush()
+    _ruim_vervallen_op(db, index)
     return index
+
+
+def _ruim_vervallen_op(db: Session, index: dict[str, Systematiek]) -> None:
+    from ..services.artikelen import Plaatser, ref_uit_bron
+
+    weg = [index.pop(c) for c in VERVALLEN if c in index]
+    if not weg:
+        return
+    weg_ids = {k.id for k in weg}
+    for k in weg:
+        for kind in list(k.kinderen):  # eigen knopen eronder: naar de ouder
+            if kind.id not in weg_ids:
+                kind.parent = k.parent
+        pl = Plaatser(k.stelsel_code, [x for x in index.values() if x.stelsel_code == k.stelsel_code])
+        for bron in list(k.bronnen):
+            ref = ref_uit_bron(bron)
+            pad = pl.pad(ref.nummer) if ref and not ref.wet else []
+            bron.systematiek = pad[-1] if pad else k.parent
+    db.flush()
+    for k in weg:
+        db.delete(k)
+    db.flush()
 
 
 def _concordanties(db: Session) -> None:

@@ -107,7 +107,7 @@ PDF-route een 501 en blijft de rest werken (Markdown en de printweergave met
 | `begrip_relatie` | `equivalent` · `deels` · `faux_ami` · `geen`, met toelichting. |
 | `vraag_begrip` | Welke begrippen bij een vraag horen. |
 | `notitie` | Losse notitie bij een vraag, al dan niet voor één stelsel (snel invoeren). |
-| `systematiek` | Boom per stelsel: het volledige BW (Boek › Titel › Afdeling), BGB (Buch › Abschnitt › Titel › Untertitel) en de Code civil (Livre › Titre › Sous-titre › Chapitre › Section › Sous-section) met artikelbereiken. |
+| `systematiek` | Boom per stelsel: het volledige BW (alle boeken en niveaus, gegenereerd uit de officiële BWB-XML), BGB (Buch › Abschnitt › Titel › Untertitel) en de Code civil (Livre › Titre › Sous-titre › Chapitre › Section › Sous-section) met artikelbereiken. |
 | `correspondentie`, `correspondentie_artikel` | Thema (functionele vraag) met per stelsel de artikelen die haar beantwoorden: (stelsel, wet, nummer[–tot]), rol en opmerking. Zonder nummer = geen wettelijke regeling. |
 | `concordantie` | Oude → nieuwe nummering met datum en grond (art. 1382 → 1240 C. civ.; art. 2014 → 3:86 BW). |
 | `wettekst`, `wettekst_artikel` | Lokale kopie van geïmporteerde wetten met versie, datum, herkomst en ruw bestand. |
@@ -154,6 +154,8 @@ de database; de app doet nooit live-calls.
 ```bash
 synoptikon import nl BWBR0005291        # BW Boek 3 (wetten.overheid.nl, BWB-XML)
 synoptikon import nl BWBR0005289        # BW Boek 6
+# BW: 1 BWBR0002656 · 2 BWBR0003045 · 4 BWBR0002761 · 5 BWBR0005288 · 7 BWBR0005290
+#     7A BWBR0006000 · 8 BWBR0005034 · 10 BWBR0030068
 synoptikon import de bgb                # gesetze-im-internet.de, xml.zip
 synoptikon import eu 32007R0864 --taal NL   # EUR-Lex HTML op CELEX
 synoptikon import fr LEGITEXT000006070721 --artikelen 1112,1196,2276 --datum 2024-01-01
@@ -166,9 +168,13 @@ Légifrance gebruikt de PISTE-API (OAuth2 client credentials) met
 hij overslaat en eindigt met exitcode 0. Omdat de Code civil ~2.800 artikelen
 heeft en elk artikel één API-call is, geef je bij voorkeur `--artikelen`.
 
-**Systematiek uit een import.** De meegeleverde bomen gaan tot titel- of
-afdelingsniveau (BGB: Untertitel; Code civil: verbintenissenrecht tot
-sous-section). Een import bevat per artikel het volledige pad; daarmee vul je
+wetten.overheid.nl heeft geen directe XML-URL meer; de importer volgt de
+doorverwijzing naar de geldende versie en vraagt de XML op via het
+exportformulier van die pagina.
+
+**Systematiek uit een import.** De BW-boom is volledig (gegenereerd uit de
+officiële XML, versies 2024–2026); de BGB-boom gaat tot Untertitel, de Code
+civil tot titre (verbintenissenrecht tot sous-section). Een import bevat per artikel het volledige pad; daarmee vul je
 de boom aan tot op het laagste niveau, met exacte bereiken:
 
 ```bash
@@ -219,7 +225,7 @@ dan `SYNOPTIKON_AUTH_MODE=none`.
 
 ```bash
 pip install -e ".[pdf,dev]"
-pytest                     # 27 tests: auth, synopse, zoeken, export, invoer, parsers, artikelen
+pytest                     # 30 tests: auth, synopse, zoeken, export, invoer, parsers, artikelen
 synoptikon rebuild-fts     # zoekindex opnieuw opbouwen na handmatige DB-ingrepen
 synoptikon seed --overschrijf   # voorbeeldvragen opnieuw laden
 synoptikon seed                 # ook om een bestaande database bij te werken: vult systematiek

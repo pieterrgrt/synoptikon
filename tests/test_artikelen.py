@@ -47,9 +47,33 @@ def test_plaatsen_in_de_systematiek():
         assert plaatser(s, "DE").pad("812")[-1].code == "BGB-2-8-26"
         assert plaatser(s, "FR").pad("1112-1")[-1].code == "CC-III-III-I-2-1-1"
         assert plaatser(s, "FR").pad("2276")[-1].code == "CC-III-XXI-II-3"
-        # Boekknopen zonder bereik bevatten elk artikel van hun boek.
-        assert [k.code for k in plaatser(s, "NL").pad("8:1")] == ["BW-8"]
+        assert [k.code for k in plaatser(s, "NL").pad("8:1")][0] == "BW-8"
+        assert plaatser(s, "NL").pad("7A:1655")[0].code == "BW-7A"
         assert plaatser(s, "NL").pad("onzin") == []
+
+
+def test_boekknoop_zonder_bereik_bevat_het_hele_boek():
+    class K:
+        def __init__(self, id, parent_id, code, bereik):
+            self.id, self.parent_id, self.code, self.bereik, self.label = id, parent_id, code, bereik, code
+
+    assert [k.code for k in Plaatser("NL", [K(1, None, "BW-9", None)]).pad("9:123")] == ["BW-9"]
+
+
+def test_seed_ruimt_vervallen_knopen_op():
+    from synoptikon.models import Bron
+
+    with database.session() as s:
+        boek = s.scalar(select(Systematiek).where(Systematiek.code == "BW-7A"))
+        oud = Systematiek(stelsel_code="NL", parent=boek, code="BW-7A-MAATSCHAP", label="Maatschap", bereik="art. 7A:1655–7A:1688")
+        bron = Bron(stelsel_code="NL", soort="wet", citeertitel="art. 7A:1655 BW", taal="nl", systematiek=oud)
+        s.add_all([oud, bron])
+    with database.session() as s:
+        seed(s)
+        assert s.scalar(select(Systematiek).where(Systematiek.code == "BW-7A-MAATSCHAP")) is None
+        bron = s.scalar(select(Bron).where(Bron.citeertitel == "art. 7A:1655 BW"))
+        assert any("maatschap" in k.label.lower() for k in bron.systematiek.pad())
+        s.delete(bron)
 
 
 def test_plaatser_leidt_bereik_af_van_kinderen():

@@ -1092,7 +1092,7 @@ CORRESPONDENTIES = [
         "titel": "Verbruikleen en geldlening",
         "rechtsgebied": "Bijzondere overeenkomsten",
         "artikelen": [
-            ("NL", "7A:1791", "hoofdregel"),
+            ("NL", "7:129", "geldlening", "Titel 7.2c; de oude titel verbruikleen in Boek 7A is vervallen."),
             ("DE", "§ 488", "Darlehensvertrag"),
             ("DE", "§ 607", "Sachdarlehen"),
             ("FR", "art. 1892", "prêt de consommation"),
@@ -1258,7 +1258,8 @@ CORRESPONDENTIES = [
         "titel": "Partneralimentatie na scheiding",
         "rechtsgebied": "Personen- en familierecht",
         "artikelen": [
-            ("NL", "1:157", "hoofdregel"),
+            ("NL", "1:156", "hoofdregel"),
+            ("NL", "1:157", "duur", "In beginsel de helft van de huwelijksduur, maximaal vijf jaar."),
             ("DE", "§ 1569", "hoofdregel"),
             ("FR", "art. 270", "deels", "Prestation compensatoire: in beginsel een kapitaal, geen periodieke alimentatie."),
         ],
