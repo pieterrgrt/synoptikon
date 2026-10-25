@@ -48,6 +48,15 @@
   --rel-faux_ami: #b4232d;
   --rel-geen: #777;
 
+  /* Rechtsfamilies: één kleur per familie, voor kolomkoppen en tabelgroepen */
+  --fam-romaans: #9b3d2a;
+  --fam-germaans: #3d4f66;
+  --fam-nordisch: #3c6e8f;
+  --fam-gemengd: #6a4c7d;
+  --fam-common_law: #2e6650;
+  --fam-supranationaal: #2b4c9a;
+  --fam-overig: #85806f;
+
   --radius: 3px;
   --maat: 17px;
 }
@@ -61,6 +70,8 @@
     --annotatie: #d7c38a; --annotatie-achter: #2a2618;
     --ok: #7fc48d; --fout: #e08a8a; --mark: #5a4a12;
     --rel-equivalent: #7fc48d; --rel-deels: #e0b35a; --rel-faux_ami: #ee6b74; --rel-geen: #8a8a8a;
+    --fam-romaans: #e0937f; --fam-germaans: #9fb2cc; --fam-nordisch: #8ec0de; --fam-gemengd: #c3a6d6;
+    --fam-common_law: #8fcdb2; --fam-supranationaal: #9db4ec; --fam-overig: #7f7a70;
   }
 }
 :root[data-theme="dark"] {
@@ -71,6 +82,8 @@
   --annotatie: #d7c38a; --annotatie-achter: #2a2618;
   --ok: #7fc48d; --fout: #e08a8a; --mark: #5a4a12;
   --rel-equivalent: #7fc48d; --rel-deels: #e0b35a; --rel-faux_ami: #ee6b74; --rel-geen: #8a8a8a;
+  --fam-romaans: #e0937f; --fam-germaans: #9fb2cc; --fam-nordisch: #8ec0de; --fam-gemengd: #c3a6d6;
+  --fam-common_law: #8fcdb2; --fam-supranationaal: #9db4ec; --fam-overig: #7f7a70;
 }
 
 * { box-sizing: border-box; }
@@ -358,3 +371,37 @@ input:focus, select:focus, textarea:focus { outline: 2px solid var(--accent); ou
 .tegenhanger { margin: .5rem 0 1rem; }
 .tegenhanger .pad { margin: 0 0 .2rem; color: var(--inkt-2); font-family: var(--serif); font-size: .95rem; }
 .kandidaten { display: flex; gap: .6rem; flex-wrap: wrap; }
+
+/* Vlaggen en rechtsfamilies */
+.vlag { height: .8em; width: auto; vertical-align: -.05em; margin-right: .3em; border-radius: 1px; box-shadow: 0 0 0 1px rgba(0,0,0,.12); }
+h1 .vlag, h2 .vlag { height: .72em; }
+.fam-romaans { --fam: var(--fam-romaans); }
+.fam-germaans { --fam: var(--fam-germaans); }
+.fam-nordisch { --fam: var(--fam-nordisch); }
+.fam-gemengd { --fam: var(--fam-gemengd); }
+.fam-common_law { --fam: var(--fam-common_law); }
+.fam-supranationaal { --fam: var(--fam-supranationaal); }
+.fam-overig { --fam: var(--fam-overig); }
+.kolomkop { border-bottom-color: var(--fam, var(--inkt)); }
+.thema-kolom h4 { border-bottom-color: var(--fam, var(--inkt)); color: var(--inkt-2); }
+.familie-kop { color: var(--fam); border-left: 4px solid var(--fam); padding-left: .5rem; margin-bottom: .1rem; }
+.familie-blok + .familie-blok { margin-top: 1.4rem; }
+.familie-groep { display: inline-flex; align-items: center; gap: .5rem; flex-wrap: wrap; padding-left: .5rem; border-left: 3px solid var(--fam); }
+.familie-knop { background: none; border: 0; padding: 0; font: inherit; font-size: .72rem; text-transform: uppercase; letter-spacing: .06em; color: var(--fam); cursor: pointer; }
+.familie-knop:hover { text-decoration: underline; }
+.familie-filter { display: flex; flex-wrap: wrap; gap: .3rem .9rem; font-size: .88rem; margin: .4rem 0 1rem; }
+.familie-filter a { color: var(--fam, var(--inkt-2)); border-bottom: 2px solid transparent; }
+.familie-filter a[aria-current="page"] { border-bottom-color: var(--fam, var(--accent)); color: var(--inkt); }
+.tabel-schuif { overflow-x: auto; }
+.tabel.correspondentie th.fam-begin, .tabel.correspondentie td.fam-begin { border-left: 2px solid var(--fam); }
+.tabel.correspondentie .familierij th { color: var(--fam); border-bottom: 2px solid var(--fam); text-transform: none; letter-spacing: 0; font-size: .8rem; white-space: nowrap; }
+.tabel.correspondentie th { white-space: nowrap; }
+.tabel.correspondentie td { min-width: 7.5rem; }
+.tabel.correspondentie td:first-child { min-width: 12rem; }
+.zaak { font-family: var(--serif); font-style: italic; color: var(--inkt-2); }
+.zaak em { font-style: normal; }
+.stelsel-tabs .tab-familie { display: inline-flex; border-left: 3px solid var(--fam); padding-left: .2rem; margin-right: .3rem; }
+.sys-wet { font-size: .72rem; font-weight: 600; letter-spacing: .04em; color: var(--inkt-3); border: 1px solid var(--lijn); border-radius: var(--radius); padding: 0 .3rem; margin-left: .3rem; }
+@media (max-width: 720px) {
+  .tabel.correspondentie th:nth-child(n+5), .tabel.correspondentie td:nth-child(n+5) { display: table-cell; }
+}

@@ -4,11 +4,11 @@
 {% block inhoud %}
 <h1>Artikelen</h1>
 <form method="get" class="formulier compact zoekgroot">
-  <input type="search" name="q" value="{{ q }}" autofocus placeholder="3:84 · § 929 BGB · art. 1196 C. civ. · 6:162">
+  <input type="search" name="q" value="{{ q }}" autofocus placeholder="3:84 · art. 5.69 BW · § 929 BGB · Art. 41 OR · art. 1337 c.c. · s 17 SGA 1979 · UCC § 2-401">
   <select name="stelsel" style="width:auto" aria-label="Stelsel"><option value="">stelsel herkennen</option>{% for s in stelsels %}<option value="{{ s.code }}" {% if s.code == f_stelsel %}selected{% endif %}>{{ s.code }}</option>{% endfor %}</select>
   <button class="knop primair">Opzoeken</button>
 </form>
-<p class="hint">Een artikelnummer toont de plaats in de systematiek en de corresponderende artikelen in de andere stelsels. NL herken je aan de dubbele punt (3:84), DE aan § of BGB, FR aan C. civ. of een streepje (1112-1); een kaal nummer kan DE of FR zijn.</p>
+<p class="hint">Een artikelnummer toont de plaats in de systematiek en de corresponderende artikelen in de andere stelsels. NL herken je aan de dubbele punt (3:84), BE aan de punt (5.69) of "oud BW", DE aan § of BGB, FR aan C. civ. of een streepje (1112-1); voor CH, IT, ES en de common law noem je de wet (Art. 41 OR, art. 2043 c.c., art. 1902 CC, s 2 MA 1967, UCC § 2-207, s 18 ACL). Een kaal nummer kan DE of FR zijn, "CC" Spanje of Frankrijk.</p>
 {% if q %}
   {% if kandidaten %}
   <p class="kandidaten">Bedoel je {% for r in kandidaten %}<a class="knop klein" href="{{ r.url }}">{{ r.citeer }}</a>{% endfor %}</p>
@@ -18,23 +18,33 @@
 {% endif %}
 
 <h2>Correspondentietabel <span class="stil">({{ aantal }} thema's)</span></h2>
-<p class="hint">Per functionele vraag de artikelen die haar beantwoorden. Klik op een artikel voor de plaats in de systematiek en de tekst, op een thema voor de synopse op artikelniveau.</p>
+<p class="hint">Per functionele vraag de artikelen die haar beantwoorden, per rechtsfamilie gegroepeerd. In de common law is de hoofdbron vaak een arrest (⚖); statutes vullen aan. Klik op een artikel voor de plaats in de systematiek en de tekst, op een thema voor de synopse op artikelniveau.</p>
+<nav class="familie-filter" aria-label="Rechtsfamilie">
+  <a href="/artikelen" {% if not f_familie %}aria-current="page"{% endif %}>Alle stelsels</a>
+  {% for k in families_in_tabel %}<a class="fam-{{ k }}" href="/artikelen?familie={{ k }}" {% if f_familie == k %}aria-current="page"{% endif %}>{{ RECHTSFAMILIES[k][0] }}</a>{% endfor %}
+</nav>
+{% set families = per_familie(kolommen) %}
 {% for gebied, thema_s in groepen.items() %}
 <section class="blok">
   <h3 class="gebied">{{ gebied }}</h3>
-  <table class="tabel">
-    <thead><tr><th>Thema</th>{% for s in kolommen %}<th>{{ s.code }}</th>{% endfor %}</tr></thead>
+  <div class="tabel-schuif">
+  <table class="tabel correspondentie">
+    <thead>
+      <tr class="familierij"><th></th>{% for f in families %}<th colspan="{{ f.stelsels | length }}" class="fam-{{ f.sleutel or 'overig' }}" title="{{ f.kenmerk }}">{{ f.naam }}</th>{% endfor %}</tr>
+      <tr><th>Thema</th>{% for f in families %}{% for s in f.stelsels %}<th class="fam-{{ f.sleutel or 'overig' }}{% if loop.first %} fam-begin{% endif %}" title="{{ s.naam }}">{{ vlag(s.code) }}{{ s.code }}</th>{% endfor %}{% endfor %}</tr>
+    </thead>
     <tbody>
     {% for c in thema_s %}
     <tr>
       <td><a href="/artikelen/thema/{{ c.id }}">{{ c.titel }}</a></td>
-      {% for s in kolommen %}
-      <td><ul class="ref-lijst">{% for a in c.voor(s.code) %}<li>{% if a.nummer is none %}<span class="stil" title="{{ a.opmerking or '' }}">—</span>{% else %}<a href="{{ a.ref.url }}" title="{{ a.rol or '' }}{% if a.opmerking %}: {{ a.opmerking }}{% endif %}">{{ a.ref.citeer }}</a>{% endif %}</li>{% endfor %}</ul></td>
-      {% endfor %}
+      {% for f in families %}{% for s in f.stelsels %}
+      <td class="fam-{{ f.sleutel or 'overig' }}{% if loop.first %} fam-begin{% endif %}"><ul class="ref-lijst">{% for a in c.voor(s.code) %}<li>{% if a.nummer is none %}{% if a.rol in ('case law', 'rechtspraak') %}<span class="zaak" title="{{ a.opmerking or '' }}">⚖ {{ (a.opmerking or 'rechtspraak').split(': ')[0] | md_inline }}</span>{% else %}<span class="stil" title="{{ a.opmerking or '' }}">—</span>{% endif %}{% else %}<a href="{{ a.ref.url }}" title="{{ a.rol or '' }}{% if a.opmerking %}: {{ a.opmerking }}{% endif %}">{{ a.ref.citeer }}</a>{% endif %}</li>{% endfor %}</ul></td>
+      {% endfor %}{% endfor %}
     </tr>
     {% endfor %}
     </tbody>
   </table>
+  </div>
 </section>
 {% endfor %}
 

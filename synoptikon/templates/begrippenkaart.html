@@ -21,7 +21,7 @@
   <span class="legenda-item"><i class="lijn rel-faux_ami"></i> faux ami</span>
   <span class="legenda-item"><i class="lijn rel-geen"></i> geen equivalent</span>
   <span class="scheiding"></span>
-  {% for s in stelsels %}<label class="kolomschakel"><input type="checkbox" data-stelsel="{{ s.code }}" checked> <span class="stelsel-code">{{ s.code }}</span></label>{% endfor %}
+  {% for s in stelsels %}<label class="kolomschakel"><input type="checkbox" data-stelsel="{{ s.code }}" checked> {{ sc(s.code) }}</label>{% endfor %}
 </div>
 <div class="kaart-wrap">
   <svg id="kaart" class="kaart" role="img" aria-label="Graaf van begrippen"></svg>

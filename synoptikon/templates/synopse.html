@@ -27,8 +27,11 @@
 
 <div class="synopse-balk" id="synopse-balk" data-vraag="{{ vraag.slug }}">
   <span class="label">Kolommen</span>
-  {% for s in stelsels %}
-  <label class="kolomschakel"><input type="checkbox" data-kolom="{{ s.code }}" checked> {{ s.code }}</label>
+  {% for f in per_familie(stelsels) %}
+  <span class="familie-groep fam-{{ f.sleutel or 'overig' }}">
+    <button type="button" class="familie-knop" data-familie="{{ f.sleutel or 'overig' }}" title="{{ f.naam }} aan/uit · {{ f.kenmerk }}">{{ f.naam }}</button>
+    {% for s in f.stelsels %}<label class="kolomschakel"><input type="checkbox" data-kolom="{{ s.code }}" data-familie="{{ f.sleutel or 'overig' }}" checked> {{ vlag(s.code) }}{{ s.code }}</label>{% endfor %}
+  </span>
   {% endfor %}
   <span class="scheiding"></span>
   <label class="kolomschakel">Vertaling
@@ -44,11 +47,11 @@
 <section class="synopse" id="synopse">
   {% for s in stelsels %}
   {% set a = vraag.antwoord_voor(s.code) %}
-  <div class="kolom" data-kolom="{{ s.code }}" id="{{ s.code }}">
+  <div class="kolom fam-{{ s.familie or 'overig' }}" data-kolom="{{ s.code }}" id="{{ s.code }}">
     <header class="kolomkop" draggable="true">
       <span class="greep" aria-hidden="true">⋮⋮</span>
-      <h2>{{ s.naam }}</h2>
-      <span class="stelsel-code">{{ s.code }}</span>
+      <h2>{{ vlag(s.code) }}{{ s.naam }}</h2>
+      <span class="stelsel-code" title="{{ s.familie_naam }}">{{ s.code }}</span>
       <a class="knop klein" href="/vragen/{{ vraag.slug }}/antwoord/{{ s.code }}" title="Analyse bewerken">✎</a>
     </header>
     {% if a and a.kern %}<p class="kern">{{ a.kern | md_inline }}</p>{% endif %}
@@ -100,7 +103,7 @@
       {% for vb in vraag.begrippen | sort(attribute='begrip.stelsel_code') %}
       {% set g = vb.begrip %}
       <li class="begrip-chip">
-        <a href="/begrippen/{{ g.id }}"><span class="stelsel-code">{{ g.stelsel_code }}</span> {{ g.term }}</a>
+        <a href="/begrippen/{{ g.id }}">{{ sc(g.stelsel_code) }} {{ g.term }}</a>
         {% for r in g.relaties %}{% set ander = r.andere(g) %}<span class="relatie rel-{{ r.type }}" title="{{ r.type_label }}{% if r.toelichting %}: {{ r.toelichting }}{% endif %}">{{ ander.term }}</span>{% endfor %}
         <form method="post" action="/vragen/{{ vraag.slug }}/begrip/{{ g.id }}/ontkoppel" class="inline"><button class="knop-tekst" title="Loskoppelen">×</button></form>
       </li>

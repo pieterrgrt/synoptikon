@@ -8,18 +8,35 @@ from fastapi import FastAPI, Request
 from fastapi.responses import RedirectResponse
 from fastapi.staticfiles import StaticFiles
 from fastapi.templating import Jinja2Templates
+from markupsafe import Markup, escape
 from starlette.middleware.base import BaseHTTPMiddleware
 
 from . import __version__, md
 from .auth import is_ingelogd
 from .config import settings
 from .db import init_db
-from .models import RELATIE_TYPES
+from .models import RECHTSFAMILIES, RELATIE_TYPES
 from .routes import auth as auth_routes
 from .routes import artikelen, begrippen, bronnen, invoer, stelsels, vragen, wetteksten, zoeken
-from .services.artikelen import ref_uit_bron
+from .services.artikelen import ref_uit_bron, wetnaam
+from .services.helpers import per_familie
 
 HIER = Path(__file__).parent
+
+# Vlaggen staan als SVG in static/vlaggen/<code>.svg; een stelsel zonder vlag krijgt alleen zijn code.
+VLAGGEN = {p.stem.upper() for p in (HIER / "static" / "vlaggen").glob("*.svg")}
+
+
+def vlag(code: str | None) -> Markup:
+    if not code or code.upper() not in VLAGGEN:
+        return Markup("")
+    return Markup('<img class="vlag vlag-{0}" src="/static/vlaggen/{0}.svg" alt="" aria-hidden="true">').format(code.lower())
+
+
+def stelsel_code(code: str | None) -> Markup:
+    """Vlag plus code, zoals in lijsten en badges."""
+    return vlag(code) + Markup('<span class="stelsel-code">{}</span>').format(escape(code or ""))
+
 
 templates = Jinja2Templates(directory=str(HIER / "templates"))
 templates.env.filters["md"] = md.render
@@ -29,6 +46,11 @@ templates.env.globals["versie"] = __version__
 templates.env.globals["ui_lang"] = settings.ui_lang
 templates.env.globals["auth_mode"] = settings.auth_mode
 templates.env.globals["artikel_ref"] = ref_uit_bron
+templates.env.globals["vlag"] = vlag
+templates.env.globals["sc"] = stelsel_code
+templates.env.globals["wetnaam"] = wetnaam
+templates.env.globals["RECHTSFAMILIES"] = RECHTSFAMILIES
+templates.env.globals["per_familie"] = per_familie
 
 
 @asynccontextmanager

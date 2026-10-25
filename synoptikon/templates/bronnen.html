@@ -15,7 +15,7 @@
   <tbody>
   {% for b in bronnen %}
   <tr>
-    <td><span class="stelsel-code">{{ b.stelsel_code }}</span></td>
+    <td>{{ sc(b.stelsel_code) }}</td>
     <td><span class="soort soort-{{ b.soort }}">{{ soorten.get(b.soort, b.soort) }}</span></td>
     <td><a href="/bronnen/{{ b.id }}">{{ b.citeertitel }}</a></td>
     <td class="stil">{{ b.titel or '' }}</td>

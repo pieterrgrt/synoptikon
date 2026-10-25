@@ -6,10 +6,10 @@ from sqlalchemy import select
 from sqlalchemy.orm import Session, selectinload
 
 from ..db import get_session
-from ..models import Antwoord, AntwoordBron, Bron, Stelsel, Systematiek, Vraag
+from ..models import RECHTSFAMILIES, Antwoord, AntwoordBron, Bron, Stelsel, Systematiek, Vraag
 from ..services import correspondentie as corr
 from ..services.artikelen import herken, plaatser, ref_uit_bron
-from ..services.helpers import actieve_stelsels, leeg_naar_none
+from ..services.helpers import actieve_stelsels, leeg_naar_none, per_familie, stelsels_per_code
 from . import render
 
 router = APIRouter()
@@ -18,16 +18,32 @@ router = APIRouter()
 @router.get("/stelsels")
 def overzicht(request: Request, db: Session = Depends(get_session)):
     stelsels = db.scalars(select(Stelsel).order_by(Stelsel.volgorde)).all()
-    return render(request, "stelsels.html", stelsels=stelsels)
+    return render(request, "stelsels.html", families=per_familie(stelsels))
 
 
 @router.post("/stelsels")
-def stelsel_maak(code: str = Form(...), naam: str = Form(...), taal: str = Form(...), toelichting: str = Form(""), db: Session = Depends(get_session)):
+def stelsel_maak(
+    code: str = Form(...), naam: str = Form(...), taal: str = Form(...), toelichting: str = Form(""), familie: str = Form(""), db: Session = Depends(get_session)
+):
     code = code.strip().upper()
     if db.get(Stelsel, code):
         raise HTTPException(400, "Stelsel bestaat al")
     volgorde = max([s.volgorde for s in db.scalars(select(Stelsel)).all()] or [0]) + 10
-    db.add(Stelsel(code=code, naam=naam.strip(), taal=taal.strip().lower(), volgorde=volgorde, toelichting=leeg_naar_none(toelichting)))
+    db.add(
+        Stelsel(
+            code=code, naam=naam.strip(), taal=taal.strip().lower(), volgorde=volgorde, toelichting=leeg_naar_none(toelichting),
+            familie=familie if familie in RECHTSFAMILIES else None,
+        )
+    )
+    return RedirectResponse("/stelsels", status_code=303)
+
+
+@router.post("/stelsels/{code}/familie")
+def stelsel_familie(code: str, familie: str = Form(""), db: Session = Depends(get_session)):
+    s = db.get(Stelsel, code)
+    if s is None:
+        raise HTTPException(404)
+    s.familie = familie if familie in RECHTSFAMILIES else None
     return RedirectResponse("/stelsels", status_code=303)
 
 
@@ -72,7 +88,7 @@ def systematiek(request: Request, code: str, vraag: str | None = None, artikel: 
         refs = herken(artikel, code)
         if refs:
             gezocht = refs[0]
-            pad = plaatser(db, code).pad(gezocht.nummer)
+            pad = plaatser(db, code, gezocht.wet).pad(gezocht.nummer)
             open_ids.update(k.id for k in pad)
             gemarkeerd_artikel = pad[-1].id if pad else None
     return render(
@@ -127,10 +143,10 @@ def bron_plaats(code: str, bron_id: int = Form(...), systematiek_id: str = Form(
 @router.post("/stelsels/{code}/plaats-automatisch")
 def bronnen_automatisch_plaatsen(code: str, db: Session = Depends(get_session)):
     """Plaatst ongeplaatste wetsbronnen op grond van hun artikelnummer."""
-    pl = plaatser(db, code)
+    ctx = corr.Context(db)
     for bron in db.scalars(select(Bron).where(Bron.stelsel_code == code, Bron.soort == "wet", Bron.systematiek_id.is_(None))).all():
         ref = ref_uit_bron(bron)
-        pad = pl.pad(ref.nummer) if ref and not ref.wet else []
+        pad = ctx.pad(ref) if ref else []
         if pad:
             bron.systematiek_id = pad[-1].id
     return RedirectResponse(f"/stelsels/{code}", status_code=303)
@@ -149,10 +165,12 @@ def knoop(request: Request, code: str, knoop_id: int, db: Session = Depends(get_
     for c, a in eigen:
         if c not in thema_s:
             thema_s.append(c)
-    namen = {s.code: s.naam for s in db.scalars(select(Stelsel)).all()}
+    per_code = stelsels_per_code(db)
+    namen = {code: st.naam for code, st in per_code.items()}
     return render(
         request,
         "knoop.html",
+        per_code=per_code,
         k=k,
         stelsel=db.get(Stelsel, code),
         eigen=eigen,

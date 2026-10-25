@@ -10,7 +10,7 @@
 {% macro lid(l, toon_tekst=True) -%}
 {% set a = l.artikel %}
 <div class="lid {% if a.nummer is none %}geen{% endif %}">
-  {% if a.nummer is none %}<span class="citeertitel">geen wettelijke regeling</span>{% else %}<a class="citeertitel" href="{{ l.ref.url }}">{{ l.ref.citeer }}</a>{% endif %}
+  {% if a.nummer is none %}<span class="citeertitel">{{ '⚖ rechtspraak' if a.rol in ('case law', 'rechtspraak') else 'geen wettelijke regeling' }}</span>{% else %}<a class="citeertitel" href="{{ l.ref.url }}"{% if l.ref.wet_naam %} title="{{ l.ref.wet_naam }}"{% endif %}>{{ l.ref.citeer }}</a>{% endif %}
   {{ rol(a.rol) }}
   {% if a.opmerking %}<p class="opmerking">{{ a.opmerking | md_inline }}</p>{% endif %}
   {{ pad(l.pad, a.stelsel_code) }}

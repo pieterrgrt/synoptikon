@@ -14,7 +14,7 @@ from sqlalchemy import select
 from sqlalchemy.orm import Session, selectinload
 
 from ..models import AntwoordBron, Bron, Concordantie, Correspondentie, CorrespondentieArtikel, Systematiek, Wettekst, WettekstArtikel
-from .artikelen import HOOFDWET, Plaatser, Ref, plaatser, ref_bevat, ref_uit_bron, sleutel
+from .artikelen import Plaatser, Ref, plaatser, ref_bevat, ref_uit_bron, sleutel
 
 FR_CODE_CIVIL = "LEGITEXT000006070721"
 
@@ -48,18 +48,18 @@ class Context:
 
     def __init__(self, db: Session) -> None:
         self.db = db
-        self._plaatsers: dict[str, Plaatser] = {}
+        self._plaatsers: dict[tuple[str, str | None], Plaatser] = {}
         self._bronnen: dict[tuple, list[Bron]] | None = None
 
-    def plaatser(self, stelsel: str) -> Plaatser:
-        if stelsel not in self._plaatsers:
-            self._plaatsers[stelsel] = plaatser(self.db, stelsel)
-        return self._plaatsers[stelsel]
+    def plaatser(self, stelsel: str, wet: str | None = None) -> Plaatser:
+        if (stelsel, wet) not in self._plaatsers:
+            self._plaatsers[(stelsel, wet)] = plaatser(self.db, stelsel, wet)
+        return self._plaatsers[(stelsel, wet)]
 
     def pad(self, ref: Ref) -> list:
-        if ref.nummer is None or ref.wet or ref.stelsel not in HOOFDWET:
+        if ref.nummer is None:
             return []
-        return self.plaatser(ref.stelsel).pad(ref.nummer)
+        return self.plaatser(ref.stelsel, ref.wet).pad(ref.nummer)
 
     def bronnen_voor(self, stelsel: str, nummer: str, wet: str | None = None) -> list[Bron]:
         if self._bronnen is None:
@@ -152,12 +152,11 @@ class Tegenhanger:
 
 
 def leden_in_knoop(ctx: Context, knoop: Systematiek) -> list[tuple[Correspondentie, CorrespondentieArtikel]]:
-    """Correspondentieleden van dit stelsel waarvan het artikel onder deze knoop valt."""
-    pl = ctx.plaatser(knoop.stelsel_code)
+    """Correspondentieleden van dit stelsel waarvan het artikel onder deze knoop valt (ook via de wetten eronder)."""
     uit = []
     for c in alle_correspondenties(ctx.db):
         for a in c.artikelen:
-            if a.stelsel_code == knoop.stelsel_code and a.wet is None and a.nummer and knoop in pl.pad(a.nummer):
+            if a.stelsel_code == knoop.stelsel_code and a.nummer and knoop in ctx.plaatser(a.stelsel_code, a.wet).pad(a.nummer):
                 uit.append((c, a))
     return uit
 
@@ -191,7 +190,7 @@ def tegenhangers(ctx: Context, knoop: Systematiek, codes: list[str]) -> "Ordered
 
 
 def _padsleutel(stelsel: str, t: Tegenhanger) -> tuple:
-    nummers = [l.artikel.nummer for l in t.leden if l.artikel.nummer and not l.artikel.wet]
+    nummers = [l.artikel.nummer for l in t.leden if l.artikel.nummer]
     sleutels = [sleutel(stelsel, n) for n in nummers]
     sleutels = [s for s in sleutels if s is not None]
     return (0 if t.pad else 1, min(sleutels) if sleutels else ())
@@ -199,11 +198,10 @@ def _padsleutel(stelsel: str, t: Tegenhanger) -> tuple:
 
 def tellingen(ctx: Context, stelsel: str) -> dict[int, int]:
     """Aantal thema's per knoop (inclusief onderliggende knopen), voor de boomweergave."""
-    pl = ctx.plaatser(stelsel)
     per_knoop: dict[int, set[int]] = {}
     for c in alle_correspondenties(ctx.db):
         for a in c.artikelen:
-            if a.stelsel_code == stelsel and a.wet is None and a.nummer:
-                for k in pl.pad(a.nummer):
+            if a.stelsel_code == stelsel and a.nummer:
+                for k in ctx.plaatser(stelsel, a.wet).pad(a.nummer):
                     per_knoop.setdefault(k.id, set()).add(c.id)
     return {k: len(v) for k, v in per_knoop.items()}
