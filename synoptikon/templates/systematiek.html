@@ -1,0 +1,61 @@
+{% extends "base.html" %}
+{% block titel %}{{ stelsel.naam }} · systematiek · Synoptikon{% endblock %}
+{% block inhoud %}
+<div class="paginakop">
+  <h1>{{ stelsel.naam }} <span class="stil">systematiek</span></h1>
+  <div class="acties">
+    <form method="get" class="inline">
+      <select name="vraag" class="auto-submit">
+        <option value="">— markeer bronnen van een vraag —</option>
+        {% for v in vragen %}<option value="{{ v.slug }}" {% if vraag and vraag.slug == v.slug %}selected{% endif %}>{{ v.titel }}</option>{% endfor %}
+      </select>
+    </form>
+  </div>
+</div>
+<nav class="stelsel-tabs">{% for s in stelsels %}<a href="/stelsels/{{ s.code }}{% if vraag %}?vraag={{ vraag.slug }}{% endif %}" {% if s.code == stelsel.code %}aria-current="page"{% endif %}>{{ s.naam }}</a>{% endfor %}</nav>
+
+{% if vraag %}<p class="melding">Gemarkeerd: bronnen van <a href="/vragen/{{ vraag.slug }}">{{ vraag.titel }}</a> in dit stelsel. Vergelijk met de andere stelsels via de tabs hierboven: zo worden structuurverschillen zichtbaar.</p>{% endif %}
+
+{% macro knoop(k, diepte) %}
+<li class="sys-knoop diepte-{{ diepte }} {% if k.id in gemarkeerd %}bevat-markering{% endif %}">
+  <div class="sys-label"><span class="sys-naam">{{ k.label }}</span>{% if k.bereik %} <span class="sys-bereik">{{ k.bereik }}</span>{% endif %}</div>
+  {% if k.id in gemarkeerd %}<ul class="sys-bronnen">{% for b in gemarkeerd[k.id] %}<li class="gemarkeerd"><a href="/bronnen/{{ b.id }}">{{ b.citeertitel }}</a>{% if b.titel %} <span class="stil">{{ b.titel }}</span>{% endif %}</li>{% endfor %}</ul>
+  {% elif not vraag and k.bronnen %}<ul class="sys-bronnen">{% for b in k.bronnen %}<li><a href="/bronnen/{{ b.id }}">{{ b.citeertitel }}</a>{% if b.titel %} <span class="stil">{{ b.titel }}</span>{% endif %}</li>{% endfor %}</ul>{% endif %}
+  {% if k.kinderen %}<ul class="sys-lijst">{% for kind in k.kinderen %}{{ knoop(kind, diepte + 1) }}{% endfor %}</ul>{% endif %}
+</li>
+{% endmacro %}
+
+{% if wortels %}
+<ul class="sys-lijst wortel">{% for w in wortels %}{{ knoop(w, 0) }}{% endfor %}</ul>
+{% else %}<p class="stil">Nog geen systematiek ingevoerd voor dit stelsel.</p>{% endif %}
+
+{% if vraag and los %}
+<h2>Niet geplaatst in de systematiek</h2>
+<ul class="lijst">{% for b in los %}<li><a href="/bronnen/{{ b.id }}">{{ b.citeertitel }}</a> <span class="stil">{{ b.soort }}</span></li>{% endfor %}</ul>
+{% endif %}
+
+<div class="kolommen-los">
+<details class="blok">
+  <summary>Knoop toevoegen</summary>
+  <form method="post" action="/stelsels/{{ stelsel.code }}/systematiek" class="formulier compact">
+    <label>Onder <select name="parent_id"><option value="">(wortel)</option>{% for k in alle_knopen %}<option value="{{ k.id }}">{{ k.pad() | map(attribute='label') | join(' › ') }}</option>{% endfor %}</select></label>
+    <label>Label <input name="label" required placeholder="Titel 4 · Verkrijging en verlies van goederen"></label>
+    <div class="rij"><label>Code <input name="knoopcode" placeholder="BW-3-4"></label><label>Bereik <input name="bereik" placeholder="art. 3:80–3:98"></label></div>
+    <div class="acties"><button class="knop klein primair">Toevoegen</button></div>
+  </form>
+</details>
+{% if ongeplaatst %}
+<details class="blok">
+  <summary>Wetsbronnen plaatsen ({{ ongeplaatst | length }} ongeplaatst)</summary>
+  {% for b in ongeplaatst %}
+  <form method="post" action="/stelsels/{{ stelsel.code }}/plaats" class="rij compact">
+    <input type="hidden" name="bron_id" value="{{ b.id }}">
+    <span class="citeertitel">{{ b.citeertitel }}</span>
+    <select name="systematiek_id"><option value="">—</option>{% for k in alle_knopen %}<option value="{{ k.id }}">{{ k.pad() | map(attribute='label') | join(' › ') }}</option>{% endfor %}</select>
+    <button class="knop klein">Plaats</button>
+  </form>
+  {% endfor %}
+</details>
+{% endif %}
+</div>
+{% endblock %}

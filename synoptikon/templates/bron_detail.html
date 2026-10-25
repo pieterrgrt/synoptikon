@@ -1,0 +1,44 @@
+{% extends "base.html" %}
+{% block titel %}{{ bron.citeertitel }} · Synoptikon{% endblock %}
+{% block inhoud %}
+<p class="kruimel"><a href="/bronnen">Bronnen</a> › {{ bron.stelsel.naam }} › {{ bron.soort }}</p>
+<div class="paginakop">
+  <h1>{{ bron.citeertitel }}</h1>
+  <a class="knop klein" href="/bronnen/{{ bron.id }}/bewerken">Bewerken</a>
+</div>
+{% if bron.titel %}<p class="bron-titel groot">{{ bron.titel }}</p>{% endif %}
+<article class="bron detail soort-{{ bron.soort }}">
+  {% if bron.tekst %}<div class="origineel" lang="{{ bron.taal }}">{{ bron.tekst | md }}</div>{% else %}<p class="stil">Geen tekst opgeslagen.</p>{% endif %}
+  {% for v in bron.vertalingen %}
+  <div class="vertaling" lang="{{ v.taal }}"><span class="label">vertaling {{ v.taal }} · {{ v.herkomst }}</span>{{ v.tekst | md }}</div>
+  {% endfor %}
+  <footer class="bron-voet">
+    {% if bron.vindplaats %}<span class="vindplaats">{{ bron.vindplaats_type }} {{ bron.vindplaats }}</span>{% endif %}
+    {% if bron.geldig_van or bron.geldig_tot %}<span>geldig {{ bron.geldig_van or '…' }} – {{ bron.geldig_tot or 'heden' }}</span>{% endif %}
+    {% if bron.url %}<a href="{{ bron.url }}" target="_blank" rel="noopener">officiële bron ↗</a>{% endif %}
+    {% if bron.systematiek %}<a href="/stelsels/{{ bron.stelsel_code }}">{{ bron.systematiek.pad() | map(attribute='label') | join(' › ') }}</a>{% endif %}
+    {% if artikel %}<span class="stil">tekst uit {{ artikel.wettekst.titel }}, versie {{ artikel.wettekst.versie }}</span>{% endif %}
+  </footer>
+  {% if bron.opmerking %}<p class="stil">{{ bron.opmerking }}</p>{% endif %}
+</article>
+
+{% if concordanties %}
+<h2>Concordantie</h2>
+<ul class="lijst">{% for c in concordanties %}<li>{{ c.oud }} → {{ c.nieuw or 'vervallen' }} {{ c.wet }}{% if c.datum %} ({{ c.datum }}){% endif %}{% if c.grond %}, {{ c.grond }}{% endif %}</li>{% endfor %}</ul>
+{% endif %}
+
+<h2>Gebruikt bij</h2>
+{% if bron.antwoorden %}
+<ul class="lijst">{% for ab in bron.antwoorden %}<li><a href="/vragen/{{ ab.antwoord.vraag.slug }}#{{ ab.antwoord.stelsel_code }}">{{ ab.antwoord.vraag.titel }}</a>{% if ab.rol %} <span class="rol">{{ ab.rol }}</span>{% endif %}</li>{% endfor %}</ul>
+{% else %}<p class="stil">Nog niet aan een vraag gekoppeld.</p>{% endif %}
+
+<h2>Vertaling toevoegen of wijzigen</h2>
+<form method="post" action="/bronnen/{{ bron.id }}/vertaling" class="formulier compact">
+  <div class="rij">
+    <label>Taal <input name="taal" value="{{ 'nl' if bron.taal != 'nl' else 'de' }}" size="4" required></label>
+    <label>Herkomst <select name="herkomst"><option value="eigen">eigen</option><option value="officieel">officieel</option><option value="literatuur">literatuur</option></select></label>
+  </div>
+  <label>Tekst <span class="hint">leeg laten om een bestaande vertaling in die taal te verwijderen</span><textarea name="tekst" rows="5"></textarea></label>
+  <div class="acties"><button class="knop klein primair">Opslaan</button></div>
+</form>
+{% endblock %}

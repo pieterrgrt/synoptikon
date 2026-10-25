@@ -1,0 +1,32 @@
+{% extends "base.html" %}
+{% block titel %}Begrippenkaart · Synoptikon{% endblock %}
+{% block mainclass %}kaart-pagina{% endblock %}
+{% block inhoud %}
+<div class="paginakop">
+  <h1>Begrippenkaart{% if vraag %} <span class="stil">· {{ vraag.titel }}</span>{% endif %}</h1>
+  <div class="acties">
+    <form method="get" class="inline">
+      <select name="vraag" class="auto-submit">
+        <option value="">alle begrippen</option>
+        {% for v in vragen %}<option value="{{ v.slug }}" {% if vraag and vraag.slug == v.slug %}selected{% endif %}>{{ v.titel }}</option>{% endfor %}
+      </select>
+    </form>
+    <a class="knop klein" href="/begrippen/lijst">Lijst</a>
+    <a class="knop klein" href="/begrippen/nieuw">+ Begrip</a>
+  </div>
+</div>
+<div class="kaart-legenda">
+  <span class="legenda-item"><i class="lijn rel-equivalent"></i> equivalent</span>
+  <span class="legenda-item"><i class="lijn rel-deels"></i> deels overlappend</span>
+  <span class="legenda-item"><i class="lijn rel-faux_ami"></i> faux ami</span>
+  <span class="legenda-item"><i class="lijn rel-geen"></i> geen equivalent</span>
+  <span class="scheiding"></span>
+  {% for s in stelsels %}<label class="kolomschakel"><input type="checkbox" data-stelsel="{{ s.code }}" checked> <span class="stelsel-code">{{ s.code }}</span></label>{% endfor %}
+</div>
+<div class="kaart-wrap">
+  <svg id="kaart" class="kaart" role="img" aria-label="Graaf van begrippen"></svg>
+  <aside class="kaart-paneel" id="kaart-paneel" hidden></aside>
+</div>
+<script id="kaart-data" type="application/json">{{ data | tojson }}</script>
+{% endblock %}
+{% block scripts %}<script src="/static/js/kaart.js"></script>{% endblock %}

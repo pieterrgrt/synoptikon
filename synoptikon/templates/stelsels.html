@@ -1,0 +1,30 @@
+{% extends "base.html" %}
+{% block titel %}Stelsels · Synoptikon{% endblock %}
+{% block inhoud %}
+<h1>Stelsels</h1>
+<table class="tabel">
+  <thead><tr><th>Code</th><th>Naam</th><th>Taal</th><th>Actief</th><th></th></tr></thead>
+  <tbody>
+  {% for s in stelsels %}
+  <tr>
+    <td><span class="stelsel-code">{{ s.code }}</span></td>
+    <td><a href="/stelsels/{{ s.code }}">{{ s.naam }}</a>{% if s.toelichting %} <span class="stil">{{ s.toelichting }}</span>{% endif %}</td>
+    <td>{{ s.taal }}</td>
+    <td>{{ 'ja' if s.actief else 'nee' }}</td>
+    <td><form method="post" action="/stelsels/{{ s.code }}/actief" class="inline"><input type="hidden" name="actief" value="{{ '0' if s.actief else '1' }}"><button class="knop klein">{{ 'Uitzetten' if s.actief else 'Aanzetten' }}</button></form></td>
+  </tr>
+  {% endfor %}
+  </tbody>
+</table>
+<h2>Stelsel toevoegen</h2>
+<form method="post" class="formulier compact">
+  <div class="rij">
+    <label>Code <input name="code" required size="4" placeholder="IT"></label>
+    <label>Naam <input name="naam" required placeholder="Italië"></label>
+    <label>Taal <input name="taal" required size="4" placeholder="it"></label>
+  </div>
+  <label>Toelichting <input name="toelichting" placeholder="Codice civile 1942"></label>
+  <div class="acties"><button class="knop klein primair">Toevoegen</button></div>
+</form>
+<p class="hint">Een nieuw stelsel krijgt bij elke vraag een kolom zodra je die vraag bewerkt en opslaat.</p>
+{% endblock %}

@@ -1,0 +1,50 @@
+{% extends "base.html" %}
+{% block titel %}{{ 'Bron bewerken' if bron else 'Nieuwe bron' }} · Synoptikon{% endblock %}
+{% block inhoud %}
+<h1>{{ 'Bron bewerken' if bron else 'Nieuwe bron' }}</h1>
+<form method="post" class="formulier">
+  <div class="rij">
+    <label>Stelsel
+      <select name="stelsel_code" id="stelsel_code" required>{% for s in stelsels %}<option value="{{ s.code }}" data-taal="{{ s.taal }}" {% if (bron and bron.stelsel_code == s.code) or (not bron and vooraf_stelsel == s.code) %}selected{% endif %}>{{ s.naam }}</option>{% endfor %}</select>
+    </label>
+    <label>Soort
+      <select name="soort" required>{% for k, v in soorten.items() %}<option value="{{ k }}" {% if bron and bron.soort == k %}selected{% endif %}>{{ v }}</option>{% endfor %}</select>
+    </label>
+    <label>Taal <input name="taal" id="taal" required value="{{ bron.taal if bron else (stelsels[0].taal if stelsels else 'nl') }}" size="4"></label>
+  </div>
+  <label>Citeertitel <span class="hint">art. 3:84 BW · § 929 BGB · HR 18 juni 1982 (Plas/Valburg)</span>
+    <input name="citeertitel" required value="{{ bron.citeertitel if bron else '' }}">
+  </label>
+  <label>Titel / opschrift / zaaknaam <input name="titel" value="{{ bron.titel or '' if bron else '' }}"></label>
+  <label>Originele tekst <span class="hint">markdown; bij rechtspraak de kernoverweging</span>
+    <textarea name="tekst" rows="12" class="serif" lang="{{ bron.taal if bron else '' }}">{{ bron.tekst or '' if bron else '' }}</textarea>
+  </label>
+  <div class="rij">
+    <label>Vindplaatstype
+      <input name="vindplaats_type" list="vindplaatstypen" value="{{ bron.vindplaats_type or '' if bron else '' }}">
+      <datalist id="vindplaatstypen"><option value="ECLI"><option value="NJ"><option value="BeckRS"><option value="NJW"><option value="BGHZ"><option value="RGZ"><option value="LEGIARTI"><option value="Bull. civ."><option value="CELEX"><option value="BWB"><option value="DOI"><option value="ISBN"></datalist>
+    </label>
+    <label>Vindplaats <input name="vindplaats" value="{{ bron.vindplaats or '' if bron else '' }}"></label>
+  </div>
+  <label>Link naar officiële bron <input name="url" type="url" value="{{ bron.url or '' if bron else '' }}"></label>
+  <div class="rij">
+    <label>Geldig van <input name="geldig_van" type="date" value="{{ bron.geldig_van or '' if bron else '' }}"></label>
+    <label>Geldig tot <input name="geldig_tot" type="date" value="{{ bron.geldig_tot or '' if bron else '' }}"></label>
+  </div>
+  <label>Plaats in de systematiek
+    <select name="systematiek_id" id="systematiek_id">
+      <option value="">—</option>
+      {% for k in systematiek %}<option value="{{ k.id }}" data-stelsel="{{ k.stelsel_code }}" {% if bron and bron.systematiek_id == k.id %}selected{% endif %}>{{ k.stelsel_code }} · {{ k.pad() | map(attribute='label') | join(' › ') }}</option>{% endfor %}
+    </select>
+  </label>
+  <label>Opmerking <span class="hint">bijv. "tekst ingekort tot de kernoverweging"</span><textarea name="opmerking" rows="2">{{ bron.opmerking or '' if bron else '' }}</textarea></label>
+  <input type="hidden" name="terug" value="{{ request.query_params.get('terug', '') }}">
+  <div class="acties">
+    <button class="knop primair" type="submit">Opslaan</button>
+    <a class="knop" href="{{ '/bronnen/' ~ bron.id if bron else '/bronnen' }}">Annuleren</a>
+  </div>
+</form>
+{% if bron %}
+<form method="post" action="/bronnen/{{ bron.id }}/verwijderen" class="gevaar-zone" data-bevestig="Bron verwijderen, ook uit alle vragen?"><button class="knop gevaar">Bron verwijderen</button></form>
+{% endif %}
+{% endblock %}

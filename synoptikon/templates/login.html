@@ -1,0 +1,26 @@
+<!doctype html>
+<html lang="nl" data-theme="auto">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<meta name="color-scheme" content="light dark">
+<title>Inloggen · Synoptikon</title>
+<link rel="stylesheet" href="/static/css/app.css">
+<script src="/static/js/thema.js"></script>
+</head>
+<body class="login-body">
+<main class="login">
+  <h1><span class="merk-teken">Σ</span> Synoptikon</h1>
+  <p class="stil">Rechtsvergelijking, naast elkaar.</p>
+  {% if geen_hash %}
+  <p class="melding fout">Er is nog geen wachtwoord ingesteld. Zet <code>SYNOPTIKON_PASSWORD_HASH</code> in <code>.env</code>; maak de hash met <code>docker compose run --rm app synoptikon hash-password</code>.</p>
+  {% endif %}
+  {% if fout %}<p class="melding fout">{{ fout }}</p>{% endif %}
+  <form method="post" action="/login">
+    <input type="hidden" name="volgende" value="{{ volgende }}">
+    <label>Wachtwoord <input type="password" name="wachtwoord" autofocus autocomplete="current-password" required></label>
+    <button type="submit" class="knop primair">Inloggen</button>
+  </form>
+</main>
+</body>
+</html>

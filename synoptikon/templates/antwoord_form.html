@@ -1,0 +1,24 @@
+{% extends "base.html" %}
+{% block titel %}Analyse {{ antwoord.stelsel_code }} · {{ vraag.titel }}{% endblock %}
+{% block inhoud %}
+<p class="kruimel"><a href="/vragen/{{ vraag.slug }}">{{ vraag.titel }}</a> › {{ antwoord.stelsel.naam }}</p>
+<h1>Analyse · {{ antwoord.stelsel.naam }}</h1>
+<form method="post" class="formulier">
+  <label>Kern <span class="hint">één zin, bovenaan de kolom</span>
+    <input name="kern" value="{{ antwoord.kern or '' }}" maxlength="400">
+  </label>
+  <label>Analyse <span class="hint">markdown</span>
+    <textarea name="analyse" rows="24" class="mono">{{ antwoord.analyse or '' }}</textarea>
+  </label>
+  <div class="acties">
+    <button class="knop primair" type="submit">Opslaan</button>
+    <a class="knop" href="/vragen/{{ vraag.slug }}#{{ antwoord.stelsel_code }}">Annuleren</a>
+  </div>
+</form>
+{% if antwoord.bronnen %}
+<h2>Gekoppelde bronnen</h2>
+<ul class="lijst">
+  {% for ab in antwoord.bronnen %}<li><a href="/bronnen/{{ ab.bron.id }}">{{ ab.bron.citeertitel }}</a>{% if ab.rol %} <span class="rol">{{ ab.rol }}</span>{% endif %}</li>{% endfor %}
+</ul>
+{% endif %}
+{% endblock %}

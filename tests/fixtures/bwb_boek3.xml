@@ -1,0 +1,32 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<toestand xmlns="http://www.overheid.nl/schemas/bwb" inwerkingtredingsdatum="2024-01-01">
+  <wetgeving>
+    <citeertitel>Burgerlijk Wetboek Boek 3</citeertitel>
+    <wet-besluit>
+      <wettekst>
+        <boek>
+          <kop><label>Boek</label><nr>3</nr><titel>Vermogensrecht in het algemeen</titel></kop>
+          <titeldeel>
+            <kop><label>Titel</label><nr>4</nr><titel>Verkrijging en verlies van goederen</titel></kop>
+            <afdeling>
+              <kop><label>Afdeling</label><nr>2</nr><titel>Overdracht</titel></kop>
+              <artikel>
+                <kop><label>Artikel</label><nr>84</nr></kop>
+                <lid><lidnr>1</lidnr><al>Voor overdracht van een goed wordt vereist een levering krachtens geldige titel, verricht door hem die bevoegd is over het goed te beschikken.</al></lid>
+                <lid><lidnr>2</lidnr><al>Bij de titel moet het goed met voldoende bepaaldheid omschreven zijn.</al></lid>
+              </artikel>
+              <artikel>
+                <kop><label>Artikel</label><nr>85</nr></kop>
+                <al>Enkele alinea.</al>
+              </artikel>
+              <artikel>
+                <kop><label>Artikel</label><nr>90</nr></kop>
+                <lid><lidnr>1</lidnr><al>De levering vereist voor de overdracht van roerende zaken, niet-registergoederen, die in de macht van de vervreemder zijn, geschiedt door aan de verkrijger het bezit der zaak te verschaffen.</al></lid>
+              </artikel>
+            </afdeling>
+          </titeldeel>
+        </boek>
+      </wettekst>
+    </wet-besluit>
+  </wetgeving>
+</toestand>

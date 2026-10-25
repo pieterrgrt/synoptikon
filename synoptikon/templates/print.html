@@ -1,0 +1,67 @@
+<!doctype html>
+<html lang="nl">
+<head>
+<meta charset="utf-8">
+<title>{{ vraag.titel }}</title>
+<link rel="stylesheet" href="{{ '/static/css/print.css' if pdf else '/static/css/app.css' }}">
+{% if not pdf %}<link rel="stylesheet" href="/static/css/print.css">{% endif %}
+</head>
+<body class="print">
+<article class="print-vraag">
+  <header>
+    <p class="kruimel">{{ vraag.rechtsgebied or '' }}{% if vraag.tag_list %} · {{ vraag.tag_list | join(', ') }}{% endif %}</p>
+    <h1>{{ vraag.titel }}</h1>
+    {% if vraag.omschrijving %}<div class="omschrijving">{{ vraag.omschrijving | md }}</div>{% endif %}
+  </header>
+
+  {% for a in vraag.antwoorden if a.bronnen or a.analyse or a.kern %}
+  <section class="print-stelsel">
+    <h2>{{ a.stelsel.naam }}</h2>
+    {% if a.kern %}<p class="kern">{{ a.kern | md_inline }}</p>{% endif %}
+    {% for ab in a.bronnen %}
+    {% set b = ab.bron %}
+    <div class="bron soort-{{ b.soort }}">
+      <h3>{{ b.citeertitel }}{% if b.titel and b.titel != b.citeertitel %} <span class="bron-titel">— {{ b.titel }}</span>{% endif %}{% if ab.rol %} <span class="rol">{{ ab.rol }}</span>{% endif %}</h3>
+      {% if b.tekst %}<div class="origineel" lang="{{ b.taal }}">{{ b.tekst | md }}</div>{% endif %}
+      {% set v = b.vertaling(vertaal_taal) if vertaal_taal and b.taal != vertaal_taal else None %}
+      {% if v %}<div class="vertaling"><span class="label">vertaling · {{ v.herkomst }}</span>{{ v.tekst | md }}</div>{% endif %}
+      {% if ab.notitie %}<div class="annotatie">{{ ab.notitie | md }}</div>{% endif %}
+      <p class="bron-voet">{% if b.vindplaats %}{{ b.vindplaats_type }} {{ b.vindplaats }}{% endif %}{% if b.geldig_van %} · geldig vanaf {{ b.geldig_van }}{% endif %}{% if b.geldig_tot %} tot {{ b.geldig_tot }}{% endif %}{% if b.url %} · {{ b.url }}{% endif %}</p>
+    </div>
+    {% endfor %}
+    {% if a.analyse %}<div class="analyse"><h3 class="label">Analyse</h3>{{ a.analyse | md }}</div>{% endif %}
+  </section>
+  {% endfor %}
+
+  {% if vraag.begrippen %}
+  <section class="print-stelsel">
+    <h2>Begrippen</h2>
+    <dl class="begrippen-dl">
+    {% for vb in vraag.begrippen | sort(attribute='begrip.stelsel_code') %}{% set g = vb.begrip %}
+      <dt><span class="stelsel-code">{{ g.stelsel_code }}</span> {{ g.term }}{% if g.vindplaats %} <span class="stil">({{ g.vindplaats }})</span>{% endif %}</dt>
+      <dd>{{ g.definitie | md }}
+        {% if g.relaties %}<ul class="relatielijst">{% for r in g.relaties %}{% set ander = r.andere(g) %}<li><span class="relatie rel-{{ r.type }}">{{ r.type_label }}</span> {{ ander.term }} ({{ ander.stelsel_code }}){% if r.toelichting %}: {{ r.toelichting }}{% endif %}</li>{% endfor %}</ul>{% endif %}
+      </dd>
+    {% endfor %}
+    </dl>
+  </section>
+  {% endif %}
+
+  {% if concordanties %}
+  <section class="print-stelsel">
+    <h2>Concordantie</h2>
+    <table class="tabel"><thead><tr><th>Oud</th><th>Nieuw</th><th>Datum</th><th>Grond</th></tr></thead>
+    <tbody>{% for c in concordanties %}<tr><td>{{ c.oud }} {{ c.wet }}</td><td>{{ c.nieuw or '— vervallen' }}</td><td>{{ c.datum or '' }}</td><td>{{ c.grond or '' }}</td></tr>{% endfor %}</tbody></table>
+  </section>
+  {% endif %}
+
+  {% if vraag.notities %}
+  <section class="print-stelsel">
+    <h2>Notities</h2>
+    {% for n in vraag.notities %}<div class="annotatie notitie"><span class="label">{{ n.aangemaakt.strftime('%d-%m-%Y') }}{% if n.stelsel_code %} · {{ n.stelsel_code }}{% endif %}</span>{{ n.tekst | md }}</div>{% endfor %}
+  </section>
+  {% endif %}
+  <footer class="print-voet">Synoptikon · {{ vraag.gewijzigd.strftime('%d-%m-%Y') }}</footer>
+</article>
+</body>
+</html>

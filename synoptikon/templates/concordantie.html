@@ -1,0 +1,28 @@
+{% extends "base.html" %}
+{% block titel %}Concordantie · Synoptikon{% endblock %}
+{% block inhoud %}
+<h1>Concordantie</h1>
+<p class="hint">Oude en nieuwe nummering. In de synopse verschijnt de concordantie automatisch bij vragen die een van beide nummers citeren.</p>
+<table class="tabel">
+  <thead><tr><th>Stelsel</th><th>Wet</th><th>Oud</th><th>Nieuw</th><th>Datum</th><th>Grond</th><th></th></tr></thead>
+  <tbody>
+  {% for c in rijen %}
+  <tr><td><span class="stelsel-code">{{ c.stelsel_code }}</span></td><td>{{ c.wet }}</td><td>{{ c.oud }}</td><td>{{ c.nieuw or '— vervallen' }}</td><td>{{ c.datum or '' }}</td><td>{{ c.grond or '' }}{% if c.toelichting %} <span class="stil">{{ c.toelichting }}</span>{% endif %}</td>
+    <td><form method="post" action="/concordantie/{{ c.id }}/verwijderen" class="inline" data-bevestig="Verwijderen?"><button class="knop-tekst">×</button></form></td></tr>
+  {% else %}<tr><td colspan="7" class="stil">Nog geen concordanties.</td></tr>{% endfor %}
+  </tbody>
+</table>
+<h2>Toevoegen</h2>
+<form method="post" class="formulier compact">
+  <div class="rij">
+    <label>Stelsel <select name="stelsel_code">{% for s in stelsels %}<option value="{{ s.code }}">{{ s.code }}</option>{% endfor %}</select></label>
+    <label>Wet <input name="wet" required placeholder="C. civ."></label>
+    <label>Oud <input name="oud" required placeholder="art. 1382"></label>
+    <label>Nieuw <input name="nieuw" placeholder="art. 1240"></label>
+    <label>Datum <input name="datum" type="date"></label>
+  </div>
+  <label>Grond <input name="grond" placeholder="Ordonnance n° 2016-131 du 10 février 2016"></label>
+  <label>Toelichting <input name="toelichting"></label>
+  <div class="acties"><button class="knop klein primair">Toevoegen</button></div>
+</form>
+{% endblock %}

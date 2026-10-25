@@ -1,0 +1,41 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<dokumente builddate="20240915120000" doknr="BJNR001950896">
+  <norm doknr="BJNR001950896">
+    <metadaten>
+      <jurabk>BGB</jurabk>
+      <amtabk>BGB</amtabk>
+      <kurzue>Bürgerliches Gesetzbuch</kurzue>
+      <langue>Bürgerliches Gesetzbuch</langue>
+      <standangabe><standtyp>Stand</standtyp><standkommentar>Zuletzt geändert durch Art. 1 G v. 1.1.2024</standkommentar></standangabe>
+    </metadaten>
+  </norm>
+  <norm>
+    <metadaten><jurabk>BGB</jurabk><gliederungseinheit><gliederungskennzahl>030</gliederungskennzahl><gliederungsbez>Buch 3</gliederungsbez><gliederungstitel>Sachenrecht</gliederungstitel></gliederungseinheit></metadaten>
+  </norm>
+  <norm>
+    <metadaten><jurabk>BGB</jurabk><gliederungseinheit><gliederungskennzahl>030030</gliederungskennzahl><gliederungsbez>Abschnitt 3</gliederungsbez><gliederungstitel>Eigentum</gliederungstitel></gliederungseinheit></metadaten>
+  </norm>
+  <norm>
+    <metadaten>
+      <jurabk>BGB</jurabk>
+      <enbez>§ 929</enbez>
+      <titel>Einigung und Übergabe</titel>
+      <gliederungseinheit><gliederungskennzahl>030030</gliederungskennzahl><gliederungsbez>Abschnitt 3</gliederungsbez><gliederungstitel>Eigentum</gliederungstitel></gliederungseinheit>
+    </metadaten>
+    <textdaten><text format="XML"><Content>
+      <P>Zur Übertragung des Eigentums an einer beweglichen Sache ist erforderlich, dass der Eigentümer die Sache dem Erwerber übergibt und beide darüber einig sind, dass das Eigentum übergehen soll.</P>
+      <P>Ist der Erwerber im Besitz der Sache, so genügt die Einigung über den Übergang des Eigentums.</P>
+    </Content></text></textdaten>
+  </norm>
+  <norm>
+    <metadaten>
+      <jurabk>BGB</jurabk>
+      <enbez>§ 930</enbez>
+      <titel>Besitzkonstitut</titel>
+      <gliederungseinheit><gliederungskennzahl>030030</gliederungskennzahl><gliederungsbez>Abschnitt 3</gliederungsbez><gliederungstitel>Eigentum</gliederungstitel></gliederungseinheit>
+    </metadaten>
+    <textdaten><text format="XML"><Content>
+      <P>Ist der Eigentümer im Besitz der Sache, so kann die Übergabe dadurch ersetzt werden, dass zwischen ihm und dem Erwerber ein Rechtsverhältnis vereinbart wird, vermöge dessen der Erwerber den mittelbaren Besitz erlangt.</P>
+    </Content></text></textdaten>
+  </norm>
+</dokumente>

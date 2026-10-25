@@ -1,0 +1,47 @@
+/* Print- en PDF-opmaak van één vraag (WeasyPrint en browser). */
+@font-face { font-family: "Source Serif 4"; src: url("/static/fonts/SourceSerif4Variable-Roman.ttf.woff2") format("woff2"); font-weight: 200 900; font-style: normal; }
+@font-face { font-family: "Source Serif 4"; src: url("/static/fonts/SourceSerif4Variable-Italic.ttf.woff2") format("woff2"); font-weight: 200 900; font-style: italic; }
+@font-face { font-family: "Source Sans 3"; src: url("/static/fonts/SourceSans3VF-Upright.ttf.woff2") format("woff2"); font-weight: 200 900; font-style: normal; }
+
+@page { size: A4; margin: 22mm 20mm 24mm; @bottom-center { content: counter(page) " / " counter(pages); font-family: "Source Sans 3", sans-serif; font-size: 9pt; color: #777; } }
+
+body.print { background: #fff; color: #111; font-family: "Source Sans 3", sans-serif; font-size: 10.5pt; line-height: 1.45; margin: 0; display: block; }
+.print-vraag { max-width: 100%; }
+.print header h1 { font-family: "Source Serif 4", serif; font-weight: 500; font-size: 20pt; margin: 0 0 .3em; }
+.print .kruimel { font-size: 8pt; text-transform: uppercase; letter-spacing: .08em; color: #777; margin: 0; }
+.print .omschrijving { color: #444; font-size: 10pt; }
+.print-stelsel { break-inside: avoid-page; margin-top: 1.4em; }
+.print-stelsel h2 { font-family: "Source Serif 4", serif; font-weight: 500; font-size: 14pt; border-bottom: 1.5pt solid #111; padding-bottom: .15em; margin: 0 0 .5em; break-after: avoid; }
+.print .kern { font-family: "Source Serif 4", serif; font-style: italic; color: #333; margin: 0 0 .6em; }
+.print .bron { margin-bottom: .9em; break-inside: avoid; }
+.print .bron h3 { font-size: 10.5pt; font-weight: 600; margin: 0 0 .15em; font-family: "Source Sans 3", sans-serif; }
+.print .bron-titel { color: #777; font-weight: 400; }
+.print .rol { font-size: 7.5pt; text-transform: uppercase; letter-spacing: .06em; color: #777; border: .5pt solid #bbb; padding: 0 .3em; margin-left: .3em; }
+.print .origineel { font-family: "Source Serif 4", serif; font-size: 10.5pt; }
+.print .origineel p { margin: .25em 0; }
+.print .vertaling { font-family: "Source Serif 4", serif; color: #3b4f6b; border-left: 2pt solid #3b4f6b; padding: .2em .6em; margin: .4em 0; font-size: 10pt; background: #f3f5f9; }
+.print .annotatie { color: #5a4a1a; border-left: 2pt solid #b89a3a; background: #faf4e2; padding: .2em .6em; margin: .4em 0; font-size: 9.5pt; }
+.print .label { display: block; font-size: 7pt; text-transform: uppercase; letter-spacing: .1em; font-weight: 600; opacity: .8; }
+.print .bron-voet { font-size: 8pt; color: #777; margin: .15em 0 0; }
+.print .analyse { border-top: .5pt solid #ccc; padding-top: .5em; margin-top: .6em; }
+.print .analyse ul, .print .analyse ol { padding-left: 1.2em; }
+.print .analyse blockquote { margin: .4em 0; padding-left: .7em; border-left: 1.5pt solid #ccc; color: #444; font-family: "Source Serif 4", serif; }
+.print .begrippen-dl dt { font-family: "Source Serif 4", serif; font-weight: 600; margin-top: .5em; }
+.print .begrippen-dl dd { margin-left: 0; }
+.print .stelsel-code { font-size: 7.5pt; font-weight: 700; letter-spacing: .08em; color: #777; }
+.print .stil { color: #777; }
+.print .relatielijst { list-style: none; padding: 0; margin: .2em 0; font-size: 9.5pt; }
+.print .relatie { font-size: 7.5pt; border: .5pt solid; padding: 0 .4em; border-radius: 1em; }
+.print .rel-equivalent { color: #2f6b3a; }
+.print .rel-deels { color: #b07a1e; }
+.print .rel-faux_ami { color: #b4232d; font-weight: 700; }
+.print .rel-geen { color: #777; }
+.print .tabel { width: 100%; border-collapse: collapse; font-size: 9.5pt; }
+.print .tabel th, .print .tabel td { text-align: left; padding: .25em .4em; border-bottom: .5pt solid #ccc; }
+.print-voet { margin-top: 2em; font-size: 8pt; color: #777; border-top: .5pt solid #ccc; padding-top: .4em; }
+a { color: inherit; text-decoration: none; }
+
+@media screen {
+  body.print { max-width: 48rem; margin: 2rem auto; padding: 0 1.5rem; }
+  .kop, .voet { display: none; }
+}

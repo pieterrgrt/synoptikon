@@ -1,0 +1,35 @@
+[build-system]
+requires = ["setuptools>=68"]
+build-backend = "setuptools.build_meta"
+
+[project]
+name = "synoptikon"
+version = "0.1.0"
+description = "Persoonlijke webapp voor functionele rechtsvergelijking"
+requires-python = ">=3.12"
+dependencies = [
+    "fastapi>=0.115",
+    "uvicorn[standard]>=0.30",
+    "jinja2>=3.1",
+    "sqlalchemy>=2.0",
+    "itsdangerous>=2.2",
+    "markdown-it-py>=3.0",
+    "python-multipart>=0.0.9",
+    "httpx>=0.27",
+]
+
+[project.optional-dependencies]
+pdf = ["weasyprint>=62"]
+dev = ["pytest>=8"]
+
+[project.scripts]
+synoptikon = "synoptikon.cli:main"
+
+[tool.setuptools.packages.find]
+include = ["synoptikon*"]
+
+[tool.setuptools.package-data]
+synoptikon = ["templates/*.html", "static/**/*", "static/*"]
+
+[tool.pytest.ini_options]
+testpaths = ["tests"]

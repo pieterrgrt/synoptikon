@@ -1,0 +1,19 @@
+{% extends "base.html" %}
+{% block titel %}{{ 'Begrip bewerken' if begrip else 'Nieuw begrip' }} · Synoptikon{% endblock %}
+{% block inhoud %}
+<h1>{{ 'Begrip bewerken' if begrip else 'Nieuw begrip' }}</h1>
+<form method="post" class="formulier">
+  <div class="rij">
+    <label>Stelsel <select name="stelsel_code" id="stelsel_code" required>{% for s in stelsels %}<option value="{{ s.code }}" data-taal="{{ s.taal }}" {% if begrip and begrip.stelsel_code == s.code %}selected{% endif %}>{{ s.naam }}</option>{% endfor %}</select></label>
+    <label>Taal <input name="taal" id="taal" size="4" required value="{{ begrip.taal if begrip else (stelsels[0].taal if stelsels else 'nl') }}"></label>
+  </div>
+  <label>Term <input name="term" required value="{{ begrip.term if begrip else '' }}" class="serif"></label>
+  <label>Definitie <span class="hint">markdown</span><textarea name="definitie" rows="8">{{ begrip.definitie or '' if begrip else '' }}</textarea></label>
+  <label>Vindplaats <span class="hint">waar het begrip verankerd is</span><input name="vindplaats" value="{{ begrip.vindplaats or '' if begrip else '' }}"></label>
+  <input type="hidden" name="terug" value="{{ request.query_params.get('terug', '') }}">
+  <div class="acties"><button class="knop primair">Opslaan</button><a class="knop" href="{{ '/begrippen/' ~ begrip.id if begrip else '/begrippen/lijst' }}">Annuleren</a></div>
+</form>
+{% if begrip %}
+<form method="post" action="/begrippen/{{ begrip.id }}/verwijderen" class="gevaar-zone" data-bevestig="Begrip en zijn relaties verwijderen?"><button class="knop gevaar">Begrip verwijderen</button></form>
+{% endif %}
+{% endblock %}

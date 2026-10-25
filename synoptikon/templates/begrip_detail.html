@@ -1,0 +1,36 @@
+{% extends "base.html" %}
+{% block titel %}{{ begrip.term }} · Synoptikon{% endblock %}
+{% block inhoud %}
+<p class="kruimel"><a href="/begrippen">Begrippen</a> › {{ begrip.stelsel.naam }}</p>
+<div class="paginakop">
+  <h1 class="serif" lang="{{ begrip.taal }}">{{ begrip.term }} <span class="stelsel-code">{{ begrip.stelsel_code }}</span></h1>
+  <a class="knop klein" href="/begrippen/{{ begrip.id }}/bewerken">Bewerken</a>
+</div>
+{% if begrip.vindplaats %}<p class="stil">{{ begrip.vindplaats }}</p>{% endif %}
+<div class="definitie">{{ begrip.definitie | md }}</div>
+
+<h2>Relaties</h2>
+{% if begrip.relaties %}
+<ul class="relatielijst groot">
+{% for r in begrip.relaties %}{% set ander = r.andere(begrip) %}
+  <li><span class="relatie rel-{{ r.type }}">{{ r.type_label }}</span> <a href="/begrippen/{{ ander.id }}"><span class="stelsel-code">{{ ander.stelsel_code }}</span> {{ ander.term }}</a>{% if r.toelichting %} <span class="toelichting">— {{ r.toelichting | md_inline }}</span>{% endif %}
+    <form method="post" action="/begrippen/relatie/{{ r.id }}/verwijderen" class="inline" data-bevestig="Relatie verwijderen?"><input type="hidden" name="terug" value="/begrippen/{{ begrip.id }}"><button class="knop-tekst">×</button></form></li>
+{% endfor %}
+</ul>
+{% else %}<p class="stil">Nog geen relaties.</p>{% endif %}
+
+<details>
+  <summary>+ relatie toevoegen</summary>
+  <form method="post" action="/begrippen/{{ begrip.id }}/relatie" class="formulier compact">
+    <div class="rij">
+      <label>Met begrip <select name="naar_id" required><option value="">— kies —</option>{% for a in anderen %}<option value="{{ a.id }}">{{ a.stelsel_code }} · {{ a.term }}</option>{% endfor %}</select></label>
+      <label>Type <select name="type">{% for k, v in relatie_types.items() %}<option value="{{ k }}">{{ v }}</option>{% endfor %}</select></label>
+    </div>
+    <label>Toelichting <input name="toelichting"></label>
+    <div class="acties"><button class="knop klein primair">Toevoegen</button></div>
+  </form>
+</details>
+
+<h2>Bij vragen</h2>
+{% if begrip.vragen %}<ul class="lijst">{% for vb in begrip.vragen %}<li><a href="/vragen/{{ vb.vraag.slug }}">{{ vb.vraag.titel }}</a></li>{% endfor %}</ul>{% else %}<p class="stil">Nog niet aan een vraag gekoppeld.</p>{% endif %}
+{% endblock %}

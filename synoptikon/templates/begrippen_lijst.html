@@ -1,0 +1,22 @@
+{% extends "base.html" %}
+{% block titel %}Begrippen · Synoptikon{% endblock %}
+{% block inhoud %}
+<div class="paginakop">
+  <h1>Begrippen</h1>
+  <div class="acties"><a class="knop klein" href="/begrippen">Kaart</a><a class="knop klein" href="/begrippen/export.json">Export JSON</a><a class="knop" href="/begrippen/nieuw">+ Begrip</a></div>
+</div>
+<div class="kolommen-los">
+{% for s in stelsels if s.code in per_stelsel %}
+<section class="blok">
+  <h2>{{ s.naam }}</h2>
+  <ul class="lijst">
+  {% for g in per_stelsel[s.code] %}
+    <li><a href="/begrippen/{{ g.id }}"><strong>{{ g.term }}</strong></a>{% if g.vindplaats %} <span class="stil">{{ g.vindplaats }}</span>{% endif %}
+      {% for r in g.relaties %}{% set ander = r.andere(g) %}<span class="relatie rel-{{ r.type }}" title="{{ r.type_label }}">{{ ander.stelsel_code }} {{ ander.term }}</span>{% endfor %}
+    </li>
+  {% endfor %}
+  </ul>
+</section>
+{% endfor %}
+</div>
+{% endblock %}

@@ -1,0 +1,48 @@
+<!doctype html>
+<html lang="nl" data-theme="auto">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<meta name="color-scheme" content="light dark">
+<title>{% block titel %}Synoptikon{% endblock %}</title>
+<link rel="stylesheet" href="/static/css/app.css">
+<link rel="icon" href="/static/favicon.svg" type="image/svg+xml">
+<script src="/static/js/thema.js"></script>
+{% block head %}{% endblock %}
+</head>
+<body class="{% block bodyclass %}{% endblock %}">
+<header class="kop">
+  <a class="merk" href="/"><span class="merk-teken">Σ</span> Synoptikon</a>
+  <nav class="nav">
+    <a href="/" {% if request.url.path == '/' %}aria-current="page"{% endif %}>Vragen</a>
+    <a href="/begrippen" {% if request.url.path.startswith('/begrippen') %}aria-current="page"{% endif %}>Begrippen</a>
+    <a href="/stelsels" {% if request.url.path.startswith('/stelsels') %}aria-current="page"{% endif %}>Stelsels</a>
+    <a href="/bronnen" {% if request.url.path.startswith('/bronnen') %}aria-current="page"{% endif %}>Bronnen</a>
+    <a href="/invoer" {% if request.url.path.startswith('/invoer') %}aria-current="page"{% endif %}>Invoer</a>
+  </nav>
+  <form class="zoekveld" action="/zoeken" method="get" role="search">
+    <input type="search" name="q" placeholder="Zoek…" value="{{ request.query_params.get('q', '') }}" aria-label="Zoeken">
+  </form>
+  <div class="kop-acties">
+    <button type="button" class="knop-icoon" id="thema-knop" title="Licht/donker" aria-label="Thema wisselen">◐</button>
+    <details class="menu">
+      <summary class="knop-icoon" aria-label="Meer">⋯</summary>
+      <div class="menu-lijst">
+        <a href="/concordantie">Concordantie</a>
+        <a href="/wetteksten">Wetteksten</a>
+        <a href="/begrippen/export.json">Begrippenparen (JSON)</a>
+        {% if auth_mode != 'none' %}<form method="post" action="/logout"><button type="submit" class="knop-tekst">Uitloggen</button></form>{% endif %}
+      </div>
+    </details>
+  </div>
+</header>
+
+<main class="{% block mainclass %}pagina{% endblock %}">
+{% block inhoud %}{% endblock %}
+</main>
+
+<footer class="voet">Synoptikon {{ versie }} · <a href="/invoer">snel invoeren</a></footer>
+<script src="/static/js/app.js"></script>
+{% block scripts %}{% endblock %}
+</body>
+</html>

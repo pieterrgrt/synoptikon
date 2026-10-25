@@ -1,0 +1,27 @@
+{% extends "base.html" %}
+{% block titel %}{{ 'Vraag bewerken' if vraag else 'Nieuwe vraag' }} · Synoptikon{% endblock %}
+{% block inhoud %}
+<h1>{{ 'Vraag bewerken' if vraag else 'Nieuwe vraag' }}</h1>
+<form method="post" class="formulier">
+  <label>Vraag (tertium comparationis)
+    <input name="titel" required value="{{ vraag.titel if vraag else '' }}" placeholder="Hoe gaat eigendom van een roerende zaak over?">
+  </label>
+  <label>Omschrijving <span class="hint">markdown</span>
+    <textarea name="omschrijving" rows="6">{{ vraag.omschrijving or '' if vraag else '' }}</textarea>
+  </label>
+  <div class="rij">
+    <label>Rechtsgebied <input name="rechtsgebied" value="{{ vraag.rechtsgebied or '' if vraag else '' }}" placeholder="Goederenrecht"></label>
+    <label>Tags <span class="hint">kommagescheiden</span> <input name="tags" value="{{ vraag.tags or '' if vraag else '' }}" placeholder="eigendom, levering, roerende zaken"></label>
+  </div>
+  <p class="hint">Voor elk actief stelsel ({% for s in stelsels %}{{ s.code }}{% if not loop.last %}, {% endif %}{% endfor %}) komt een kolom.</p>
+  <div class="acties">
+    <button class="knop primair" type="submit">Opslaan</button>
+    <a class="knop" href="{{ '/vragen/' ~ vraag.slug if vraag else '/' }}">Annuleren</a>
+  </div>
+</form>
+{% if vraag %}
+<form method="post" action="/vragen/{{ vraag.slug }}/verwijderen" class="gevaar-zone" data-bevestig="Vraag en alle analyses verwijderen? Bronnen en begrippen blijven bestaan.">
+  <button class="knop gevaar" type="submit">Vraag verwijderen</button>
+</form>
+{% endif %}
+{% endblock %}

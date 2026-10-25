@@ -1,0 +1,30 @@
+{% extends "base.html" %}
+{% block titel %}Zoeken · Synoptikon{% endblock %}
+{% block inhoud %}
+<h1>Zoeken</h1>
+<form method="get" class="formulier compact zoekgroot">
+  <input type="search" name="q" value="{{ q }}" autofocus placeholder="levering · Übergabe · 3:84 · culpa in contrahendo · ECLI:NL:HR:2005:AT7337">
+  <button class="knop primair">Zoek</button>
+</form>
+<p class="hint">Full-text in alle talen; accenten worden genegeerd (délivrance = delivrance). Woorden worden als prefix gezocht.</p>
+{% if resultaat %}
+<p class="stil">{{ resultaat.aantal }} treffers.</p>
+{% macro groep(titel, treffers) %}
+{% if treffers %}
+<section class="blok">
+  <h2>{{ titel }} <span class="stil">({{ treffers | length }})</span></h2>
+  <ul class="treffers">
+  {% for t in treffers %}
+    <li><a href="{{ t.url }}">{% if t.stelsel %}<span class="stelsel-code">{{ t.stelsel }}</span> {% endif %}{{ t.titel }}</a>{% if t.extra %} <span class="stil">{{ t.extra }}</span>{% endif %}<p class="snippet serif">{{ t.snippet | safe }}</p></li>
+  {% endfor %}
+  </ul>
+</section>
+{% endif %}
+{% endmacro %}
+{{ groep('Vragen', resultaat.vragen) }}
+{{ groep('Bronnen', resultaat.bronnen) }}
+{{ groep('Begrippen', resultaat.begrippen) }}
+{{ groep('Analyses', resultaat.antwoorden) }}
+{{ groep('Wetteksten (geïmporteerd)', resultaat.wetteksten) }}
+{% endif %}
+{% endblock %}
