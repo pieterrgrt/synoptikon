@@ -168,11 +168,27 @@ END;
 """
 
 
+# Kolommen die later zijn bijgekomen: (tabel, kolom, type). `create_all` voegt
+# geen kolommen toe aan bestaande tabellen, dus dat doet `_migreer`.
+_NIEUWE_KOLOMMEN = [
+    ("stelsel", "familie", "VARCHAR(20)"),
+    ("systematiek", "wet", "VARCHAR(60)"),
+]
+
+
+def _migreer(conn) -> None:
+    for tabel, kolom, soort in _NIEUWE_KOLOMMEN:
+        bestaand = {r[1] for r in conn.execute(text(f"PRAGMA table_info({tabel})"))}
+        if bestaand and kolom not in bestaand:
+            conn.execute(text(f"ALTER TABLE {tabel} ADD COLUMN {kolom} {soort}"))
+
+
 def init_db() -> None:
-    """Maakt tabellen, FTS-tabellen en triggers aan (idempotent)."""
+    """Maakt tabellen, FTS-tabellen en triggers aan en voegt nieuwe kolommen toe (idempotent)."""
     eng = engine()
     Base.metadata.create_all(eng)
     with eng.begin() as conn:
+        _migreer(conn)
         for stmt in _splits_ddl(_FTS_DDL):
             conn.execute(text(stmt))
 

@@ -16,7 +16,7 @@
     <li>
       <a class="vraag-titel" href="/vragen/{{ v.slug }}">{{ v.titel }}</a>
       <span class="stelsels-mini">
-        {% for a in v.antwoorden %}<span class="stelsel-tag {% if a.analyse or a.bronnen %}gevuld{% endif %}">{{ a.stelsel_code }}</span>{% endfor %}
+        {% for a in v.antwoorden %}<span class="stelsel-tag {% if a.analyse or a.bronnen %}gevuld{% endif %}">{{ vlag(a.stelsel_code) }}{{ a.stelsel_code }}</span>{% endfor %}
       </span>
       {% if v.tag_list %}<span class="tags">{% for t in v.tag_list %}<span class="tag">{{ t }}</span>{% endfor %}</span>{% endif %}
     </li>

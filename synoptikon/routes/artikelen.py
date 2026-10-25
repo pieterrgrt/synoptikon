@@ -16,7 +16,8 @@ from ..db import get_session
 from ..models import Correspondentie, CorrespondentieArtikel, Stelsel
 from ..services import correspondentie as corr
 from ..services.artikelen import Ref, herken, lees, sleutel
-from ..services.helpers import actieve_stelsels, leeg_naar_none
+from ..models import RECHTSFAMILIES
+from ..services.helpers import actieve_stelsels, leeg_naar_none, stelsels_per_code
 from . import render
 
 router = APIRouter()
@@ -27,7 +28,7 @@ def _codes(db: Session) -> list[str]:
 
 
 @router.get("/artikelen")
-def overzicht(request: Request, q: str = "", stelsel: str = "", db: Session = Depends(get_session)):
+def overzicht(request: Request, q: str = "", stelsel: str = "", familie: str = "", db: Session = Depends(get_session)):
     kandidaten: list[Ref] = []
     if q.strip():
         kandidaten = herken(q, stelsel or None)
@@ -40,11 +41,16 @@ def overzicht(request: Request, q: str = "", stelsel: str = "", db: Session = De
     stelsels = actieve_stelsels(db)
     gebruikt = {a.stelsel_code for c in thema_s for a in c.artikelen}
     kolommen = [s for s in stelsels if s.code in gebruikt] or stelsels
+    families_in_tabel = [k for k in RECHTSFAMILIES if any(s.familie == k for s in kolommen)]
+    if familie in RECHTSFAMILIES:
+        kolommen = [s for s in kolommen if s.familie == familie]
     return render(
         request,
         "artikelen.html",
         q=q,
         f_stelsel=stelsel,
+        f_familie=familie if familie in RECHTSFAMILIES else "",
+        families_in_tabel=families_in_tabel,
         kandidaten=kandidaten,
         groepen=groepen,
         kolommen=kolommen,
@@ -64,8 +70,9 @@ def thema(request: Request, cid: int, db: Session = Depends(get_session)):
     ctx = corr.Context(db)
     stelsels = actieve_stelsels(db)
     kolommen = corr.per_stelsel(ctx, c, [s.code for s in stelsels])
-    namen = {s.code: s.naam for s in db.scalars(select(Stelsel)).all()}
-    return render(request, "thema.html", c=c, kolommen=kolommen, namen=namen, stelsels=stelsels)
+    per_code = stelsels_per_code(db)
+    namen = {code: st.naam for code, st in per_code.items()}
+    return render(request, "thema.html", c=c, kolommen=kolommen, namen=namen, per_code=per_code, stelsels=stelsels)
 
 
 @router.post("/artikelen/thema")
@@ -189,6 +196,7 @@ def artikel(request: Request, stelsel: str, nummer: str, wet: str | None = None,
         buren=buren,
         alle_thema_s=db.scalars(select(Correspondentie).order_by(Correspondentie.titel)).all(),
         stelsels=actieve_stelsels(db),
+        per_code=stelsels_per_code(db),
     )
 
 

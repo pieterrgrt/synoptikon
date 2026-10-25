@@ -18,7 +18,7 @@
   <h2>{{ titel }} <span class="stil">({{ treffers | length }})</span></h2>
   <ul class="treffers">
   {% for t in treffers %}
-    <li><a href="{{ t.url }}">{% if t.stelsel %}<span class="stelsel-code">{{ t.stelsel }}</span> {% endif %}{{ t.titel }}</a>{% if t.extra %} <span class="stil">{{ t.extra }}</span>{% endif %}<p class="snippet serif">{{ t.snippet | safe }}</p></li>
+    <li><a href="{{ t.url }}">{% if t.stelsel %}{{ sc(t.stelsel) }} {% endif %}{{ t.titel }}</a>{% if t.extra %} <span class="stil">{{ t.extra }}</span>{% endif %}<p class="snippet serif">{{ t.snippet | safe }}</p></li>
   {% endfor %}
   </ul>
 </section>

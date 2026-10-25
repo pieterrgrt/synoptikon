@@ -7,7 +7,7 @@
   <thead><tr><th>Stelsel</th><th>Wet</th><th>Versie</th><th>Artikelen</th><th>Opgehaald</th><th>Herkomst</th></tr></thead>
   <tbody>
   {% for w in wetten %}
-  <tr><td><span class="stelsel-code">{{ w.stelsel_code }}</span></td><td><a href="/wetteksten/{{ w.id }}">{{ w.titel }}</a> <span class="stil">{{ w.wet_id }}</span></td><td>{{ w.versie }}</td><td>{{ w.artikelen | length }}</td><td class="stil">{{ w.opgehaald.strftime('%Y-%m-%d') }}</td><td class="stil">{% if w.bron_url %}<a href="{{ w.bron_url }}" target="_blank" rel="noopener">bron ↗</a>{% endif %}</td></tr>
+  <tr><td>{{ sc(w.stelsel_code) }}</td><td><a href="/wetteksten/{{ w.id }}">{{ w.titel }}</a> <span class="stil">{{ w.wet_id }}</span></td><td>{{ w.versie }}</td><td>{{ w.artikelen | length }}</td><td class="stil">{{ w.opgehaald.strftime('%Y-%m-%d') }}</td><td class="stil">{% if w.bron_url %}<a href="{{ w.bron_url }}" target="_blank" rel="noopener">bron ↗</a>{% endif %}</td></tr>
   {% else %}<tr><td colspan="6" class="stil">Nog niets geïmporteerd.</td></tr>{% endfor %}
   </tbody>
 </table>

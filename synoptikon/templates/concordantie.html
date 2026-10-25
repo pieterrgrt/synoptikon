@@ -7,7 +7,7 @@
   <thead><tr><th>Stelsel</th><th>Wet</th><th>Oud</th><th>Nieuw</th><th>Datum</th><th>Grond</th><th></th></tr></thead>
   <tbody>
   {% for c in rijen %}
-  <tr><td><span class="stelsel-code">{{ c.stelsel_code }}</span></td><td>{{ c.wet }}</td><td>{{ c.oud }}</td><td>{{ c.nieuw or '— vervallen' }}</td><td>{{ c.datum or '' }}</td><td>{{ c.grond or '' }}{% if c.toelichting %} <span class="stil">{{ c.toelichting }}</span>{% endif %}</td>
+  <tr><td>{{ sc(c.stelsel_code) }}</td><td>{{ c.wet }}</td><td>{{ c.oud }}</td><td>{{ c.nieuw or '— vervallen' }}</td><td>{{ c.datum or '' }}</td><td>{{ c.grond or '' }}{% if c.toelichting %} <span class="stil">{{ c.toelichting }}</span>{% endif %}</td>
     <td><form method="post" action="/concordantie/{{ c.id }}/verwijderen" class="inline" data-bevestig="Verwijderen?"><button class="knop-tekst">×</button></form></td></tr>
   {% else %}<tr><td colspan="7" class="stil">Nog geen concordanties.</td></tr>{% endfor %}
   </tbody>

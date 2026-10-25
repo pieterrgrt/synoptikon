@@ -48,6 +48,19 @@
       bewaar();
     });
   });
+  // Rechtsfamilie: alle kolommen van de familie tegelijk aan of uit.
+  Array.prototype.slice.call(balk.querySelectorAll('.familie-knop')).forEach(function (knop) {
+    knop.addEventListener('click', function () {
+      var leden = schakels.filter(function (s) { return s.dataset.familie === knop.dataset.familie; });
+      var aan = !leden.every(function (s) { return s.checked; });
+      leden.forEach(function (s) {
+        s.checked = aan;
+        var k = synopse.querySelector('.kolom[data-kolom="' + s.dataset.kolom + '"]');
+        if (k) k.hidden = !aan;
+      });
+      bewaar();
+    });
+  });
   var toonAnalyse = document.getElementById('toon-analyse');
   if (toonAnalyse) toonAnalyse.addEventListener('change', function () {
     document.body.classList.toggle('toon-analyse-uit', !toonAnalyse.checked); bewaar();
