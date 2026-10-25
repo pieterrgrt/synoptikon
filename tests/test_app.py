@@ -23,11 +23,14 @@ def test_pictogrammen_zonder_login(anoniem):
         ("/apple-touch-icon.png", "image/png"),
         ("/apple-touch-icon-precomposed.png", "image/png"),
         ("/static/favicon.svg", "image/svg+xml"),
+        ("/static/favicon-licht.svg", "image/svg+xml"),
+        ("/static/favicon-donker.svg", "image/svg+xml"),
         ("/static/manifest.json", "application/json"),
     ]:
         r = anoniem.get(pad, follow_redirects=False)
         assert r.status_code == 200 and r.headers["content-type"].startswith(soort), pad
     assert "prefers-color-scheme: dark" in anoniem.get("/static/favicon.svg").text
+    assert "#d98c86" in anoniem.get("/static/favicon-donker.svg").text
     for icoon in anoniem.get("/static/manifest.json").json()["icons"]:
         assert anoniem.get(icoon["src"]).status_code == 200
     html = anoniem.get("/").text  # belandt op de loginpagina

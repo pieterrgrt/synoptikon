@@ -12,6 +12,7 @@
       var nieuw = huidig() === 'dark' ? 'light' : 'dark';
       root.dataset.theme = nieuw;
       try { localStorage.setItem('thema', nieuw); } catch (e) {}
+      if (window.zetFavicon) window.zetFavicon();
     });
   }
   document.addEventListener('submit', function (e) {
