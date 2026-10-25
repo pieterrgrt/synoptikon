@@ -18,6 +18,13 @@ server {
 
     add_header Strict-Transport-Security "max-age=31536000" always;
 
+    # Pictogrammen ook buiten basic auth, zodat een startpagina of dashboard ze kan ophalen.
+    location ~ ^/(favicon\.ico|apple-touch-icon(-precomposed)?\.png)$ {
+        auth_basic off;
+        proxy_pass http://127.0.0.1:8765;
+        expires 7d;
+    }
+
     location /static/ {
         proxy_pass http://127.0.0.1:8765;
         proxy_cache_valid 200 7d;

@@ -5,7 +5,7 @@ from contextlib import asynccontextmanager
 from pathlib import Path
 
 from fastapi import FastAPI, Request
-from fastapi.responses import RedirectResponse
+from fastapi.responses import FileResponse, RedirectResponse
 from fastapi.staticfiles import StaticFiles
 from fastapi.templating import Jinja2Templates
 from starlette.middleware.base import BaseHTTPMiddleware
@@ -40,7 +40,9 @@ async def lifespan(_app: FastAPI):
 app = FastAPI(title="Synoptikon", version=__version__, lifespan=lifespan, docs_url=None, redoc_url=None, openapi_url=None)
 app.mount("/static", StaticFiles(directory=str(HIER / "static")), name="static")
 
-_OPEN_PADEN = ("/login", "/static/", "/gezond")
+# Pictogrammen ook zonder login: startpagina's, dashboards en telefoons halen
+# ze op vaste paden op, zonder sessiecookie.
+_OPEN_PADEN = ("/login", "/static/", "/gezond", "/favicon.ico", "/apple-touch-icon")
 
 
 class AuthMiddleware(BaseHTTPMiddleware):
@@ -68,6 +70,17 @@ app.add_middleware(AuthMiddleware)
 @app.get("/gezond")
 def gezond():
     return {"status": "ok", "versie": __version__}
+
+
+@app.get("/favicon.ico", include_in_schema=False)
+def favicon():
+    return FileResponse(HIER / "static" / "favicon.ico")
+
+
+@app.get("/apple-touch-icon.png", include_in_schema=False)
+@app.get("/apple-touch-icon-precomposed.png", include_in_schema=False)
+def apple_touch_icon():
+    return FileResponse(HIER / "static" / "apple-touch-icon.png")
 
 
 for router in (auth_routes.router, vragen.router, bronnen.router, begrippen.router, stelsels.router, artikelen.router, zoeken.router, invoer.router, wetteksten.router):

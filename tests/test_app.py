@@ -16,6 +16,23 @@ def test_open_redirect_geblokkeerd(anoniem):
     assert r.headers["location"] == "/"
 
 
+def test_pictogrammen_zonder_login(anoniem):
+    # Een startpagina of dashboard haalt het pictogram op zonder sessie.
+    for pad, soort in [
+        ("/favicon.ico", "image/"),
+        ("/apple-touch-icon.png", "image/png"),
+        ("/apple-touch-icon-precomposed.png", "image/png"),
+        ("/static/favicon.svg", "image/svg+xml"),
+        ("/static/manifest.json", "application/json"),
+    ]:
+        r = anoniem.get(pad, follow_redirects=False)
+        assert r.status_code == 200 and r.headers["content-type"].startswith(soort), pad
+    for icoon in anoniem.get("/static/manifest.json").json()["icons"]:
+        assert anoniem.get(icoon["src"]).status_code == 200
+    html = anoniem.get("/").text  # belandt op de loginpagina
+    assert 'href="/favicon.ico"' in html and 'rel="apple-touch-icon"' in html
+
+
 def test_synopse_toont_drie_lagen(client):
     r = client.get("/vragen/eigendomsoverdracht-roerende-zaken?vertaling=nl")
     assert r.status_code == 200

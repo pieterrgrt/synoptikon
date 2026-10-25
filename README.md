@@ -88,6 +88,13 @@ uit als je de app achter nginx basic auth zet. Strikte CSP (`script-src
 (interface), beide SIL OFL, als variabele WOFF2 in `synoptikon/static/fonts`.
 `scripts/fetch_fonts.sh` ververst ze.
 
+**Pictogram.** De Σ uit Source Serif 4 (gewicht 600, opsz 8) als omtrek in
+`static/favicon.svg`, dus onafhankelijk van geïnstalleerde lettertypen;
+`favicon.ico` (16/32/48), `apple-touch-icon.png` (180) en de manifest-iconen
+(192/512) zijn daaruit gerenderd. `/favicon.ico` en `/apple-touch-icon.png`
+zijn ook zonder login bereikbaar, zodat een startpagina, dashboard of
+telefoonbeginscherm het pictogram kan ophalen.
+
 **PDF via WeasyPrint.** Dezelfde HTML als de printweergave; de Pango-
 bibliotheken zitten in het Docker-image. Ontbreekt WeasyPrint, dan geeft de
 PDF-route een 501 en blijft de rest werken (Markdown en de printweergave met
@@ -225,7 +232,7 @@ dan `SYNOPTIKON_AUTH_MODE=none`.
 
 ```bash
 pip install -e ".[pdf,dev]"
-pytest                     # 31 tests: auth, synopse, zoeken, export, invoer, parsers, artikelen
+pytest                     # 32 tests: auth, synopse, zoeken, export, invoer, parsers, artikelen
 synoptikon rebuild-fts     # zoekindex opnieuw opbouwen na handmatige DB-ingrepen
 synoptikon seed --overschrijf   # voorbeeldvragen opnieuw laden
 synoptikon seed                 # ook om een bestaande database bij te werken: vult systematiek
