@@ -41,5 +41,5 @@ fi
 
 # Oude back-ups opruimen: bewaar de laatste $KEEP van elke soort.
 for patroon in "synoptikon-*.db.gz" "wetteksten-*.tar.gz"; do
-    ls -1t "$DOEL"/$patroon 2>/dev/null | tail -n +"$((KEEP + 1))" | xargs -r rm -f
+    (ls -1t "$DOEL"/$patroon 2>/dev/null || true) | tail -n +"$((KEEP + 1))" | xargs -r rm -f
 done
