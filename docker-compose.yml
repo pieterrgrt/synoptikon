@@ -7,6 +7,7 @@ services:
     # Alleen bereikbaar via loopback; nginx op de host doet TLS en de hostnaam.
     ports:
       - "127.0.0.1:8765:8000"
+    # ./data moet schrijfbaar zijn voor uid 10001: sudo chown -R 10001:10001 data
     volumes:
       - ./data:/data
     deploy:

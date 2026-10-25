@@ -33,6 +33,7 @@ cp .env.example .env
 openssl rand -hex 32                                  # → SYNOPTIKON_SECRET_KEY
 docker compose run --rm app synoptikon hash-password  # → SYNOPTIKON_PASSWORD_HASH
 # beide waarden in .env zetten, dan:
+sudo chown -R 10001:10001 data      # de container draait als uid 10001
 docker compose up -d --build
 docker compose exec app synoptikon seed
 ```
