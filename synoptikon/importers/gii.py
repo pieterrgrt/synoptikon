@@ -2,9 +2,10 @@
 
 Download: https://www.gesetze-im-internet.de/{kurz}/xml.zip, bijv. bgb, hgb, zpo.
 Elke <norm> is óf een gliederingseenheid (Buch, Abschnitt, Titel) óf een
-paragraaf met <enbez>§ 929</enbez>. De gliederingseenheid in de metadata van
-een paragraaf geeft het directe ouderniveau; het volledige pad bouwen we op
-uit de gliederingskennzahl (3 cijfers per niveau).
+paragraaf met <enbez>§ 929</enbez>. Paragrafen dragen hun gliederingseenheid
+in de praktijk niet zelf: ze staan in documentvolgorde na de eenheid waartoe
+ze behoren. Het volledige pad volgt uit de gliederingskennzahl van die
+laatst geziene eenheid (3 cijfers per niveau).
 """
 from __future__ import annotations
 
@@ -49,7 +50,7 @@ def parse(xml_bytes: bytes, wet_id: str, bron_url: str | None = None) -> Geparse
     titel = wet_id
     eerste = root.find("norm")
     if eerste is not None:
-        titel = _tekst(eerste.find("metadaten/kurzue")) or _tekst(eerste.find("metadaten/jurabk")) or _tekst(eerste.find("metadaten/langue")) or wet_id
+        titel = _tekst(eerste.find("metadaten/kurzue")) or _tekst(eerste.find("metadaten/langue")) or _tekst(eerste.find("metadaten/jurabk")) or wet_id
         stand = eerste.find("metadaten/standangabe/standkommentar")
         if stand is not None and _tekst(stand):
             versie = f"{versie} ({_tekst(stand)})"
@@ -71,15 +72,19 @@ def parse(xml_bytes: bytes, wet_id: str, bron_url: str | None = None) -> Geparse
         return " › ".join(delen) if delen else None
 
     artikelen: list[Artikel] = []
+    huidige_kz = ""
     for norm in root.findall("norm"):
         enbez = _tekst(norm.find("metadaten/enbez"))
+        g = norm.find("metadaten/gliederungseinheit")
+        if g is not None and not enbez:
+            huidige_kz = _tekst(g.find("gliederungskennzahl"))
+            continue
         if not enbez or not (enbez.startswith("§") or enbez.lower().startswith("art")):
             continue
-        g = norm.find("metadaten/gliederungseinheit")
-        kz = _tekst(g.find("gliederungskennzahl")) if g is not None else ""
+        kz = _tekst(g.find("gliederungskennzahl")) if g is not None else huidige_kz
         nummer = enbez.replace("§", "").strip()
         tekst = _inhoud(norm) or "[weggefallen]"
-        artikelen.append(Artikel(nummer=nummer, tekst=tekst, opschrift=_tekst(norm.find("metadaten/titel")) or None, pad=pad_voor(kz) if kz else None))
+        artikelen.append(Artikel(nummer=nummer, tekst=tekst, opschrift=re.sub(r"\s+", " ", _tekst(norm.find("metadaten/titel"))) or None, pad=pad_voor(kz) if kz else None))
     return Geparseerd(wet_id=wet_id, titel=titel, versie=versie, bron_url=bron_url, artikelen=artikelen, ruw=xml_bytes, ruw_extensie="xml")
 
 

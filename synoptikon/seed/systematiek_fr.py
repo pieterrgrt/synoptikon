@@ -6,26 +6,32 @@ verbintenissenrecht (ordonnance n° 2016-131), de verjaringshervorming van
 Titres III, IV en IV bis), de koop en de bezitsregels zijn tot op
 sous-sectionniveau uitgewerkt. `synoptikon systematiek fr LEGITEXT000006070721`
 vult de rest aan uit een Légifrance-import.
+
+Gecontroleerd tegen de artikelenlijst van de LEGI-database van de DILA
+(stand 16-09-2026, via een niet-officieel extract): alle grensartikelen
+bestaan en geen geldend artikel valt buiten de boom. De namen van de
+titres en secties zijn daarmee níet gecontroleerd; de LEGI-indeling zelf
+kwam via Légifrance (Cloudflare) en de PISTE-API niet binnen.
 """
 
 CC = [
     ("CC-TP", "Titre préliminaire · De la publication, des effets et de l'application des lois en général", "art. 1–6-2", []),
-    ("CC-I", "Livre Ier · Des personnes", "art. 7–515-13", [
+    ("CC-I", "Livre Ier · Des personnes", "art. 7–515-13-1", [
         ("CC-I-I", "Titre Ier · Des droits civils", "art. 7–16-14", []),
         ("CC-I-Ibis", "Titre Ier bis · De la nationalité française", "art. 17–33-2", []),
-        ("CC-I-II", "Titre II · Des actes de l'état civil", "art. 34–101", []),
+        ("CC-I-II", "Titre II · Des actes de l'état civil", "art. 34–101-2", []),
         ("CC-I-III", "Titre III · Du domicile", "art. 102–111", []),
         ("CC-I-IV", "Titre IV · Des absents", "art. 112–132", []),
         ("CC-I-V", "Titre V · Du mariage", "art. 143–227", []),
         ("CC-I-VI", "Titre VI · Du divorce", "art. 229–309", []),
-        ("CC-I-VII", "Titre VII · De la filiation", "art. 310–342-13", []),
+        ("CC-I-VII", "Titre VII · De la filiation", "art. 310-1–342-13", []),
         ("CC-I-VIII", "Titre VIII · De la filiation adoptive", "art. 343–370-5", []),
-        ("CC-I-IX", "Titre IX · De l'autorité parentale", "art. 371–387", []),
+        ("CC-I-IX", "Titre IX · De l'autorité parentale", "art. 371–387-6", []),
         ("CC-I-X", "Titre X · De la minorité et de l'émancipation", "art. 388–413-8", []),
         ("CC-I-XI", "Titre XI · De la majorité et des majeurs protégés par la loi", "art. 414–495-9", []),
         ("CC-I-XII", "Titre XII · De la gestion du patrimoine des mineurs et majeurs en tutelle", "art. 496–515", []),
         ("CC-I-XIII", "Titre XIII · Du pacte civil de solidarité et du concubinage", "art. 515-1–515-8", []),
-        ("CC-I-XIV", "Titre XIV · Des mesures de protection des victimes de violences", "art. 515-9–515-13", []),
+        ("CC-I-XIV", "Titre XIV · Des mesures de protection des victimes de violences", "art. 515-9–515-13-1", []),
     ]),
     ("CC-II", "Livre II · Des biens et des différentes modifications de la propriété", "art. 515-14–710-1", [
         ("CC-II-I", "Titre Ier · De la distinction des biens", "art. 516–543", []),
@@ -45,11 +51,11 @@ CC = [
             ("CC-III-III-I", "Sous-titre Ier · Le contrat", "art. 1101–1231-7", [
                 ("CC-III-III-I-1", "Chapitre Ier · Dispositions liminaires", "art. 1101–1111-1", []),
                 ("CC-III-III-I-2", "Chapitre II · La formation du contrat", "art. 1112–1187", [
-                    ("CC-III-III-I-2-1", "Section 1 · La conclusion du contrat", "art. 1112–1127-6", [
+                    ("CC-III-III-I-2-1", "Section 1 · La conclusion du contrat", "art. 1112–1127-4", [
                         ("CC-III-III-I-2-1-1", "Sous-section 1 · Les négociations", "art. 1112–1112-2", []),
                         ("CC-III-III-I-2-1-2", "Sous-section 2 · L'offre et l'acceptation", "art. 1113–1122", []),
                         ("CC-III-III-I-2-1-3", "Sous-section 3 · Le pacte de préférence et la promesse unilatérale", "art. 1123–1124", []),
-                        ("CC-III-III-I-2-1-4", "Sous-section 4 · Dispositions propres au contrat conclu par voie électronique", "art. 1125–1127-6", []),
+                        ("CC-III-III-I-2-1-4", "Sous-section 4 · Dispositions propres au contrat conclu par voie électronique", "art. 1125–1127-4", []),
                     ]),
                     ("CC-III-III-I-2-2", "Section 2 · La validité du contrat", "art. 1128–1171", [
                         ("CC-III-III-I-2-2-1", "Sous-section 1 · Le consentement", "art. 1129–1144", []),
@@ -135,10 +141,10 @@ CC = [
         ("CC-III-IXbis", "Titre IX bis · Des conventions relatives à l'exercice des droits indivis", "art. 1873-1–1873-18", []),
         ("CC-III-X", "Titre X · Du prêt", "art. 1874–1914", []),
         ("CC-III-XI", "Titre XI · Du dépôt et du séquestre", "art. 1915–1963", []),
-        ("CC-III-XII", "Titre XII · Des contrats aléatoires", "art. 1964–1983", []),
+        ("CC-III-XII", "Titre XII · Des contrats aléatoires", "art. 1965–1983", []),
         ("CC-III-XIII", "Titre XIII · Du mandat", "art. 1984–2010", []),
         ("CC-III-XIV", "Titre XIV · De la fiducie", "art. 2011–2030", []),
-        ("CC-III-XV", "Titre XV · Des transactions", "art. 2044–2058", []),
+        ("CC-III-XV", "Titre XV · Des transactions", "art. 2044–2052", []),
         ("CC-III-XVI", "Titre XVI · De la convention d'arbitrage", "art. 2059–2061", []),
         ("CC-III-XVII", "Titre XVII · De la convention de procédure participative", "art. 2062–2068", []),
         ("CC-III-XX", "Titre XX · De la prescription extinctive", "art. 2219–2254", [

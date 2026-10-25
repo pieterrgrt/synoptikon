@@ -225,7 +225,7 @@ dan `SYNOPTIKON_AUTH_MODE=none`.
 
 ```bash
 pip install -e ".[pdf,dev]"
-pytest                     # 30 tests: auth, synopse, zoeken, export, invoer, parsers, artikelen
+pytest                     # 31 tests: auth, synopse, zoeken, export, invoer, parsers, artikelen
 synoptikon rebuild-fts     # zoekindex opnieuw opbouwen na handmatige DB-ingrepen
 synoptikon seed --overschrijf   # voorbeeldvragen opnieuw laden
 synoptikon seed                 # ook om een bestaande database bij te werken: vult systematiek

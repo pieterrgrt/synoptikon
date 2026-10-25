@@ -99,3 +99,17 @@ def test_bwb_parse_huidig_formaat():
     (a,) = g.artikelen
     assert a.nummer == "7A:1655" and a.tekst == "Maatschap is eene overeenkomst."
     assert a.pad == "Boek 7a Bijzondere overeenkomsten; vervolg › titel Negende Van maatschap"
+
+
+def test_gii_pad_uit_documentvolgorde():
+    """Zoals gesetze-im-internet.de het nu levert: paragrafen zonder eigen gliederungseinheit."""
+    xml = b"""<?xml version="1.0" encoding="UTF-8"?><dokumente builddate="20260926">
+<norm><metadaten><jurabk>BGB</jurabk><langue>B\xc3\xbcrgerliches Gesetzbuch</langue></metadaten></norm>
+<norm><metadaten><gliederungseinheit><gliederungskennzahl>030</gliederungskennzahl><gliederungsbez>Buch 3</gliederungsbez><gliederungstitel>Sachenrecht</gliederungstitel></gliederungseinheit></metadaten></norm>
+<norm><metadaten><gliederungseinheit><gliederungskennzahl>030030</gliederungskennzahl><gliederungsbez>Abschnitt 3</gliederungsbez><gliederungstitel>Eigentum</gliederungstitel></gliederungseinheit></metadaten></norm>
+<norm><metadaten><enbez>\xc2\xa7 929</enbez><titel>Einigung und \xc3\x9cbergabe</titel></metadaten><textdaten><text><Content><P>Tekst.</P></Content></text></textdaten></norm>
+</dokumente>"""
+    g = gii.parse(xml, "bgb")
+    assert g.titel == "Bürgerliches Gesetzbuch"
+    (a,) = g.artikelen
+    assert a.nummer == "929" and a.pad == "Buch 3 Sachenrecht › Abschnitt 3 Eigentum"

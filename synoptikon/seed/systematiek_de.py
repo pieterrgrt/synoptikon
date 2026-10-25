@@ -1,25 +1,26 @@
-"""Systematiek van het BGB: Buch › Abschnitt › Titel › Untertitel.
+"""Systematiek van het BGB, alle niveaus: Buch › Abschnitt › Titel › Untertitel › Kapitel › Unterkapitel.
 
-Opgebouwd uit de XML van gesetze-im-internet.de (bereiken = eerste en laatste
-paragraaf, inclusief weggefallene), bijgewerkt voor het MoPeG (Titel 16,
-1.1.2024) en de Vormundschafts- und Betreuungsrechtsreform (Buch 4
-Abschnitt 3, 1.1.2023). `synoptikon systematiek de bgb` ververst de boom
-uit een actuele import tot op het laagste niveau.
+Gegenereerd uit de officiële XML van gesetze-im-internet.de (builddate
+20260926215507); bereiken zijn de eerste en laatste paragraaf van elke eenheid,
+weggefallene inbegrepen. Ververs met `synoptikon import de bgb --systematiek`.
 """
 
 BGB = [
-    ('BGB-1', 'Buch 1 · Allgemeiner Teil', '§§ 1–240', [
+    ('BGB-1', 'Buch 1 · Allgemeiner Teil', '§§ 1–240a', [
         ('BGB-1-1', 'Abschnitt 1 · Personen', '§§ 1–89', [
-            ('BGB-1-1-1', 'Titel 1 · Natürliche Personen, Verbraucher, Unternehmer', '§§ 1–20', []),
+            ('BGB-1-1-1', 'Titel 1 · Natürliche Personen, Verbraucher, Unternehmer', '§§ 1–14', []),
             ('BGB-1-1-2', 'Titel 2 · Juristische Personen', '§§ 21–89', [
-                ('BGB-1-1-2-1', 'Untertitel 1 · Vereine', '§§ 21–79a', []),
-                ('BGB-1-1-2-2', 'Untertitel 2 · Stiftungen', '§§ 80–88', []),
+                ('BGB-1-1-2-1', 'Untertitel 1 · Vereine', '§§ 21–79a', [
+                    ('BGB-1-1-2-1-1', 'Kapitel 1 · Allgemeine Vorschriften', '§§ 21–54', []),
+                    ('BGB-1-1-2-1-2', 'Kapitel 2 · Eingetragene Vereine', '§§ 55–79a', []),
+                ]),
+                ('BGB-1-1-2-2', 'Untertitel 2 · Rechtsfähige Stiftungen', '§§ 80–88', []),
                 ('BGB-1-1-2-3', 'Untertitel 3 · Juristische Personen des öffentlichen Rechts', '§ 89', []),
             ]),
         ]),
         ('BGB-1-2', 'Abschnitt 2 · Sachen und Tiere', '§§ 90–103', []),
         ('BGB-1-3', 'Abschnitt 3 · Rechtsgeschäfte', '§§ 104–185', [
-            ('BGB-1-3-1', 'Titel 1 · Geschäftsfähigkeit', '§§ 104–114', []),
+            ('BGB-1-3-1', 'Titel 1 · Geschäftsfähigkeit', '§§ 104–113', []),
             ('BGB-1-3-2', 'Titel 2 · Willenserklärung', '§§ 116–144', []),
             ('BGB-1-3-3', 'Titel 3 · Vertrag', '§§ 145–157', []),
             ('BGB-1-3-4', 'Titel 4 · Bedingung und Zeitbestimmung', '§§ 158–163', []),
@@ -27,13 +28,13 @@ BGB = [
             ('BGB-1-3-6', 'Titel 6 · Einwilligung und Genehmigung', '§§ 182–185', []),
         ]),
         ('BGB-1-4', 'Abschnitt 4 · Fristen, Termine', '§§ 186–193', []),
-        ('BGB-1-5', 'Abschnitt 5 · Verjährung', '§§ 194–225', [
+        ('BGB-1-5', 'Abschnitt 5 · Verjährung', '§§ 194–218', [
             ('BGB-1-5-1', 'Titel 1 · Gegenstand und Dauer der Verjährung', '§§ 194–202', []),
             ('BGB-1-5-2', 'Titel 2 · Hemmung, Ablaufhemmung und Neubeginn der Verjährung', '§§ 203–213', []),
-            ('BGB-1-5-3', 'Titel 3 · Rechtsfolgen der Verjährung', '§§ 214–225', []),
+            ('BGB-1-5-3', 'Titel 3 · Rechtsfolgen der Verjährung', '§§ 214–218', []),
         ]),
         ('BGB-1-6', 'Abschnitt 6 · Ausübung der Rechte, Selbstverteidigung, Selbsthilfe', '§§ 226–231', []),
-        ('BGB-1-7', 'Abschnitt 7 · Sicherheitsleistung', '§§ 232–240', []),
+        ('BGB-1-7', 'Abschnitt 7 · Sicherheitsleistung', '§§ 232–240a', []),
     ]),
     ('BGB-2', 'Buch 2 · Recht der Schuldverhältnisse', '§§ 241–853', [
         ('BGB-2-1', 'Abschnitt 1 · Inhalt der Schuldverhältnisse', '§§ 241–304', [
@@ -44,7 +45,12 @@ BGB = [
         ('BGB-2-3', 'Abschnitt 3 · Schuldverhältnisse aus Verträgen', '§§ 311–361', [
             ('BGB-2-3-1', 'Titel 1 · Begründung, Inhalt und Beendigung', '§§ 311–319', [
                 ('BGB-2-3-1-1', 'Untertitel 1 · Begründung', '§§ 311–311c', []),
-                ('BGB-2-3-1-2', 'Untertitel 2 · Grundsätze bei Verbraucherverträgen und besondere Vertriebsformen', '§§ 312–312k', []),
+                ('BGB-2-3-1-2', 'Untertitel 2 · Grundsätze bei Verbraucherverträgen und besondere Vertriebsformen', '§§ 312–312m', [
+                    ('BGB-2-3-1-2-1', 'Kapitel 1 · Anwendungsbereich und Grundsätze bei Verbraucherverträgen', '§§ 312–312a', []),
+                    ('BGB-2-3-1-2-2', 'Kapitel 2 · Außerhalb von Geschäftsräumen geschlossene Verträge und Fernabsatzverträge', '§§ 312b–312h', []),
+                    ('BGB-2-3-1-2-3', 'Kapitel 3 · Verträge im elektronischen Geschäftsverkehr; Online-Marktplätze', '§§ 312i–312l', []),
+                    ('BGB-2-3-1-2-4', 'Kapitel 4 · Abweichende Vereinbarungen und Beweislast', '§ 312m', []),
+                ]),
                 ('BGB-2-3-1-3', 'Untertitel 3 · Anpassung und Beendigung von Verträgen', '§§ 313–314', []),
                 ('BGB-2-3-1-4', 'Untertitel 4 · Einseitige Leistungsbestimmungsrechte', '§§ 315–319', []),
             ]),
@@ -72,13 +78,21 @@ BGB = [
         ('BGB-2-8', 'Abschnitt 8 · Einzelne Schuldverhältnisse', '§§ 433–853', [
             ('BGB-2-8-1', 'Titel 1 · Kauf, Tausch', '§§ 433–480', [
                 ('BGB-2-8-1-1', 'Untertitel 1 · Allgemeine Vorschriften', '§§ 433–453', []),
-                ('BGB-2-8-1-2', 'Untertitel 2 · Besondere Arten des Kaufs', '§§ 454–473', []),
+                ('BGB-2-8-1-2', 'Untertitel 2 · Besondere Arten des Kaufs', '§§ 454–473', [
+                    ('BGB-2-8-1-2-1', 'Kapitel 1 · Kauf auf Probe', '§§ 454–455', []),
+                    ('BGB-2-8-1-2-2', 'Kapitel 2 · Wiederkauf', '§§ 456–462', []),
+                    ('BGB-2-8-1-2-3', 'Kapitel 3 · Vorkauf', '§§ 463–473', []),
+                ]),
                 ('BGB-2-8-1-3', 'Untertitel 3 · Verbrauchsgüterkauf', '§§ 474–479', []),
-                ('BGB-2-8-1-4', 'Untertitel 4 · Tausch', '§ 480', []),
+                ('BGB-2-8-1-4', 'Untertitel 4 · Reparaturverpflichtung des Herstellers', '§§ 479a–479g', []),
+                ('BGB-2-8-1-5', 'Untertitel 5 · Tausch', '§ 480', []),
             ]),
             ('BGB-2-8-2', 'Titel 2 · Teilzeit-Wohnrechteverträge, Verträge über langfristige Urlaubsprodukte, Vermittlungsverträge und Tauschsystemverträge', '§§ 481–487', []),
             ('BGB-2-8-3', 'Titel 3 · Darlehensvertrag; Finanzierungshilfen und Ratenlieferungsverträge zwischen einem Unternehmer und einem Verbraucher', '§§ 488–515', [
-                ('BGB-2-8-3-1', 'Untertitel 1 · Darlehensvertrag', '§§ 488–505e', []),
+                ('BGB-2-8-3-1', 'Untertitel 1 · Darlehensvertrag', '§§ 488–505e', [
+                    ('BGB-2-8-3-1-1', 'Kapitel 1 · Allgemeine Vorschriften', '§§ 488–490', []),
+                    ('BGB-2-8-3-1-2', 'Kapitel 2 · Besondere Vorschriften für Verbraucherdarlehensverträge', '§§ 491–505e', []),
+                ]),
                 ('BGB-2-8-3-2', 'Untertitel 2 · Finanzierungshilfen zwischen einem Unternehmer und einem Verbraucher', '§§ 506–509', []),
                 ('BGB-2-8-3-3', 'Untertitel 3 · Ratenlieferungsverträge zwischen einem Unternehmer und einem Verbraucher', '§ 510', []),
                 ('BGB-2-8-3-4', 'Untertitel 4 · Beratungsleistungen bei Immobiliar-Verbraucherdarlehensverträgen', '§ 511', []),
@@ -88,7 +102,24 @@ BGB = [
             ('BGB-2-8-4', 'Titel 4 · Schenkung', '§§ 516–534', []),
             ('BGB-2-8-5', 'Titel 5 · Mietvertrag, Pachtvertrag', '§§ 535–597', [
                 ('BGB-2-8-5-1', 'Untertitel 1 · Allgemeine Vorschriften für Mietverhältnisse', '§§ 535–548a', []),
-                ('BGB-2-8-5-2', 'Untertitel 2 · Mietverhältnisse über Wohnraum', '§§ 549–577a', []),
+                ('BGB-2-8-5-2', 'Untertitel 2 · Mietverhältnisse über Wohnraum', '§§ 549–577a', [
+                    ('BGB-2-8-5-2-1', 'Kapitel 1 · Allgemeine Vorschriften', '§§ 549–555', []),
+                    ('BGB-2-8-5-2-1a', 'Kapitel 1a · Erhaltungs- und Modernisierungsmaßnahmen', '§§ 555a–555f', []),
+                    ('BGB-2-8-5-2-2', 'Kapitel 2 · Die Miete', '§§ 556–561', [
+                        ('BGB-2-8-5-2-2-1', 'Unterkapitel 1 · Vereinbarungen über die Miete', '§§ 556–556c', []),
+                        ('BGB-2-8-5-2-2-1a', 'Unterkapitel 1a · Vereinbarungen über die Miethöhe bei Mietbeginn in Gebieten mit angespannten Wohnungsmärkten', '§§ 556d–556g', []),
+                        ('BGB-2-8-5-2-2-2', 'Unterkapitel 2 · Regelungen über die Miethöhe', '§§ 557–561', []),
+                    ]),
+                    ('BGB-2-8-5-2-3', 'Kapitel 3 · Pfandrecht des Vermieters', '§§ 562–562d', []),
+                    ('BGB-2-8-5-2-4', 'Kapitel 4 · Wechsel der Vertragsparteien', '§§ 563–567b', []),
+                    ('BGB-2-8-5-2-5', 'Kapitel 5 · Beendigung des Mietverhältnisses', '§§ 568–576b', [
+                        ('BGB-2-8-5-2-5-1', 'Unterkapitel 1 · Allgemeine Vorschriften', '§§ 568–572', []),
+                        ('BGB-2-8-5-2-5-2', 'Unterkapitel 2 · Mietverhältnisse auf unbestimmte Zeit', '§§ 573–574c', []),
+                        ('BGB-2-8-5-2-5-3', 'Unterkapitel 3 · Mietverhältnisse auf bestimmte Zeit', '§§ 575–575a', []),
+                        ('BGB-2-8-5-2-5-4', 'Unterkapitel 4 · Werkwohnungen', '§§ 576–576b', []),
+                    ]),
+                    ('BGB-2-8-5-2-6', 'Kapitel 6 · Besonderheiten bei der Bildung von Wohnungseigentum an vermieteten Wohnungen', '§§ 577–577a', []),
+                ]),
                 ('BGB-2-8-5-3', 'Untertitel 3 · Mietverhältnisse über andere Sachen und digitale Produkte', '§§ 578–580a', []),
                 ('BGB-2-8-5-4', 'Untertitel 4 · Pachtvertrag', '§§ 581–584b', []),
                 ('BGB-2-8-5-5', 'Untertitel 5 · Landpachtvertrag', '§§ 585–597', []),
@@ -100,9 +131,14 @@ BGB = [
                 ('BGB-2-8-8-2', 'Untertitel 2 · Behandlungsvertrag', '§§ 630a–630h', []),
             ]),
             ('BGB-2-8-9', 'Titel 9 · Werkvertrag und ähnliche Verträge', '§§ 631–651y', [
-                ('BGB-2-8-9-1', 'Untertitel 1 · Werkvertrag', '§§ 631–650o', []),
+                ('BGB-2-8-9-1', 'Untertitel 1 · Werkvertrag', '§§ 631–650o', [
+                    ('BGB-2-8-9-1-1', 'Kapitel 1 · Allgemeine Vorschriften', '§§ 631–650', []),
+                    ('BGB-2-8-9-1-2', 'Kapitel 2 · Bauvertrag', '§§ 650a–650h', []),
+                    ('BGB-2-8-9-1-3', 'Kapitel 3 · Verbraucherbauvertrag', '§§ 650i–650n', []),
+                    ('BGB-2-8-9-1-4', 'Kapitel 4 · Unabdingbarkeit', '§ 650o', []),
+                ]),
                 ('BGB-2-8-9-2', 'Untertitel 2 · Architektenvertrag und Ingenieurvertrag', '§§ 650p–650t', []),
-                ('BGB-2-8-9-3', 'Untertitel 3 · Bauträgervertrag', '§§ 650u–650v', []),
+                ('BGB-2-8-9-3', 'Untertitel 3 · Bauträgervertrag', '§§ 650u–651', []),
                 ('BGB-2-8-9-4', 'Untertitel 4 · Pauschalreisevertrag, Reisevermittlung und Vermittlung verbundener Reiseleistungen', '§§ 651a–651y', []),
             ]),
             ('BGB-2-8-10', 'Titel 10 · Maklervertrag', '§§ 652–656d', [
@@ -115,12 +151,31 @@ BGB = [
             ('BGB-2-8-12', 'Titel 12 · Auftrag, Geschäftsbesorgungsvertrag und Zahlungsdienste', '§§ 662–676c', [
                 ('BGB-2-8-12-1', 'Untertitel 1 · Auftrag', '§§ 662–674', []),
                 ('BGB-2-8-12-2', 'Untertitel 2 · Geschäftsbesorgungsvertrag', '§§ 675–675b', []),
-                ('BGB-2-8-12-3', 'Untertitel 3 · Zahlungsdienste', '§§ 675c–676c', []),
+                ('BGB-2-8-12-3', 'Untertitel 3 · Zahlungsdienste', '§§ 675c–676c', [
+                    ('BGB-2-8-12-3-1', 'Kapitel 1 · Allgemeine Vorschriften', '§§ 675c–675e', []),
+                    ('BGB-2-8-12-3-2', 'Kapitel 2 · Zahlungsdienstevertrag', '§§ 675f–675i', []),
+                    ('BGB-2-8-12-3-3', 'Kapitel 3 · Erbringung und Nutzung von Zahlungsdiensten', '§§ 675j–676c', [
+                        ('BGB-2-8-12-3-3-1', 'Unterkapitel 1 · Autorisierung von Zahlungsvorgängen; Zahlungsinstrumente; Verweigerung des Zugangs zum Zahlungskonto', '§§ 675j–675m', []),
+                        ('BGB-2-8-12-3-3-2', 'Unterkapitel 2 · Ausführung von Zahlungsvorgängen', '§§ 675n–675t', []),
+                        ('BGB-2-8-12-3-3-3', 'Unterkapitel 3 · Haftung', '§§ 675u–676c', []),
+                    ]),
+                ]),
             ]),
             ('BGB-2-8-13', 'Titel 13 · Geschäftsführung ohne Auftrag', '§§ 677–687', []),
             ('BGB-2-8-14', 'Titel 14 · Verwahrung', '§§ 688–700', []),
             ('BGB-2-8-15', 'Titel 15 · Einbringung von Sachen bei Gastwirten', '§§ 701–704', []),
-            ('BGB-2-8-16', 'Titel 16 · Gesellschaft', '§§ 705–740c', []),
+            ('BGB-2-8-16', 'Titel 16 · Gesellschaft', '§§ 705–740c', [
+                ('BGB-2-8-16-1', 'Untertitel 1 · Allgemeine Bestimmungen', '§ 705', []),
+                ('BGB-2-8-16-2', 'Untertitel 2 · Rechtsfähige Gesellschaft', '§§ 706–739', [
+                    ('BGB-2-8-16-2-1', 'Kapitel 1 · Sitz; Registrierung', '§§ 706–707d', []),
+                    ('BGB-2-8-16-2-2', 'Kapitel 2 · Rechtsverhältnis der Gesellschafter untereinander und der Gesellschafter zur Gesellschaft', '§§ 708–718', []),
+                    ('BGB-2-8-16-2-3', 'Kapitel 3 · Rechtsverhältnis der Gesellschaft zu Dritten', '§§ 719–722', []),
+                    ('BGB-2-8-16-2-4', 'Kapitel 4 · Ausscheiden eines Gesellschafters', '§§ 723–728b', []),
+                    ('BGB-2-8-16-2-5', 'Kapitel 5 · Auflösung der Gesellschaft', '§§ 729–734', []),
+                    ('BGB-2-8-16-2-6', 'Kapitel 6 · Liquidation der Gesellschaft', '§§ 735–739', []),
+                ]),
+                ('BGB-2-8-16-3', 'Untertitel 3 · Nicht rechtsfähige Gesellschaft', '§§ 740–740c', []),
+            ]),
             ('BGB-2-8-17', 'Titel 17 · Gemeinschaft', '§§ 741–758', []),
             ('BGB-2-8-18', 'Titel 18 · Leibrente', '§§ 759–761', []),
             ('BGB-2-8-19', 'Titel 19 · Unvollkommene Verbindlichkeiten', '§§ 762–764', []),
@@ -137,7 +192,7 @@ BGB = [
     ('BGB-3', 'Buch 3 · Sachenrecht', '§§ 854–1296', [
         ('BGB-3-1', 'Abschnitt 1 · Besitz', '§§ 854–872', []),
         ('BGB-3-2', 'Abschnitt 2 · Allgemeine Vorschriften über Rechte an Grundstücken', '§§ 873–902', []),
-        ('BGB-3-3', 'Abschnitt 3 · Eigentum', '§§ 903–1017', [
+        ('BGB-3-3', 'Abschnitt 3 · Eigentum', '§§ 903–1011', [
             ('BGB-3-3-1', 'Titel 1 · Inhalt des Eigentums', '§§ 903–924', []),
             ('BGB-3-3-2', 'Titel 2 · Erwerb und Verlust des Eigentums an Grundstücken', '§§ 925–928', []),
             ('BGB-3-3-3', 'Titel 3 · Erwerb und Verlust des Eigentums an beweglichen Sachen', '§§ 929–984', [
@@ -149,7 +204,7 @@ BGB = [
                 ('BGB-3-3-3-6', 'Untertitel 6 · Fund', '§§ 965–984', []),
             ]),
             ('BGB-3-3-4', 'Titel 4 · Ansprüche aus dem Eigentum', '§§ 985–1007', []),
-            ('BGB-3-3-5', 'Titel 5 · Miteigentum', '§§ 1008–1017', []),
+            ('BGB-3-3-5', 'Titel 5 · Miteigentum', '§§ 1008–1011', []),
         ]),
         ('BGB-3-4', 'Abschnitt 4 · Dienstbarkeiten', '§§ 1018–1093', [
             ('BGB-3-4-1', 'Titel 1 · Grunddienstbarkeiten', '§§ 1018–1029', []),
@@ -170,11 +225,11 @@ BGB = [
             ]),
         ]),
         ('BGB-3-8', 'Abschnitt 8 · Pfandrecht an beweglichen Sachen und an Rechten', '§§ 1204–1296', [
-            ('BGB-3-8-1', 'Titel 1 · Pfandrecht an beweglichen Sachen', '§§ 1204–1272', []),
+            ('BGB-3-8-1', 'Titel 1 · Pfandrecht an beweglichen Sachen', '§§ 1204–1259', []),
             ('BGB-3-8-2', 'Titel 2 · Pfandrecht an Rechten', '§§ 1273–1296', []),
         ]),
     ]),
-    ('BGB-4', 'Buch 4 · Familienrecht', '§§ 1297–1921', [
+    ('BGB-4', 'Buch 4 · Familienrecht', '§§ 1297–1888', [
         ('BGB-4-1', 'Abschnitt 1 · Bürgerliche Ehe', '§§ 1297–1588', [
             ('BGB-4-1-1', 'Titel 1 · Verlöbnis', '§§ 1297–1302', []),
             ('BGB-4-1-2', 'Titel 2 · Eingehung der Ehe', '§§ 1303–1312', [
@@ -184,17 +239,33 @@ BGB = [
                 ('BGB-4-1-2-4', 'Untertitel 4 · Eheschließung', '§§ 1310–1312', []),
             ]),
             ('BGB-4-1-3', 'Titel 3 · Aufhebung der Ehe', '§§ 1313–1318', []),
-            ('BGB-4-1-4', 'Titel 4 · Wiederverheiratung nach Todeserklärung', '§§ 1319–1352', []),
+            ('BGB-4-1-4', 'Titel 4 · Wiederverheiratung nach Todeserklärung', '§§ 1319–1320', []),
             ('BGB-4-1-5', 'Titel 5 · Wirkungen der Ehe im Allgemeinen', '§§ 1353–1362', []),
-            ('BGB-4-1-6', 'Titel 6 · Eheliches Güterrecht', '§§ 1363–1563', [
-                ('BGB-4-1-6-1', 'Untertitel 1 · Gesetzliches Güterrecht', '§§ 1363–1407', []),
-                ('BGB-4-1-6-2', 'Untertitel 2 · Vertragliches Güterrecht', '§§ 1408–1557', []),
-                ('BGB-4-1-6-3', 'Untertitel 3 · Güterrechtsregister', '§§ 1558–1563', []),
+            ('BGB-4-1-6', 'Titel 6 · Eheliches Güterrecht', '§§ 1363–1519', [
+                ('BGB-4-1-6-1', 'Untertitel 1 · Gesetzliches Güterrecht', '§§ 1363–1390', []),
+                ('BGB-4-1-6-2', 'Untertitel 2 · Vertragliches Güterrecht', '§§ 1408–1519', [
+                    ('BGB-4-1-6-2-1', 'Kapitel 1 · Allgemeine Vorschriften', '§§ 1408–1413', []),
+                    ('BGB-4-1-6-2-2', 'Kapitel 2 · Gütertrennung', '§ 1414', []),
+                    ('BGB-4-1-6-2-3', 'Kapitel 3 · Gütergemeinschaft', '§§ 1415–1518', [
+                        ('BGB-4-1-6-2-3-1', 'Unterkapitel 1 · Allgemeine Vorschriften', '§§ 1415–1421', []),
+                        ('BGB-4-1-6-2-3-2', 'Unterkapitel 2 · Verwaltung des Gesamtguts durch einen Ehegatten', '§§ 1422–1449', []),
+                        ('BGB-4-1-6-2-3-3', 'Unterkapitel 3 · Gemeinschaftliche Verwaltung des Gesamtguts durch die Ehegatten', '§§ 1450–1470', []),
+                        ('BGB-4-1-6-2-3-4', 'Unterkapitel 4 · Auseinandersetzung des Gesamtguts', '§§ 1471–1482', []),
+                        ('BGB-4-1-6-2-3-5', 'Unterkapitel 5 · Fortgesetzte Gütergemeinschaft', '§§ 1483–1518', []),
+                    ]),
+                    ('BGB-4-1-6-2-4', 'Kapitel 4 · Wahl-Zugewinngemeinschaft', '§ 1519', []),
+                ]),
             ]),
             ('BGB-4-1-7', 'Titel 7 · Scheidung der Ehe', '§§ 1564–1587', [
                 ('BGB-4-1-7-1', 'Untertitel 1 · Scheidungsgründe', '§§ 1564–1568', []),
                 ('BGB-4-1-7-1a', 'Untertitel 1a · Behandlung der Ehewohnung und der Haushaltsgegenstände anlässlich der Scheidung', '§§ 1568a–1568b', []),
-                ('BGB-4-1-7-2', 'Untertitel 2 · Unterhalt des geschiedenen Ehegatten', '§§ 1569–1586b', []),
+                ('BGB-4-1-7-2', 'Untertitel 2 · Unterhalt des geschiedenen Ehegatten', '§§ 1569–1586b', [
+                    ('BGB-4-1-7-2-1', 'Kapitel 1 · Grundsatz', '§ 1569', []),
+                    ('BGB-4-1-7-2-2', 'Kapitel 2 · Unterhaltsberechtigung', '§§ 1570–1580', []),
+                    ('BGB-4-1-7-2-3', 'Kapitel 3 · Leistungsfähigkeit und Rangfolge', '§§ 1581–1584', []),
+                    ('BGB-4-1-7-2-4', 'Kapitel 4 · Gestaltung des Unterhaltsanspruchs', '§§ 1585–1585c', []),
+                    ('BGB-4-1-7-2-5', 'Kapitel 5 · Ende des Unterhaltsanspruchs', '§§ 1586–1586b', []),
+                ]),
                 ('BGB-4-1-7-3', 'Untertitel 3 · Versorgungsausgleich', '§ 1587', []),
             ]),
             ('BGB-4-1-8', 'Titel 8 · Kirchliche Verpflichtungen', '§ 1588', []),
@@ -207,17 +278,50 @@ BGB = [
                 ('BGB-4-2-3-2', 'Untertitel 2 · Besondere Vorschriften für das Kind und seine nicht miteinander verheirateten Eltern', '§§ 1615a–1615n', []),
             ]),
             ('BGB-4-2-4', 'Titel 4 · Rechtsverhältnis zwischen den Eltern und dem Kind im Allgemeinen', '§§ 1616–1625', []),
-            ('BGB-4-2-5', 'Titel 5 · Elterliche Sorge', '§§ 1626–1711', []),
-            ('BGB-4-2-6', 'Titel 6 · Beistandschaft', '§§ 1712–1740', []),
+            ('BGB-4-2-5', 'Titel 5 · Elterliche Sorge', '§§ 1626–1698b', []),
+            ('BGB-4-2-6', 'Titel 6 · Beistandschaft', '§§ 1712–1717', []),
             ('BGB-4-2-7', 'Titel 7 · Annahme als Kind', '§§ 1741–1772', [
                 ('BGB-4-2-7-1', 'Untertitel 1 · Annahme Minderjähriger', '§§ 1741–1766a', []),
                 ('BGB-4-2-7-2', 'Untertitel 2 · Annahme Volljähriger', '§§ 1767–1772', []),
             ]),
         ]),
         ('BGB-4-3', 'Abschnitt 3 · Vormundschaft, Pflegschaft für Minderjährige, rechtliche Betreuung, sonstige Pflegschaft', '§§ 1773–1888', [
-            ('BGB-4-3-1', 'Titel 1 · Vormundschaft', '§§ 1773–1808', []),
+            ('BGB-4-3-1', 'Titel 1 · Vormundschaft', '§§ 1773–1808', [
+                ('BGB-4-3-1-1', 'Untertitel 1 · Begründung der Vormundschaft', '§§ 1773–1787', [
+                    ('BGB-4-3-1-1-1', 'Kapitel 1 · Bestellte Vormundschaft', '§§ 1773–1785', [
+                        ('BGB-4-3-1-1-1-1', 'Unterkapitel 1 · Allgemeine Vorschriften', '§§ 1773–1777', []),
+                        ('BGB-4-3-1-1-1-2', 'Unterkapitel 2 · Auswahl des Vormunds', '§§ 1778–1785', []),
+                    ]),
+                    ('BGB-4-3-1-1-2', 'Kapitel 2 · Gesetzliche Amtsvormundschaft', '§§ 1786–1787', []),
+                ]),
+                ('BGB-4-3-1-2', 'Untertitel 2 · Führung der Vormundschaft', '§§ 1788–1801', [
+                    ('BGB-4-3-1-2-1', 'Kapitel 1 · Allgemeine Vorschriften', '§§ 1788–1794', []),
+                    ('BGB-4-3-1-2-2', 'Kapitel 2 · Personensorge', '§§ 1795–1797', []),
+                    ('BGB-4-3-1-2-3', 'Kapitel 3 · Vermögenssorge', '§§ 1798–1801', []),
+                ]),
+                ('BGB-4-3-1-3', 'Untertitel 3 · Beratung und Aufsicht durch das Familiengericht', '§§ 1802–1803', []),
+                ('BGB-4-3-1-4', 'Untertitel 4 · Beendigung der Vormundschaft', '§§ 1804–1807', []),
+                ('BGB-4-3-1-5', 'Untertitel 5 · Vergütung und Aufwendungsersatz', '§ 1808', []),
+            ]),
             ('BGB-4-3-2', 'Titel 2 · Pflegschaft für Minderjährige', '§§ 1809–1813', []),
-            ('BGB-4-3-3', 'Titel 3 · Rechtliche Betreuung', '§§ 1814–1881', []),
+            ('BGB-4-3-3', 'Titel 3 · Rechtliche Betreuung', '§§ 1814–1881', [
+                ('BGB-4-3-3-1', 'Untertitel 1 · Betreuerbestellung', '§§ 1814–1820', []),
+                ('BGB-4-3-3-2', 'Untertitel 2 · Führung der Betreuung', '§§ 1821–1860', [
+                    ('BGB-4-3-3-2-1', 'Kapitel 1 · Allgemeine Vorschriften', '§§ 1821–1826', []),
+                    ('BGB-4-3-3-2-2', 'Kapitel 2 · Personenangelegenheiten', '§§ 1827–1834', []),
+                    ('BGB-4-3-3-2-3', 'Kapitel 3 · Vermögensangelegenheiten', '§§ 1835–1860', [
+                        ('BGB-4-3-3-2-3-1', 'Unterkapitel 1 · Allgemeine Vorschriften', '§§ 1835–1837', []),
+                        ('BGB-4-3-3-2-3-2', 'Unterkapitel 2 · Verwaltung von Geld, Wertpapieren und Wertgegenständen', '§§ 1838–1845', []),
+                        ('BGB-4-3-3-2-3-3', 'Unterkapitel 3 · Anzeigepflichten', '§§ 1846–1847', []),
+                        ('BGB-4-3-3-2-3-4', 'Unterkapitel 4 · Genehmigungsbedürftige Rechtsgeschäfte', '§§ 1848–1854', []),
+                        ('BGB-4-3-3-2-3-5', 'Unterkapitel 5 · Genehmigungserklärung', '§§ 1855–1858', []),
+                        ('BGB-4-3-3-2-3-6', 'Unterkapitel 6 · Befreiungen', '§§ 1859–1860', []),
+                    ]),
+                ]),
+                ('BGB-4-3-3-3', 'Untertitel 3 · Beratung und Aufsicht durch das Betreuungsgericht', '§§ 1861–1867', []),
+                ('BGB-4-3-3-4', 'Untertitel 4 · Beendigung, Aufhebung oder Änderung von Betreuung und Einwilligungsvorbehalt', '§§ 1868–1874', []),
+                ('BGB-4-3-3-5', 'Untertitel 5 · Vergütung und Aufwendungsersatz', '§§ 1875–1881', []),
+            ]),
             ('BGB-4-3-4', 'Titel 4 · Sonstige Pflegschaft', '§§ 1882–1888', []),
         ]),
     ]),
