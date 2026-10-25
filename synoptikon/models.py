@@ -68,11 +68,24 @@ class Base(DeclarativeBase):
     pass
 
 
+# Rechtsfamilies (naar Zweigert/Kötz, met de gebruikelijke correcties): sleutel → (naam, kenmerk).
+# De volgorde is die van de kolommen: eerst de civil law, dan de common law, dan het eenvormige recht.
+RECHTSFAMILIES: dict[str, tuple[str, str]] = {
+    "romaans": ("Romaanse rechtsfamilie", "Code civil-traditie: causaal stelsel, consensualisme, de wet als hoofdbron"),
+    "germaans": ("Germaanse rechtsfamilie", "Pandektistiek: Allgemeiner Teil, abstracte begrippen, Trennungs- en Abstraktionsprinzip"),
+    "nordisch": ("Nordische rechtsfamilie", "Scandinavisch recht: pragmatisch, weinig codificatie van het algemene deel"),
+    "gemengd": ("Gemengde stelsels", "Civil law-kern met common law-bovenbouw: Louisiana, Québec, Schotland, Zuid-Afrika"),
+    "common_law": ("Common law", "Rechtersrecht en precedent; statutes vullen aan en worden restrictief uitgelegd"),
+    "supranationaal": ("Europees en eenvormig recht", "EU-recht, verdragen en soft law (CISG, PECL, DCFR) als gemeenschappelijke maatstaf"),
+}
+
+
 class Stelsel(Base):
     __tablename__ = "stelsel"
 
     code: Mapped[str] = mapped_column(String(8), primary_key=True)  # NL, DE, FR, EU, IT, EN …
     naam: Mapped[str] = mapped_column(String(80))
+    familie: Mapped[str | None] = mapped_column(String(20))  # sleutel uit RECHTSFAMILIES
     taal: Mapped[str] = mapped_column(String(5))  # hoofdtaal van de wetteksten
     volgorde: Mapped[int] = mapped_column(Integer, default=0)
     actief: Mapped[bool] = mapped_column(default=True)
@@ -81,6 +94,10 @@ class Stelsel(Base):
     bronnen: Mapped[list["Bron"]] = relationship(back_populates="stelsel")
     begrippen: Mapped[list["Begrip"]] = relationship(back_populates="stelsel")
     systematiek: Mapped[list["Systematiek"]] = relationship(back_populates="stelsel")
+
+    @property
+    def familie_naam(self) -> str:
+        return RECHTSFAMILIES.get(self.familie or "", ("Overig", ""))[0]
 
 
 class Vraag(Base):
@@ -290,6 +307,7 @@ class Systematiek(Base):
     stelsel_code: Mapped[str] = mapped_column(ForeignKey("stelsel.code"))
     parent_id: Mapped[int | None] = mapped_column(ForeignKey("systematiek.id", ondelete="CASCADE"))
     code: Mapped[str] = mapped_column(String(60))  # bijv. "BW-3-4-2", "BGB-3-3-1", "CC-III-I-1-2"
+    wet: Mapped[str | None] = mapped_column(String(60))  # None = hoofdcodificatie; anders "OR", "UCC", "SGA 1979"
     label: Mapped[str] = mapped_column(String(200))  # "Boek 3", "Titel 4 Verkrijging en verlies van goederen"
     bereik: Mapped[str | None] = mapped_column(String(80))  # "art. 3:83–3:98", "§§ 929–936"
     volgorde: Mapped[int] = mapped_column(Integer, default=0)

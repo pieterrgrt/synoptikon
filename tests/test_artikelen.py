@@ -167,3 +167,48 @@ def test_systematiek_uit_wettekst():
         s.delete(w)
         for knoop in s.scalars(select(Systematiek).where(Systematiek.id.in_(voor))):
             knoop.bereik, knoop.volgorde = voor[knoop.id]
+
+
+def test_nummering_van_de_nieuwe_stelsels():
+    def een(t):
+        (r,) = herken(t)
+        return r.stelsel, r.nummer, r.wet, r.detail, r.citeer
+
+    assert een("art. 5.69 BW") == ("BE", "5.69", None, None, "art. 5.69 BW")
+    assert een("art. 1382 oud BW") == ("BE", "1382", "oud BW", None, "art. 1382 oud BW")
+    assert een("art. 2:56 WVV")[:3] == ("BE", "2:56", "WVV")
+    assert een("Art. 41 Abs. 1 OR") == ("CH", "41", "OR", "Abs. 1", "Art. 41 Abs. 1 OR")
+    assert een("art. 1469 bis c.c.")[:2] == ("IT", "1469-bis")
+    assert een("s 2(1)(a) SGA 1979") == ("EN", "2", "SGA 1979", "(1)(a)", "s 2(1)(a) SGA 1979")
+    assert een("UCC § 2-207(2)") == ("US", "2-207", "UCC", "(2)", "UCC § 2-207(2)")
+    assert een("La. C.C. art. 2315")[4] == "La. C.C. art. 2315"  # niet het Italiaanse c.c.
+    assert een("s 18 ACL")[:3] == ("AU", "18", "ACL")
+    assert een("DCFR VIII.–2:101")[:3] == ("EU", "VIII.-2:101", "DCFR")
+    assert {r.stelsel for r in herken("art. 1902 CC")} == {"ES", "FR"}  # "CC" is dubbelzinnig
+    assert lees("ES", "artículo 94 bis").nummer == "94 bis" and lees("BE", "art. 2262 bis oud BW").nummer == "2262bis"
+    assert sleutel("IT", "1469-bis") < sleutel("IT", "1469-ter") < sleutel("IT", "1470")
+    assert sleutel("CH", "40") < sleutel("CH", "40a") < sleutel("CH", "41")
+    assert sleutel("US", "2-401") < sleutel("US", "2-725") < sleutel("US", "9-101")
+
+
+def test_plaatsen_per_wet():
+    with database.session() as s:
+        assert plaatser(s, "BE").pad("5.69")[-1].label.startswith("Onderafdeling 1 · Bindende kracht")
+        assert plaatser(s, "BE", "oud BW").pad("1582")[-1].code == "BE-OBW-III-6"
+        assert plaatser(s, "BE").pad("1582") == []  # oud BW valt niet in het nieuwe BW
+        assert plaatser(s, "CH", "OR").pad("41")[0].code == "CH-OR"
+        assert plaatser(s, "CH").pad("714")[0].code == "CH-ZGB"
+        assert [k.code for k in plaatser(s, "EN", "SGA 1979").pad("17")] == ["EN-CONTRACT", "EN-SGA1979", "EN-SGA1979-III"]
+        assert plaatser(s, "US", "UCC").pad("2-401")[-1].code == "US-UCC-2-4"
+        assert plaatser(s, "US", "Rest. 2d Torts").pad("402A")[-1].code == "US-REST2T"  # wetwortel zonder bereik
+        assert plaatser(s, "IT").pad("1469-bis")[-1].code == "IT-IV-II-XIVBIS"
+        assert plaatser(s, "EU", "Rome I").pad("6")[-1].code == "EU-ROME1"
+
+
+def test_stelsels_per_rechtsfamilie():
+    from synoptikon.services.helpers import actieve_stelsels, per_familie
+
+    with database.session() as s:
+        families = per_familie(actieve_stelsels(s))
+        assert [f.sleutel for f in families] == ["romaans", "germaans", "common_law", "supranationaal"]
+        assert [x.code for x in families[2].stelsels] == ["EN", "US", "AU"]

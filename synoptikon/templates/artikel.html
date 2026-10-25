@@ -32,8 +32,8 @@
   <div class="thema-kolommen">
   {% for code, leden in kolommen.items() %}
     {% if leden %}
-    <div class="thema-kolom">
-      <h4>{{ code }}{% if code == ref.stelsel %} · ook{% endif %}</h4>
+    <div class="thema-kolom fam-{{ per_code[code].familie if code in per_code else '' }}">
+      <h4>{{ vlag(code) }}{{ per_code[code].naam if code in per_code else code }}{% if code == ref.stelsel %} · ook{% endif %}</h4>
       {% for l in leden %}{{ m.lid(l) }}{% endfor %}
     </div>
     {% endif %}

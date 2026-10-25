@@ -8,8 +8,8 @@
 
 <div class="thema-kolommen">
 {% for code, leden in kolommen.items() %}
-  <div class="thema-kolom">
-    <h4>{{ namen.get(code, code) }}</h4>
+  <div class="thema-kolom fam-{{ per_code[code].familie if code in per_code else '' }}">
+    <h4>{{ vlag(code) }}{{ namen.get(code, code) }}</h4>
     {% for l in leden %}
       {{ m.lid(l) }}
       <form method="post" action="/artikelen/thema/{{ c.id }}/artikel/{{ l.artikel.id }}/verwijderen" class="inline" data-bevestig="{{ l.ref.citeer }} uit dit thema halen?"><button class="knop-tekst klein">× uit thema</button></form>

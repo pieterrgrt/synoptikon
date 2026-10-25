@@ -35,9 +35,14 @@ from .systematiek_fr import HERNOEMD
 
 
 def _stelsels(db: Session) -> None:
-    for i, (code, naam, taal, toelichting, actief) in enumerate(STELSELS):
-        if db.get(Stelsel, code) is None:
-            db.add(Stelsel(code=code, naam=naam, taal=taal, volgorde=(i + 1) * 10, actief=actief, toelichting=toelichting))
+    """Nieuwe stelsels erbij; bestaande zonder rechtsfamilie (van vóór de indeling in families)
+    krijgen familie, volgorde, naam en toelichting uit de seed en worden aangezet."""
+    for i, (code, naam, taal, toelichting, actief, familie) in enumerate(STELSELS):
+        s = db.get(Stelsel, code)
+        if s is None:
+            db.add(Stelsel(code=code, naam=naam, taal=taal, volgorde=(i + 1) * 10, actief=actief, toelichting=toelichting, familie=familie))
+        elif s.familie is None:
+            s.familie, s.volgorde, s.naam, s.toelichting, s.actief = familie, (i + 1) * 10, naam, toelichting, actief
     db.flush()
 
 
@@ -55,18 +60,19 @@ def _systematiek(db: Session) -> dict[str, Systematiek]:
             index[nieuw] = index.pop(oud)
             index[nieuw].code = nieuw
 
-    def voeg_toe(code: str, knopen: list, parent: Systematiek | None):
-        for i, (kcode, label, bereik, kinderen) in enumerate(knopen):
+    def voeg_toe(code: str, knopen: list, parent: Systematiek | None, wet: str | None):
+        for i, (kcode, label, bereik, kinderen, *eigen_wet) in enumerate(knopen):
             knoop = index.get(kcode)
             if knoop is None:
                 knoop = Systematiek(stelsel_code=code, code=kcode)
                 db.add(knoop)
                 index[kcode] = knoop
             knoop.parent, knoop.label, knoop.bereik, knoop.volgorde = parent, label, bereik or None, (i + 1) * 10
-            voeg_toe(code, kinderen, knoop)
+            knoop.wet = eigen_wet[0] if eigen_wet else wet
+            voeg_toe(code, kinderen, knoop, knoop.wet)
 
     for code, knopen in SYSTEMATIEK.items():
-        voeg_toe(code, knopen, None)
+        voeg_toe(code, knopen, None, None)
     db.flush()
     _ruim_vervallen_op(db, index)
     return index
@@ -83,10 +89,10 @@ def _ruim_vervallen_op(db: Session, index: dict[str, Systematiek]) -> None:
         for kind in list(k.kinderen):  # eigen knopen eronder: naar de ouder
             if kind.id not in weg_ids:
                 kind.parent = k.parent
-        pl = Plaatser(k.stelsel_code, [x for x in index.values() if x.stelsel_code == k.stelsel_code])
+        knopen = [x for x in index.values() if x.stelsel_code == k.stelsel_code]
         for bron in list(k.bronnen):
             ref = ref_uit_bron(bron)
-            pad = pl.pad(ref.nummer) if ref and not ref.wet else []
+            pad = Plaatser(k.stelsel_code, knopen, ref.wet).pad(ref.nummer) if ref else []
             bron.systematiek = pad[-1] if pad else k.parent
     db.flush()
     for k in weg:
