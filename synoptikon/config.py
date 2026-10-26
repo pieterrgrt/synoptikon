@@ -38,6 +38,9 @@ class Settings:
     legifrance_client_secret: str | None = field(default_factory=lambda: _env("LEGIFRANCE_CLIENT_SECRET"))
     legifrance_sandbox: bool = field(default_factory=lambda: _env("LEGIFRANCE_SANDBOX", "0") == "1")
 
+    # Koppeling met Wunderkammer (routes/wunderkammer.py): Bearer-token, minstens 24 tekens; leeg = uit.
+    wk_token: str | None = field(default_factory=lambda: _env("SYNOPTIKON_WK_TOKEN"))
+
     # Standaardtaal voor vertalingen in de synopse.
     ui_lang: str = field(default_factory=lambda: _env("SYNOPTIKON_UI_LANG", "nl"))
 

@@ -17,7 +17,7 @@ from .config import settings
 from .db import init_db
 from .models import RECHTSFAMILIES, RELATIE_TYPES
 from .routes import auth as auth_routes
-from .routes import artikelen, begrippen, bronnen, invoer, stelsels, vragen, wetteksten, zoeken
+from .routes import artikelen, begrippen, bronnen, invoer, stelsels, vragen, wetteksten, wunderkammer, zoeken
 from .services.artikelen import ref_uit_bron, wetnaam
 from .services.helpers import per_familie
 
@@ -64,7 +64,8 @@ app.mount("/static", StaticFiles(directory=str(HIER / "static")), name="static")
 
 # Pictogrammen ook zonder login: startpagina's, dashboards en telefoons halen
 # ze op vaste paden op, zonder sessiecookie.
-_OPEN_PADEN = ("/login", "/static/", "/gezond", "/favicon.ico", "/apple-touch-icon")
+# /api/wk/ heeft een eigen token (routes/wunderkammer.py) in plaats van de sessiecookie.
+_OPEN_PADEN = ("/login", "/static/", "/gezond", "/favicon.ico", "/apple-touch-icon", "/api/wk/")
 
 
 class AuthMiddleware(BaseHTTPMiddleware):
@@ -105,5 +106,5 @@ def apple_touch_icon():
     return FileResponse(HIER / "static" / "apple-touch-icon.png")
 
 
-for router in (auth_routes.router, vragen.router, bronnen.router, begrippen.router, stelsels.router, artikelen.router, zoeken.router, invoer.router, wetteksten.router):
+for router in (auth_routes.router, vragen.router, bronnen.router, begrippen.router, stelsels.router, artikelen.router, zoeken.router, invoer.router, wetteksten.router, wunderkammer.router):
     app.include_router(router)
