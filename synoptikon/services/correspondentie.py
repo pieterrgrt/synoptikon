@@ -14,7 +14,7 @@ from sqlalchemy import select
 from sqlalchemy.orm import Session, selectinload
 
 from ..models import AntwoordBron, Bron, Concordantie, Correspondentie, CorrespondentieArtikel, Systematiek, Wettekst, WettekstArtikel
-from .artikelen import Plaatser, Ref, plaatser, ref_bevat, ref_uit_bron, sleutel
+from .artikelen import REGELS, Plaatser, Ref, herken, kale_nummers, noemt_wet, plaatser, ref_bevat, ref_uit_bron, sleutel
 
 FR_CODE_CIVIL = "LEGITEXT000006070721"
 
@@ -86,19 +86,56 @@ class Context:
 
 
 def wettekst_artikel(db: Session, ref: Ref) -> WettekstArtikel | None:
-    """Het artikel uit de meest recent geïmporteerde versie van de passende wet."""
+    """Het artikel uit de meest recent geïmporteerde versie van de passende wet.
+
+    Een wettekst draagt de afkorting waaronder ze geciteerd wordt (`Wettekst.wet`,
+    None voor de hoofdcodificatie); de hoofdcodificatie kan uit meer wetteksten
+    bestaan (de boeken van het BW, NL en BE). Oudere imports zonder afkorting
+    tellen als hoofdcodificatie.
+    """
     if ref.nummer is None:
         return None
     q = select(WettekstArtikel).join(Wettekst).where(Wettekst.stelsel_code == ref.stelsel, WettekstArtikel.nummer == ref.nummer)
-    if ref.stelsel == "DE":
-        q = q.where(Wettekst.wet_id == (ref.wet or "bgb").lower())
-    elif ref.stelsel == "FR":
-        if ref.wet:
-            return None
+    q = q.where(Wettekst.wet == ref.wet) if ref.wet else q.where(Wettekst.wet.is_(None))
+    if ref.stelsel == "FR" and not ref.wet:
         q = q.where(Wettekst.wet_id == FR_CODE_CIVIL)
-    elif ref.wet:
-        return None
     return db.scalars(q.order_by(Wettekst.opgehaald.desc())).first()
+
+
+def zoek_artikel(db: Session, q: str, stelsel: str | None = None) -> list[tuple[Ref, WettekstArtikel | None]]:
+    """Artikelen die bij de invoer passen, met hun tekst als die geïmporteerd is.
+
+    Noemt de invoer geen wet ("929", "art. 1101", "L217-3"), dan tellen ook alle
+    geïmporteerde wetten mee waarin dat nummer bestaat. Zijn er meer kandidaten,
+    dan vallen de verwijzingen af naar een wet waarvan de tekst er wel is maar
+    het artikel niet (§ 1337 BGB is vervallen).
+    """
+    uit = [(r, wettekst_artikel(db, r)) for r in herken(q, stelsel)]
+    if not noemt_wet(q) and (nummers := kale_nummers(q)):
+        # "art. 1469 bis" is niet art. 1469 C. civ.
+        uit = [(r, wa) for r, wa in uit if r.nummer in nummers]
+        if "§" in q and not stelsel:
+            stelsel = "DE"
+        gezien = {(r.stelsel, r.wet, r.nummer) for r, _ in uit}
+        stmt = select(WettekstArtikel).join(Wettekst).where(WettekstArtikel.nummer.in_(nummers)).options(selectinload(WettekstArtikel.wettekst))
+        if stelsel:
+            stmt = stmt.where(Wettekst.stelsel_code == stelsel)
+        extra = []
+        for wa in db.scalars(stmt.order_by(Wettekst.opgehaald.desc())).all():
+            w = wa.wettekst
+            if w.stelsel_code == "FR" and not w.wet and w.wet_id != FR_CODE_CIVIL:
+                continue
+            r = Ref(w.stelsel_code, wa.nummer, w.wet)
+            if (r.stelsel, r.wet, r.nummer) not in gezien:
+                gezien.add((r.stelsel, r.wet, r.nummer))
+                extra.append((r, wa))
+        orde = list(REGELS)
+        extra.sort(key=lambda p: (orde.index(p[0].stelsel) if p[0].stelsel in orde else 99, p[0].wet is not None, p[0].wet or ""))
+        uit += extra
+    if len(uit) > 1 and any(wa for _, wa in uit):
+        met_tekst = set(db.execute(select(Wettekst.stelsel_code, Wettekst.wet).distinct()).tuples().all())
+        uit = [(r, wa) for r, wa in uit if wa or (r.stelsel, r.wet) not in met_tekst]
+    return uit
 
 
 def alle_correspondenties(db: Session) -> list[Correspondentie]:

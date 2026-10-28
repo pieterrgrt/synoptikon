@@ -7,14 +7,19 @@ hun eigen plaats in hun eigen systematiek.
 from __future__ import annotations
 
 from collections import OrderedDict
+from urllib.parse import quote
+
 from fastapi import APIRouter, Depends, Form, HTTPException, Request
 from fastapi.responses import RedirectResponse
 from sqlalchemy import select
 from sqlalchemy.orm import Session
 
 from ..db import get_session
-from ..models import Correspondentie, CorrespondentieArtikel, Stelsel
+from ..i18n import _
+from ..models import Correspondentie, CorrespondentieArtikel, Stelsel, Systematiek
 from ..services import correspondentie as corr
+from ..auth import huidig_profiel
+from ..services import eu, leren, wetboek, zoeken
 from ..services.artikelen import Ref, herken, lees, sleutel
 from ..models import RECHTSFAMILIES
 from ..services.helpers import actieve_stelsels, leeg_naar_none, stelsels_per_code
@@ -29,11 +34,14 @@ def _codes(db: Session) -> list[str]:
 
 @router.get("/artikelen")
 def overzicht(request: Request, q: str = "", stelsel: str = "", familie: str = "", db: Session = Depends(get_session)):
-    kandidaten: list[Ref] = []
+    kandidaten: list[tuple[Ref, object]] = []
+    treffers = []
     if q.strip():
-        kandidaten = herken(q, stelsel or None)
+        kandidaten = corr.zoek_artikel(db, q, stelsel or None)
         if len(kandidaten) == 1:
-            return RedirectResponse(kandidaten[0].url, status_code=303)
+            return RedirectResponse(kandidaten[0][0].url, status_code=303)
+        if not kandidaten:
+            treffers = [(Ref(wa.wettekst.stelsel_code, wa.nummer, wa.wettekst.wet), wa, s) for wa, s in zoeken.wetsartikelen(db, q, stelsel)]
     thema_s = corr.alle_correspondenties(db)
     groepen: OrderedDict[str, list[Correspondentie]] = OrderedDict()
     for c in thema_s:
@@ -52,6 +60,7 @@ def overzicht(request: Request, q: str = "", stelsel: str = "", familie: str = "
         f_familie=familie if familie in RECHTSFAMILIES else "",
         families_in_tabel=families_in_tabel,
         kandidaten=kandidaten,
+        treffers=treffers,
         groepen=groepen,
         kolommen=kolommen,
         stelsels=stelsels,
@@ -87,7 +96,7 @@ def thema_maak(
 ):
     titel = titel.strip()
     if db.scalar(select(Correspondentie).where(Correspondentie.titel == titel)):
-        raise HTTPException(400, "Er bestaat al een thema met deze titel")
+        raise HTTPException(400, _("Er bestaat al een thema met deze titel"))
     c = Correspondentie(titel=titel, rechtsgebied=leeg_naar_none(rechtsgebied), toelichting=leeg_naar_none(toelichting))
     db.add(c)
     if stelsel_code and verwijzing.strip():
@@ -116,7 +125,7 @@ def thema_verwijderen(cid: int, db: Session = Depends(get_session)):
 def _voeg_lid_toe(c: Correspondentie, stelsel_code: str, verwijzing: str, rol: str, opmerking: str) -> CorrespondentieArtikel:
     ref = lees(stelsel_code, verwijzing)
     if ref is None:
-        raise HTTPException(400, f"Kan '{verwijzing}' niet lezen als artikel uit {stelsel_code}")
+        raise HTTPException(400, _("Kan '{verwijzing}' niet lezen als artikel uit {stelsel}", verwijzing=verwijzing, stelsel=stelsel_code))
     volgorde = max([a.volgorde for a in c.artikelen] or [0]) + 10
     lid = CorrespondentieArtikel(
         stelsel_code=stelsel_code, wet=ref.wet, nummer=ref.nummer, tot=ref.tot, detail=ref.detail,
@@ -172,7 +181,7 @@ def artikel(request: Request, stelsel: str, nummer: str, wet: str | None = None,
         raise HTTPException(404)
     ref = lees(st.code, nummer)
     if ref is None or ref.nummer is None:
-        raise HTTPException(404, "Onleesbaar artikelnummer")
+        raise HTTPException(404, _("Onleesbaar artikelnummer"))
     ref = Ref(st.code, ref.nummer, wet or None)
     if ref.nummer != nummer:
         return RedirectResponse(ref.url, status_code=303)
@@ -183,6 +192,7 @@ def artikel(request: Request, stelsel: str, nummer: str, wet: str | None = None,
         thema_s.append((c, eigen, corr.per_stelsel(ctx, c, codes, behalve=eigen[0] if len(eigen) == 1 else None)))
     pad = ctx.pad(ref)
     buren = _buren(ctx, ref, pad)
+    lezen = _in_wettekst(db, ref)
     return render(
         request,
         "artikel.html",
@@ -193,11 +203,40 @@ def artikel(request: Request, stelsel: str, nummer: str, wet: str | None = None,
         thema_s=thema_s,
         concordanties=corr.concordanties_voor(db, ref.stelsel, ref.nummer) if not ref.wet else [],
         gebruik=corr.gebruik(ctx, ref),
+        europees=eu.omzettingen_voor_artikel(db, ref),
         buren=buren,
+        lezen=lezen,
+        bewaarde_refs=leren.bewaarde_refs(db, huidig_profiel(request).id if huidig_profiel(request) else 1),
         alle_thema_s=db.scalars(select(Correspondentie).order_by(Correspondentie.titel)).all(),
         stelsels=actieve_stelsels(db),
         per_code=stelsels_per_code(db),
     )
+
+
+def _in_wettekst(db: Session, ref: Ref) -> dict | None:
+    """Waar dit artikel in de geïmporteerde wet staat, en het vorige en volgende artikel daar."""
+    wa = corr.wettekst_artikel(db, ref)
+    if wa is None:
+        return None
+    w = wa.wettekst
+    ih = wetboek.inhoud(db, w)
+    deel = next((d for d in ih.volgorde if wa.nummer in d.artikelen), None)
+    vorig, volgend = wetboek.naast(db, wa)
+    # Lezen gaat via de systematiek; wat die niet plaatst, via de inhoudsopgave van de wet zelf.
+    knoop_id = wetboek.plaatsing(db, w.stelsel_code).plek.get((w.id, wa.nummer))
+    knoop = db.get(Systematiek, knoop_id) if knoop_id else None
+    if knoop is not None:
+        url = f"/stelsels/{w.stelsel_code}/lees/{knoop.id}#art-{quote(wa.nummer)}"
+    else:
+        url = f"/stelsels/{w.stelsel_code}/wet/{w.id}" + (f"?deel={quote(deel.sleutel)}#art-{quote(wa.nummer)}" if deel else "")
+    return {
+        "wet": w,
+        "deel": deel,
+        "knoop": knoop,
+        "url": url,
+        "vorig": wetboek.ref(w, vorig.nummer) if vorig else None,
+        "volgend": wetboek.ref(w, volgend.nummer) if volgend else None,
+    }
 
 
 def _buren(ctx: corr.Context, ref: Ref, pad: list) -> list[Ref]:

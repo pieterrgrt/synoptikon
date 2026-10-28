@@ -2,7 +2,7 @@
 {% import "_artikel.html" as m %}
 {% block titel %}{{ k.label }} · Synoptikon{% endblock %}
 {% block inhoud %}
-<p class="kruimel"><a href="/stelsels/{{ stelsel.code }}">{{ stelsel.naam }}</a></p>
+<p class="kruimel"><a href="/stelsels/{{ stelsel.code }}">{{ vt(stelsel.naam) }}</a></p>
 {% set pad = k.pad() %}
 {% if pad | length > 1 %}{{ m.pad(pad[:-1], stelsel.code) }}{% endif %}
 <h1>{{ k.label }}</h1>
@@ -11,26 +11,26 @@
 <ul class="lijst">{% for kind in k.kinderen %}<li><a href="/stelsels/{{ stelsel.code }}/knoop/{{ kind.id }}">{{ kind.label }}</a> <span class="sys-bereik">{{ kind.bereik or '' }}</span></li>{% endfor %}</ul>
 {% endif %}
 
-<h2>Waar staat dit in de andere stelsels?</h2>
+<h2>{{ _('Waar staat dit in de andere stelsels?') }}</h2>
 {% if thema_s %}
-<p class="hint">Voor elk artikel uit deze knoop dat in een thema staat: de plaats van de corresponderende artikelen in de systematiek van de andere stelsels. Eén knoop hier kan daar over meerdere boeken verspreid liggen; dat is het structuurverschil.</p>
+<p class="hint">{{ _('Voor elk artikel uit deze knoop dat in een thema staat: de plaats van de corresponderende artikelen in de systematiek van de andere stelsels. Eén knoop hier kan daar over meerdere boeken verspreid liggen; dat is het structuurverschil.') }}</p>
 <div class="thema-kolommen">
 {% for code, groepen in tegenhangers.items() if groepen %}
   <div class="thema-kolom fam-{{ per_code[code].familie if code in per_code else '' }}">
-    <h4>{{ vlag(code) }}{{ namen.get(code, code) }}</h4>
+    <h4>{{ vlag(code) }}{{ vt(namen.get(code, code)) }}</h4>
     {% for t in groepen %}
     <div class="tegenhanger">
-      {% if t.pad %}<p class="pad">{% for x in t.pad %}{% if not loop.first %}<span class="sep">›</span>{% endif %}<a href="/stelsels/{{ code }}/knoop/{{ x.id }}">{{ x.label }}</a>{% endfor %}</p>{% else %}<p class="pad">buiten de codificatie of zonder regeling</p>{% endif %}
-      <ul class="ref-lijst">{% for l in t.leden %}<li>{% if l.artikel.nummer is none %}<span class="stil" title="{{ l.artikel.opmerking or '' }}">{{ '⚖ rechtspraak' if l.artikel.rol in ('case law', 'rechtspraak') else '—' }}</span>{% else %}<a href="{{ l.ref.url }}">{{ l.ref.citeer }}</a>{% endif %} <span class="stil klein">· {{ l.artikel.correspondentie.titel }}</span></li>{% endfor %}</ul>
+      {% if t.pad %}<p class="pad">{% for x in t.pad %}{% if not loop.first %}<span class="sep">›</span>{% endif %}<a href="/stelsels/{{ code }}/knoop/{{ x.id }}">{{ x.label }}</a>{% endfor %}</p>{% else %}<p class="pad">{{ _('buiten de codificatie of zonder regeling') }}</p>{% endif %}
+      <ul class="ref-lijst">{% for l in t.leden %}<li>{% if l.artikel.nummer is none %}<span class="stil" title="{{ l.artikel.opmerking or '' }}">{{ '⚖ ' ~ _('rechtspraak') if l.artikel.rol in ('case law', 'rechtspraak') else '—' }}</span>{% else %}<a href="{{ l.ref.url }}">{{ l.ref.citeer }}</a>{% endif %} <span class="stil klein">· {{ vt(l.artikel.correspondentie.titel) }}</span></li>{% endfor %}</ul>
     </div>
     {% endfor %}
   </div>
 {% endfor %}
 </div>
 
-<h2>Thema's <span class="stil">({{ thema_s | length }})</span></h2>
-<ul class="lijst">{% for c in thema_s %}<li><a href="/artikelen/thema/{{ c.id }}">{{ c.titel }}</a> <span class="stil">— {% for cc, a in eigen if cc == c %}<a href="{{ a.ref.url }}">{{ a.ref.citeer }}</a>{% if not loop.last %}, {% endif %}{% endfor %}</span></li>{% endfor %}</ul>
+<h2>{{ _('Thema\'s') }} <span class="stil">({{ thema_s | length }})</span></h2>
+<ul class="lijst">{% for c in thema_s %}<li><a href="/artikelen/thema/{{ c.id }}">{{ vt(c.titel) }}</a> <span class="stil">— {% for cc, a in eigen if cc == c %}<a href="{{ a.ref.url }}">{{ a.ref.citeer }}</a>{% if not loop.last %}, {% endif %}{% endfor %}</span></li>{% endfor %}</ul>
 {% else %}
-<p class="stil">Geen artikelen uit deze knoop in de correspondentietabel. Voeg ze toe via <a href="/artikelen">Artikelen</a>.</p>
+<p class="stil">{{ _('Geen artikelen uit deze knoop in de correspondentietabel.') }} <a href="/artikelen">{{ _('Artikelen') }}</a></p>
 {% endif %}
 {% endblock %}

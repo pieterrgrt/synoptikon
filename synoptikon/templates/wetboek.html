@@ -1,0 +1,63 @@
+{% extends "base.html" %}
+{% block titel %}{% if d.pad %}{{ d.label }} · {% endif %}{{ w.titel }} · Synoptikon{% endblock %}
+{% macro deellink(x) %}<a href="?deel={{ x.sleutel | urlencode }}">{{ x.label }}</a> <span class="sys-bereik">{% if x.eerste %}{{ ref(x.eerste).citeer if x.eerste == x.laatste else ref(x.eerste).citeer ~ ' – ' ~ x.laatste }}{% endif %}</span>{% endmacro %}
+{% macro boom(x, diepte) %}
+<li class="sys-knoop diepte-{{ diepte }}">
+  {% if x.kinderen %}<details {% if diepte == 0 and ih.wortel.kinderen | length == 1 %}open{% endif %}><summary>{{ deellink(x) }}</summary>
+  <ul class="sys-lijst">{% for k in x.kinderen %}{{ boom(k, diepte + 1) }}{% endfor %}</ul></details>
+  {% else %}<div class="sys-blad">{{ deellink(x) }}</div>{% endif %}
+</li>
+{% endmacro %}
+{% block inhoud %}
+<p class="kruimel"><a href="/stelsels">{{ _('Stelsels') }}</a> › <a href="/stelsels/{{ stelsel.code }}">{{ vlag(stelsel.code) }}{{ vt(stelsel.naam) }}</a>{% if d.pad %} › <a href="?">{{ w.titel }}</a>{% endif %}</p>
+<div class="paginakop">
+  <h1>{% if d.pad %}{{ d.label }}{% else %}{{ w.titel }}{% endif %}</h1>
+  <form method="get" class="inline sys-zoek">
+    <input type="search" name="artikel" placeholder="{{ _('Ga naar artikel') }}" aria-label="{{ _('Ga naar artikel') }}" inputmode="text">
+  </form>
+</div>
+<p class="stil klein">{{ w.titel }} · {{ _('versie {versie}', versie=w.versie) }} · {{ n_('{n} artikel', '{n} artikelen', ih.wortel.aantal) }}{% if w.bron_url %} · <a href="{{ w.bron_url }}" target="_blank" rel="noopener">{{ _('officiële bron ↗') }}</a>{% endif %}{% if ih.afgeleid %} · {{ _('indeling uit de systematiek van Synoptikon, niet uit de bron') }}{% endif %}</p>
+
+{% if d.pad %}
+<nav class="pad wet-pad" aria-label="{{ _('Plaats in de wet') }}">{% for i in range(d.pad | length) %}{% if i %}<span class="sep">›</span>{% endif %}{% set sub = d.pad[: i + 1] | join(' › ') %}{% if i + 1 < d.pad | length %}<a href="?deel={{ sub | urlencode }}">{{ d.pad[i] }}</a>{% else %}<span aria-current="page">{{ d.pad[i] }}</span>{% endif %}{% endfor %}</nav>
+{% endif %}
+
+{% if not d.pad %}
+{% if wetten | length > 1 %}
+<details class="blok wet-keuze"><summary>{{ _('Andere wetten van dit stelsel') }} ({{ wetten | length - 1 }})</summary>
+<ul class="lijst">{% for x in wetten if x.id != w.id %}<li><a href="/stelsels/{{ stelsel.code }}/wet/{{ x.id }}">{{ x.titel }}</a>{% if x.wet %} <span class="stil">{{ x.wet }}</span>{% endif %}</li>{% endfor %}</ul></details>
+{% endif %}
+{% if d.kinderen %}
+<h2>{{ _('Inhoudsopgave') }}</h2>
+<ul class="sys-lijst wortel wet-inhoud">{% for k in d.kinderen %}{{ boom(k, 0) }}{% endfor %}</ul>
+{% endif %}
+{% elif d.kinderen and not toon_tekst %}
+<p class="hint">{{ n_('{n} artikel in deze afdeling; kies een onderdeel.', '{n} artikelen in deze afdeling; kies een onderdeel.', d.aantal) }}</p>
+<ul class="sys-lijst wortel wet-inhoud">{% for k in d.kinderen %}{{ boom(k, 0) }}{% endfor %}</ul>
+{% endif %}
+
+{% if artikelen %}
+<div class="wettekst">
+{% set ns = namespace(vorig=none) %}
+{% for a in artikelen %}
+  {% set p = plek.get(a.nummer) %}
+  {% if p and p is not sameas ns.vorig and p is not sameas d %}
+  <h3 class="wet-kop">{% for i in range(d.pad | length, p.pad | length) %}{% if i > d.pad | length %} › {% endif %}<a href="?deel={{ p.pad[: i + 1] | join(' › ') | urlencode }}">{{ p.pad[i] }}</a>{% endfor %}</h3>
+  {% endif %}
+  {% set ns.vorig = p %}
+  {% set r = ref(a.nummer) %}
+  <article class="bron soort-wet wet-artikel" id="art-{{ a.nummer }}">
+    <header class="bron-kop"><a class="citeertitel" href="{{ r.url }}" title="{{ _('Plaats in de systematiek en corresponderende artikelen in andere stelsels') }}">{{ r.citeer }}</a>{% if a.opschrift %} <span class="bron-titel">{{ a.opschrift }}</span>{% endif %}</header>
+    <div class="origineel" lang="{{ stelsel.taal }}">{{ a.tekst | md }}</div>
+  </article>
+{% endfor %}
+</div>
+{% endif %}
+
+{% if vorige or volgende %}
+<nav class="bladeren wet-bladeren" aria-label="{{ _('Bladeren') }}">
+  {% if vorige %}<a class="knop klein" href="?deel={{ vorige.sleutel | urlencode }}" rel="prev">‹ {{ vorige.label | truncate(48) }}</a>{% else %}<span></span>{% endif %}
+  {% if volgende %}<a class="knop klein" href="?deel={{ volgende.sleutel | urlencode }}" rel="next">{{ volgende.label | truncate(48) }} ›</a>{% endif %}
+</nav>
+{% endif %}
+{% endblock %}

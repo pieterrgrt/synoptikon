@@ -1,0 +1,28 @@
+{% extends "base.html" %}
+{% block titel %}{{ _('Profielen') }} · Synoptikon{% endblock %}
+{% block inhoud %}
+<h1>{{ _('Profielen') }}</h1>
+<p class="hint">{{ _('Vijf plekken. Een beheerder mag alles, ook profielen beheren; een redacteur mag lezen en invoeren; een lezer alleen lezen. Een profiel kan pas aan als het een wachtwoord heeft. Een nieuw wachtwoord of uitzetten logt dat profiel overal uit.') }}</p>
+{% if fout %}<p class="melding fout" role="alert">{{ fout }}</p>{% endif %}
+{% if klaar %}<p class="melding ok" role="status">{{ _('Opgeslagen.') }}</p>{% endif %}
+<div class="profielen">
+{% for p in profielen %}
+<form method="post" action="/beheer/profielen/{{ p.id }}" class="formulier blok profiel-kaart {% if not p.actief %}uit{% endif %}" id="p{{ p.id }}">
+  <h2>{{ p.id }} · {{ p.naam }}{% if p.id == ik %} <span class="stil">({{ _('jij') }})</span>{% endif %}</h2>
+  <p class="stil klein">{% if p.actief %}{{ _('actief') }}{% else %}{{ _('uit') }}{% endif %}{% if p.laatst_ingelogd %} · {{ _('laatst ingelogd {datum}', datum=p.laatst_ingelogd.strftime('%d-%m-%Y %H:%M')) }}{% endif %}{% if not p.wachtwoord_hash %} · {{ _('nog geen eigen wachtwoord') }}{% endif %}</p>
+  <div class="rij">
+    <label>{{ _('Gebruikersnaam') }} <input name="gebruikersnaam" value="{{ p.gebruikersnaam }}" required maxlength="40" autocapitalize="none" autocorrect="off" spellcheck="false"></label>
+    <label>{{ _('Naam') }} <input name="naam" value="{{ p.naam }}" required maxlength="80"></label>
+  </div>
+  <div class="rij">
+    <label>{{ _('Rol') }} <select name="rol">{% for k in ROLLEN %}<option value="{{ k }}" {% if k == p.rol %}selected{% endif %}>{{ _(ROLLEN[k]) }}</option>{% endfor %}</select></label>
+    <label>{{ _('Taal') }} <select name="taal">{% for k, v in TALEN.items() %}<option value="{{ k }}" lang="{{ k }}" {% if k == p.taal %}selected{% endif %}>{{ v }}</option>{% endfor %}</select></label>
+  </div>
+  <label>{{ _('Nieuw wachtwoord') }} <span class="hint">{{ _('leeg laten om het huidige te houden; minstens {n} tekens', n=min_lengte) }}</span>
+    <input type="password" name="wachtwoord" minlength="{{ min_lengte }}" autocomplete="new-password"></label>
+  <label class="vinkje"><input type="checkbox" name="actief" value="1" {% if p.actief %}checked{% endif %}> {{ _('Profiel staat aan') }}</label>
+  <div class="acties"><button class="knop primair">{{ _('Opslaan') }}</button></div>
+</form>
+{% endfor %}
+</div>
+{% endblock %}

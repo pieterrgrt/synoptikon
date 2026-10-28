@@ -1,66 +1,78 @@
 {% extends "base.html" %}
-{% block titel %}{{ stelsel.naam }} · systematiek · Synoptikon{% endblock %}
+{% block titel %}{{ vt(stelsel.naam) }} · {{ _('systematiek') }} · Synoptikon{% endblock %}
 {% block inhoud %}
 <div class="paginakop">
-  <h1>{{ vlag(stelsel.code) }}{{ stelsel.naam }} <span class="stil">systematiek</span></h1>
+  <h1>{{ vlag(stelsel.code) }}{{ vt(stelsel.naam) }} <span class="stil">{{ _('systematiek') }}</span></h1>
   <div class="acties">
     <form method="get" class="inline sys-zoek">
       {% if vraag %}<input type="hidden" name="vraag" value="{{ vraag.slug }}">{% endif %}
-      <input type="search" name="artikel" value="{{ artikel }}" placeholder="{{ {'NL': '3:84', 'BE': '5.69', 'DE': '§ 929', 'CH': 'Art. 41 OR', 'FR': '1196', 'IT': '1337', 'ES': '1902', 'EN': 's 17 SGA 1979', 'US': 'UCC § 2-401', 'AU': 's 18 ACL', 'EU': 'art. 6 Rome I'}.get(stelsel.code, 'artikel') }}" aria-label="Artikel opzoeken in de systematiek">
+      <input type="search" name="artikel" value="{{ artikel }}" placeholder="{{ {'NL': '3:84', 'BE': '5.69', 'DE': '§ 929', 'CH': 'Art. 41 OR', 'FR': '1196', 'IT': '1337', 'ES': '1902', 'EN': 's 17 SGA 1979', 'US': 'UCC § 2-401', 'AU': 's 18 ACL', 'EU': 'art. 6 Rome I'}.get(stelsel.code, _('artikel')) }}" aria-label="{{ _('Artikel opzoeken in de systematiek') }}">
     </form>
     <form method="get" class="inline">
-      <select name="vraag" class="auto-submit">
-        <option value="">— markeer bronnen van een vraag —</option>
-        {% for v in vragen %}<option value="{{ v.slug }}" {% if vraag and vraag.slug == v.slug %}selected{% endif %}>{{ v.titel }}</option>{% endfor %}
+      <select name="vraag" class="auto-submit" aria-label="{{ _('Vraag') }}">
+        <option value="">{{ _('— markeer bronnen van een vraag —') }}</option>
+        {% for v in vragen %}<option value="{{ v.slug }}" {% if vraag and vraag.slug == v.slug %}selected{% endif %}>{{ vt(v.titel) }}</option>{% endfor %}
       </select>
     </form>
   </div>
 </div>
-<nav class="stelsel-tabs">{% for f in per_familie(stelsels) %}<span class="tab-familie fam-{{ f.sleutel or 'overig' }}" title="{{ f.naam }}">{% for s in f.stelsels %}<a href="/stelsels/{{ s.code }}{% if vraag %}?vraag={{ vraag.slug }}{% endif %}" {% if s.code == stelsel.code %}aria-current="page"{% endif %}>{{ vlag(s.code) }}{{ s.naam }}</a>{% endfor %}</span>{% endfor %}</nav>
-<p class="stil klein">{{ stelsel.familie_naam }}{% if stelsel.toelichting %} · {{ stelsel.toelichting }}{% endif %}</p>
+<nav class="stelsel-tabs">{% for f in per_familie(stelsels) %}<span class="tab-familie fam-{{ f.sleutel or 'overig' }}" title="{{ f.naam }}">{% for s in f.stelsels %}<a href="/stelsels/{{ s.code }}{% if vraag %}?vraag={{ vraag.slug }}{% endif %}" {% if s.code == stelsel.code %}aria-current="page"{% endif %}>{{ vlag(s.code) }}{{ vt(s.naam) }}</a>{% endfor %}</span>{% endfor %}</nav>
+<p class="stil klein">{{ stelsel.familie_naam }}{% if stelsel.toelichting %} · {{ vt(stelsel.toelichting) }}{% endif %}</p>
+{% if artikel %}<p class="melding">{% if gezocht %}<a href="{{ gezocht.url }}">{{ gezocht.citeer }}</a>{% if gezocht_knoop %} {{ _('staat in de gemarkeerde knoop.') }}{% else %} {{ _('valt buiten de ingevoerde systematiek.') }}{% endif %} <a href="{{ gezocht.url }}">{{ _('Corresponderende artikelen →') }}</a>{% else %}{{ _('Geen artikelnummer herkend in “{artikel}”.', artikel=artikel) }}{% endif %}</p>{% endif %}
+{% if vraag %}<p class="melding">{{ _('Gemarkeerd: bronnen van') }} <a href="/vragen/{{ vraag.slug }}">{{ vt(vraag.titel) }}</a>. {{ _('Vergelijk met de andere stelsels via de tabs hierboven: zo worden structuurverschillen zichtbaar.') }}</p>{% endif %}
 
-{% if artikel %}<p class="melding">{% if gezocht %}<a href="{{ gezocht.url }}">{{ gezocht.citeer }}</a>{% if gezocht_knoop %} staat in de gemarkeerde knoop.{% else %} valt buiten de ingevoerde systematiek.{% endif %} <a href="{{ gezocht.url }}">Corresponderende artikelen →</a>{% else %}Geen artikelnummer herkend in “{{ artikel }}”.{% endif %}</p>{% endif %}
-{% if vraag %}<p class="melding">Gemarkeerd: bronnen van <a href="/vragen/{{ vraag.slug }}">{{ vraag.titel }}</a> in dit stelsel. Vergelijk met de andere stelsels via de tabs hierboven: zo worden structuurverschillen zichtbaar.</p>{% endif %}
-
-{% macro label(k) %}<span class="sys-label"><span class="sys-naam">{{ k.label }}</span>{% if k.wet and (not k.parent or k.parent.wet != k.wet) %} <span class="sys-wet">{{ k.wet }}</span>{% endif %}{% if k.bereik %} <span class="sys-bereik">{{ k.bereik }}</span>{% endif %}</span>{% if tellingen.get(k.id) %} <a class="sys-teller" href="/stelsels/{{ stelsel.code }}/knoop/{{ k.id }}" title="{{ tellingen[k.id] }} thema's met corresponderende artikelen in andere stelsels">⇄ {{ tellingen[k.id] }}</a>{% endif %}{% endmacro %}
+{% macro label(k) %}<span class="sys-label"><span class="sys-naam">{{ k.label }}</span>{% if k.wet and (not k.parent or k.parent.wet != k.wet) %} <span class="sys-wet">{{ k.wet }}</span>{% endif %}{% if k.bereik %} <span class="sys-bereik">{{ k.bereik }}</span>{% endif %}</span>{% if tellingen.get(k.id) %} <a class="sys-teller" href="/stelsels/{{ stelsel.code }}/knoop/{{ k.id }}" title="{{ n_('{n} thema met corresponderende artikelen in andere stelsels', '{n} thema\'s met corresponderende artikelen in andere stelsels', tellingen[k.id]) }}">⇄ {{ tellingen[k.id] }}</a>{% endif %}{% endmacro %}
+{% macro tekst(k, aantal, naam=none) %}<details class="sys-tekst" data-k="{{ k.id }}"{% if k.id == gezocht_knoop %} open data-artikel="art-{{ gezocht.nummer }}"{% endif %}><summary>{% if naam %}<span class="sys-naam">{{ naam }}</span>{% else %}{{ label(k) }}{% endif %} <span class="sys-aantal">{{ aantal }}</span></summary><div class="wettekst sys-artikelen"></div></details>{% endmacro %}
 {% macro knoop(k, diepte) %}
-<li class="sys-knoop diepte-{{ diepte }} {% if k.id in gemarkeerd or k.id == gezocht_knoop %}bevat-markering{% endif %}">
-  {% if k.kinderen %}<details {% if diepte == 0 and not open_ids or k.id in open_ids %}open{% endif %}><summary>{{ label(k) }}</summary>{% else %}<div class="sys-blad">{{ label(k) }}</div>{% endif %}
+{% set eigen = pl.direct.get(k.id, []) | length %}
+<li class="sys-knoop diepte-{{ diepte }} {% if k.id in gemarkeerd or k.id == gezocht_knoop %}bevat-markering{% endif %}" id="knoop-{{ k.id }}">
+  {% if k.kinderen %}<details {% if diepte == 0 and not open_ids or k.id in open_ids %}open{% endif %}><summary>{{ label(k) }}{% if pl.onder.get(k.id) %} <a class="sys-lees" href="/stelsels/{{ stelsel.code }}/lees/{{ k.id }}">{{ _('tekst') }}</a>{% endif %}</summary>
+  {% elif eigen %}{{ tekst(k, eigen) }}
+  {% else %}<div class="sys-blad">{{ label(k) }}</div>{% endif %}
   {% if k.id in gemarkeerd %}<ul class="sys-bronnen">{% for b in gemarkeerd[k.id] %}<li class="gemarkeerd"><a href="/bronnen/{{ b.id }}">{{ b.citeertitel }}</a>{% if b.titel %} <span class="stil">{{ b.titel }}</span>{% endif %}</li>{% endfor %}</ul>
   {% elif not vraag and k.bronnen %}<ul class="sys-bronnen">{% for b in k.bronnen %}<li><a href="/bronnen/{{ b.id }}">{{ b.citeertitel }}</a>{% if b.titel %} <span class="stil">{{ b.titel }}</span>{% endif %}</li>{% endfor %}</ul>{% endif %}
-  {% if k.kinderen %}<ul class="sys-lijst">{% for kind in k.kinderen %}{{ knoop(kind, diepte + 1) }}{% endfor %}</ul></details>{% endif %}
+  {% if k.kinderen %}<ul class="sys-lijst">{% if eigen %}<li class="sys-knoop diepte-{{ diepte + 1 }}{% if k.id == gezocht_knoop %} bevat-markering{% endif %}">{{ tekst(k, eigen, _('Artikelen vóór de onderdelen')) }}</li>{% endif %}{% for kind in k.kinderen %}{{ knoop(kind, diepte + 1) }}{% endfor %}</ul></details>{% endif %}
 </li>
 {% endmacro %}
 
 {% if wortels %}
-<ul class="sys-lijst wortel">{% for w in wortels %}{{ knoop(w, 0) }}{% endfor %}</ul>
-{% else %}<p class="stil">Nog geen systematiek ingevoerd voor dit stelsel.</p>{% endif %}
+<ul class="sys-lijst wortel" data-lees="/stelsels/{{ stelsel.code }}/lees/">{% for w in wortels %}{{ knoop(w, 0) }}{% endfor %}</ul>
+{% else %}<p class="stil">{{ _('Nog geen systematiek ingevoerd voor dit stelsel.') }}</p>{% endif %}
+
+{% set los_wetten = ws.values() | selectattr('id', 'in', pl.los) | list %}
+{% if los_wetten %}
+<details class="blok">
+  <summary>{{ _('Niet in de systematiek geplaatst') }}</summary>
+  <p class="hint">{{ _('Deze artikelen vallen buiten de bereiken van de systematiek; je leest ze in de wet zelf.') }}</p>
+  <ul class="lijst">{% for w in los_wetten %}<li><a href="/stelsels/{{ stelsel.code }}/wet/{{ w.id }}">{{ w.titel }}</a> <span class="stil">{{ n_('{n} artikel', '{n} artikelen', pl.los[w.id] | length) }}</span></li>{% endfor %}</ul>
+</details>
+{% endif %}
 
 {% if vraag and los %}
-<h2>Niet geplaatst in de systematiek</h2>
-<ul class="lijst">{% for b in los %}<li><a href="/bronnen/{{ b.id }}">{{ b.citeertitel }}</a> <span class="stil">{{ b.soort }}</span></li>{% endfor %}</ul>
+<h2>{{ _('Niet geplaatst in de systematiek') }}</h2>
+<ul class="lijst">{% for b in los %}<li><a href="/bronnen/{{ b.id }}">{{ b.citeertitel }}</a> <span class="stil">{{ _(b.soort) }}</span></li>{% endfor %}</ul>
 {% endif %}
 
 <div class="kolommen-los">
 <details class="blok">
-  <summary>Knoop toevoegen</summary>
+  <summary>{{ _('Knoop toevoegen') }}</summary>
   <form method="post" action="/stelsels/{{ stelsel.code }}/systematiek" class="formulier compact">
-    <label>Onder <select name="parent_id"><option value="">(wortel)</option>{% for k in alle_knopen %}<option value="{{ k.id }}">{{ k.pad() | map(attribute='label') | join(' › ') }}</option>{% endfor %}</select></label>
-    <label>Label <input name="label" required placeholder="Titel 4 · Verkrijging en verlies van goederen"></label>
-    <div class="rij"><label>Code <input name="knoopcode" placeholder="BW-3-4"></label><label>Bereik <input name="bereik" placeholder="art. 3:80–3:98"></label></div>
-    <div class="acties"><button class="knop klein primair">Toevoegen</button></div>
+    <label>{{ _('Onder') }} <select name="parent_id"><option value="">{{ _('(wortel)') }}</option>{% for k in alle_knopen %}<option value="{{ k.id }}">{{ k.pad() | map(attribute='label') | join(' › ') }}</option>{% endfor %}</select></label>
+    <label>{{ _('Label') }} <input name="label" required placeholder="Titel 4 · Verkrijging en verlies van goederen"></label>
+    <div class="rij"><label>{{ _('Code') }} <input name="knoopcode" placeholder="BW-3-4"></label><label>{{ _('Bereik') }} <input name="bereik" placeholder="art. 3:80–3:98"></label></div>
+    <div class="acties"><button class="knop klein primair">{{ _('Toevoegen') }}</button></div>
   </form>
 </details>
 {% if ongeplaatst %}
 <details class="blok">
-  <summary>Wetsbronnen plaatsen ({{ ongeplaatst | length }} ongeplaatst)</summary>
-  <form method="post" action="/stelsels/{{ stelsel.code }}/plaats-automatisch" class="compact"><button class="knop klein">Automatisch plaatsen op artikelnummer</button></form>
+  <summary>{{ _('Wetsbronnen plaatsen ({n} ongeplaatst)', n=ongeplaatst | length) }}</summary>
+  <form method="post" action="/stelsels/{{ stelsel.code }}/plaats-automatisch" class="compact"><button class="knop klein">{{ _('Automatisch plaatsen op artikelnummer') }}</button></form>
   {% for b in ongeplaatst %}
   <form method="post" action="/stelsels/{{ stelsel.code }}/plaats" class="rij compact">
     <input type="hidden" name="bron_id" value="{{ b.id }}">
     <span class="citeertitel">{{ b.citeertitel }}</span>
     <select name="systematiek_id"><option value="">—</option>{% for k in alle_knopen %}<option value="{{ k.id }}">{{ k.pad() | map(attribute='label') | join(' › ') }}</option>{% endfor %}</select>
-    <button class="knop klein">Plaats</button>
+    <button class="knop klein">{{ _('Plaats') }}</button>
   </form>
   {% endfor %}
 </details>

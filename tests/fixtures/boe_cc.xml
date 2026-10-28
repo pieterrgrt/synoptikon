@@ -1,0 +1,21 @@
+<?xml version="1.0" encoding="utf-8"?><response><data><texto><bloque id="liv" tipo="encabezado" titulo="LIBRO IV">
+        <version id_norma="BOE-A-1889-4763" fecha_publicacion="18890725" fecha_vigencia="18890816">
+          <p class="libro_num">LIBRO CUARTO</p>
+          <p class="libro_tit">De las obligaciones y contratos</p>
+        </version>
+      </bloque><bloque id="txvi" tipo="encabezado" titulo="TÍTULO XVI">
+        <version id_norma="BOE-A-1889-4763" fecha_publicacion="18890725" fecha_vigencia="18890816">
+          <p class="titulo_num">TÍTULO XVI</p>
+          <p class="titulo_tit">De las obligaciones que se contraen sin convenio</p>
+        </version>
+      </bloque><bloque id="cii-36" tipo="encabezado" titulo="CAPÍTULO II">
+        <version id_norma="BOE-A-1889-4763" fecha_publicacion="18890725" fecha_vigencia="18890816">
+          <p class="capitulo_num">CAPÍTULO II</p>
+          <p class="capitulo_tit">De las obligaciones que nacen de culpa o negligencia</p>
+        </version>
+      </bloque><bloque id="art1902" tipo="precepto" titulo="Art 1902">
+        <version id_norma="BOE-A-1889-4763" fecha_publicacion="18890725" fecha_vigencia="18890816">
+          <p class="articulo">Artículo 1902.</p>
+          <p class="parrafo">El que por acción u omisión causa daño a otro, interviniendo culpa o negligencia, está obligado a reparar el daño causado.</p>
+        </version>
+      </bloque></texto></data></response>

@@ -1,27 +1,33 @@
 <!doctype html>
-<html lang="nl" data-theme="auto">
+<html lang="{{ huidige_taal() }}" data-theme="auto">
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
 <meta name="color-scheme" content="light dark">
-<title>Inloggen · Synoptikon</title>
-<link rel="stylesheet" href="/static/css/app.css">
+<title>{{ _('Inloggen') }} · Synoptikon</title>
+<link rel="stylesheet" href="/static/css/app.css?v={{ sv }}">
 {% include "_iconen.html" %}
-<script src="/static/js/thema.js"></script>
+<script src="/static/js/thema.js?v={{ sv }}"></script>
 </head>
 <body class="login-body">
 <main class="login">
-  <h1><span class="merk-teken">Σ</span> Synoptikon</h1>
-  <p class="stil">Rechtsvergelijking, naast elkaar.</p>
-  {% if geen_hash %}
-  <p class="melding fout">Er is nog geen wachtwoord ingesteld. Zet <code>SYNOPTIKON_PASSWORD_HASH</code> in <code>.env</code>; maak de hash met <code>docker compose run --rm app synoptikon hash-password</code>.</p>
-  {% endif %}
-  {% if fout %}<p class="melding fout">{{ fout }}</p>{% endif %}
+  <h1><span class="merk-teken" aria-hidden="true">Σ</span> Synoptikon</h1>
+  <p class="stil">{{ _('Rechtsvergelijking, naast elkaar.') }}</p>
+  {% if fout %}<p class="melding fout" role="alert">{{ fout }}</p>{% endif %}
   <form method="post" action="/login">
     <input type="hidden" name="volgende" value="{{ volgende }}">
-    <label>Wachtwoord <input type="password" name="wachtwoord" autofocus autocomplete="current-password" required></label>
-    <button type="submit" class="knop primair">Inloggen</button>
+    <label>{{ _('Gebruikersnaam') }} <input name="gebruikersnaam" value="{{ gebruikersnaam }}" autocomplete="username" autocapitalize="none" autocorrect="off" spellcheck="false" required {% if not gebruikersnaam %}autofocus{% endif %}></label>
+    <label>{{ _('Wachtwoord') }} <input type="password" name="wachtwoord" autocomplete="current-password" required {% if gebruikersnaam %}autofocus{% endif %}></label>
+    <button type="submit" class="knop primair">{{ _('Inloggen') }}</button>
+  </form>
+  <form method="post" action="/taal" class="taalkeuze login-taal">
+    <input type="hidden" name="terug" value="/login?volgende={{ volgende | urlencode }}">
+    <label>{{ _('Taal') }}
+      <select name="taal" class="auto-submit">{% for k, v in TALEN.items() %}<option value="{{ k }}" lang="{{ k }}" {% if k == huidige_taal() %}selected{% endif %}>{{ v }}</option>{% endfor %}</select>
+    </label>
+    <noscript><button class="knop klein">OK</button></noscript>
   </form>
 </main>
+<script src="/static/js/app.js?v={{ sv }}"></script>
 </body>
 </html>

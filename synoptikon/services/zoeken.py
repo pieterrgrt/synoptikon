@@ -2,12 +2,16 @@
 from __future__ import annotations
 
 import re
+import unicodedata
 from dataclasses import dataclass, field
 
+from markupsafe import escape
 from sqlalchemy import text
 from sqlalchemy.orm import Session
 
+from ..i18n import BRONTAAL, taal, vt
 from ..models import Antwoord, Begrip, Bron, Vraag, WettekstArtikel
+from .artikelen import Ref
 
 _TOKEN = re.compile(r"[\w§:\-\.]+", re.UNICODE)
 
@@ -43,13 +47,36 @@ class Zoekresultaat:
     begrippen: list[Treffer] = field(default_factory=list)
     antwoorden: list[Treffer] = field(default_factory=list)
     wetteksten: list[Treffer] = field(default_factory=list)
+    vertalingen: list[Treffer] = field(default_factory=list)  # eigen inhoud, gevonden in de vertaling
+    eu: list[Treffer] = field(default_factory=list)
 
     @property
     def aantal(self) -> int:
-        return len(self.vragen) + len(self.bronnen) + len(self.begrippen) + len(self.antwoorden) + len(self.wetteksten)
+        return sum(len(x) for x in (self.vragen, self.bronnen, self.begrippen, self.antwoorden, self.wetteksten, self.vertalingen, self.eu))
 
 
 _SNIP = "snippet({tabel}, {kolom}, '<mark>', '</mark>', '…', 24)"
+
+
+def wetsartikelen(db: Session, q: str, stelsel: str = "", limiet: int = 40) -> list[tuple[WettekstArtikel, str]]:
+    """Artikelen waarvan nummer, opschrift of tekst de woorden bevat, met een fragment."""
+    match = fts_query(q)
+    if not match:
+        return []
+    rows = db.execute(
+        text(
+            "SELECT wettekst_artikel_fts.rowid, " + _SNIP.format(tabel="wettekst_artikel_fts", kolom=2) + " AS s "
+            "FROM wettekst_artikel_fts JOIN wettekst_artikel a ON a.id = wettekst_artikel_fts.rowid JOIN wettekst w ON w.id = a.wettekst_id "
+            "WHERE wettekst_artikel_fts MATCH :m AND (:st = '' OR w.stelsel_code = :st) ORDER BY rank LIMIT :l"
+        ),
+        {"m": match, "st": stelsel, "l": limiet},
+    ).all()
+    uit = []
+    for rowid, snippet in rows:
+        wa = db.get(WettekstArtikel, rowid)
+        if wa:
+            uit.append((wa, snippet or ""))
+    return uit
 
 
 def zoek(db: Session, q: str, limiet: int = 30) -> Zoekresultaat:
@@ -68,7 +95,7 @@ def zoek(db: Session, q: str, limiet: int = 30) -> Zoekresultaat:
     for rowid, snippet in rows:
         v = db.get(Vraag, rowid)
         if v:
-            res.vragen.append(Treffer("vraag", v.titel, snippet or "", f"/vragen/{v.slug}", extra=v.rechtsgebied))
+            res.vragen.append(Treffer("vraag", vt(v.titel), snippet or "", f"/vragen/{v.slug}", extra=vt(v.rechtsgebied)))
 
     rows = db.execute(
         text(
@@ -105,7 +132,7 @@ def zoek(db: Session, q: str, limiet: int = 30) -> Zoekresultaat:
         a = db.get(Antwoord, rowid)
         if a:
             res.antwoorden.append(
-                Treffer("antwoord", a.vraag.titel, snippet or "", f"/vragen/{a.vraag.slug}#{a.stelsel_code}", a.stelsel_code)
+                Treffer("antwoord", vt(a.vraag.titel), snippet or "", f"/vragen/{a.vraag.slug}#{a.stelsel_code}", a.stelsel_code)
             )
 
     rows = db.execute(
@@ -123,9 +150,44 @@ def zoek(db: Session, q: str, limiet: int = 30) -> Zoekresultaat:
                     "wettekst",
                     f"{wa.wettekst.titel} {wa.nummer}",
                     snippet or "",
-                    f"/wetteksten/{wa.wettekst_id}#{wa.nummer}",
+                    Ref(wa.wettekst.stelsel_code, wa.nummer, wa.wettekst.wet).url,
                     wa.wettekst.stelsel_code,
                     wa.opschrift,
                 )
             )
+    res.vertalingen = _in_vertalingen(db, q, limiet)
+    from . import eu
+
+    for h in eu.zoek(db, q, per_pagina=10)[0]:
+        res.eu.append(Treffer("eu", h.roepnaam or h.citeer, escape(h.toon_titel[:240]), f"/eu/{h.celex}", "EU", h.soort_label))
     return res
+
+
+def _vouw(s: str) -> str:
+    return "".join(c for c in unicodedata.normalize("NFKD", s.casefold()) if not unicodedata.combining(c))
+
+
+def _in_vertalingen(db: Session, q: str, limiet: int) -> list[Treffer]:
+    """Eigen inhoud waarvan de vertaling in de taal van het verzoek alle woorden bevat (accent- en hoofdletterongevoelig)."""
+    t = taal()
+    if t == BRONTAAL:
+        return []
+    from .vertalen import bronteksten, vertalingen
+
+    woorden = [_vouw(w) for w in re.findall(r"\w+", q)]
+    if not woorden:
+        return []
+    klaar = vertalingen(db, t)
+    uit = []
+    for b in bronteksten(db):
+        v = klaar.get(b.hash)
+        if v is None:
+            continue
+        gevouwen = _vouw(v.tekst)
+        if all(w in gevouwen for w in woorden):
+            i = gevouwen.find(woorden[0])
+            fragment = v.tekst[max(0, i - 60): i + 140]
+            uit.append(Treffer(b.soort, vt(b.waar) or b.waar, escape(("…" if i > 60 else "") + fragment + "…"), b.url))
+            if len(uit) >= limiet:
+                break
+    return uit

@@ -15,7 +15,8 @@ def _veilig(s: str) -> str:
     return re.sub(r"[^A-Za-z0-9_.\-]+", "_", s)[:80]
 
 
-def sla_op(db: Session, stelsel_code: str, g: Geparseerd) -> Wettekst:
+def sla_op(db: Session, stelsel_code: str, g: Geparseerd, wet: str | None = None) -> Wettekst:
+    """`wet`: citeerafkorting waaronder de artikelen gevonden worden (None = hoofdcodificatie)."""
     bestand = None
     if g.ruw:
         map_ = settings.wetteksten_dir / stelsel_code / _veilig(g.wet_id) / _veilig(g.versie)
@@ -28,7 +29,7 @@ def sla_op(db: Session, stelsel_code: str, g: Geparseerd) -> Wettekst:
     if bestaand:
         db.delete(bestaand)
         db.flush()
-    w = Wettekst(stelsel_code=stelsel_code, wet_id=g.wet_id, titel=g.titel, versie=g.versie, bron_url=g.bron_url, bestand=bestand)
+    w = Wettekst(stelsel_code=stelsel_code, wet_id=g.wet_id, wet=wet or None, titel=g.titel, versie=g.versie, bron_url=g.bron_url, bestand=bestand)
     gezien: set[str] = set()
     for i, a in enumerate(g.artikelen):
         if a.nummer in gezien:

@@ -1,49 +1,76 @@
 <!doctype html>
-<html lang="nl" data-theme="auto">
+<html lang="{{ huidige_taal() }}" data-theme="auto">
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
 <meta name="color-scheme" content="light dark">
 <title>{% block titel %}Synoptikon{% endblock %}</title>
-<link rel="stylesheet" href="/static/css/app.css">
+<link rel="stylesheet" href="/static/css/app.css?v={{ sv }}">
 {% include "_iconen.html" %}
-<script src="/static/js/thema.js"></script>
+<script src="/static/js/thema.js?v={{ sv }}"></script>
 {% block head %}{% endblock %}
 </head>
-<body class="{% block bodyclass %}{% endblock %}">
+<body class="{% block bodyclass %}{% endblock %}{% if not mag_bewerken %} alleen-lezen{% endif %}">
+<a class="naar-inhoud" href="#inhoud">{{ _('Naar de inhoud') }}</a>
 <header class="kop">
-  <a class="merk" href="/"><span class="merk-teken">Σ</span> Synoptikon</a>
-  <nav class="nav">
-    <a href="/" {% if request.url.path == '/' %}aria-current="page"{% endif %}>Vragen</a>
-    <a href="/begrippen" {% if request.url.path.startswith('/begrippen') %}aria-current="page"{% endif %}>Begrippen</a>
-    <a href="/artikelen" {% if request.url.path.startswith('/artikelen') %}aria-current="page"{% endif %}>Artikelen</a>
-    <a href="/stelsels" {% if request.url.path.startswith('/stelsels') %}aria-current="page"{% endif %}>Stelsels</a>
-    <a href="/bronnen" {% if request.url.path.startswith('/bronnen') %}aria-current="page"{% endif %}>Bronnen</a>
-    <a href="/invoer" {% if request.url.path.startswith('/invoer') %}aria-current="page"{% endif %}>Invoer</a>
+  <a class="merk" href="/"><span class="merk-teken" aria-hidden="true">Σ</span> Synoptikon</a>
+  <nav class="nav" aria-label="{{ _('Hoofdmenu') }}">
+    <a href="/" {% if request.url.path == '/' %}aria-current="page"{% endif %}>{{ _('Vragen') }}</a>
+    <a href="/begrippen" {% if request.url.path.startswith('/begrippen') %}aria-current="page"{% endif %}>{{ _('Begrippen') }}</a>
+    <a href="/artikelen" {% if request.url.path.startswith('/artikelen') %}aria-current="page"{% endif %}>{{ _('Artikelen') }}</a>
+    <a href="/stelsels" {% if request.url.path.startswith('/stelsels') %}aria-current="page"{% endif %}>{{ _('Stelsels') }}</a>
+    <a href="/eu" {% if request.url.path.startswith('/eu') %}aria-current="page"{% endif %}>{{ _('EU') }}</a>
+    <a href="/bronnen" {% if request.url.path.startswith('/bronnen') %}aria-current="page"{% endif %}>{{ _('Bronnen') }}</a>
+    <a href="/leren" {% if request.url.path.startswith('/leren') %}aria-current="page"{% endif %}>{{ _('Leren') }}</a>
+    {% if mag_bewerken %}<a href="/invoer" {% if request.url.path.startswith('/invoer') %}aria-current="page"{% endif %}>{{ _('Invoer') }}</a>{% endif %}
   </nav>
   <form class="zoekveld" action="/zoeken" method="get" role="search">
-    <input type="search" name="q" placeholder="Zoek…" value="{{ request.query_params.get('q', '') }}" aria-label="Zoeken">
+    <input type="search" name="q" placeholder="{{ _('Zoek…') }}" value="{{ request.query_params.get('q', '') }}" aria-label="{{ _('Zoeken') }}">
   </form>
   <div class="kop-acties">
-    <button type="button" class="knop-icoon" id="thema-knop" title="Licht/donker" aria-label="Thema wisselen">◐</button>
+    <button type="button" class="knop-icoon" id="thema-knop" title="{{ _('Licht/donker') }}" aria-label="{{ _('Thema wisselen') }}">◐</button>
     <details class="menu">
-      <summary class="knop-icoon" aria-label="Meer">⋯</summary>
+      <summary class="knop-icoon" aria-label="{{ _('Meer') }}">⋯</summary>
       <div class="menu-lijst">
-        <a href="/concordantie">Concordantie</a>
-        <a href="/wetteksten">Wetteksten</a>
-        <a href="/begrippen/export.json">Begrippenparen (JSON)</a>
-        {% if auth_mode != 'none' %}<form method="post" action="/logout"><button type="submit" class="knop-tekst">Uitloggen</button></form>{% endif %}
+        {% if profiel %}<a href="/profiel"><strong>{{ profiel.naam }}</strong> <span class="stil">· {{ profiel.rol_label }}</span></a>{% endif %}
+        <a href="/concordantie">{{ _('Concordantie') }}</a>
+        <a href="/wetteksten">{{ _('Wetteksten') }}</a>
+        <a href="/begrippen/export.json">{{ _('Begrippenparen (JSON)') }}</a>
+        {% if mag_bewerken %}<a href="/vertalingen">{{ _('Vertalingen') }}</a>{% endif %}
+        {% if profiel and profiel.is_beheerder %}<a href="/beheer/profielen">{{ _('Profielen') }}</a>{% endif %}
+        <form method="post" action="/taal" class="taalkeuze">
+          <input type="hidden" name="terug" value="{{ request.url.path }}{% if request.url.query %}?{{ request.url.query }}{% endif %}">
+          <label>{{ _('Taal') }}
+            <select name="taal" class="auto-submit">{% for k, v in TALEN.items() %}<option value="{{ k }}" lang="{{ k }}" {% if k == huidige_taal() %}selected{% endif %}>{{ v }}</option>{% endfor %}</select>
+          </label>
+          <noscript><button class="knop klein">OK</button></noscript>
+        </form>
+        {% if auth_mode != 'none' %}<form method="post" action="/logout"><button type="submit" class="knop-tekst">{{ _('Uitloggen') }}</button></form>{% endif %}
       </div>
     </details>
   </div>
 </header>
+{% if huidige_taal() != 'nl' %}
+<form method="post" action="/taal/inhoud" class="inhoud-taal">
+  <input type="hidden" name="terug" value="{{ request.url.path }}{% if request.url.query %}?{{ request.url.query }}{% endif %}">
+  {% if toont_origineel() %}
+  <span>{{ _('Eigen inhoud in het oorspronkelijke Nederlands.') }}</span>
+  <input type="hidden" name="origineel" value="0"><button class="knop-tekst">{{ _('Vertaling tonen') }}</button>
+  {% else %}
+  <span>{{ _('Vragen, analyses en definities zijn uit het Nederlands vertaald (niet geverifieerd). Wetteksten, termen en citeertitels staan in de oorspronkelijke taal.') }}</span>
+  <input type="hidden" name="origineel" value="1"><button class="knop-tekst">{{ _('Nederlands origineel') }}</button>
+  {% endif %}
+</form>
+{% endif %}
 
-<main class="{% block mainclass %}pagina{% endblock %}">
+<main id="inhoud" class="{% block mainclass %}pagina{% endblock %}">
+{% set bewaard = request.query_params.get('bewaard') %}
+{% if bewaard is not none %}<p class="melding" role="status">{% if bewaard == '0' %}{{ _('Die kaarten stonden al in de lijst.') }}{% else %}{{ n_('{n} kaart bewaard.', '{n} kaarten bewaard.', bewaard | int) }}{% endif %} <a href="/leren">{{ _('Naar je leerlijsten') }}</a></p>{% endif %}
 {% block inhoud %}{% endblock %}
 </main>
 
-<footer class="voet">Synoptikon {{ versie }} · <a href="/invoer">snel invoeren</a></footer>
-<script src="/static/js/app.js"></script>
+<footer class="voet">Synoptikon {{ versie }}{% if mag_bewerken %} · <a href="/invoer">{{ _('snel invoeren') }}</a>{% endif %}</footer>
+<script src="/static/js/app.js?v={{ sv }}"></script>
 {% block scripts %}{% endblock %}
 </body>
 </html>

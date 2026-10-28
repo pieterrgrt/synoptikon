@@ -1,57 +1,58 @@
 {% extends "base.html" %}
-{% block titel %}Snel invoeren · Synoptikon{% endblock %}
+{% block titel %}{{ _('Snel invoeren') }} · Synoptikon{% endblock %}
 {% block mainclass %}pagina smal{% endblock %}
 {% block inhoud %}
-<h1>Snel invoeren</h1>
-{% if klaar %}<p class="melding ok">{{ {'bron': 'Bron toegevoegd en gekoppeld.', 'notitie': 'Notitie opgeslagen.', 'begrip': 'Begrip opgeslagen en gekoppeld.'}[klaar] }}</p>{% endif %}
-{% if not vragen %}<p class="stil">Maak eerst <a href="/vragen/nieuw">een vraag</a>.</p>{% else %}
-<nav class="tabs" role="tablist">
-  <a href="?vraag={{ vooraf_vraag or '' }}&tab=bron" {% if tab == 'bron' %}aria-current="page"{% endif %}>Bron</a>
-  <a href="?vraag={{ vooraf_vraag or '' }}&tab=notitie" {% if tab == 'notitie' %}aria-current="page"{% endif %}>Notitie</a>
-  <a href="?vraag={{ vooraf_vraag or '' }}&tab=begrip" {% if tab == 'begrip' %}aria-current="page"{% endif %}>Begrip</a>
+<h1>{{ _('Snel invoeren') }}</h1>
+{% if klaar %}<p class="melding ok" role="status">{{ {'bron': _('Bron toegevoegd en gekoppeld.'), 'notitie': _('Notitie opgeslagen.'), 'begrip': _('Begrip opgeslagen en gekoppeld.')}[klaar] }}</p>{% endif %}
+{% if huidige_taal() != 'nl' %}<p class="hint">{{ _('Vul in het Nederlands in; vertalingen beheer je onder Vertalingen.') }}</p>{% endif %}
+{% if not vragen %}<p class="stil">{{ _('Maak eerst een vraag.') }} <a href="/vragen/nieuw">{{ _('+ Nieuwe vraag') }}</a></p>{% else %}
+<nav class="tabs" aria-label="{{ _('Soort invoer') }}">
+  <a href="?vraag={{ vooraf_vraag or '' }}&tab=bron" {% if tab == 'bron' %}aria-current="page"{% endif %}>{{ _('Bron') }}</a>
+  <a href="?vraag={{ vooraf_vraag or '' }}&tab=notitie" {% if tab == 'notitie' %}aria-current="page"{% endif %}>{{ _('Notitie') }}</a>
+  <a href="?vraag={{ vooraf_vraag or '' }}&tab=begrip" {% if tab == 'begrip' %}aria-current="page"{% endif %}>{{ _('Begrip') }}</a>
 </nav>
 
 {% macro vraagkeuze() %}
-<label>Vraag <select name="vraag_slug" required>{% for v in vragen %}<option value="{{ v.slug }}" {% if vooraf_vraag == v.slug %}selected{% endif %}>{{ v.titel }}</option>{% endfor %}</select></label>
+<label>{{ _('Vraag') }} <select name="vraag_slug" required>{% for v in vragen %}<option value="{{ v.slug }}" {% if vooraf_vraag == v.slug %}selected{% endif %}>{{ vt(v.titel) }}</option>{% endfor %}</select></label>
 {% endmacro %}
 {% macro stelselkeuze(leeg=False) %}
-<label>Stelsel <select name="stelsel_code" class="stelsel-keuze" {% if not leeg %}required{% endif %}>{% if leeg %}<option value="">algemeen</option>{% endif %}{% for s in stelsels %}<option value="{{ s.code }}" data-taal="{{ s.taal }}">{{ s.naam }}</option>{% endfor %}</select></label>
+<label>{{ _('Stelsel') }} <select name="stelsel_code" class="stelsel-keuze" {% if not leeg %}required{% endif %}>{% if leeg %}<option value="">{{ _('algemeen') }}</option>{% endif %}{% for s in stelsels %}<option value="{{ s.code }}" data-taal="{{ s.taal }}">{{ vt(s.naam) }}</option>{% endfor %}</select></label>
 {% endmacro %}
 
 {% if tab == 'bron' %}
 <form method="post" action="/invoer/bron" class="formulier">
   {{ vraagkeuze() }}
   <div class="rij">{{ stelselkeuze() }}
-    <label>Soort <select name="soort">{% for k, v in soorten.items() %}<option value="{{ k }}">{{ v }}</option>{% endfor %}</select></label>
+    <label>{{ _('Soort') }} <select name="soort">{% for k, v in soorten.items() %}<option value="{{ k }}">{{ _(v) }}</option>{% endfor %}</select></label>
   </div>
-  <label>Citeertitel <input name="citeertitel" required placeholder="§ 932 BGB · Cass. com. 26 nov. 2003 (Manoukian)"></label>
-  <label>Titel / zaaknaam <input name="titel"></label>
-  <label>Tekst <textarea name="tekst" rows="6" class="serif" placeholder="Originele tekst of kernoverweging (mag later)"></textarea></label>
+  <label>{{ _('Citeertitel') }} <input name="citeertitel" required placeholder="§ 932 BGB · Cass. com. 26 nov. 2003 (Manoukian)"></label>
+  <label>{{ _('Titel / zaaknaam') }} <input name="titel"></label>
+  <label>{{ _('Tekst') }} <textarea name="tekst" rows="6" class="serif" placeholder="{{ _('Originele tekst of kernoverweging (mag later)') }}"></textarea></label>
   <div class="rij">
-    <label>Vindplaatstype <input name="vindplaats_type" list="vt" placeholder="ECLI"><datalist id="vt"><option value="ECLI"><option value="NJ"><option value="BeckRS"><option value="NJW"><option value="LEGIARTI"><option value="CELEX"></datalist></label>
-    <label>Vindplaats <input name="vindplaats"></label>
+    <label>{{ _('Vindplaatstype') }} <input name="vindplaats_type" list="vt" placeholder="ECLI"><datalist id="vt"><option value="ECLI"><option value="NJ"><option value="BeckRS"><option value="NJW"><option value="LEGIARTI"><option value="CELEX"></datalist></label>
+    <label>{{ _('Vindplaats') }} <input name="vindplaats"></label>
   </div>
-  <label>Link <input name="url" type="url" inputmode="url"></label>
-  <div class="rij"><label>Rol <input name="rol" placeholder="hoofdregel"></label><label>Taal <input name="taal" class="taal-veld" size="4" placeholder="auto"></label></div>
-  <label>Annotatie <textarea name="notitie" rows="2"></textarea></label>
-  <button class="knop primair groot">Bron toevoegen</button>
+  <label>{{ _('Link') }} <input name="url" type="url" inputmode="url"></label>
+  <div class="rij"><label>{{ _('Rol') }} <input name="rol" placeholder="hoofdregel" lang="nl"></label><label>{{ _('Taal') }} <input name="taal" class="taal-veld" size="4" placeholder="auto"></label></div>
+  <label>{{ _('Annotatie') }} <textarea name="notitie" rows="2" lang="nl"></textarea></label>
+  <button class="knop primair groot">{{ _('Bron toevoegen') }}</button>
 </form>
 {% elif tab == 'notitie' %}
 <form method="post" action="/invoer/notitie" class="formulier">
   {{ vraagkeuze() }}
   {{ stelselkeuze(leeg=True) }}
-  <label>Notitie <span class="hint">markdown</span><textarea name="tekst" rows="8" required autofocus></textarea></label>
-  <button class="knop primair groot">Notitie opslaan</button>
+  <label>{{ _('Notitie') }} <span class="hint">markdown</span><textarea name="tekst" rows="8" required autofocus lang="nl"></textarea></label>
+  <button class="knop primair groot">{{ _('Notitie opslaan') }}</button>
 </form>
 {% else %}
 <form method="post" action="/invoer/begrip" class="formulier">
   {{ vraagkeuze() }}
   {{ stelselkeuze() }}
-  <label>Term <input name="term" required class="serif" autofocus></label>
-  <label>Definitie <textarea name="definitie" rows="5"></textarea></label>
-  <div class="rij"><label>Vindplaats <input name="vindplaats"></label><label>Taal <input name="taal" class="taal-veld" size="4" placeholder="auto"></label></div>
-  <button class="knop primair groot">Begrip opslaan</button>
-  <p class="hint">Bestaat de term al in dit stelsel, dan wordt alleen de koppeling met de vraag gelegd. Relaties leg je daarna op de begrippenpagina.</p>
+  <label>{{ _('Term') }} <input name="term" required class="serif" autofocus></label>
+  <label>{{ _('Definitie') }} <textarea name="definitie" rows="5" lang="nl"></textarea></label>
+  <div class="rij"><label>{{ _('Vindplaats') }} <input name="vindplaats"></label><label>{{ _('Taal') }} <input name="taal" class="taal-veld" size="4" placeholder="auto"></label></div>
+  <button class="knop primair groot">{{ _('Begrip opslaan') }}</button>
+  <p class="hint">{{ _('Bestaat de term al in dit stelsel, dan wordt alleen de koppeling met de vraag gelegd. Relaties leg je daarna op de begrippenpagina.') }}</p>
 </form>
 {% endif %}
 {% endif %}

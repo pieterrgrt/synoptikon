@@ -1,13 +1,19 @@
 from __future__ import annotations
 
+from urllib.parse import quote
+
 from fastapi import APIRouter, Depends, Form, HTTPException, Request
 from fastapi.responses import RedirectResponse
 from sqlalchemy import select
 from sqlalchemy.orm import Session, selectinload
 
 from ..db import get_session
+from ..i18n import _
 from ..models import RECHTSFAMILIES, Antwoord, AntwoordBron, Bron, Stelsel, Systematiek, Vraag
+from ..models import Wettekst
 from ..services import correspondentie as corr
+from ..auth import huidig_profiel
+from ..services import leren, wetboek
 from ..services.artikelen import herken, plaatser, ref_uit_bron
 from ..services.helpers import actieve_stelsels, leeg_naar_none, per_familie, stelsels_per_code
 from . import render
@@ -18,7 +24,55 @@ router = APIRouter()
 @router.get("/stelsels")
 def overzicht(request: Request, db: Session = Depends(get_session)):
     stelsels = db.scalars(select(Stelsel).order_by(Stelsel.volgorde)).all()
-    return render(request, "stelsels.html", families=per_familie(stelsels))
+    return render(request, "stelsels.html", families=per_familie(stelsels), wetten={s.code: wetboek.wetten(db, s.code) for s in stelsels})
+
+
+@router.get("/stelsels/{code}/wet/{wid}")
+def wet(request: Request, code: str, wid: int, deel: str = "", artikel: str = "", db: Session = Depends(get_session)):
+    """Een wet lezen: inhoudsopgave, of één afdeling met de volledige tekst van haar artikelen."""
+    w = db.get(Wettekst, wid)
+    if w is None or w.stelsel_code != code:
+        raise HTTPException(404)
+    ih = wetboek.inhoud(db, w)
+    if artikel.strip():
+        # Ga naar artikel: binnen deze wet, anders via de gewone artikelzoeker.
+        nr = artikel.strip()
+        for kandidaat in (nr, nr.removeprefix("art.").removeprefix("Art.").removeprefix("§").strip()):
+            gevonden = next((d for d in [ih.wortel, *ih.volgorde] if kandidaat in d.artikelen), None)
+            if gevonden is not None:
+                return RedirectResponse(f"/stelsels/{code}/wet/{wid}?deel={quote(gevonden.sleutel)}#art-{quote(kandidaat)}", status_code=303)
+        return RedirectResponse(f"/artikelen?q={quote(nr)}&stelsel={code}", status_code=303)
+    d = wetboek.deel(ih, deel)
+    if d is None:
+        raise HTTPException(404)
+    nummers = wetboek.nummers_onder(d) if d.pad else d.artikelen
+    toon_tekst = not d.kinderen or (bool(d.pad) and len(nummers) <= wetboek.MAX_ARTIKELEN)
+    arts = wetboek.artikelen(db, w, nummers[: wetboek.MAX_ARTIKELEN * 3] if toon_tekst else d.artikelen)
+    # Kopjes tussen de artikelen: het pad onder dit deel, telkens als het verandert.
+    plek = {nr: dd for dd in [d, *_onder(d)] for nr in dd.artikelen}
+    vorige, volgende = wetboek.buren(ih, d) if d.pad else (None, None)
+    return render(
+        request,
+        "wetboek.html",
+        stelsel=db.get(Stelsel, code),
+        stelsels=actieve_stelsels(db),
+        w=w,
+        wetten=wetboek.wetten(db, code),
+        ih=ih,
+        d=d,
+        artikelen=arts,
+        plek=plek,
+        toon_tekst=toon_tekst,
+        vorige=vorige,
+        volgende=volgende,
+        ref=lambda nr: wetboek.ref(w, nr),
+    )
+
+
+def _onder(d):
+    for k in d.kinderen:
+        yield k
+        yield from _onder(k)
 
 
 @router.post("/stelsels")
@@ -27,7 +81,7 @@ def stelsel_maak(
 ):
     code = code.strip().upper()
     if db.get(Stelsel, code):
-        raise HTTPException(400, "Stelsel bestaat al")
+        raise HTTPException(400, _("Stelsel bestaat al"))
     volgorde = max([s.volgorde for s in db.scalars(select(Stelsel)).all()] or [0]) + 10
     db.add(
         Stelsel(
@@ -57,10 +111,15 @@ def stelsel_actief(code: str, actief: str = Form("0"), db: Session = Depends(get
 
 
 @router.get("/stelsels/{code}")
-def systematiek(request: Request, code: str, vraag: str | None = None, artikel: str = "", db: Session = Depends(get_session)):
+def systematiek(request: Request, code: str, vraag: str | None = None, artikel: str = "", wet: int | None = None, db: Session = Depends(get_session)):
     stelsel = db.get(Stelsel, code)
     if stelsel is None:
         raise HTTPException(404)
+    if wet is not None:
+        # Een wet openen: naar haar plek in de systematiek, of naar haar eigen inhoudsopgave als die er niet is.
+        wortel = wetboek.plaatsing(db, code).wortel.get(wet)
+        doel = f"/stelsels/{code}#knoop-{wortel}" if wortel else f"/stelsels/{code}/wet/{wet}"
+        return RedirectResponse(doel, status_code=303)
     alle_knopen = db.scalars(
         select(Systematiek).where(Systematiek.stelsel_code == code).options(selectinload(Systematiek.kinderen), selectinload(Systematiek.bronnen)).order_by(Systematiek.volgorde)
     ).all()
@@ -95,6 +154,8 @@ def systematiek(request: Request, code: str, vraag: str | None = None, artikel: 
         request,
         "systematiek.html",
         stelsel=stelsel,
+        pl=wetboek.plaatsing(db, code),
+        ws={w.id: w for w in wetboek.wetten(db, code)},
         stelsels=actieve_stelsels(db),
         wortels=wortels,
         vraag=vraag_obj,
@@ -179,3 +240,73 @@ def knoop(request: Request, code: str, knoop_id: int, db: Session = Depends(get_
         namen=namen,
         stelsels=stelsels,
     )
+
+
+@router.get("/stelsels/{code}/lees/{knoop_id}")
+def lees(request: Request, code: str, knoop_id: int, fragment: int = 0, db: Session = Depends(get_session)):
+    """De tekst van de artikelen in een systematiekknoop. `fragment=1`: alleen de artikelen direct in de knoop, om in de boom
+    open te klappen; anders een pagina met alles eronder (of, bij een groot onderdeel, de onderdelen om uit te kiezen)."""
+    k = db.get(Systematiek, knoop_id)
+    if k is None or k.stelsel_code != code:
+        raise HTTPException(404)
+    stelsel = db.get(Stelsel, code)
+    pl = wetboek.plaatsing(db, code)
+    ws = {w.id: w for w in wetboek.wetten(db, code)}
+    if fragment:
+        arts = wetboek.artikelen_bij(db, pl.direct.get(k.id, []))
+        terug = f"/stelsels/{code}#knoop-{k.id}"
+        return render(request, "_wetartikelen.html", stelsel=stelsel, artikelen=arts, ws=ws, koppen={}, terug=terug,
+                      bewaarde_refs=_bewaarde(request, db))
+    # Alle knopen eronder in boomvolgorde; de knopen met eigen artikelen zijn ook de stappen voor vorige/volgende.
+    onder = [k, *_afstammelingen(k)]
+    toon_tekst = pl.onder.get(k.id, 0) <= wetboek.MAX_ARTIKELEN
+    paren = [p for x in onder for p in pl.direct.get(x.id, [])] if toon_tekst else pl.direct.get(k.id, [])
+    arts = wetboek.artikelen_bij(db, paren)
+    koppen = {}
+    for x in onder[1:]:
+        eerste = pl.direct.get(x.id)
+        if eerste and toon_tekst:
+            koppen[eerste[0]] = [y for y in x.pad() if y not in k.pad()]
+    stappen = [x for x in _boomvolgorde(db, code) if pl.direct.get(x.id)]
+    i = next((j for j, x in enumerate(stappen) if x.id == k.id), None)
+    if i is None:  # knoop zonder eigen artikelen: vorige/volgende rond de eerste knoop eronder
+        i = next((j for j, x in enumerate(stappen) if x in onder), None)
+    vorige = stappen[i - 1] if i is not None and i > 0 else None
+    volgende = None
+    if i is not None:
+        volgende = next((x for x in stappen[i + 1:] if x not in onder), None)
+    return render(
+        request,
+        "lezen.html",
+        stelsel=stelsel,
+        k=k,
+        pl=pl,
+        ws=ws,
+        artikelen=arts,
+        koppen=koppen,
+        toon_tekst=toon_tekst,
+        vorige=vorige,
+        volgende=volgende,
+        terug=f"/stelsels/{code}/lees/{k.id}",
+        bewaarde_refs=_bewaarde(request, db),
+    )
+
+
+def _afstammelingen(k: Systematiek):
+    for c in k.kinderen:
+        yield c
+        yield from _afstammelingen(c)
+
+
+def _boomvolgorde(db: Session, code: str) -> list[Systematiek]:
+    wortels = db.scalars(select(Systematiek).where(Systematiek.stelsel_code == code, Systematiek.parent_id.is_(None)).order_by(Systematiek.volgorde)).all()
+    uit: list[Systematiek] = []
+    for w in wortels:
+        uit.append(w)
+        uit.extend(_afstammelingen(w))
+    return uit
+
+
+def _bewaarde(request: Request, db: Session) -> set:
+    p = huidig_profiel(request)
+    return leren.bewaarde_refs(db, p.id if p else 1)

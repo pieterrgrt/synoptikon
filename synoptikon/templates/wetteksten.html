@@ -1,14 +1,15 @@
 {% extends "base.html" %}
-{% block titel %}Wetteksten · Synoptikon{% endblock %}
+{% block titel %}{{ _('Wetteksten') }} · Synoptikon{% endblock %}
 {% block inhoud %}
-<h1>Geïmporteerde wetteksten</h1>
-<p class="hint">Lokaal opgeslagen kopieën met versie en datum. Importeren gaat via de CLI: <code>synoptikon import nl BWBR0005291</code>, <code>synoptikon import de bgb</code>, <code>synoptikon import eu 32007R0864</code>, <code>synoptikon import fr LEGITEXT000006070721</code>.</p>
-<table class="tabel">
-  <thead><tr><th>Stelsel</th><th>Wet</th><th>Versie</th><th>Artikelen</th><th>Opgehaald</th><th>Herkomst</th></tr></thead>
+<h1>{{ _('Geïmporteerde wetteksten') }}</h1>
+<p class="hint">{{ _('Lokaal opgeslagen kopieën met versie en datum. Lezen per stelsel, met inhoudsopgave: via Stelsels. BE is de tekst zoals bekendgemaakt, niet geconsolideerd.') }}</p>
+<p class="hint" lang="nl">Alles uit het register in één keer: <code>synoptikon import-alles --legi &lt;map&gt;</code> (FR uit de LEGI-dump, zie <code>scripts/legi_ophalen.sh</code>). Losse wetten: <code>synoptikon import nl BWBR0005291</code>, <code>synoptikon import ch cc/27/317_321_377 --wet OR</code>, <code>synoptikon import eu 32007R0864</code>. BE is de tekst zoals bekendgemaakt, niet geconsolideerd.</p>
+<div class="tabel-schuif"><table class="tabel">
+  <thead><tr><th>{{ _('Stelsel') }}</th><th>{{ _('Wet') }}</th><th>{{ _('Citeerwijze') }}</th><th>{{ _('Versie') }}</th><th>{{ _('Artikelen') }}</th><th>{{ _('Opgehaald') }}</th><th>{{ _('Herkomst') }}</th></tr></thead>
   <tbody>
   {% for w in wetten %}
-  <tr><td>{{ sc(w.stelsel_code) }}</td><td><a href="/wetteksten/{{ w.id }}">{{ w.titel }}</a> <span class="stil">{{ w.wet_id }}</span></td><td>{{ w.versie }}</td><td>{{ w.artikelen | length }}</td><td class="stil">{{ w.opgehaald.strftime('%Y-%m-%d') }}</td><td class="stil">{% if w.bron_url %}<a href="{{ w.bron_url }}" target="_blank" rel="noopener">bron ↗</a>{% endif %}</td></tr>
-  {% else %}<tr><td colspan="6" class="stil">Nog niets geïmporteerd.</td></tr>{% endfor %}
+  <tr><td>{{ sc(w.stelsel_code) }}</td><td><a href="/stelsels/{{ w.stelsel_code }}/wet/{{ w.id }}">{{ w.titel }}</a> <span class="stil">{{ w.wet_id }}</span></td><td>{{ w.wet or _('hoofdwet') }}</td><td>{{ w.versie }}</td><td>{{ aantallen.get(w.id, 0) }}</td><td class="stil">{{ w.opgehaald.strftime('%Y-%m-%d') }}</td><td class="stil">{% if w.bron_url %}<a href="{{ w.bron_url }}" target="_blank" rel="noopener">{{ _('bron ↗') }}</a>{% endif %}</td></tr>
+  {% else %}<tr><td colspan="7" class="stil">{{ _('Nog niets geïmporteerd.') }}</td></tr>{% endfor %}
   </tbody>
-</table>
+</table></div>
 {% endblock %}

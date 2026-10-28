@@ -1,4 +1,4 @@
-"""Voorbeeldinhoud: stelsels, systematiek, twee uitgewerkte vragen, begrippen, concordanties.
+"""Voorbeeldinhoud: stelsels, systematiek, twee uitgewerkte vragen, begrippen, concordanties, omzettingstabel.
 
 De wetteksten zijn de geldende officiële teksten zoals gepubliceerd op
 wetten.overheid.nl, gesetze-im-internet.de, legifrance.gouv.fr en EUR-Lex;
@@ -209,13 +209,51 @@ def _vraag(db: Session, systematiek: dict[str, Systematiek], spec: dict, oversch
     return v
 
 
+def _begrippen_overig(db: Session) -> None:
+    """Begrippen van de overige stelsels (seed/begrippen.py), gekoppeld aan hun vraag als die er is."""
+    from .begrippen import BEGRIPPEN, BESTAAND, RELATIES
+
+    per_sleutel: dict[str, Begrip] = {}
+    for sleutel_, (stelsel, term) in BESTAAND.items():
+        g = db.scalar(select(Begrip).where(Begrip.stelsel_code == stelsel, Begrip.term == term))
+        if g:
+            per_sleutel[sleutel_] = g
+    vragen = {v.slug: v for v in db.scalars(select(Vraag)).all()}
+    for spec in BEGRIPPEN:
+        g = _begrip(db, spec)
+        per_sleutel[spec["sleutel"]] = g
+        v = vragen.get(spec["vraag"])
+        if v is not None and not any(vb.begrip_id == g.id for vb in v.begrippen):
+            v.begrippen.append(VraagBegrip(begrip=g))
+    for van, naar, typ, toelichting in RELATIES:
+        a_, b_ = per_sleutel.get(van), per_sleutel.get(naar)
+        if a_ is None or b_ is None:
+            continue
+        bestaande = db.scalar(
+            select(BegripRelatie).where(
+                ((BegripRelatie.van_id == a_.id) & (BegripRelatie.naar_id == b_.id)) | ((BegripRelatie.van_id == b_.id) & (BegripRelatie.naar_id == a_.id))
+            )
+        )
+        if bestaande is None:
+            db.add(BegripRelatie(van=a_, naar=b_, type=typ, toelichting=toelichting))
+    db.flush()
+
+
 def seed(db: Session, overschrijf: bool = False) -> int:
     _stelsels(db)
     systematiek = _systematiek(db)
     _concordanties(db)
     _correspondenties(db)
+    from ..services.eu import laad_omzettingen
+
+    laad_omzettingen(db)
     n = 0
     for spec in (data_eigendom.VRAAG, data_precontractueel.VRAAG):
         if _vraag(db, systematiek, spec, overschrijf) is not None:
             n += 1
+    _begrippen_overig(db)
+    db.flush()
+    from ..services.vertalen import laad_seed
+
+    laad_seed(db)  # machinevertalingen van de standaardinhoud; eigen vertalingen blijven staan
     return n

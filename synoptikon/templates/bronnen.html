@@ -1,28 +1,28 @@
 {% extends "base.html" %}
-{% block titel %}Bronnen · Synoptikon{% endblock %}
+{% block titel %}{{ _('Bronnen') }} · Synoptikon{% endblock %}
 {% block inhoud %}
 <div class="paginakop">
-  <h1>Bronnen</h1>
-  <a class="knop" href="/bronnen/nieuw">+ Nieuwe bron</a>
+  <h1>{{ _('Bronnen') }}</h1>
+  <a class="knop" href="/bronnen/nieuw">{{ _('+ Nieuwe bron') }}</a>
 </div>
 <form class="filters" method="get">
-  <select name="stelsel" class="auto-submit"><option value="">alle stelsels</option>{% for s in stelsels %}<option value="{{ s.code }}" {% if f_stelsel == s.code %}selected{% endif %}>{{ s.naam }}</option>{% endfor %}</select>
-  <select name="soort" class="auto-submit"><option value="">alle soorten</option>{% for k, v in soorten.items() %}<option value="{{ k }}" {% if f_soort == k %}selected{% endif %}>{{ v }}</option>{% endfor %}</select>
-  <noscript><button class="knop klein">Filter</button></noscript>
+  <select name="stelsel" class="auto-submit" aria-label="{{ _('Stelsel') }}"><option value="">{{ _('alle stelsels') }}</option>{% for s in stelsels %}<option value="{{ s.code }}" {% if f_stelsel == s.code %}selected{% endif %}>{{ vt(s.naam) }}</option>{% endfor %}</select>
+  <select name="soort" class="auto-submit" aria-label="{{ _('Soort') }}"><option value="">{{ _('alle soorten') }}</option>{% for k, v in soorten.items() %}<option value="{{ k }}" {% if f_soort == k %}selected{% endif %}>{{ _(v) }}</option>{% endfor %}</select>
+  <noscript><button class="knop klein">{{ _('Filter') }}</button></noscript>
 </form>
-<table class="tabel">
-  <thead><tr><th>Stelsel</th><th>Soort</th><th>Citeertitel</th><th>Titel</th><th>Vindplaats</th><th>Geldig</th></tr></thead>
+<div class="tabel-schuif"><table class="tabel">
+  <thead><tr><th>{{ _('Stelsel') }}</th><th>{{ _('Soort') }}</th><th>{{ _('Citeertitel') }}</th><th>{{ _('Titel') }}</th><th>{{ _('Vindplaats') }}</th><th>{{ _('Geldig') }}</th></tr></thead>
   <tbody>
   {% for b in bronnen %}
   <tr>
     <td>{{ sc(b.stelsel_code) }}</td>
-    <td><span class="soort soort-{{ b.soort }}">{{ soorten.get(b.soort, b.soort) }}</span></td>
+    <td><span class="soort soort-{{ b.soort }}">{{ _(soorten.get(b.soort, b.soort)) }}</span></td>
     <td><a href="/bronnen/{{ b.id }}">{{ b.citeertitel }}</a></td>
     <td class="stil">{{ b.titel or '' }}</td>
     <td class="stil">{{ b.vindplaats or '' }}</td>
     <td class="stil">{{ b.geldig_van or '' }}{% if b.geldig_tot %} – {{ b.geldig_tot }}{% endif %}</td>
   </tr>
-  {% else %}<tr><td colspan="6" class="stil">Geen bronnen.</td></tr>{% endfor %}
+  {% else %}<tr><td colspan="6" class="stil">{{ _('Geen bronnen.') }}</td></tr>{% endfor %}
   </tbody>
-</table>
+</table></div>
 {% endblock %}

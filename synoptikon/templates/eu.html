@@ -1,0 +1,54 @@
+{% extends "base.html" %}
+{% block titel %}{{ _('Unierecht') }} · Synoptikon{% endblock %}
+{% block inhoud %}
+<div class="paginakop">
+  <h1>{{ _('Unierecht') }}</h1>
+  <a class="knop klein" href="/eu/omzetting">{{ _('Omzettingsmatrix') }}</a>
+</div>
+<form method="get" class="formulier compact zoekgroot">
+  <input type="search" name="q" value="{{ q }}" aria-label="{{ _('Zoeken') }}" placeholder="{{ _('AVG · 2019/771 · 32016R0679 · oneerlijke bedingen · artificiële intelligentie') }}">
+  {% if f_rubriek %}<input type="hidden" name="rubriek" value="{{ f_rubriek }}">{% endif %}
+  <button class="knop primair">{{ _('Zoeken') }}</button>
+</form>
+<form method="get" class="filters eu-filters">
+  {% if q %}<input type="hidden" name="q" value="{{ q }}">{% endif %}
+  {% if f_rubriek %}<input type="hidden" name="rubriek" value="{{ f_rubriek }}">{% endif %}
+  <select name="soort" aria-label="{{ _('Soort') }}"><option value="">{{ _('alle soorten') }}</option>{% for k, (enk, mv) in EU_SOORTEN.items() %}<option value="{{ k }}" {% if k == f_soort %}selected{% endif %}>{{ _(mv) }}</option>{% endfor %}</select>
+  <select name="variant" aria-label="{{ _('Variant') }}"><option value="">{{ _('basis, gedelegeerd en uitvoering') }}</option>{% for k, v in EU_VARIANTEN.items() %}<option value="{{ k }}" {% if k == f_variant %}selected{% endif %}>{{ _(v) }}</option>{% endfor %}</select>
+  <label class="vinkje"><input type="checkbox" name="omgezet" value="1" {% if f_omgezet %}checked{% endif %}> {{ _('met artikelkoppeling') }}</label>
+  <button class="knop klein">{{ _('Filteren') }}</button>
+</form>
+<p class="hint">{{ _('Alle geldende verordeningen, richtlijnen en kaderbesluiten (ook gedelegeerde en uitvoeringshandelingen), uit de Cellar van het Publicatiebureau, ingedeeld naar het repertorium van de geldende wetgeving. Besluiten zijn weggelaten.') }}</p>
+
+{% if rubriekpad %}
+<p class="pad"><a href="/eu{% if q %}?q={{ q | urlencode }}{% endif %}">{{ _('Repertorium') }}</a>{% for r in rubriekpad %}<span class="sep">›</span><a href="/eu?rubriek={{ r.code }}">{{ r.code }} {{ r.toon_label }}</a>{% endfor %}</p>
+{% set sub = kinderen.get(f_rubriek, []) %}
+{% if sub %}<ul class="rep-lijst">{% for r in sub %}{% if tellingen[r.code] %}<li><a href="/eu?rubriek={{ r.code }}">{{ r.code }} {{ r.toon_label }}</a> <span class="stil">{{ tellingen[r.code] }}</span></li>{% endif %}{% endfor %}</ul>{% endif %}
+{% elif not q and not f_soort and not f_variant and not f_omgezet %}
+<details class="blok" open>
+  <summary>{{ _('Repertorium van de geldende wetgeving') }}</summary>
+  <ul class="rep-lijst">{% for r in hoofdstukken %}<li><a href="/eu?rubriek={{ r.code }}">{{ r.code }} {{ r.toon_label }}</a> <span class="stil">{{ tellingen[r.code] }}</span></li>{% endfor %}</ul>
+</details>
+{% endif %}
+
+<h2>{{ n_('{n} handeling', '{n} handelingen', totaal, n='{:,}'.format(totaal).replace(',', '.')) }}</h2>
+<ul class="eu-lijst">
+{% for h in handelingen %}
+  <li>
+    <a class="eu-titel" href="/eu/{{ h.celex }}">{% if h.roepnaam %}<strong>{{ h.roepnaam }}</strong> · {% endif %}{{ h.citeer }}</a>
+    <span class="rol">{{ h.soort_label }}</span>{% if h.variant != 'basis' %}<span class="rol">{{ _(EU_VARIANTEN[h.variant]) }}</span>{% endif %}
+    <p class="stil klein">{{ h.toon_titel | truncate(220) }}</p>
+  </li>
+{% else %}
+  <li class="stil">{{ _('Niets gevonden.') }}{% if totaal == 0 and not q %} {{ _('Is de catalogus geladen?') }} <code>synoptikon eu-catalogus</code>{% endif %}</li>
+{% endfor %}
+</ul>
+{% if paginas > 1 %}
+<nav class="bladeren">
+  {% set basis = request.url.remove_query_params('pagina') %}
+  {% if pagina > 1 %}<a class="knop klein" href="{{ basis.include_query_params(pagina=pagina - 1) }}" rel="prev">‹ {{ _('vorige') }}</a>{% endif %}
+  <span class="stil">{{ _('pagina {p} van {n}', p=pagina, n=paginas) }}</span>
+  {% if pagina < paginas %}<a class="knop klein" href="{{ basis.include_query_params(pagina=pagina + 1) }}" rel="next">{{ _('volgende') }} ›</a>{% endif %}
+</nav>
+{% endif %}
+{% endblock %}

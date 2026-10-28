@@ -12,4 +12,7 @@ def render(request: Request, naam: str, status_code: int = 200, **context: Any) 
     from ..main import templates
 
     context.setdefault("request", request)
+    profiel = getattr(request.state, "profiel", None)
+    context.setdefault("profiel", profiel)
+    context.setdefault("mag_bewerken", profiel is None or profiel.mag_bewerken)
     return templates.TemplateResponse(request, naam, context, status_code=status_code)

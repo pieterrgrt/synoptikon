@@ -1,17 +1,17 @@
 {% extends "base.html" %}
-{% block titel %}Zoeken · Synoptikon{% endblock %}
+{% block titel %}{{ _('Zoeken') }} · Synoptikon{% endblock %}
 {% block inhoud %}
-<h1>Zoeken</h1>
-<form method="get" class="formulier compact zoekgroot">
-  <input type="search" name="q" value="{{ q }}" autofocus placeholder="levering · Übergabe · 3:84 · culpa in contrahendo · ECLI:NL:HR:2005:AT7337">
-  <button class="knop primair">Zoek</button>
+<h1>{{ _('Zoeken') }}</h1>
+<form method="get" class="formulier compact zoekgroot" role="search">
+  <input type="search" name="q" value="{{ q }}" autofocus aria-label="{{ _('Zoeken') }}" placeholder="levering · Übergabe · 3:84 · culpa in contrahendo · ECLI:NL:HR:2005:AT7337">
+  <button class="knop primair">{{ _('Zoek') }}</button>
 </form>
-<p class="hint">Full-text in alle talen; accenten worden genegeerd (délivrance = delivrance). Woorden worden als prefix gezocht.</p>
+<p class="hint">{{ _('Full-text in alle talen; accenten worden genegeerd (délivrance = delivrance). Woorden worden als prefix gezocht.') }}</p>
 {% if artikelen %}
-<p class="melding">Artikel: {% for r in artikelen %}<a href="{{ r.url }}">{{ r.citeer }}</a>{% if not loop.last %} of {% endif %}{% endfor %} — plaats in de systematiek en corresponderende artikelen in de andere stelsels.</p>
+<p class="melding">{{ _('Artikel:') }} {% for r in artikelen %}<a href="{{ r.url }}">{{ r.citeer }}</a>{% if not loop.last %} {{ _('of') }} {% endif %}{% endfor %} — {{ _('plaats in de systematiek en corresponderende artikelen in de andere stelsels.') }}</p>
 {% endif %}
 {% if resultaat %}
-<p class="stil">{{ resultaat.aantal }} treffers.</p>
+<p class="stil" role="status">{{ n_('{n} treffer.', '{n} treffers.', resultaat.aantal) }}</p>
 {% macro groep(titel, treffers) %}
 {% if treffers %}
 <section class="blok">
@@ -24,10 +24,12 @@
 </section>
 {% endif %}
 {% endmacro %}
-{{ groep('Vragen', resultaat.vragen) }}
-{{ groep('Bronnen', resultaat.bronnen) }}
-{{ groep('Begrippen', resultaat.begrippen) }}
-{{ groep('Analyses', resultaat.antwoorden) }}
-{{ groep('Wetteksten (geïmporteerd)', resultaat.wetteksten) }}
+{{ groep(_('Vragen'), resultaat.vragen) }}
+{{ groep(_('Bronnen'), resultaat.bronnen) }}
+{{ groep(_('Begrippen'), resultaat.begrippen) }}
+{{ groep(_('Analyses'), resultaat.antwoorden) }}
+{{ groep(_('Vertaalde inhoud'), resultaat.vertalingen) }}
+{{ groep(_('EU-handelingen'), resultaat.eu) }}
+{{ groep(_('Wetteksten (geïmporteerd)'), resultaat.wetteksten) }}
 {% endif %}
 {% endblock %}

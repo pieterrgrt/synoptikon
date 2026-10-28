@@ -1,0 +1,52 @@
+{% extends "base.html" %}
+{% block titel %}{{ _('Leren') }} · Synoptikon{% endblock %}
+{% block inhoud %}
+<p class="kruimel"><a href="/leren">{{ _('Leren') }}</a></p>
+<h1>☆ {% if ref %}{{ ref.citeer }}{% elif bron %}{{ bron.citeertitel }}{% else %}{{ _('Nieuwe kaart') }}{% endif %}</h1>
+{% if wa and wa.opschrift %}<p class="stil">{{ wa.opschrift }}</p>{% endif %}
+{% if bron and bron.titel %}<p class="stil">{{ bron.titel }}</p>{% endif %}
+
+<form method="post" action="/leren/nieuw" class="formulier">
+  <input type="hidden" name="terug" value="{{ terug }}">
+  {% if ref %}<input type="hidden" name="stelsel" value="{{ ref.stelsel }}"><input type="hidden" name="nummer" value="{{ ref.nummer }}"><input type="hidden" name="wet" value="{{ ref.wet or '' }}">{% endif %}
+  {% if bron %}<input type="hidden" name="bron" value="{{ bron.id }}">{% endif %}
+
+  <fieldset class="keuze">
+    <legend>{{ _('Lijst') }}</legend>
+    {% for l in lijsten %}<label class="vinkje"><input type="radio" name="lijst" value="{{ l.id }}" {% if l.id == gekozen %}checked{% endif %} required> {{ l.naam }} <span class="stil klein">{{ n_('{n} kaart', '{n} kaarten', l.kaarten | length) }}</span></label>{% endfor %}
+    <label class="vinkje"><input type="radio" name="lijst" value="nieuw" {% if not lijsten %}checked{% endif %} required> {{ _('Nieuwe lijst:') }}</label>
+    <div class="rij">
+      <input name="nieuwe_lijst" placeholder="{{ _('Examen goederenrecht') }}" aria-label="{{ _('Naam van de nieuwe lijst') }}">
+      <input name="vak" list="vakken" placeholder="{{ _('vak (Wunderkammer)') }}" aria-label="{{ _('Vak in Wunderkammer') }}" autocapitalize="none">
+    </div>
+    <datalist id="vakken">{% for v in vakken %}<option value="{{ v }}">{% endfor %}</datalist>
+  </fieldset>
+
+  <fieldset class="keuze">
+    <legend>{{ _('Kaarten') }}</legend>
+    {% if ref %}
+      {% for s in artikelsoorten if s != 'tegenhanger' %}<label class="vinkje"><input type="checkbox" name="soort" value="{{ s }}" {% if s == 'artikel' %}checked{% endif %}> <strong>{{ _(soorten[s][0]) }}</strong> <span class="stil klein">{{ _(soorten[s][1]) }}</span></label>{% endfor %}
+      {% if doelen %}
+      <label class="vinkje"><input type="checkbox" name="soort" value="tegenhanger"> <strong>{{ _(soorten['tegenhanger'][0]) }}</strong> <span class="stil klein">{{ _(soorten['tegenhanger'][1]) }}</span></label>
+      <div class="doelen">{% for s in doelen %}<label class="vinkje klein"><input type="checkbox" name="doel" value="{{ s.code }}"> {{ vlag(s.code) }}{{ vt(s.naam) }}</label>{% endfor %}</div>
+      {% endif %}
+      <label>{{ _('Omschrijving voor “inhoud → artikel”') }} <span class="hint">{{ _('leeg = het opschrift') }}</span><input name="vraag" placeholder="{{ wa.opschrift if wa and wa.opschrift else _('bijv. vereisten voor overdracht') }}"></label>
+    {% else %}
+      <label class="vinkje"><input type="radio" name="soort" value="arrest" {% if bron %}checked{% endif %}> <strong>{{ _(soorten['arrest'][0]) }}</strong> <span class="stil klein">{{ _(soorten['arrest'][1]) }}</span></label>
+      <label class="vinkje"><input type="checkbox" name="soort" value="feiten"> <strong>{{ _(soorten['feiten'][0]) }}</strong> <span class="stil klein">{{ _(soorten['feiten'][1]) }}</span></label>
+      {% if not bron %}<label class="vinkje"><input type="radio" name="soort" value="vrij" checked> <strong>{{ _(soorten['vrij'][0]) }}</strong> <span class="stil klein">{{ _(soorten['vrij'][1]) }}</span></label>{% endif %}
+      <div class="arrest-velden">
+        <div class="rij">
+          <label>{{ _('Zaak') }} <input name="zaak" value="{{ bron.citeertitel if bron else '' }}" placeholder="HR 18 juni 1982 (Plas/Valburg)"></label>
+          <label>{{ _('Vindplaats') }} <input name="vindplaats" value="{{ bron.vindplaats if bron and bron.vindplaats else '' }}" placeholder="ECLI:NL:HR:1982:AG4405"></label>
+        </div>
+        <label>{{ _('Feiten') }} <span class="hint">markdown</span><textarea name="feiten" rows="3"></textarea></label>
+      </div>
+      <label>{{ _('Vraag (vrije kaart)') }} <span class="hint">markdown</span><textarea name="vraag" rows="2"></textarea></label>
+      <label>{{ _('Antwoord / rechtsregel') }} <span class="hint">markdown</span><textarea name="antwoord" rows="3"></textarea></label>
+    {% endif %}
+    <label>{{ _('Notitie') }} <span class="hint">{{ _('komt onder het antwoord · markdown') }}</span><textarea name="notitie" rows="2"></textarea></label>
+  </fieldset>
+  <div class="acties"><button class="knop primair groot">{{ _('Bewaren') }}</button> <a class="knop" href="{{ terug }}">{{ _('Annuleren') }}</a></div>
+</form>
+{% endblock %}

@@ -9,6 +9,7 @@ from __future__ import annotations
 import json
 from datetime import date, datetime, timezone
 
+from ..i18n import _, vt
 from ..models import Begrip, BegripRelatie, Bron, Vraag
 
 
@@ -22,39 +23,39 @@ def _bron_kop(b: Bron) -> str:
 def _bron_meta(b: Bron) -> str:
     delen = []
     if b.vindplaats:
-        delen.append(f"{b.vindplaats_type or 'vindplaats'}: {b.vindplaats}")
+        delen.append(f"{b.vindplaats_type or _('vindplaats')}: {b.vindplaats}")
     if b.geldig_van or b.geldig_tot:
         van = b.geldig_van.isoformat() if b.geldig_van else "…"
-        tot = b.geldig_tot.isoformat() if b.geldig_tot else "heden"
-        delen.append(f"geldig {van} – {tot}")
+        tot = b.geldig_tot.isoformat() if b.geldig_tot else _("heden")
+        delen.append(f"{_('geldig')} {van} – {tot}")
     if b.url:
         delen.append(f"<{b.url}>")
     return "; ".join(delen)
 
 
 def vraag_naar_markdown(vraag: Vraag, stelsels: list[str] | None = None, vertaal_taal: str | None = "nl") -> str:
-    regels: list[str] = [f"# {vraag.titel}", ""]
+    regels: list[str] = [f"# {vt(vraag.titel)}", ""]
     meta = []
     if vraag.rechtsgebied:
-        meta.append(f"**Rechtsgebied:** {vraag.rechtsgebied}")
+        meta.append(f"**{_('Rechtsgebied')}:** {vt(vraag.rechtsgebied)}")
     if vraag.tag_list:
-        meta.append("**Tags:** " + ", ".join(vraag.tag_list))
+        meta.append(f"**{_('Tags')}:** " + ", ".join(vt(t) for t in vraag.tag_list))
     if meta:
         regels += ["  ".join(meta), ""]
     if vraag.omschrijving:
-        regels += [vraag.omschrijving.strip(), ""]
+        regels += [vt(vraag.omschrijving).strip(), ""]
 
     for antwoord in vraag.antwoorden:
         if stelsels and antwoord.stelsel_code not in stelsels:
             continue
-        regels += [f"## {antwoord.stelsel.naam}", ""]
+        regels += [f"## {vt(antwoord.stelsel.naam)}", ""]
         if antwoord.kern:
-            regels += [f"> {antwoord.kern}", ""]
+            regels += [f"> {vt(antwoord.kern)}", ""]
         if antwoord.bronnen:
-            regels += ["### Bronnen", ""]
+            regels += [f"### {_('Bronnen')}", ""]
             for ab in antwoord.bronnen:
                 b = ab.bron
-                rol = f" *({ab.rol})*" if ab.rol else ""
+                rol = f" *({vt(ab.rol)})*" if ab.rol else ""
                 regels += [f"#### {_bron_kop(b)}{rol}", ""]
                 m = _bron_meta(b)
                 if m:
@@ -64,29 +65,29 @@ def vraag_naar_markdown(vraag: Vraag, stelsels: list[str] | None = None, vertaal
                 if vertaal_taal and b.taal != vertaal_taal:
                     v = b.vertaling(vertaal_taal)
                     if v:
-                        regels += [f"*Vertaling ({v.herkomst}):* " + v.tekst.strip().replace("\n", " "), ""]
+                        regels += [f"*{_('vertaling').capitalize()} ({_(v.herkomst)}):* " + v.tekst.strip().replace("\n", " "), ""]
                 if ab.notitie:
-                    regels += [ab.notitie.strip(), ""]
+                    regels += [vt(ab.notitie).strip(), ""]
         if antwoord.analyse:
-            regels += ["### Analyse", "", antwoord.analyse.strip(), ""]
+            regels += [f"### {_('Analyse')}", "", vt(antwoord.analyse).strip(), ""]
 
     begrippen = [vb.begrip for vb in vraag.begrippen]
     if begrippen:
-        regels += ["## Begrippen", ""]
+        regels += [f"## {_('Begrippen')}", ""]
         for g in sorted(begrippen, key=lambda g: (g.stelsel.volgorde, g.term)):
-            regels.append(f"- **{g.term}** ({g.stelsel_code})" + (f": {g.definitie.strip()}" if g.definitie else ""))
+            regels.append(f"- **{g.term}** ({g.stelsel_code})" + (f": {vt(g.definitie).strip()}" if g.definitie else ""))
             for r in g.relaties:
                 ander = r.andere(g)
-                regels.append(f"  - {r.type_label} → {ander.term} ({ander.stelsel_code})" + (f": {r.toelichting}" if r.toelichting else ""))
+                regels.append(f"  - {r.type_label} → {ander.term} ({ander.stelsel_code})" + (f": {vt(r.toelichting)}" if r.toelichting else ""))
         regels.append("")
 
     if vraag.notities:
-        regels += ["## Notities", ""]
+        regels += [f"## {_('Notities')}", ""]
         for n in vraag.notities:
             kop = n.aangemaakt.strftime("%Y-%m-%d") + (f" · {n.stelsel_code}" if n.stelsel_code else "")
-            regels += [f"**{kop}** — {n.tekst.strip()}", ""]
+            regels += [f"**{kop}** — {vt(n.tekst).strip()}", ""]
 
-    regels += ["---", f"*Synoptikon, geëxporteerd {date.today().isoformat()}*", ""]
+    regels += ["---", f"*Synoptikon, {_('geëxporteerd')} {date.today().isoformat()}*", ""]
     return "\n".join(regels)
 
 
@@ -94,7 +95,7 @@ def html_naar_pdf(html: str, base_url: str) -> bytes:
     try:
         from weasyprint import HTML  # type: ignore
     except ImportError as e:  # pragma: no cover - afhankelijk van systeembibliotheken
-        raise RuntimeError("WeasyPrint is niet geïnstalleerd; gebruik de Markdown-export of print de pagina.") from e
+        raise RuntimeError(_("WeasyPrint is niet geïnstalleerd; gebruik de Markdown-export of print de pagina.")) from e
     return HTML(string=html, base_url=base_url).write_pdf()
 
 

@@ -41,7 +41,7 @@ def client():
     from synoptikon.main import app
 
     with TestClient(app) as c:
-        c.post("/login", data={"wachtwoord": "geheim", "volgende": "/"})
+        c.post("/login", data={"gebruikersnaam": "beheerder", "wachtwoord": "geheim", "volgende": "/"})
         yield c
 
 

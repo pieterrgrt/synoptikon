@@ -4,15 +4,15 @@ import json
 def test_login_vereist(anoniem):
     r = anoniem.get("/vragen/eigendomsoverdracht-roerende-zaken", follow_redirects=False)
     assert r.status_code == 303 and r.headers["location"].startswith("/login")
-    r = anoniem.post("/login", data={"wachtwoord": "fout", "volgende": "/"})
+    r = anoniem.post("/login", data={"gebruikersnaam": "beheerder", "wachtwoord": "fout", "volgende": "/"})
     assert r.status_code == 401
-    r = anoniem.post("/login", data={"wachtwoord": "geheim", "volgende": "/bronnen"}, follow_redirects=False)
+    r = anoniem.post("/login", data={"gebruikersnaam": "beheerder", "wachtwoord": "geheim", "volgende": "/bronnen"}, follow_redirects=False)
     assert r.status_code == 303 and r.headers["location"] == "/bronnen"
     assert "synoptikon_sessie" in r.cookies
 
 
 def test_open_redirect_geblokkeerd(anoniem):
-    r = anoniem.post("/login", data={"wachtwoord": "geheim", "volgende": "//kwaad.example"}, follow_redirects=False)
+    r = anoniem.post("/login", data={"gebruikersnaam": "beheerder", "wachtwoord": "geheim", "volgende": "//kwaad.example"}, follow_redirects=False)
     assert r.headers["location"] == "/"
 
 
@@ -74,8 +74,14 @@ def test_export_begrippenparen(client):
 
 def test_begrippenkaart_json(client):
     data = client.get("/begrippen/kaart.json").json()
-    assert {k["stelsel"] for k in data["knopen"]} >= {"NL", "DE", "FR", "EU"}
+    assert {k["stelsel"] for k in data["knopen"]} == {"NL", "DE", "FR", "EU", "BE", "IT", "ES", "CH", "EN", "US", "AU"}
     assert {k["type"] for k in data["kanten"]} == {"equivalent", "deels", "faux_ami", "geen"}
+    assert all(k["familie"] for k in data["knopen"])
+    # De twee clusters (vragen) blijven gescheiden; ieder begrip hangt aan een vraag.
+    assert {v for k in data["knopen"] for v in k["vragen"]} == {"eigendomsoverdracht-roerende-zaken", "precontractuele-aansprakelijkheid"}
+    assert all(k["vragen"] for k in data["knopen"])
+    r = client.get("/begrippen", params={"vraag": "precontractuele-aansprakelijkheid"})
+    assert r.status_code == 200 and "Walford" in r.text and "Kausalitätsprinzip" not in r.text
 
 
 def test_systematiek_markeert_bronnen(client):

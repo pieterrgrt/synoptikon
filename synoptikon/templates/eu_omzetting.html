@@ -1,0 +1,24 @@
+{% extends "base.html" %}
+{% block titel %}{{ _('Omzettingsmatrix') }} · Synoptikon{% endblock %}
+{% block inhoud %}
+<p class="kruimel"><a href="/eu">{{ _('Unierecht') }}</a></p>
+<h1>{{ _('Omzettingsmatrix') }}</h1>
+<p class="hint">{{ _('Waar staat een richtlijn of verordening in het nationale recht? Per handeling en stelsel de artikelen die haar omzetten of uitvoeren. Cursief: de wet als geheel, zonder artikelverwijzing.') }} <span class="rol onzeker">?</span> = {{ _('eigen aantekening, nog niet tegen de officiële tekst gecontroleerd.') }} {{ _('CH is geen lidstaat (autonome navolging); voor EN geldt omzetting van vóór de Brexit als nationaal recht door.') }}</p>
+<div class="tabel-schuif">
+<table class="tabel correspondentie">
+  <thead><tr><th>{{ _('Handeling') }}</th>{% for s in kolommen %}<th class="fam-{{ s.familie }}" title="{{ vt(s.naam) }}">{{ vlag(s.code) }}{{ s.code }}</th>{% endfor %}</tr></thead>
+  <tbody>
+  {% for h in handelingen %}
+  <tr>
+    <td><a href="/eu/{{ h.celex }}">{{ h.roepnaam or h.citeer }}</a><br><span class="stil klein">{{ h.citeer }} · {{ h.soort_label }}</span></td>
+    {% for s in kolommen %}
+    <td class="fam-{{ s.familie }}"><ul class="ref-lijst">{% for o in per[h.celex].get(s.code, []) %}<li>{% if o.nummer %}<a href="{{ o.ref.url }}" title="{{ o.soort_label }}{% if o.opmerking %}: {{ vt(o.opmerking) }}{% endif %}">{{ o.ref.citeer }}</a>{% else %}<em title="{{ vt(o.opmerking) or '' }}">{{ o.wet_label | truncate(60) }}</em>{% endif %}{% if not o.geverifieerd %} <span class="rol onzeker" title="{{ _('niet geverifieerd') }}">?</span>{% endif %}</li>{% endfor %}</ul></td>
+    {% endfor %}
+  </tr>
+  {% else %}
+  <tr><td colspan="{{ kolommen | length + 1 }}" class="stil">{{ _('Nog geen koppelingen.') }} <code>synoptikon seed</code></td></tr>
+  {% endfor %}
+  </tbody>
+</table>
+</div>
+{% endblock %}

@@ -1,0 +1,39 @@
+{% extends "base.html" %}
+{% block titel %}{{ _('Leren') }} · Synoptikon{% endblock %}
+{% block inhoud %}
+<h1>{{ _('Leren') }}</h1>
+<p class="hint">{{ _('Bewaar artikelen en arresten in leerlijsten, bijvoorbeeld per examen. Bij elk artikel en elke uitspraak staat ☆ Leren. Oefenen kan hier; de herhaling op lange termijn plant Wunderkammer, dat de kaarten van lijsten met “naar Wunderkammer” ophaalt en per vak in je dagpad zet.') }}</p>
+
+{% if lijsten %}
+<ul class="leerlijsten">
+{% for l in lijsten %}
+  {% set actief = l.kaarten | selectattr('actief') | list %}
+  {% set gekend = actief | selectattr('gekend') | list | length %}
+  {% set wk = actief | selectattr('stand') | list %}
+  <li class="leerlijst-kaart">
+    <a class="leerlijst-naam" href="/leren/{{ l.id }}">{{ l.naam }}</a>
+    <span class="stil klein">{{ n_('{n} kaart', '{n} kaarten', actief | length) }}{% if l.vak %} · {{ l.vak }}{% endif %}{% if l.examen %} · {{ _('examen {datum}', datum=l.examen.strftime('%d-%m-%Y')) }}{% set dagen = (l.examen - vandaag).days %}{% if dagen >= 0 %} ({{ n_('nog {n} dag', 'nog {n} dagen', dagen) }}){% endif %}{% endif %}</span>
+    {% if actief %}<span class="voortgang" aria-label="{{ _('{a} van {b} gekend', a=gekend, b=actief | length) }}"><span style="width: {{ (100 * gekend / actief | length) | round | int }}%"></span></span>{% endif %}
+    <span class="stil klein">{{ _('{a} van {b} gekend', a=gekend, b=actief | length) }}{% if l.naar_wk %} · {{ _('Wunderkammer') }}{% if wk %}: {{ n_('{n} kaart in herhaling', '{n} kaarten in herhaling', wk | length) }}{% endif %}{% endif %}</span>
+    {% if actief %}<a class="knop klein primair" href="/leren/{{ l.id }}/oefenen">{{ _('Oefenen') }}</a>{% endif %}
+  </li>
+{% endfor %}
+</ul>
+{% else %}
+<p class="stil">{{ _('Nog geen leerlijsten. Maak er hieronder een, of tik bij een artikel op ☆ Leren.') }}</p>
+{% endif %}
+
+<details class="blok" {% if not lijsten %}open{% endif %}>
+  <summary>{{ _('Nieuwe leerlijst') }}</summary>
+  <form method="post" action="/leren" class="formulier compact">
+    <label>{{ _('Naam') }} <input name="naam" required placeholder="{{ _('Examen goederenrecht') }}"></label>
+    <div class="rij">
+      <label>{{ _('Vak in Wunderkammer') }} <input name="vak" list="vakken" autocapitalize="none"></label>
+      <label>{{ _('Examen') }} <input type="date" name="examen"></label>
+    </div>
+    <datalist id="vakken">{% for v in vakken %}<option value="{{ v }}">{% endfor %}</datalist>
+    <label>{{ _('Omschrijving') }} <textarea name="omschrijving" rows="2"></textarea></label>
+    <div class="acties"><button class="knop primair">{{ _('Aanmaken') }}</button></div>
+  </form>
+</details>
+{% endblock %}

@@ -1,0 +1,13 @@
+{% import "_leren.html" as l %}
+{% for a in artikelen %}
+  {% set w = ws[a.wettekst_id] %}
+  {% set kop = koppen.get((a.wettekst_id, a.nummer)) %}
+  {% if kop %}<h3 class="wet-kop">{% for x in kop %}{% if not loop.first %} › {% endif %}<a href="/stelsels/{{ stelsel.code }}/lees/{{ x.id }}">{{ x.label }}</a>{% endfor %}</h3>{% endif %}
+  {% set r = wetref(w, a.nummer) %}
+  <article class="bron soort-wet wet-artikel{% if gezocht and gezocht.nummer == a.nummer %} gezocht-artikel{% endif %}" id="art-{{ a.nummer }}">
+    <header class="bron-kop"><a class="citeertitel" href="{{ r.url }}" title="{{ _('Plaats in de systematiek en corresponderende artikelen in andere stelsels') }}">{{ r.citeer }}</a>{% if a.opschrift %} <span class="bron-titel">{{ a.opschrift }}</span>{% endif %}{{ l.ster(r, bewaarde_refs, terug ~ '#art-' ~ a.nummer) }}</header>
+    <div class="origineel" lang="{{ stelsel.taal }}">{{ a.tekst | md }}</div>
+  </article>
+{% else %}
+  <p class="stil">{{ _('Geen ingelezen artikelen in dit onderdeel.') }}</p>
+{% endfor %}

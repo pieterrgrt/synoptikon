@@ -1,44 +1,63 @@
 {% extends "base.html" %}
-{% block titel %}Stelsels · Synoptikon{% endblock %}
+{% block titel %}{{ _('Stelsels') }} · Synoptikon{% endblock %}
 {% block inhoud %}
-<h1>Stelsels</h1>
-<p class="hint">Per rechtsfamilie. De familie bepaalt de volgorde en groepering van de kolommen in de synopse, de correspondentietabel en de thema's; de indeling volgt Zweigert/Kötz, met Nederland bij de Romaanse familie vanwege het Code civil-erfgoed.</p>
+<h1>{{ _('Stelsels') }}</h1>
+<p class="hint">{{ _('Per rechtsfamilie. Kies een wet om de tekst te lezen, van inhoudsopgave tot artikel; de systematiek laat zien waar een onderwerp in elk stelsel staat.') }}</p>
 {% for f in families %}
 <section class="blok familie-blok fam-{{ f.sleutel or 'overig' }}">
   <h2 class="familie-kop">{{ f.naam }}</h2>
   {% if f.kenmerk %}<p class="stil">{{ f.kenmerk }}</p>{% endif %}
-  <table class="tabel">
-    <thead><tr><th>Code</th><th>Naam</th><th>Taal</th><th>Familie</th><th>Actief</th><th></th></tr></thead>
-    <tbody>
-    {% for s in f.stelsels %}
-    <tr>
-      <td>{{ sc(s.code) }}</td>
-      <td><a href="/stelsels/{{ s.code }}">{{ s.naam }}</a>{% if s.toelichting %} <span class="stil">{{ s.toelichting }}</span>{% endif %}</td>
-      <td>{{ s.taal }}</td>
-      <td><form method="post" action="/stelsels/{{ s.code }}/familie" class="inline">
-        <select name="familie" class="auto-submit" aria-label="Rechtsfamilie van {{ s.naam }}">
-          <option value="">—</option>
-          {% for k, (naam, _) in RECHTSFAMILIES.items() %}<option value="{{ k }}" {% if s.familie == k %}selected{% endif %}>{{ naam }}</option>{% endfor %}
-        </select>
-      </form></td>
-      <td>{{ 'ja' if s.actief else 'nee' }}</td>
-      <td><form method="post" action="/stelsels/{{ s.code }}/actief" class="inline"><input type="hidden" name="actief" value="{{ '0' if s.actief else '1' }}"><button class="knop klein">{{ 'Uitzetten' if s.actief else 'Aanzetten' }}</button></form></td>
-    </tr>
-    {% endfor %}
-    </tbody>
-  </table>
+  <div class="stelsel-kaarten">
+  {% for s in f.stelsels if s.actief %}
+    <div class="stelsel-kaart">
+      <h3><a href="/stelsels/{{ s.code }}">{{ vlag(s.code) }}{{ vt(s.naam) }}</a> <span class="stelsel-code">{{ s.code }}</span></h3>
+      {% if s.toelichting %}<p class="stil klein">{{ vt(s.toelichting) }}</p>{% endif %}
+      {% if wetten[s.code] %}
+      <ul class="wet-lijst">{% for w in wetten[s.code] %}<li><a href="/stelsels/{{ s.code }}?wet={{ w.id }}">{{ w.titel }}</a>{% if w.wet %} <span class="stil">{{ w.wet }}</span>{% endif %}</li>{% endfor %}</ul>
+      {% else %}<p class="stil klein">{{ _('Geen geïmporteerde wettekst; alleen de systematiek.') }}</p>{% endif %}
+      <p class="klein"><a href="/stelsels/{{ s.code }}">{{ _('Systematiek') }} →</a></p>
+    </div>
+  {% endfor %}
+  </div>
 </section>
 {% endfor %}
-<h2>Stelsel toevoegen</h2>
+
+<details class="blok">
+<summary>{{ _('Stelsels beheren') }}</summary>
+<p class="hint">{{ _('De familie bepaalt de volgorde en groepering van de kolommen in de synopse, de correspondentietabel en de thema\'s; de indeling volgt Zweigert/Kötz, met Nederland bij de Romaanse familie vanwege het Code civil-erfgoed.') }}</p>
+<div class="tabel-schuif">
+<table class="tabel">
+  <thead><tr><th>{{ _('Code') }}</th><th>{{ _('Naam') }}</th><th>{{ _('Taal') }}</th><th>{{ _('Familie') }}</th><th>{{ _('Actief') }}</th><th></th></tr></thead>
+  <tbody>
+  {% for f in families %}{% for s in f.stelsels %}
+  <tr>
+    <td>{{ sc(s.code) }}</td>
+    <td><a href="/stelsels/{{ s.code }}">{{ vt(s.naam) }}</a></td>
+    <td>{{ s.taal }}</td>
+    <td><form method="post" action="/stelsels/{{ s.code }}/familie" class="inline">
+      <select name="familie" class="auto-submit" aria-label="{{ _('Rechtsfamilie van {naam}', naam=vt(s.naam)) }}">
+        <option value="">—</option>
+        {% for k, fam in RECHTSFAMILIES.items() %}<option value="{{ k }}" {% if s.familie == k %}selected{% endif %}>{{ _(fam[0]) }}</option>{% endfor %}
+      </select>
+    </form></td>
+    <td>{{ _('ja') if s.actief else _('nee') }}</td>
+    <td><form method="post" action="/stelsels/{{ s.code }}/actief" class="inline"><input type="hidden" name="actief" value="{{ '0' if s.actief else '1' }}"><button class="knop klein">{{ _('Uitzetten') if s.actief else _('Aanzetten') }}</button></form></td>
+  </tr>
+  {% endfor %}{% endfor %}
+  </tbody>
+</table>
+</div>
+<h3>{{ _('Stelsel toevoegen') }}</h3>
 <form method="post" class="formulier compact">
   <div class="rij">
-    <label>Code <input name="code" required size="4" placeholder="AT"></label>
-    <label>Naam <input name="naam" required placeholder="Oostenrijk"></label>
-    <label>Taal <input name="taal" required size="4" placeholder="de"></label>
-    <label>Rechtsfamilie <select name="familie"><option value="">—</option>{% for k, (naam, _) in RECHTSFAMILIES.items() %}<option value="{{ k }}">{{ naam }}</option>{% endfor %}</select></label>
+    <label>{{ _('Code') }} <input name="code" required size="4" placeholder="AT"></label>
+    <label>{{ _('Naam') }} <input name="naam" required placeholder="Oostenrijk"></label>
+    <label>{{ _('Taal') }} <input name="taal" required size="4" placeholder="de"></label>
+    <label>{{ _('Rechtsfamilie') }} <select name="familie"><option value="">—</option>{% for k, fam in RECHTSFAMILIES.items() %}<option value="{{ k }}">{{ _(fam[0]) }}</option>{% endfor %}</select></label>
   </div>
-  <label>Toelichting <input name="toelichting" placeholder="Allgemeines Bürgerliches Gesetzbuch (1811)"></label>
-  <div class="acties"><button class="knop klein primair">Toevoegen</button></div>
+  <label>{{ _('Toelichting') }} <input name="toelichting" placeholder="Allgemeines Bürgerliches Gesetzbuch (1811)"></label>
+  <div class="acties"><button class="knop klein primair">{{ _('Toevoegen') }}</button></div>
 </form>
-<p class="hint">Een nieuw stelsel krijgt bij elke vraag een kolom zodra je die vraag bewerkt en opslaat. Een vlag verschijnt als er een SVG staat in <code>static/vlaggen/&lt;code&gt;.svg</code>.</p>
+<p class="hint">{{ _('Een nieuw stelsel krijgt bij elke vraag een kolom zodra je die vraag bewerkt en opslaat. Een vlag verschijnt als er een SVG staat in static/vlaggen/<code>.svg.') }}</p>
+</details>
 {% endblock %}

@@ -1,32 +1,48 @@
 {% extends "base.html" %}
-{% block titel %}Begrippenkaart · Synoptikon{% endblock %}
+{% block titel %}{{ _('Begrippenkaart') }} · Synoptikon{% endblock %}
 {% block mainclass %}kaart-pagina{% endblock %}
 {% block inhoud %}
 <div class="paginakop">
-  <h1>Begrippenkaart{% if vraag %} <span class="stil">· {{ vraag.titel }}</span>{% endif %}</h1>
+  <h1>{{ _('Begrippenkaart') }}{% if vraag %} <span class="stil">· {{ vt(vraag.titel) }}</span>{% endif %}</h1>
   <div class="acties">
     <form method="get" class="inline">
-      <select name="vraag" class="auto-submit">
-        <option value="">alle begrippen</option>
-        {% for v in vragen %}<option value="{{ v.slug }}" {% if vraag and vraag.slug == v.slug %}selected{% endif %}>{{ v.titel }}</option>{% endfor %}
+      <select name="vraag" class="auto-submit" aria-label="{{ _('Vraag') }}">
+        <option value="">{{ _('alle begrippen') }}</option>
+        {% for v in vragen %}<option value="{{ v.slug }}" {% if vraag and vraag.slug == v.slug %}selected{% endif %}>{{ vt(v.titel) }}</option>{% endfor %}
       </select>
     </form>
-    <a class="knop klein" href="/begrippen/lijst">Lijst</a>
-    <a class="knop klein" href="/begrippen/nieuw">+ Begrip</a>
+    <a class="knop klein" href="/begrippen/lijst">{{ _('Lijst') }}</a>
+    <a class="knop klein" href="/begrippen/nieuw">{{ _('+ Begrip') }}</a>
   </div>
 </div>
 <div class="kaart-legenda">
-  <span class="legenda-item"><i class="lijn rel-equivalent"></i> equivalent</span>
-  <span class="legenda-item"><i class="lijn rel-deels"></i> deels overlappend</span>
-  <span class="legenda-item"><i class="lijn rel-faux_ami"></i> faux ami</span>
-  <span class="legenda-item"><i class="lijn rel-geen"></i> geen equivalent</span>
-  <span class="scheiding"></span>
-  {% for s in stelsels %}<label class="kolomschakel"><input type="checkbox" data-stelsel="{{ s.code }}" checked> {{ sc(s.code) }}</label>{% endfor %}
+  <span class="legenda-item"><i class="lijn rel-equivalent"></i> {{ _('equivalent') }}</span>
+  <span class="legenda-item"><i class="lijn rel-deels"></i> {{ _('deels overlappend') }}</span>
+  <span class="legenda-item"><i class="lijn rel-faux_ami"></i> {{ _('faux ami') }}</span>
+  <span class="legenda-item"><i class="lijn rel-geen"></i> {{ _('geen equivalent') }}</span>
 </div>
+<details class="kaart-filter" open>
+<summary>{{ _('Stelsels') }} <span class="stil">({{ kaart_stelsels | length }})</span></summary>
+<div class="kaart-legenda kaart-stelsels">
+  {% for f in per_familie(kaart_stelsels) %}
+  <span class="familie-groep fam-{{ f.sleutel or 'overig' }}">
+    <button type="button" class="familie-knop" data-familie="{{ f.sleutel or 'overig' }}" title="{{ f.kenmerk }}">{{ f.naam }}</button>
+    {% for s in f.stelsels %}<label class="kolomschakel"><input type="checkbox" data-stelsel="{{ s.code }}" checked> {{ sc(s.code) }}</label>{% endfor %}
+  </span>
+  {% endfor %}
+</div>
+</details>
 <div class="kaart-wrap">
-  <svg id="kaart" class="kaart" role="img" aria-label="Graaf van begrippen"></svg>
+  <svg id="kaart" class="kaart" role="img" aria-label="{{ _('Graaf van begrippen per stelsel, gegroepeerd per rechtsfamilie') }}"></svg>
+  <div class="kaart-zoom" role="group" aria-label="{{ _('Zoomen') }}">
+    <button type="button" class="knop klein" data-zoom="in" aria-label="{{ _('Inzoomen') }}">+</button>
+    <button type="button" class="knop klein" data-zoom="uit" aria-label="{{ _('Uitzoomen') }}">−</button>
+    <button type="button" class="knop klein" data-zoom="passend" aria-label="{{ _('Alles tonen') }}">⤢</button>
+  </div>
   <aside class="kaart-paneel" id="kaart-paneel" hidden></aside>
 </div>
+<p class="hint">{{ _('Tik op een begrip om alleen zijn relaties te zien; tik op de achtergrond om terug te gaan. Slepen verschuift de kaart, knijpen of scrollen zoomt. Stelsels staan in een ring per rechtsfamilie, Europees en eenvormig recht in het midden. Begrippen buiten NL, DE en FR zijn eigen aantekening (niet geverifieerd); de wetsartikelen zijn getoetst aan de officiële teksten.') }}</p>
 <script id="kaart-data" type="application/json">{{ data | tojson }}</script>
+<script id="kaart-i18n" type="application/json">{{ kaart_teksten | tojson }}</script>
 {% endblock %}
-{% block scripts %}<script src="/static/js/kaart.js"></script>{% endblock %}
+{% block scripts %}<script src="/static/js/kaart.js?v={{ sv }}"></script>{% endblock %}

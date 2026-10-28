@@ -113,3 +113,112 @@ def test_gii_pad_uit_documentvolgorde():
     assert g.titel == "Bürgerliches Gesetzbuch"
     (a,) = g.artikelen
     assert a.nummer == "929" and a.pad == "Buch 3 Sachenrecht › Abschnitt 3 Eigentum"
+
+
+def test_normattiva_bijlagen():
+    from synoptikon.importers import normattiva
+
+    g = normattiva.parse((FIX / "normattiva_cc.xml").read_bytes(), "urn:nir:stato:regio.decreto:1942-03-16;262")
+    assert g.versie == "2026-08-12"
+    per = {a.nummer: a for a in g.artikelen}
+    assert set(per) == {"1", "5", "42-bis", "1337"}
+    assert per["1337"].opschrift == "Trattative e responsabilita' precontrattuale"
+    assert per["1337"].tekst.startswith("Le parti, nello svolgimento")
+    # opschrift met wijzigingshaken, voetnootnummers en het blok AGGIORNAMENTO verdwijnen
+    assert per["42-bis"].opschrift == "Trasformazione, fusione e scissione"
+    assert "((" not in per["42-bis"].tekst
+    assert "AGGIORNAMENTO" not in per["5"].tekst and "(3a)" not in per["5"].tekst
+
+
+def test_normattiva_body_en_latijnse_nummers():
+    from synoptikon.importers import normattiva
+
+    g = normattiva.parse((FIX / "normattiva_consumo.xml").read_bytes(), "c. cons.", deel=None)
+    assert [a.nummer for a in g.artikelen] == ["33", "135-vicies-ter"]
+    a33 = g.artikelen[0]
+    assert a33.opschrift == "Clausole vessatorie nel contratto tra professionista e consumatore"
+    assert a33.pad == "Parte III IL RAPPORTO DI CONSUMO Titolo I DEI CONTRATTI DEL CONSUMATORE IN GENERALE"
+    assert a33.tekst.startswith("1. Nel contratto concluso")
+    assert g.artikelen[1].pad == "Parte IV Capo I-bis Dei contratti di fornitura di contenuto digitale"
+
+
+def test_boe_pad_uit_koppen():
+    from synoptikon.importers import boe
+
+    g = boe.parse((FIX / "boe_cc.xml").read_bytes(), "BOE-A-1889-4763", titel="Código Civil")
+    [a] = g.artikelen
+    assert a.nummer == "1902"
+    assert a.pad.startswith("LIBRO CUARTO De las obligaciones y contratos › TÍTULO XVI")
+    assert a.tekst.startswith("El que por acción u omisión causa daño a otro")
+
+
+def test_boe_artikelkop_varianten():
+    from synoptikon.importers.boe import _ART
+
+    assert _ART.match("Artículo 94 bis.").group(1, 2) == ("94", "bis")
+    assert _ART.match("Artículo 1º.").group(1) == "1"
+    assert _ART.match("Art. 50.").group(1) == "50"
+    assert _ART.match("Artículo 10 octies.").group(1, 2) == ("10", "octies")
+
+
+def test_fedlex_randtitels_en_voetnoten():
+    from synoptikon.importers import fedlex
+
+    g = fedlex.parse((FIX / "fedlex_zgb.xml").read_bytes(), "eli/cc/24/233_245_233")
+    assert g.titel == "Schweizerisches Zivilgesetzbuch"
+    a641, a641a = g.artikelen
+    assert (a641.nummer, a641a.nummer) == ("641", "641a")
+    assert a641.opschrift == "Inhalt des Eigentums › Im Allgemeinen"
+    assert a641.pad == "Vierter Teil Das Sachenrecht › Erste Abteilung Das Eigentum › Achtzehnter Titel Allgemeine Bestimmungen"
+    assert a641a.tekst == "1 Tiere sind keine Sachen.\n\n2 Soweit für Tiere keine besonderen Regelungen bestehen, gelten für sie die auf Sachen anwendbaren Vorschriften."
+    assert "Eingefügt" not in a641a.tekst
+
+
+def test_clml_sections():
+    from synoptikon.importers import legislation_uk
+
+    g = legislation_uk.parse((FIX / "clml_sga.xml").read_bytes(), "ukpga/1979/54")
+    assert g.titel == "Sale of Goods Act 1979"
+    per = {a.nummer: a for a in g.artikelen}
+    assert per["17"].opschrift == "Property passes when intended to pass"
+    assert per["17"].tekst.startswith("(1) Where there is a contract for the sale of specific or ascertained goods")
+    assert per["21"].pad == "Part III Effects of the Contract › Transfer of title"
+    assert "20A" in per
+
+
+def test_etaamb_koppen_en_opschriften():
+    from synoptikon.importers import etaamb
+
+    g = etaamb.parse((FIX / "etaamb_boek5.html").read_text(encoding="utf-8"), "wet-van-28-april-2022_n2022032058")
+    assert g.versie == "bekendmaking 2022-07-01"
+    per = {a.nummer: a for a in g.artikelen}
+    assert per["5.1"].opschrift == "Verbintenis"
+    assert per["5.1"].tekst.startswith("Een verbintenis is een rechtsband")
+    assert per["5.69"].opschrift == "Beginsel van de overeenkomst-wet"
+    assert per["5.69"].pad.endswith("Afdeling 4 Gevolgen van het contract tussen partijen › Onderafdeling 1 Bindende kracht")
+
+
+def test_legi_geldende_versie_en_pad():
+    from datetime import date
+
+    from synoptikon.importers import legi
+
+    g = legi.parse_map(FIX / "legi", "LEGITEXT000006070721")
+    [a] = g.artikelen
+    assert a.nummer == "1240"
+    assert a.tekst.startswith("Tout fait quelconque de l'homme")
+    assert a.pad == "Livre III : Des différentes manières dont on acquiert la propriété › Titre III : Des sources d'obligations"
+    # Op een peildatum vóór 2016 geldt de oude tekst onder de oude titre
+    oud = legi.parse_map(FIX / "legi", "LEGITEXT000006070721", peildatum=date(2010, 1, 1))
+    assert oud.artikelen == []  # de oude titre verwijst in deze fixture niet naar artikelen
+
+
+def test_cellar_nummer_uit_titel():
+    from synoptikon.importers.cellar import _nummer, _rep_code
+
+    ai = ("Verordening (EU) 2024/1689 van het Europees Parlement en de Raad van 13 juni 2024 tot vaststelling van geharmoniseerde regels "
+          "betreffende artificiële intelligentie en tot wijziging van de Verordeningen (EG) nr. 300/2008, (EU) nr. 167/2013")
+    assert _nummer("32024R1689", ai) == "2024/1689"
+    assert _nummer("32008R0593", "Verordening (EG) nr. 593/2008 van het Europees Parlement") == "593/2008"
+    assert _nummer("31993L0013", "Richtlijn 93/13/EEG van de Raad") == "93/13"
+    assert _rep_code("http://publications.europa.eu/resource/authority/dir-eu-legal-act/13301420") == "13.30.14.20"
