@@ -147,7 +147,9 @@ def europa(sessie: Callable[[], Session], parallel: int = 4, limiet: int | None 
         datums = {h.celex: h.datum.isoformat() for h in handelingen if h.datum}
         titels = dict(s.execute(select(EuTitel.celex, EuTitel.titel).where(EuTitel.taal == "de")).all())
         nl_titels = {h.celex: h.titel for h in handelingen}
-        al = {(w.wet_id, w.taal): w.versie for w in s.scalars(select(Wettekst).where(Wettekst.stelsel_code == "EU"))}
+        # Alleen de kolommen: hele Wettekst-rijen laden zou alle al geïmporteerde teksten in het geheugen zetten.
+        al = {(w, t): v for w, t, v in s.execute(select(Wettekst.wet_id, Wettekst.taal, Wettekst.versie)
+                                                 .where(Wettekst.stelsel_code == "EU"))}
     eunamen.laad(catalogus)
     cons = {} if alleen_verdragen else consolidaties(c)
     melder(f"EU: {len(catalogus)} handelingen in de catalogus, {len(cons)} met een geconsolideerde versie")

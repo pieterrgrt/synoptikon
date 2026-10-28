@@ -367,7 +367,8 @@ def download(celex: str, taal: str = "de", c=None) -> str | None:
             r = c.get(url, headers={"Accept": accept, "Accept-Language": TAAL3.get(taal, taal)}, follow_redirects=True, timeout=180)
             if r.status_code == 200 and r.content:
                 return r.content.decode("utf-8", "replace")
-            if r.status_code not in (404, 406):
+            # 300: de Cellar heeft meerdere manifestaties en kiest niet; behandelen als "niet in deze vorm".
+            if r.status_code not in (300, 404, 406):
                 r.raise_for_status()
         return None
     finally:
