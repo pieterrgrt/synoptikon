@@ -13,6 +13,7 @@ from dataclasses import dataclass, field
 from sqlalchemy import select
 from sqlalchemy.orm import Session, selectinload
 
+from ..i18n import taal
 from ..models import AntwoordBron, Bron, Concordantie, Correspondentie, CorrespondentieArtikel, Systematiek, Wettekst, WettekstArtikel
 from .artikelen import REGELS, Plaatser, Ref, herken, kale_nummers, noemt_wet, plaatser, ref_bevat, ref_uit_bron, sleutel
 
@@ -99,7 +100,12 @@ def wettekst_artikel(db: Session, ref: Ref) -> WettekstArtikel | None:
     q = q.where(Wettekst.wet == ref.wet) if ref.wet else q.where(Wettekst.wet.is_(None))
     if ref.stelsel == "FR" and not ref.wet:
         q = q.where(Wettekst.wet_id == FR_CODE_CIVIL)
-    return db.scalars(q.order_by(Wettekst.opgehaald.desc())).first()
+    if ref.stelsel == "EU":
+        # De verdragen staan er in zes talen: die van de interface, anders Duits (de taal van de rest van de EU-teksten).
+        t = taal()
+        return db.scalars(q.order_by((Wettekst.taal == t).desc(), (Wettekst.taal == "de").desc(), Wettekst.opgehaald.desc(),
+                                     Wettekst.id.desc())).first()
+    return db.scalars(q.order_by(Wettekst.opgehaald.desc(), Wettekst.id.desc())).first()
 
 
 def zoek_artikel(db: Session, q: str, stelsel: str | None = None) -> list[tuple[Ref, WettekstArtikel | None]]:
@@ -117,7 +123,8 @@ def zoek_artikel(db: Session, q: str, stelsel: str | None = None) -> list[tuple[
         if "§" in q and not stelsel:
             stelsel = "DE"
         gezien = {(r.stelsel, r.wet, r.nummer) for r, _ in uit}
-        stmt = select(WettekstArtikel).join(Wettekst).where(WettekstArtikel.nummer.in_(nummers)).options(selectinload(WettekstArtikel.wettekst))
+        # Een kaal nummer zoeken we alleen in de wetten uit het register, niet in alle 6.000 Duitse wetten (§ 1 staat overal).
+        stmt = select(WettekstArtikel).join(Wettekst).where(WettekstArtikel.nummer.in_(nummers), Wettekst.kern.is_(True)).options(selectinload(WettekstArtikel.wettekst))
         if stelsel:
             stmt = stmt.where(Wettekst.stelsel_code == stelsel)
         extra = []

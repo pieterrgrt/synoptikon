@@ -12,8 +12,9 @@
     <div class="stelsel-kaart">
       <h3><a href="/stelsels/{{ s.code }}">{{ vlag(s.code) }}{{ vt(s.naam) }}</a> <span class="stelsel-code">{{ s.code }}</span></h3>
       {% if s.toelichting %}<p class="stil klein">{{ vt(s.toelichting) }}</p>{% endif %}
-      {% if wetten[s.code] %}
-      <ul class="wet-lijst">{% for w in wetten[s.code] %}<li><a href="/stelsels/{{ s.code }}?wet={{ w.id }}">{{ w.titel }}</a>{% if w.wet %} <span class="stil">{{ w.wet }}</span>{% endif %}</li>{% endfor %}</ul>
+      {% if wetten[s.code] or aantallen[s.code] %}
+      <ul class="wet-lijst">{% for w in wetten[s.code] %}<li><a href="/stelsels/{{ s.code }}?wet={{ w.id }}">{{ wet_titel(w) }}</a>{% if w.wet %} <span class="stil">{{ wet_afk(w) }}</span>{% endif %}</li>{% endfor %}</ul>
+      {% if aantallen[s.code] > wetten[s.code] | length %}<p class="klein"><a href="/stelsels/{{ s.code }}/wetten">{{ _('Alle {n} wetten doorzoeken', n=aantallen[s.code]) }} →</a></p>{% endif %}
       {% else %}<p class="stil klein">{{ _('Geen geïmporteerde wettekst; alleen de systematiek.') }}</p>{% endif %}
       <p class="klein"><a href="/stelsels/{{ s.code }}">{{ _('Systematiek') }} →</a></p>
     </div>

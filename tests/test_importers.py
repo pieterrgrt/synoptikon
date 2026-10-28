@@ -49,7 +49,9 @@ def test_eurlex_parse():
     assert arts["12"].opschrift == "Culpa in contrahendo"
     assert arts["12"].tekst.startswith("1. The law applicable")
     assert "paragraph 1" in arts["12"].tekst
-    assert arts["12"].pad == "CHAPTER III › UNJUST ENRICHMENT, NEGOTIORUM GESTIO AND CULPA IN CONTRAHENDO"
+    # kop en titel van een hoofdstuk vormen samen één niveau
+    assert arts["12"].pad == "CHAPTER III UNJUST ENRICHMENT, NEGOTIORUM GESTIO AND CULPA IN CONTRAHENDO"
+    assert arts["14"].pad == "CHAPTER IV FREEDOM OF CHOICE"
     assert arts["14"].opschrift == "Freedom of choice"  # oude opmaak zonder eli-subdivision
 
 
@@ -222,3 +224,51 @@ def test_cellar_nummer_uit_titel():
     assert _nummer("32008R0593", "Verordening (EG) nr. 593/2008 van het Europees Parlement") == "593/2008"
     assert _nummer("31993L0013", "Richtlijn 93/13/EEG van de Raad") == "93/13"
     assert _rep_code("http://publications.europa.eu/resource/authority/dir-eu-legal-act/13301420") == "13.30.14.20"
+
+
+def test_eurlex_drie_vormen():
+    """Geconsolideerd (title-article-norm + div.norm), Publicatieblad met klassen, en oude HTML zonder klassen."""
+    cons = eurlex.parse((FIX / "eu" / "01993L0013-20220528.xhtml").read_text(encoding="utf-8"), "31993L0013")
+    a = {x.nummer: x for x in cons.artikelen}
+    assert cons.titel.startswith("RICHTLINIE 93/13/EWG")
+    assert a["1"].tekst.startswith("(1) Zweck dieser Richtlinie") and "(2) Vertragsklauseln" in a["1"].tekst
+    assert "a) mißbräuchliche Klauseln" in a["2"].tekst
+    assert "Anhang" in a
+    charta = eurlex.parse((FIX / "eu" / "12016P.xhtml").read_text(encoding="utf-8"), "12016P")
+    c = {x.nummer: x for x in charta.artikelen}
+    assert list(c)[0] == "Präambel" and len([n for n in c if n.isdigit()]) == 54
+    assert c["1"].opschrift == "Würde des Menschen" and c["1"].pad.startswith("TITEL I")
+    oud = eurlex.parse((FIX / "eu" / "31985L0374.html").read_text(encoding="utf-8", errors="replace"), "31985L0374")
+    o = {x.nummer: x for x in oud.artikelen}
+    assert o["1"].tekst.startswith("Der Hersteller eines Produkts haftet") and "22" in o
+
+
+def test_gii_nummers_en_afkorting():
+    g = gii.parse((FIX / "gii_bgb.xml").read_bytes(), "bgb")
+    assert g.afkorting == "BGB"
+
+
+def test_lawspot_parse():
+    """GR: geneste hoofdstukken als pad, kop "Άρθρο 914 - Αστικός Κώδικας - Έννοια" → nummer en opschrift."""
+    from synoptikon.importers import lawspot
+
+    html = """<h1 class="post__title fs-mb-2xl">Αστικός Κώδικας</h1><span>Τελευταία Τροποποίηση:</span><span>17.02.2023</span>
+<div class="chapter root"><h3 class="chapter__title fs-mb-lg">ΒΙΒΛΙΟ ΔΕΥΤΕΡΟ ΕΝΟΧΙΚΟ ΔΙΚΑΙΟ</h3>
+<div class="chapter"><h3 class="chapter__title fs-mb-lg">ΚΕΦΑΛΑΙΟ ΤΡΙΑΚΟΣΤΟ ΕΝΑΤΟ ΑΔΙΚΟΠΡΑΞΙΕΣ</h3>
+<article class="legislation__article bg-greyLight" id="arthro-914"><h4><a href="/x/" class="inner">Άρθρο 914 - Αστικός Κώδικας - Έννοια</a>
+<a class="article__toggle expand"><img src="x.svg"></a></h4><div class="body collapsed" hidden><p>Όποιος ζημιώσει άλλον παράνομα και υπαίτια
+έχει υποχρέωση να τον αποζημιώσει.</p><p>Δεύτερη παράγραφος.</p></div></article></div></div>"""
+    g = lawspot.parse(html, "astikos-kodikas")
+    assert g.titel == "Αστικός Κώδικας" and g.versie == "2023-02-17"
+    a = g.artikelen[0]
+    assert (a.nummer, a.opschrift) == ("914", "Έννοια")
+    assert a.pad == "ΒΙΒΛΙΟ ΔΕΥΤΕΡΟ ΕΝΟΧΙΚΟ ΔΙΚΑΙΟ › ΚΕΦΑΛΑΙΟ ΤΡΙΑΚΟΣΤΟ ΕΝΑΤΟ ΑΔΙΚΟΠΡΑΞΙΕΣ"
+    assert a.tekst == "Όποιος ζημιώσει άλλον παράνομα και υπαίτια έχει υποχρέωση να τον αποζημιώσει.\n\nΔεύτερη παράγραφος."
+
+
+def test_griekse_verwijzingen():
+    from synoptikon.services.artikelen import herken
+
+    assert [(r.stelsel, r.nummer, r.wet) for r in herken("άρθρο 914 ΑΚ")] == [("GR", "914", None)]
+    assert [(r.stelsel, r.nummer, r.wet) for r in herken("Art. 1033 AK")] == [("GR", "1033", None)]
+    assert [(r.stelsel, r.nummer, r.wet) for r in herken("άρθρο 5 Συντ.")] == [("GR", "5", "Συντ.")]

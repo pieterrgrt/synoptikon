@@ -229,3 +229,49 @@ def test_volledige_wetsnamen_en_kale_nummers():
     assert kale_nummers("art. L. 217-3") == {"L217-3"}
     assert kale_nummers("art. 1469 bis") == {"1469bis", "1469 bis", "1469-bis"}
     assert kale_nummers("dwaling") == set()
+
+
+def test_eu_namen_per_taal_en_bij_invoer():
+    """Eén sleutel ("VWEU", "Verordening 2016/679"), getoond in de taal van de interface, herkend in elke schrijfwijze."""
+    from synoptikon.i18n import zet_taal
+    from synoptikon.services import eunamen
+    from synoptikon.services.artikelen import Ref
+
+    eunamen.laad([("32016R0679", "verordening", "2016/679"), ("32008R0593", "verordening", "593/2008"),
+                  ("31993L0013", "richtlijn", "93/13")])
+    for invoer, wet in [("Art. 34 AEUV", "VWEU"), ("art. 101 TFUE", "VWEU"), ("Art. 6 DSGVO", "Verordening 2016/679"),
+                        ("art. 6 AVG", "Verordening 2016/679"), ("Art. 4 Verordnung (EG) Nr. 593/2008", "Rome I"),
+                        ("Art. 3 Richtlinie 93/13/EWG", "Richtlijn 93/13"), ("Art. 47 GRCh", "Handvest")]:
+        refs = [r for r in herken(invoer) if r.stelsel == "EU"]
+        assert refs and refs[0].wet == wet, invoer
+    try:
+        zet_taal("de")
+        assert Ref("EU", "34", "VWEU").citeer == "Art. 34 AEUV"
+        assert Ref("EU", "6", "Verordening 2016/679").citeer == "Art. 6 DSGVO"
+        assert Ref("EU", "3", "Richtlijn 93/13").citeer == "Art. 3 RL 93/13"
+        zet_taal("fr")
+        assert Ref("EU", "34", "VWEU").citeer == "art. 34 TFUE"
+    finally:
+        zet_taal("nl")
+    assert Ref("EU", "34", "VWEU").citeer == "art. 34 VWEU"
+
+
+def test_alle_duitse_wetten_herkennen_en_doorzoeken(client):
+    """Een wet uit de bulkimport: herkend aan haar afkorting, niet in het overzicht, wel te vinden en te lezen."""
+    from synoptikon.importers import Artikel, Geparseerd
+    from synoptikon.services import artikelen as art
+    from synoptikon.services import wetboek
+
+    g = Geparseerd(wet_id="patg", titel="Patentgesetz", versie="2025-01-01", bron_url=None,
+                   artikelen=[Artikel("1", "Patente werden für Erfindungen erteilt.", "Patentfähige Erfindungen", "Erster Abschnitt Das Patent")])
+    with database.session() as s:
+        w = store.sla_op(s, "DE", g, "PatG", kern=False)
+        art.laad_wetnamen(s)
+        wid = w.id
+        assert [(r.stelsel, r.nummer, r.wet) for r in herken("§ 1 PatG")] == [("DE", "1", "PatG")]
+        assert w not in wetboek.wetten(s, "DE") and w in wetboek.wetten(s, "DE", alle=True)
+        assert wetboek.zoek_wetten(s, "DE", "patg")[0][0].id == wid
+    r = client.get("/stelsels/DE/wetten?q=PatG", follow_redirects=False)
+    assert r.status_code == 303 and r.headers["location"] == f"/stelsels/DE/wet/{wid}"
+    assert "Patente werden für Erfindungen erteilt" in client.get(f"/stelsels/DE/wet/{wid}?deel=Erster Abschnitt Das Patent").text
+    assert "Patente werden" in client.get("/artikelen/DE/1?wet=PatG").text

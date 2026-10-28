@@ -411,6 +411,8 @@ class Wettekst(Base):
     bron_url: Mapped[str | None] = mapped_column(String(500))
     bestand: Mapped[str | None] = mapped_column(String(300))  # relatief pad onder data/wetteksten
     opgehaald: Mapped[datetime] = mapped_column(DateTime, default=now)
+    taal: Mapped[str | None] = mapped_column(String(5))  # taal van de tekst als het stelsel er meer heeft (EU); None = de taal van het stelsel
+    kern: Mapped[bool] = mapped_column(default=True)  # uit het register (systematiek, overzicht); False = bulkimport (alle wetten)
 
     artikelen: Mapped[list["WettekstArtikel"]] = relationship(
         back_populates="wettekst", cascade="all, delete-orphan", order_by="WettekstArtikel.volgorde"

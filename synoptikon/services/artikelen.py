@@ -31,11 +31,14 @@ Sale of Goods Act.
 from __future__ import annotations
 
 import re
+import time
 from dataclasses import dataclass, field
 from typing import Iterable
 from urllib.parse import quote
 
 from ..i18n import _ as vertaal
+from ..i18n import taal as huidige_taal
+from . import eunamen
 
 _LATIJN = ["bis", "ter", "quater", "quinquies", "sexies", "septies", "octies", "novies", "decies",
            "undecies", "duodecies", "terdecies", "quaterdecies", "quinquiesdecies", "sexiesdecies",
@@ -76,6 +79,17 @@ REGELS: dict[str, Regels] = {
         nummer=rf"\d+[a-z]{{0,3}}(?:\s?(?:{_LAT}))?",
         namen={"ZGB": "Schweizerisches Zivilgesetzbuch", "OR": "Obligationenrecht", "SchKG": "Bundesgesetz über Schuldbetreibung und Konkurs",
                "IPRG": "Bundesgesetz über das Internationale Privatrecht", "PrHG": "Produktehaftpflichtgesetz", "KKG": "Konsumkreditgesetz"},
+    ),
+    "GR": Regels(
+        "ΑΚ",
+        ("ΕισΝΑΚ", "Συντ.", "ΠΚ", "ΕμπΝ", "ν. 2251/1994", "ν. 2190/1920", "ν. 3190/1955", "ν. 4548/2018", "ν. 4072/2012", "ν. 3869/2010",
+         "ν. 4624/2019", "ΚΠολΔ"),
+        nummer=r"\d+[Α-ΩA-Z]{0,2}",
+        namen={"ΑΚ": "Αστικός Κώδικας (1946)", "Συντ.": "Σύνταγμα της Ελλάδος (1975)", "ΠΚ": "Ποινικός Κώδικας (2019)",
+               "ΕμπΝ": "Εμπορικός Νόμος (1835)", "ν. 2251/1994": "Προστασία των καταναλωτών", "ν. 2190/1920": "Ανώνυμες εταιρείες (oud)",
+               "ν. 3190/1955": "Εταιρείες περιορισμένης ευθύνης (ΕΠΕ)", "ν. 4548/2018": "Ανώνυμες εταιρείες",
+               "ν. 4072/2012": "Ιδιωτική κεφαλαιουχική εταιρεία, προσωπικές εταιρείες, σήματα", "ν. 3869/2010": "Υπερχρεωμένα νοικοκυριά",
+               "ν. 4624/2019": "Προστασία δεδομένων (uitvoering AVG)", "ΚΠολΔ": "Κώδικας Πολιτικής Δικονομίας", "ΕισΝΑΚ": "Εισαγωγικός Νόμος του Αστικού Κώδικα"},
     ),
     "FR": Regels("C. civ.", ("C. consom.", "C. com.", "C. trav.", "C. rur.", "C. proc. civ.", "C. assur.", "Loi 1901", "Loi 1985", "Loi 1987")),
     "IT": Regels(
@@ -177,7 +191,9 @@ _NAMEN_HAND = [
     ("Ley General para la Defensa de los Consumidores y Usuarios", "TRLGDCU"),
     ("Bürgerliches Gesetzbuch", "BGB"), ("Handelsgesetzbuch", "HGB"), ("Produkthaftungsgesetz", "ProdHaftG"),
     ("Einführungsgesetz zum Bürgerlichen Gesetzbuche", "EGBGB"),
-    ("Burgerlijk Wetboek", "BW"), ("Wetboek van Koophandel", "WvK"), ("Wetboek van Burgerlijke Rechtsvordering", "Rv"), ("Faillissementswet", "Fw"),
+    ("Burgerlijk Wetboek", "BW"),
+    ("Αστικός Κώδικας", "ΑΚ"), ("Αστικού Κώδικα", "ΑΚ"), ("Astikos Kodikas", "ΑΚ"), ("AK", "ΑΚ"), ("Σύνταγμα", "Συντ."), ("Ποινικός Κώδικας", "ΠΚ"),
+    ("Εμπορικός Νόμος", "ΕμπΝ"), ("Wetboek van Koophandel", "WvK"), ("Wetboek van Burgerlijke Rechtsvordering", "Rv"), ("Faillissementswet", "Fw"),
 ]
 
 
@@ -214,7 +230,7 @@ _DE_NR = re.compile(r"(\d+[a-z]{0,3})\b")
 _FR_NR = re.compile(r"\b([LRD])?\.?\s?(\d+(?:-\d+)*)\b")
 _DETAIL = re.compile(r"\b(lid|leden|onder|sub|Abs\.|S\.|Satz|Ziff\.|lit\.|Nr\.|al\.|alinéa|comma|apartado|párrafo|°)\s*.*$", re.I)
 _HAAKJES = re.compile(r"^\s*((?:\([0-9A-Za-z]{1,5}\))+)")
-_PREFIX = re.compile(r"^\s*(artt?\.|artikel|art[íi]culos?|art|§§|§|ss?\.?(?=\s*\d)|secs?\.|sections?)\s*", re.I)
+_PREFIX = re.compile(r"^\s*(artt?\.|artikel|art[íi]culos?|art|άρθρ[οα]|αρθρ[οα]|άρθ\.|§§|§|ss?\.?(?=\s*\d)|secs?\.|sections?)\s*", re.I)
 _STREEP = "–"
 
 
@@ -223,9 +239,74 @@ def regels(stelsel: str) -> Regels:
 
 
 def wetnaam(stelsel: str, wet: str | None) -> str | None:
-    """Volledige titel bij een afkorting, als die bekend is."""
+    """Volledige titel bij een afkorting, als die bekend is (EU: in de taal van de interface)."""
     r = regels(stelsel)
+    if stelsel == "EU":
+        t = huidige_taal()
+        return eunamen.titel(wet, t) or (r.namen.get(wet or "") if t == "nl" else None)
     return r.namen.get(wet or r.hoofdwet or "")
+
+
+def wet_kort(stelsel: str, wet: str | None) -> str | None:
+    """De afkorting zoals ze getoond wordt: EU-wetten in de taal van de interface ("VWEU" → "AEUV")."""
+    return eunamen.kort(wet, huidige_taal()) if stelsel == "EU" and wet else wet
+
+
+# --- wetten uit de database (alle Duitse wetten, de EU-catalogus) ---------------------
+
+_GELADEN = {"tijd": 0.0}
+_DE_WETTEN: dict[str, str] = {}  # kleine letters → afkorting ("patg" → "PatG", "sgb v" → "SGB 5")
+_DE_TOKEN = re.compile(r"(?<![\w.])((?:\d{1,2}\.\s?|\d+-)?[A-ZÄÖÜ][\wÄÖÜäöüß\-]*(?:\.[A-Za-z]+)*(?:\s(?:\d{1,2}|[IVX]{1,4}))?)(?![\w-])")
+_ROMEINS_NAAR = {1: "I", 2: "II", 3: "III", 4: "IV", 5: "V", 6: "VI", 7: "VII", 8: "VIII", 9: "IX", 10: "X", 11: "XI", 12: "XII", 14: "XIV"}
+
+
+def laad_wetnamen(db=None) -> None:
+    """Afkortingen van alle geïmporteerde Duitse wetten en de EU-catalogus in het geheugen (voor `herken`)."""
+    from ..models import EuHandeling, Wettekst
+    from sqlalchemy import select
+
+    eigen = db is None
+    if eigen:
+        from ..db import session_factory
+        db = session_factory()()
+    try:
+        de = db.scalars(select(Wettekst.wet).where(Wettekst.stelsel_code == "DE", Wettekst.wet.is_not(None)).distinct()).all()
+        eu = db.execute(select(EuHandeling.celex, EuHandeling.soort, EuHandeling.nummer)).all()
+    finally:
+        if eigen:
+            db.close()
+    namen: dict[str, str] = {}
+    for w in de:
+        namen.setdefault(w.lower(), w)
+        m = re.fullmatch(r"(.*\D) (\d{1,2})", w)
+        if m and int(m.group(2)) in _ROMEINS_NAAR:
+            namen.setdefault(f"{m.group(1)} {_ROMEINS_NAAR[int(m.group(2))]}".lower(), w)
+    _DE_WETTEN.clear()
+    _DE_WETTEN.update(namen)
+    eunamen.laad([tuple(r) for r in eu])
+    _GELADEN["tijd"] = time.time()
+
+
+def _zorg_geladen() -> None:
+    if time.time() - _GELADEN["tijd"] > 600:
+        _GELADEN["tijd"] = time.time()  # ook bij een fout niet bij elke aanroep opnieuw proberen
+        try:
+            laad_wetnamen()
+        except Exception:
+            pass
+
+
+def _de_wet(tekst: str) -> tuple[str | None, str]:
+    _zorg_geladen()
+    if not _DE_WETTEN:
+        return None, tekst
+    for m in _DE_TOKEN.finditer(tekst):
+        for kandidaat in (m.group(1), m.group(1).split(" ")[0]):
+            w = _DE_WETTEN.get(kandidaat.lower())
+            if w:
+                eind = m.start(1) + len(kandidaat)
+                return w, tekst[: m.start(1)] + " " + tekst[eind:]
+    return None, tekst
 
 
 @dataclass(frozen=True)
@@ -238,7 +319,7 @@ class Ref:
 
     @property
     def wet_label(self) -> str:
-        return self.wet or HOOFDWET.get(self.stelsel, "")
+        return wet_kort(self.stelsel, self.wet) or HOOFDWET.get(self.stelsel, "")
 
     @property
     def wet_naam(self) -> str | None:
@@ -259,9 +340,11 @@ class Ref:
 def citeer(stelsel: str, nummer: str | None, wet: str | None = None, tot: str | None = None, detail: str | None = None) -> str:
     if nummer is None:
         return vertaal("geen wettelijke regeling")
-    w = wet or HOOFDWET.get(stelsel, "")
+    w = wet_kort(stelsel, wet) or HOOFDWET.get(stelsel, "")
     nr = f"{nummer}{_STREEP}{tot}" if tot else nummer
     d = (detail if detail.startswith("(") else f" {detail}") if detail else ""
+    if re.match(r"^(?:\(|[^\d\s(]{3,})", nummer):  # bijlage, preambule, protocol: "Anlage 2 1. BImSchV", "Protokoll 2 Art. 9 AEUV"
+        return f"{nr}{d} {w}".strip()
     stijl = regels(stelsel).stijl
     if stijl == "§":
         return f"{'§§' if tot else '§'} {nr}{d} {w}".strip()
@@ -269,6 +352,8 @@ def citeer(stelsel: str, nummer: str | None, wet: str | None = None, tot: str | 
         return f"Art. {nr}{d} {w}".strip()
     if stijl == "s":
         return f"{'ss' if tot else 's'} {nr}{d} {w}".strip()
+    if stelsel == "EU" and huidige_taal() not in ("nl", "fr"):
+        return f"Art. {nr}{d} {w}".strip()
     if stijl == "us":
         teken = "art." if w == "La. C.C." else ("§§" if tot else "§")
         return f"{w} {teken} {nr}{d}".strip()
@@ -389,10 +474,19 @@ def _wet_patroon(w: str) -> re.Pattern:
 
 
 def _wet_uit(stelsel: str, tekst: str) -> tuple[str | None, str]:
+    if stelsel == "EU":
+        _zorg_geladen()
+        w, rest = eunamen.herken_wet(tekst)
+        if w:
+            return w, rest
     for w in sorted(regels(stelsel).andere, key=len, reverse=True):
         patroon = _wet_patroon(w)
         if patroon.search(tekst):
             return w, patroon.sub(" ", tekst)
+    if stelsel == "DE":
+        w, rest = _de_wet(re.sub(r"(?<!\w)BGB(?!\w)", " ", tekst))
+        if w:
+            return w, rest
     hoofd = HOOFDWET.get(stelsel)
     if stelsel == "FR":
         tekst = _FR_HOOFD.sub(" ", tekst)
@@ -468,12 +562,18 @@ def _wet_treffers(t: str) -> list[str]:
     def patroon(w: str) -> str:
         return r"(?<![\w.])" + re.escape(w).replace(r"\ ", r"\s*") + r"(?!\w)"
 
+    _zorg_geladen()
     uit, rest = [], t
+    if eunamen.noemt_eu(t):
+        uit.append("EU")
+        rest = eunamen.herken_wet(rest)[1]
     for code, r in REGELS.items():
         for w in r.andere:
             if re.search(patroon(w), t):
                 uit.append(code)
                 rest = re.sub(patroon(w), " ", rest)
+    if "DE" not in uit and _de_wet(rest)[0]:
+        uit.append("DE")
     for code, r in REGELS.items():
         if code in uit:
             continue

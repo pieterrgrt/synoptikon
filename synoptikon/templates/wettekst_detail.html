@@ -1,8 +1,8 @@
 {% extends "base.html" %}
-{% block titel %}{{ w.titel }} · Synoptikon{% endblock %}
+{% block titel %}{{ wet_titel(w) }} · Synoptikon{% endblock %}
 {% block inhoud %}
 <p class="kruimel"><a href="/wetteksten">{{ _('Wetteksten') }}</a> › {{ w.stelsel_code }} · <a href="/stelsels/{{ w.stelsel_code }}/wet/{{ w.id }}">{{ _('Inhoudsopgave') }}</a></p>
-<h1>{{ w.titel }} <span class="stil">{{ _('versie {versie}', versie=w.versie) }}</span></h1>
+<h1>{{ wet_titel(w) }} <span class="stil">{{ _('versie {versie}', versie=w.versie) }}</span></h1>
 <form method="get" class="formulier compact rij"><input type="search" name="q" value="{{ q }}" placeholder="{{ _('artikelnummer of opschrift') }}" aria-label="{{ _('artikelnummer of opschrift') }}"><button class="knop klein">{{ _('Filter') }}</button><span class="stil">{{ _('{n} van {totaal}', n=artikelen | length, totaal=totaal) }}</span></form>
 <div class="wettekst">
 {% for a in artikelen %}

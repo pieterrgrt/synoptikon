@@ -52,6 +52,8 @@ templates.env.globals["vlag"] = vlag
 templates.env.globals["sc"] = stelsel_code
 templates.env.globals["wetnaam"] = wetnaam
 templates.env.globals["wetref"] = wetboek.ref
+templates.env.globals["wet_titel"] = wetboek.toon_titel
+templates.env.globals["wet_afk"] = wetboek.toon_afkorting
 templates.env.globals["RECHTSFAMILIES"] = RECHTSFAMILIES
 templates.env.globals["per_familie"] = per_familie
 # Versie van css/js voor de cache: nginx bewaart /static/ zeven dagen als immutable.
@@ -83,7 +85,9 @@ def _warm() -> None:
     from .models import Stelsel
 
     try:
+        from .services.artikelen import laad_wetnamen
         with session_factory()() as db:
+            laad_wetnamen(db)
             for s in db.query(Stelsel).all():
                 wetboek.plaatsing(db, s.code)
     except Exception:  # alleen een versnelling; de pagina's rekenen het anders zelf uit

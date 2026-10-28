@@ -24,7 +24,22 @@ router = APIRouter()
 @router.get("/stelsels")
 def overzicht(request: Request, db: Session = Depends(get_session)):
     stelsels = db.scalars(select(Stelsel).order_by(Stelsel.volgorde)).all()
-    return render(request, "stelsels.html", families=per_familie(stelsels), wetten={s.code: wetboek.wetten(db, s.code) for s in stelsels})
+    return render(request, "stelsels.html", families=per_familie(stelsels), wetten={s.code: wetboek.wetten(db, s.code) for s in stelsels},
+                  aantallen={s.code: wetboek.aantal_wetten(db, s.code) for s in stelsels})
+
+
+@router.get("/stelsels/{code}/wetten")
+def alle_wetten(request: Request, code: str, q: str = "", p: int = 1, db: Session = Depends(get_session)):
+    """Alle wetten van een stelsel (DE: ruim 6.000, EU: ruim 17.000), te doorzoeken op titel of afkorting."""
+    stelsel = db.get(Stelsel, code)
+    if stelsel is None:
+        raise HTTPException(404)
+    per = 100
+    ws, totaal = wetboek.zoek_wetten(db, code, q, max(1, p), per)
+    if q.strip() and totaal == 1:
+        return RedirectResponse(f"/stelsels/{code}/wet/{ws[0].id}", status_code=303)
+    return render(request, "wetten_zoek.html", stelsel=stelsel, stelsels=actieve_stelsels(db), ws=ws, titels=wetboek.toon_titels(db, ws),
+                  totaal=totaal, q=q, p=max(1, p), paginas=(totaal + per - 1) // per)
 
 
 @router.get("/stelsels/{code}/wet/{wid}")
@@ -58,6 +73,7 @@ def wet(request: Request, code: str, wid: int, deel: str = "", artikel: str = ""
         stelsels=actieve_stelsels(db),
         w=w,
         wetten=wetboek.wetten(db, code),
+        aantal_wetten=wetboek.aantal_wetten(db, code),
         ih=ih,
         d=d,
         artikelen=arts,

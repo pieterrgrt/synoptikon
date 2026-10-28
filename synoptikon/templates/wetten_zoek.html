@@ -1,0 +1,26 @@
+{% extends "base.html" %}
+{% block titel %}{{ _('Alle wetten') }} · {{ vt(stelsel.naam) }} · Synoptikon{% endblock %}
+{% block inhoud %}
+<p class="kruimel"><a href="/stelsels">{{ _('Stelsels') }}</a> › <a href="/stelsels/{{ stelsel.code }}">{{ vlag(stelsel.code) }}{{ vt(stelsel.naam) }}</a></p>
+<h1>{{ _('Alle wetten') }} · {{ vt(stelsel.naam) }}</h1>
+<form method="get" class="formulier compact zoekgroot">
+  <input type="search" name="q" value="{{ q }}" aria-label="{{ _('Wet zoeken') }}" placeholder="{{ _('Titel of afkorting, bijv. PatG, DSGVO, 2019/771') }}">
+  <button class="knop primair">{{ _('Zoeken') }}</button>
+</form>
+<p class="stil klein">{{ n_('{n} wet', '{n} wetten', totaal) }}</p>
+<ul class="wet-lijst">
+{% for w in ws %}
+  <li><a href="/stelsels/{{ stelsel.code }}/wet/{{ w.id }}">{{ titels[w.id] }}</a>{% if w.wet %} <span class="stil">{{ wet_afk(w) }}</span>{% endif %}{% if w.kern %} <span class="tag">{{ _('register') }}</span>{% endif %}</li>
+{% else %}
+  <li class="stil">{{ _('Niets gevonden.') }}</li>
+{% endfor %}
+</ul>
+{% if paginas > 1 %}
+<nav class="bladeren">
+  {% set basis = request.url.remove_query_params('p') %}
+  {% if p > 1 %}<a class="knop klein" href="{{ basis.include_query_params(p=p - 1) }}" rel="prev">‹ {{ _('vorige') }}</a>{% endif %}
+  <span class="stil">{{ _('pagina {p} van {n}', p=p, n=paginas) }}</span>
+  {% if p < paginas %}<a class="knop klein" href="{{ basis.include_query_params(p=p + 1) }}" rel="next">{{ _('volgende') }} ›</a>{% endif %}
+</nav>
+{% endif %}
+{% endblock %}

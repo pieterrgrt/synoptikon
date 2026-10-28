@@ -27,6 +27,7 @@ class Geparseerd:
     artikelen: list[Artikel] = field(default_factory=list)
     ruw: bytes | None = None
     ruw_extensie: str = "xml"
+    afkorting: str | None = None  # citeerafkorting volgens de bron (DE: amtabk/jurabk)
 
 
 class ImportOvergeslagen(Exception):

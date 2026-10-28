@@ -85,7 +85,7 @@ def cmd_profiel(args) -> int:
 
 
 def cmd_import(args) -> int:
-    from .importers import boe, bwb, etaamb, eurlex, fedlex, gii, legi, legifrance, legislation_uk, normattiva, store
+    from .importers import boe, bwb, etaamb, eurlex, fedlex, gii, lawspot, legi, legifrance, legislation_uk, normattiva, store
 
     database.init_db()
     bron = args.stelsel.lower()
@@ -109,19 +109,22 @@ def cmd_import(args) -> int:
                 g = fedlex.parse(data, args.id)
             elif bron == "be":
                 g = etaamb.parse(data.decode("utf-8", "replace"), args.id)
+            elif bron == "gr":
+                g = lawspot.parse(data.decode("utf-8", "replace"), args.id)
             else:
                 g = legislation_uk.parse(data, args.id)
         else:
             haal = {
                 "nl": lambda: bwb.haal_op(args.id),
                 "de": lambda: gii.haal_op(args.id),
-                "eu": lambda: eurlex.haal_op(args.id, taal=args.taal or "NL"),
+                "eu": lambda: eurlex.haal_op(args.id, taal=(args.taal or "de").lower()),
                 "fr": lambda: legifrance.haal_op(args.id, nummers=args.artikelen.split(",") if args.artikelen else None, datum=args.datum),
                 "it": lambda: normattiva.haal_op(args.id),
                 "es": lambda: boe.haal_op(args.id),
                 "ch": lambda: fedlex.haal_op(args.id),
                 "be": lambda: etaamb.haal_op(args.id),
                 "en": lambda: legislation_uk.haal_op(args.id),
+                "gr": lambda: lawspot.haal_op(args.id),
             }
             g = haal[bron]()
     except ImportOvergeslagen as e:
@@ -129,7 +132,15 @@ def cmd_import(args) -> int:
         return 0
 
     with database.session() as s:
-        w = store.sla_op(s, bron.upper(), g, args.wet)
+        wet = args.wet
+        taal = None
+        if bron == "eu":  # EU: geen hoofdwet; de sleutel volgt uit de catalogus ("Verordening 2016/679")
+            from .models import EuHandeling
+            from .services import eunamen
+            h = s.get(EuHandeling, args.id)
+            wet = wet or eunamen.sleutel(args.id, h.soort if h else None, h.nummer if h else None)
+            taal = (args.taal or "de").lower()
+        w = store.sla_op(s, bron.upper(), g, wet, taal=taal)
         print(f"{w.stelsel_code} {w.titel} (versie {w.versie}): {len(w.artikelen)} artikelen opgeslagen.")
         if args.systematiek:
             _systematiek(s, w)
@@ -160,6 +171,22 @@ def cmd_import_alles(args) -> int:
             if w.systematiek and args.systematiek:
                 _systematiek(s, t)
     return 1 if fouten else 0
+
+
+def cmd_import_bulk(args) -> int:
+    """Alle wetten van gesetze-im-internet.de, of alle geldende EU-handelingen (importers/bulk.py)."""
+    from .importers import bulk
+
+    database.init_db()
+    fabriek = database.session_factory()
+    meld = lambda t: print(t, flush=True)  # noqa: E731
+    if args.bron == "de":
+        tel = bulk.duitsland(fabriek, parallel=args.parallel, limiet=args.limiet, opnieuw=args.opnieuw, melder=meld)
+    else:
+        tel = bulk.europa(fabriek, parallel=args.parallel, limiet=args.limiet, opnieuw=args.opnieuw,
+                          alleen_verdragen=args.verdragen, melder=meld)
+    print(f"klaar: {tel}", flush=True)
+    return 0
 
 
 def cmd_eu_catalogus(args) -> int:
@@ -265,13 +292,13 @@ def main(argv: list[str] | None = None) -> int:
     s.add_argument("--uit", action="store_true")
     s.set_defaults(fn=cmd_profiel)
     s = sub.add_parser("import", help="wettekst importeren: nl BWBR…, de bgb, fr LEGITEXT…, it urn:nir:…, es BOE-A-…, ch cc/…, be <etaamb>, en ukpga/…, eu CELEX")
-    s.add_argument("stelsel", choices=["nl", "de", "fr", "it", "es", "ch", "be", "en", "eu"])
+    s.add_argument("stelsel", choices=["nl", "de", "fr", "it", "es", "ch", "be", "en", "eu", "gr"])
     s.add_argument("id")
     s.add_argument("--wet", help="citeerafkorting als het niet de hoofdcodificatie is, bijv. OR, 'C. consom.', TRLGDCU")
     s.add_argument("--bestand", help="lokaal bestand gebruiken in plaats van downloaden (FR: map met de LEGI-dump)")
     s.add_argument("--artikelen", help="FR: kommagescheiden artikelnummers, bijv. 1196,2276")
     s.add_argument("--datum", help="FR: geldigheidsdatum JJJJ-MM-DD")
-    s.add_argument("--taal", help="EU: taalcode van de EUR-Lex-versie (standaard NL)")
+    s.add_argument("--taal", help="EU: taal van de tekst (standaard de)")
     s.add_argument("--systematiek", action="store_true", help="na het importeren de systematiekboom aanvullen uit de wettekst")
     s.set_defaults(fn=cmd_import)
     s = sub.add_parser("import-alles", help="alle wetboeken en wetten uit het register importeren")
@@ -279,6 +306,13 @@ def main(argv: list[str] | None = None) -> int:
     s.add_argument("--legi", help="map met de uitgepakte LEGI-dump (scripts/legi_ophalen.sh), nodig voor FR")
     s.add_argument("--systematiek", action="store_true", help="systematiekboom aanvullen waar het register dat aangeeft")
     s.set_defaults(fn=cmd_import_alles)
+    s = sub.add_parser("import-bulk", help="alle wetten van een bron: de (gesetze-im-internet.de) of eu (geldende EU-handelingen, Duits; verdragen in zes talen)")
+    s.add_argument("bron", choices=["de", "eu"])
+    s.add_argument("--parallel", type=int, default=4, help="downloads tegelijk")
+    s.add_argument("--limiet", type=int, help="hoogstens zoveel wetten (proef)")
+    s.add_argument("--opnieuw", action="store_true", help="ook wat er al is opnieuw ophalen")
+    s.add_argument("--verdragen", action="store_true", help="EU: alleen VEU, VWEU en Handvest")
+    s.set_defaults(fn=cmd_import_bulk)
     s = sub.add_parser("eu-catalogus", help="geldende verordeningen en richtlijnen, repertorium en nationale uitvoeringsmaatregelen ophalen uit Cellar")
     s.add_argument("--zonder-nims", action="store_true", help="nationale uitvoeringsmaatregelen overslaan")
     s.set_defaults(fn=cmd_eu_catalogus)

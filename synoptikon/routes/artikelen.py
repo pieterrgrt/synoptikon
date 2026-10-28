@@ -179,12 +179,16 @@ def artikel(request: Request, stelsel: str, nummer: str, wet: str | None = None,
     st = db.get(Stelsel, stelsel.upper())
     if st is None:
         raise HTTPException(404)
-    ref = lees(st.code, nummer)
-    if ref is None or ref.nummer is None:
-        raise HTTPException(404, _("Onleesbaar artikelnummer"))
-    ref = Ref(st.code, ref.nummer, wet or None)
-    if ref.nummer != nummer:
-        return RedirectResponse(ref.url, status_code=303)
+    ref = Ref(st.code, nummer, wet or None)
+    if corr.wettekst_artikel(db, ref) is None:
+        # Geen artikel met precies dit nummer: de invoer lezen ("art. 3:84" → "3:84"). Bijlagen, preambules en
+        # protocolartikelen ("Anlage 2", "Präambel", "Protokoll 2 Art. 9") vindt de eerste stap al.
+        gelezen = lees(st.code, nummer)
+        if gelezen is None or gelezen.nummer is None:
+            raise HTTPException(404, _("Onleesbaar artikelnummer"))
+        ref = Ref(st.code, gelezen.nummer, wet or None)
+        if ref.nummer != nummer:
+            return RedirectResponse(ref.url, status_code=303)
     ctx = corr.Context(db)
     codes = _codes(db)
     thema_s = []

@@ -240,11 +240,31 @@ synoptikon seed                              # laadt o.a. de omzettingstabel
 | CH | Fedlex (Akoma Ntoso) | ZGB, OR, IPRG, PrHG | ja, laatste geldende stand |
 | BE | Staatsblad via etaamb.openjustice.be | nieuw BW Boek 1, 2 (titel 3), 3, 4, 5, 8 | **nee**: tekst zoals bekendgemaakt |
 | EN | legislation.gov.uk (CLML) | SGA 1979, SGSA 1982, CRA 2015, UCTA 1977, MA 1967, C(RTP)A 1999, LR(FC)A 1943, LA 1980, CPA 1987, OLA 1957, LPA 1925 | ja |
+| GR | lawspot.gr | ΑΚ, Σύνταγμα, ΠΚ, ΕμπΝ, ν. 2251/1994, 2190/1920, 3190/1955, 4548/2018, 4072/2012, 3869/2010, 4624/2019 | ja |
+
+**Alle wetten van een bron** (`synoptikon/importers/bulk.py`), naast het register:
+
+```bash
+synoptikon import-bulk de          # alle ±6.100 wetten en verordeningen van gesetze-im-internet.de (±30 min)
+synoptikon import-bulk eu          # alle ±17.600 geldende EU-handelingen, Duits, geconsolideerd waar mogelijk (±3 uur)
+synoptikon import-bulk eu --verdragen   # alleen VEU, VWEU en Handvest, in alle zes talen
+```
+
+Een tweede run haalt alleen op wat ontbreekt (EU: ook een nieuwere consolidatie). Bulkwetten staan niet in het
+overzicht van Stelsels en niet in de systematiek, maar zijn te vinden via **Alle wetten doorzoeken**
+(`/stelsels/DE/wetten`, `/stelsels/EU/wetten`), via de artikelzoeker ("§ 1 PatG", "Art. 6 DSGVO") en de zoekfunctie.
+
+**EU-teksten** komen uit de Cellar van het Publicatiebureau (content negotiation op CELEX); EUR-Lex zelf weigert
+geautomatiseerde toegang. Elke EU-wet heeft één interne sleutel ("VWEU", "Rome I", "Verordening 2016/679",
+`services/eunamen.py`); getoond wordt de naam in de taal van de interface (AEUV, TFUE, TFEU; DSGVO, RGPD, GDPR) en
+bij invoer wordt elke schrijfwijze herkend. De verdragen staan er in zes talen; de rest in het Duits.
 
 Justel (BE) en Légifrance (FR) weigeren geautomatiseerde toegang; de
 Belgische tekst komt daarom uit de spiegel van het Staatsblad, en BE Boek 6,
 het WER en het oud BW ontbreken. Voor US (UCC, Restatements) en AU (ACL) is
-er geen open bron zonder scraping; daar blijft het bij de systematiek.
+er geen open bron zonder scraping; daar blijft het bij de systematiek. Griekenland heeft geen open officiële
+geconsolideerde bron (het Staatsblad geeft alleen de oorspronkelijke ΦΕΚ als pdf); lawspot.gr houdt de teksten bij.
+ΚΠολΔ en ΚΠΔ staan daar achter een login en ontbreken.
 
 Losse wetten:
 
@@ -255,7 +275,8 @@ synoptikon import it "urn:nir:stato:decreto.legislativo:2005-09-06;206" --wet "c
 synoptikon import es BOE-A-2007-20555 --wet TRLGDCU
 synoptikon import en ukpga/1979/54 --wet "SGA 1979"
 synoptikon import fr LEGITEXT000006069565 --wet "C. consom." --bestand data/legi
-synoptikon import eu 32007R0864 --taal NL              # EUR-Lex HTML op CELEX
+synoptikon import eu 32007R0864 --taal de              # Cellar, op CELEX
+synoptikon import gr astikos-kodikas                   # lawspot.gr
 ```
 
 De **omzettingstabel** (`synoptikon/seed/omzetting.py`) is eigen

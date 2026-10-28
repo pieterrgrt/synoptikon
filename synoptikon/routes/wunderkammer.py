@@ -78,6 +78,8 @@ def themen(db: Session = Depends(get_session)):
 @router.post("/artikelen", dependencies=[Depends(token_ok)])
 def artikelen(body: dict = Body(...), db: Session = Depends(get_session)):
     refs = body.get("refs")
+    eigenaar = db.get(Profiel, 1)
+    zet_taal(eigenaar.taal if eigenaar else "de")  # EU-verdragen in de taal van de eigenaar
     if not isinstance(refs, list) or len(refs) > MAX_REFS:
         raise HTTPException(422, f"refs: lijst van hoogstens {MAX_REFS}")
     uit = []

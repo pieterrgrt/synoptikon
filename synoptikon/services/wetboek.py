@@ -13,12 +13,15 @@ versie dezelfde is.
 from __future__ import annotations
 
 from dataclasses import dataclass, field
+from functools import lru_cache
 
-from sqlalchemy import select
+from sqlalchemy import func, or_, select
 from sqlalchemy.orm import Session
 
-from ..models import Wettekst, WettekstArtikel
-from .artikelen import Ref, plaatser
+from ..i18n import taal
+from ..models import EuHandeling, EuTitel, Wettekst, WettekstArtikel
+from . import eunamen
+from .artikelen import Ref, plaatser, wet_kort
 
 SCHEIDING = " › "
 MAX_ARTIKELEN = 120  # meer artikelen in één afdeling: eerst een onderafdeling kiezen
@@ -48,17 +51,108 @@ class Inhoud:
 
 
 _CACHE: dict[int, tuple[object, Inhoud]] = {}
+_CACHE_MAX = 200  # met duizenden wetten: alleen de laatst gelezen bewaren
 
 
-def wetten(db: Session, stelsel: str) -> list[Wettekst]:
-    """De meest recente versie van elke geïmporteerde wet van een stelsel; de hoofdcodificatie eerst."""
-    alle = db.scalars(select(Wettekst).where(Wettekst.stelsel_code == stelsel).order_by(Wettekst.opgehaald.desc())).all()
-    gezien, uit = set(), []
-    for w in alle:
-        if w.wet_id not in gezien:
-            gezien.add(w.wet_id)
-            uit.append(w)
-    return sorted(uit, key=lambda w: (w.wet is not None, w.id))
+def _basis(w: Wettekst) -> str:
+    """Taalversies van één EU-tekst delen hun CELEX: 12016E, 12016E.fr, …"""
+    return w.wet_id.split(".")[0] if w.stelsel_code == "EU" else w.wet_id
+
+
+def _kies_taal(ws: list[Wettekst]) -> list[Wettekst]:
+    """Per wet één versie: de meest recente, en bij EU-teksten in meer talen die van de interface (anders Duits)."""
+    t = taal()
+    beste: dict[str, Wettekst] = {}
+    for w in ws:
+        b = _basis(w)
+        huidig = beste.get(b)
+        if huidig is None or (w.taal == t and huidig.taal != t) or (w.taal == "de" and huidig.taal not in (t, "de")):
+            beste[b] = w
+    return list(beste.values())
+
+
+def wetten(db: Session, stelsel: str, alle: bool = False) -> list[Wettekst]:
+    """De meest recente versie van elke wet uit het register (`alle`: ook de bulkimport); de hoofdcodificatie eerst."""
+    q = select(Wettekst).where(Wettekst.stelsel_code == stelsel)
+    if not alle:
+        q = q.where(Wettekst.kern.is_(True))
+    gekozen = _kies_taal(list(db.scalars(q.order_by(Wettekst.opgehaald.desc())).all()))
+    return sorted(gekozen, key=lambda w: (w.wet is not None, w.id))
+
+
+def aantal_wetten(db: Session, stelsel: str) -> int:
+    """Aantal wetten van een stelsel (EU: handelingen, niet hun taalversies)."""
+    q = select(func.count(func.distinct(Wettekst.wet_id))).where(Wettekst.stelsel_code == stelsel)
+    if stelsel == "EU":
+        q = q.where(~Wettekst.wet_id.like("%.%"))
+    return db.scalar(q) or 0
+
+
+def zoek_wetten(db: Session, stelsel: str, q: str = "", pagina: int = 1, per_pagina: int = 100) -> tuple[list[Wettekst], int]:
+    """Alle wetten van een stelsel, gezocht op titel of afkorting (EU ook op de titel in de taal van de interface)."""
+    stmt = select(Wettekst).where(Wettekst.stelsel_code == stelsel)
+    if stelsel == "EU":
+        stmt = stmt.where(~Wettekst.wet_id.like("%.%"))  # één regel per handeling; de taalversie kiest `toon_titel`/lezen
+    q = q.strip()
+    if q:
+        like = f"%{q}%"
+        voorwaarden = [Wettekst.titel.ilike(like), Wettekst.wet.ilike(like), Wettekst.wet_id.ilike(like)]
+        if stelsel == "EU":
+            t = taal()
+            voorwaarden.append(Wettekst.wet_id.in_(select(EuTitel.celex).where(EuTitel.taal == t, EuTitel.titel.ilike(like))))
+            voorwaarden.append(Wettekst.wet_id.in_(select(EuHandeling.celex).where(or_(EuHandeling.titel.ilike(like), EuHandeling.roepnaam.ilike(like)))))
+            sleutels = {w for w, per_taal in eunamen.KORT.items() if any(q.lower() in n.lower() for n in per_taal.values())}
+            if sleutels:
+                voorwaarden.append(Wettekst.wet.in_(sleutels))
+        stmt = stmt.where(or_(*voorwaarden))
+    totaal = db.scalar(select(func.count()).select_from(stmt.subquery())) or 0
+    # Afkorting voorop: wat men zoekt ("PatG") staat dan bovenaan, daarna de kern en de titel.
+    exact = (func.lower(Wettekst.wet) == q.lower()) if q else Wettekst.kern
+    rijen = db.scalars(stmt.order_by(exact.desc(), Wettekst.kern.desc(), Wettekst.titel).offset((pagina - 1) * per_pagina).limit(per_pagina)).all()
+    return list(rijen), totaal
+
+
+def toon_titels(db: Session, ws: list[Wettekst]) -> dict[int, str]:
+    """Titel per wet zoals ze getoond wordt: EU-teksten in de taal van de interface, de rest zoals in de bron."""
+    t = taal()
+    uit = {w.id: w.titel for w in ws}
+    eu = [w for w in ws if w.stelsel_code == "EU"]
+    if not eu:
+        return uit
+    celexen = [_basis(w) for w in eu]
+    if t == "nl":
+        vertaald = dict(db.execute(select(EuHandeling.celex, EuHandeling.titel).where(EuHandeling.celex.in_(celexen))).all())
+    else:
+        vertaald = dict(db.execute(select(EuTitel.celex, EuTitel.titel).where(EuTitel.taal == t, EuTitel.celex.in_(celexen))).all())
+    for w in eu:
+        uit[w.id] = eunamen.titel(w.wet, t) or vertaald.get(_basis(w)) or w.titel
+    return uit
+
+
+def toon_afkorting(w: Wettekst) -> str | None:
+    return wet_kort(w.stelsel_code, w.wet)
+
+
+@lru_cache(maxsize=8192)
+def _eu_titel(celex: str, t: str) -> str | None:
+    from ..db import session_factory
+    with session_factory()() as db:
+        if t == "nl":
+            return db.scalar(select(EuHandeling.titel).where(EuHandeling.celex == celex))
+        return db.scalar(select(EuTitel.titel).where(EuTitel.celex == celex, EuTitel.taal == t))
+
+
+def toon_titel(w: Wettekst) -> str:
+    """Voor templates: de titel van één wet in de taal van de interface (EU), anders zoals in de bron."""
+    if w.stelsel_code != "EU":
+        return w.titel
+    t = taal()
+    if w.taal == t:
+        return w.titel
+    try:
+        return eunamen.titel(w.wet, t) or _eu_titel(_basis(w), t) or w.titel
+    except Exception:
+        return w.titel
 
 
 def inhoud(db: Session, w: Wettekst) -> Inhoud:
@@ -69,7 +163,7 @@ def inhoud(db: Session, w: Wettekst) -> Inhoud:
         select(WettekstArtikel.nummer, WettekstArtikel.pad).where(WettekstArtikel.wettekst_id == w.id).order_by(WettekstArtikel.volgorde)
     ).all()
     afgeleid = bool(rijen) and not any(p for _n, p in rijen)
-    pl = plaatser(db, w.stelsel_code, w.wet) if any(not p for _n, p in rijen) else None
+    pl = plaatser(db, w.stelsel_code, w.wet) if w.kern and any(not p for _n, p in rijen) else None
     wortel = Deel(w.titel, ())
     per_pad: dict[tuple[str, ...], Deel] = {(): wortel}
     for nummer, pad in rijen:
@@ -106,6 +200,8 @@ def inhoud(db: Session, w: Wettekst) -> Inhoud:
 
     loop(wortel)
     uit = Inhoud(wortel, per_pad, volgorde, afgeleid)
+    if len(_CACHE) >= _CACHE_MAX:
+        _CACHE.pop(next(iter(_CACHE)))
     _CACHE[w.id] = (w.opgehaald, uit)
     return uit
 
@@ -175,7 +271,8 @@ def plaatsing(db: Session, stelsel: str) -> Plaatsing:
     ws = wetten(db, stelsel)
     knopen = db.execute(select(Systematiek.id, Systematiek.parent_id, Systematiek.bereik, Systematiek.wet).where(Systematiek.stelsel_code == stelsel)).all()
     versie = (tuple((w.id, w.opgehaald) for w in ws), hash(tuple(sorted(tuple(k) for k in knopen))))
-    bewaard = _PLAATSING.get(stelsel)
+    sleutel = f"{stelsel}:{taal()}" if stelsel == "EU" else stelsel  # EU: de verdragen per taal
+    bewaard = _PLAATSING.get(sleutel)
     if bewaard and bewaard[0] == versie:
         return bewaard[1]
     uit = Plaatsing({}, {}, {}, {}, {})
@@ -193,7 +290,7 @@ def plaatsing(db: Session, stelsel: str) -> Plaatsing:
             uit.plek[(w.id, nr)] = pad[-1].id
             for k in pad:
                 uit.onder[k.id] = uit.onder.get(k.id, 0) + 1
-    _PLAATSING[stelsel] = (versie, uit)
+    _PLAATSING[sleutel] = (versie, uit)
     return uit
 
 

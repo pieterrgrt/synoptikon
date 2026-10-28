@@ -207,6 +207,8 @@ _NIEUWE_KOLOMMEN = [
     ("stelsel", "familie", "VARCHAR(20)"),
     ("systematiek", "wet", "VARCHAR(60)"),
     ("wettekst", "wet", "VARCHAR(60)"),
+    ("wettekst", "taal", "VARCHAR(5)"),
+    ("wettekst", "kern", "BOOLEAN NOT NULL DEFAULT 1"),
 ]
 
 

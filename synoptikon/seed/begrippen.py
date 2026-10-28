@@ -1,7 +1,7 @@
 """Begrippen uit de overige stelsels voor de begrippenkaart, met hun relaties.
 
 Vult de begrippen van de twee uitgewerkte vragen (NL, DE, FR, EU) aan met BE,
-IT, ES, CH, EN, US en AU, en voegt een paar ontbrekende ankers toe (FR:
+IT, ES, CH, GR, EN, US en AU, en voegt een paar ontbrekende ankers toe (FR:
 transfert solo consensu; EU: DCFR). De wettelijke vindplaatsen van BE, IT, ES,
 CH en EN zijn getoetst aan de geïmporteerde officiële teksten; definities,
 rechtspraak en de typering van de relaties zijn eigen aantekening, daarom
@@ -77,6 +77,18 @@ BEGRIPPEN = [
     _b("it_1153", "IT", "it", "possesso vale titolo", "art. 1153 c.c.",
        "Chi riceve beni mobili da un non proprietario ne acquista la proprietà mediante il possesso, purché sia in buona fede al momento della consegna "
        "e sussista un titolo idoneo al trasferimento della proprietà.", EIGENDOM),
+    _b("gr_symvasi", "GR", "el", "εμπράγματη σύμβαση", "άρθρο 1033, 1034 ΑΚ",
+       "Η συμφωνία κυρίου και αποκτώντος ότι μετατίθεται η κυριότητα. Για τα κινητά (ΑΚ 1034) απαιτείται επιπλέον παράδοση της νομής και η "
+       "συμφωνία είναι αναιτιώδης· για τα ακίνητα (ΑΚ 1033) απαιτείται συμβολαιογραφικό έγγραφο, μεταγραφή και αναφορά νόμιμης αιτίας.", EIGENDOM),
+    _b("gr_paradosi", "GR", "el", "παράδοση της νομής", "άρθρο 1034, 976, 977 ΑΚ",
+       "Η μεταβίβαση της φυσικής εξουσίας πάνω στο πράγμα, προϋπόθεση της μεταβίβασης κυριότητας κινητού μαζί με την εμπράγματη σύμβαση· "
+       "ισοδύναμα της παράδοσης είναι η σύμβαση με τον ήδη κάτοχο (ΑΚ 976) και η αναγνώριση από τον νομέα ότι κατέχει πλέον για τον αποκτώντα (ΑΚ 977).", EIGENDOM),
+    _b("gr_nomi", "GR", "el", "νομή", "άρθρο 974, 997 ΑΚ",
+       "Όποιος απέκτησε τη φυσική εξουσία πάνω στο πράγμα (κατοχή) με διάνοια κυρίου είναι νομέας (ΑΚ 974). Όποιος κατέχει χωρίς διάνοια κυρίου "
+       "(μισθωτής, θεματοφύλακας) είναι απλός κάτοχος (ΑΚ 997).", EIGENDOM),
+    _b("gr_1036", "GR", "el", "κτήση κινητού από μη κύριο", "άρθρο 1036–1039 ΑΚ",
+       "Ο αποκτών με παράδοση και εμπράγματη σύμβαση γίνεται κύριος κινητού και όταν ο εκποιών δεν είναι κύριος, εφόσον είναι καλόπιστος κατά την "
+       "παράδοση (ΑΚ 1036–1037)· όχι όμως για πράγματα κλεμμένα ή χαμένα (ΑΚ 1038), εκτός από χρήματα και ανώνυμα αξιόγραφα (ΑΚ 1039).", EIGENDOM),
     _b("es_titulo_modo", "ES", "es", "teoría del título y el modo", "art. 609, 1095 CC",
        "La propiedad se transmite por consecuencia de ciertos contratos mediante la tradición (art. 609): el contrato (título) no basta, hace falta la "
        "entrega (modo); el acreedor no adquiere derecho real hasta la entrega (art. 1095). Sistema causal: la nulidad del título impide la transmisión.", EIGENDOM),
@@ -146,6 +158,16 @@ BEGRIPPEN = [
     _b("it_interesse_negativo", "IT", "it", "interesse negativo", "art. 1338 c.c.",
        "Il danno subito per aver confidato nella conclusione o nella validità del contratto: spese inutili e occasioni alternative perdute; "
        "esclude l'interesse positivo all'esecuzione.", PRECONTRACTUEEL),
+    _b("gr_cic", "GR", "el", "ευθύνη από διαπραγματεύσεις", "άρθρο 197, 198 ΑΚ",
+       "Κατά τις διαπραγματεύσεις για τη σύναψη σύμβασης τα μέρη οφείλουν να συμπεριφέρονται σύμφωνα με την καλή πίστη και τα συναλλακτικά ήθη "
+       "(ΑΚ 197). Όποιος υπαίτια προξενήσει ζημία στο άλλο μέρος κατά τις διαπραγματεύσεις ευθύνεται σε αποζημίωση, ακόμη και αν η σύμβαση "
+       "δεν καταρτίστηκε· η αξίωση παραγράφεται όπως η αξίωση από αδικοπραξία (ΑΚ 198).", PRECONTRACTUEEL),
+    _b("gr_kali_pisti", "GR", "el", "καλή πίστη", "άρθρο 200, 281, 288 ΑΚ",
+       "Αντικειμενική καλή πίστη: μέτρο της ερμηνείας των δικαιοπραξιών (ΑΚ 200), της εκπλήρωσης της παροχής (ΑΚ 288) και όριο της άσκησης των "
+       "δικαιωμάτων (απαγόρευση καταχρηστικής άσκησης, ΑΚ 281). Διακρίνεται από την υποκειμενική καλή πίστη της κτήσης (ΑΚ 1037).", PRECONTRACTUEEL),
+    _b("gr_arnitiko", "GR", "el", "αρνητικό διαφέρον", "άρθρο 198 ΑΚ",
+       "Η ζημία από την εμπιστοσύνη στην κατάρτιση ή στο κύρος της σύμβασης: μάταιες δαπάνες και χαμένες ευκαιρίες. Κατά την κρατούσα άποψη "
+       "αυτή αποκαθίσταται κατά το ΑΚ 198, όχι το θετικό διαφέρον της εκπλήρωσης.", PRECONTRACTUEEL),
     _b("es_culpa", "ES", "es", "culpa in contrahendo", "art. 1902, 7.1 CC; jurisprudencia del TS",
        "Sin regulación específica: la ruptura injustificada de los tratos preliminares que defrauda la confianza suscitada se reconduce a la "
        "responsabilidad extracontractual (art. 1902), con fundamento en la buena fe (art. 7.1). Se indemniza el interés negativo.", PRECONTRACTUEEL),
@@ -196,6 +218,17 @@ def _r(van, naar, typ, toelichting):
 
 RELATIES = [
     # --- overdracht --------------------------------------------------------------------
+    _r("gr_symvasi", "de_einigung", "equivalent", "Zelfde pandektistische figuur: een afzonderlijke goederenrechtelijke overeenkomst naast de koop."),
+    _r("gr_symvasi", "de_abstraktion", "deels", "Bij roerende zaken abstract zoals in DE; bij onroerende zaken eist art. 1033 ΑΚ een geldige rechtsgrond (causaal)."),
+    _r("gr_symvasi", "nl_causaal", "geen", "Voor roerende zaken: GR abstract, NL causaal (art. 3:84 lid 1 BW)."),
+    _r("gr_symvasi", "fr_consensu", "geen", "GR eist naast de wilsovereenstemming de overgave van het bezit; FR draagt solo consensu over."),
+    _r("gr_paradosi", "de_uebergabe", "equivalent", "Zelfde Realakt met dezelfde surrogaten (art. 976, 977 ΑΚ ≈ §§ 929 S. 2, 930 BGB)."),
+    _r("gr_paradosi", "nl_levering", "deels", "De Griekse παράδοση is alleen het feitelijke deel; de wilsovereenstemming is de afzonderlijke εμπράγματη σύμβαση."),
+    _r("gr_nomi", "de_besitz", "deels", "GR onderscheidt νομή (met animus domini) van κατοχή; in DE is ook de huurder Besitzer."),
+    _r("gr_nomi", "it_possesso", "equivalent", "Beide: macht over de zaak met de wil van een eigenaar; de huurder is (alleen) houder."),
+    _r("gr_nomi", "fr_possession", "equivalent", "Zelfde onderscheid tussen bezit (animus domini) en detentie."),
+    _r("gr_1036", "it_1153", "deels", "Beide beschermen de verkrijger te goeder trouw; GR sluit gestolen en verloren zaken uit (art. 1038 ΑΚ), IT eist een titolo idoneo."),
+    _r("gr_1036", "fr_titre", "deels", "Zelfde functie; FR via het bezit (art. 2276 C. civ.), GR als verkrijging door overdracht van een beschikkingsonbevoegde."),
     _r("fr_consensu", "nl_levering", "geen", "FR kent geen levering als overdrachtsvereiste: de eigendom gaat solo consensu over; NL eist levering krachtens geldige titel."),
     _r("fr_consensu", "be_wil", "deels", "Zelfde uitkomst (overgang bij wilsovereenstemming), maar BE onderscheidt sinds 2021 uitdrukkelijk de titel (verbintenis tot geven) van de rechtshandeling tot overdracht."),
     _r("fr_consensu", "it_consenso", "equivalent", "Art. 1376 c.c. volgt het Franse consensualisme: overgang door de wilsovereenstemming bij een bepaalde zaak."),
@@ -239,6 +272,11 @@ RELATIES = [
     _r("be_precontr", "nl_precontr", "deels", "Art. 5.17 BW codificeert in wezen de NL driefasenleer (Plas/Valburg): negatief belang, en bij gerechtvaardigd vertrouwen in de totstandkoming ook het positieve. Wel buitencontractueel."),
     _r("be_precontr", "fr_rupture", "deels", "Beide buitencontractueel; BE staat uitzonderlijk de verwachte netto-voordelen toe, die art. 1112 al. 2 C. civ. juist uitsluit."),
     _r("be_precontr", "eu_cic", "equivalent", "De BE-kwalificatie (buitencontractueel) sluit aan bij art. 12 Rome II."),
+    _r("gr_cic", "de_cic", "equivalent", "Wat in DE rechtsvorming was (sinds 2002 § 311 Abs. 2 BGB), staat in GR sinds 1946 in de wet (art. 197, 198 ΑΚ)."),
+    _r("gr_cic", "eu_cic", "deels", "Voor de verwijzing kwalificeert art. 12 Rome II autonoom; de Griekse regeling verjaart als een onrechtmatige daad (art. 198 ΑΚ)."),
+    _r("gr_kali_pisti", "de_tug", "equivalent", "Art. 288 ΑΚ is de tegenhanger van § 242 BGB; art. 281 ΑΚ (rechtsmisbruik) gaat verder dan § 226 BGB."),
+    _r("gr_kali_pisti", "nl_rb", "deels", "Zelfde objectieve norm; NL kent daarnaast de beperkende werking als eigen regel (art. 6:248 lid 2 BW)."),
+    _r("gr_arnitiko", "de_negativ", "equivalent", "Dezelfde pandektistische figuur (Vertrauensschaden)."),
     _r("it_resp", "de_cic", "deels", "Zelfde functie; art. 1337 c.c. is een uitdrukkelijke goede-trouwnorm, de aard (contractueel of niet) is in IT omstreden."),
     _r("it_resp", "fr_rupture", "deels", "Beide beperken de vergoeding tot het negatieve belang; IT heeft een eigen bepaling, FR sinds 2016 art. 1112."),
     _r("it_resp", "eu_cic", "equivalent", "Voor de verwijzing kwalificeert art. 12 Rome II autonoom, ongeacht het Italiaanse debat over contatto sociale."),

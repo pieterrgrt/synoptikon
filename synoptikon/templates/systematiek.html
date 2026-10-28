@@ -44,7 +44,7 @@
 <details class="blok">
   <summary>{{ _('Niet in de systematiek geplaatst') }}</summary>
   <p class="hint">{{ _('Deze artikelen vallen buiten de bereiken van de systematiek; je leest ze in de wet zelf.') }}</p>
-  <ul class="lijst">{% for w in los_wetten %}<li><a href="/stelsels/{{ stelsel.code }}/wet/{{ w.id }}">{{ w.titel }}</a> <span class="stil">{{ n_('{n} artikel', '{n} artikelen', pl.los[w.id] | length) }}</span></li>{% endfor %}</ul>
+  <ul class="lijst">{% for w in los_wetten %}<li><a href="/stelsels/{{ stelsel.code }}/wet/{{ w.id }}">{{ wet_titel(w) }}</a> <span class="stil">{{ n_('{n} artikel', '{n} artikelen', pl.los[w.id] | length) }}</span></li>{% endfor %}</ul>
 </details>
 {% endif %}
 

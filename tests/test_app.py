@@ -74,7 +74,7 @@ def test_export_begrippenparen(client):
 
 def test_begrippenkaart_json(client):
     data = client.get("/begrippen/kaart.json").json()
-    assert {k["stelsel"] for k in data["knopen"]} == {"NL", "DE", "FR", "EU", "BE", "IT", "ES", "CH", "EN", "US", "AU"}
+    assert {k["stelsel"] for k in data["knopen"]} == {"NL", "DE", "FR", "EU", "BE", "IT", "ES", "CH", "GR", "EN", "US", "AU"}
     assert {k["type"] for k in data["kanten"]} == {"equivalent", "deels", "faux_ami", "geen"}
     assert all(k["familie"] for k in data["knopen"])
     # De twee clusters (vragen) blijven gescheiden; ieder begrip hangt aan een vraag.
