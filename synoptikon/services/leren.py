@@ -43,12 +43,21 @@ def ref_van(k: Kaart) -> Ref | None:
 def bewaarde_refs(db: Session, profiel_id: int) -> set[tuple[str, str | None, str]]:
     """(stelsel, wet, nummer) van alle artikelen in de lijsten van dit profiel: voor de ster bij een artikel."""
     rijen = db.execute(select(Kaart.stelsel_code, Kaart.wet, Kaart.nummer).join(Leerlijst).where(
-        Leerlijst.profiel_id == profiel_id, Kaart.nummer.is_not(None))).all()
+        Leerlijst.profiel_id == profiel_id, Kaart.nummer.is_not(None), Kaart.status.is_(None))).all()
     return {(s, w or None, n) for s, w, n in rijen}
 
 
 def bewaarde_bronnen(db: Session, profiel_id: int) -> set[int]:
     return set(db.scalars(select(Kaart.bron_id).join(Leerlijst).where(Leerlijst.profiel_id == profiel_id, Kaart.bron_id.is_not(None))).all())
+
+
+def _sleutel(soort, stelsel, wet, nummer, doel, bron_id, zaak, vraag) -> tuple:
+    """Waar een kaart over gaat: het artikel, het arrest (bron of zaaknaam) of, bij een vrije kaart, de vraag."""
+    if soort in ARTIKELSOORTEN:
+        return (soort, stelsel, wet or None, nummer, doel)
+    if soort in ARRESTSOORTEN:
+        return (soort, bron_id) if bron_id else (soort, None, (zaak or "").strip().lower())
+    return (soort, (vraag or "").strip().lower())
 
 
 def maak_kaarten(
@@ -61,7 +70,7 @@ def maak_kaarten(
     **velden,
 ) -> list[Kaart]:
     """Kaarten van de gekozen soorten; een kaart die al in de lijst staat (zelfde soort en onderwerp) komt er niet nog eens bij."""
-    bestaand = {(k.soort, k.stelsel_code, k.wet or None, k.nummer, k.doel_stelsel, k.bron_id) for k in lijst.kaarten}
+    bestaand = {_sleutel(k.soort, k.stelsel_code, k.wet, k.nummer, k.doel_stelsel, k.bron_id, k.zaak, k.vraag) for k in lijst.kaarten}
     velden = {k: (v.strip() or None) if isinstance(v, str) else v for k, v in velden.items()}
     if bron is not None:
         velden.setdefault("zaak", None)
@@ -70,7 +79,8 @@ def maak_kaarten(
     uit = []
     for soort in soorten:
         for doel in (doelen or [None]) if soort == "tegenhanger" else [None]:
-            sleutel = (soort, ref.stelsel if ref else None, ref.wet if ref else None, ref.nummer if ref else None, doel, bron.id if bron else None)
+            sleutel = _sleutel(soort, ref.stelsel if ref else None, ref.wet if ref else None, ref.nummer if ref else None, doel,
+                               bron.id if bron else None, velden.get("zaak"), velden.get("vraag"))
             if soort in ARTIKELSOORTEN and ref is None or soort in ARRESTSOORTEN and not (bron or velden.get("zaak")):
                 continue
             if sleutel in bestaand:

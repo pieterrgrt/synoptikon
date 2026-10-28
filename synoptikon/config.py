@@ -52,6 +52,12 @@ class Settings:
     claude_model: str = field(default_factory=lambda: _env("SYNOPTIKON_CLAUDE_MODEL", "claude-opus-5-5"))
     llm_budget_usd: float = field(default_factory=lambda: float(_env("SYNOPTIKON_LLM_BUDGET_USD", "20")))
 
+    # Kaarten uit notities (services/notities.py): een kopie van de notitiemap (scripts/notities.sh zet die in
+    # data/notities) en per map het vak in Wunderkammer, "Zivilrecht 1A=ZR Ia; Kapitalmarktrecht=W". Mappen zonder vak
+    # worden overgeslagen. Leeg = uit.
+    notities_dir: Path = field(default_factory=lambda: Path(_env("SYNOPTIKON_NOTITIES_DIR", "") or Path(_env("SYNOPTIKON_DATA_DIR", "./data")) / "notities").resolve())
+    notities_vakken: str = field(default_factory=lambda: _env("SYNOPTIKON_NOTITIES_VAKKEN", ""))
+
     # Standaardtaal voor vertalingen in de synopse.
     ui_lang: str = field(default_factory=lambda: _env("SYNOPTIKON_UI_LANG", "nl"))
 

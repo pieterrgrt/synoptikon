@@ -211,6 +211,8 @@ _NIEUWE_KOLOMMEN = [
     ("wettekst", "taal", "VARCHAR(5)"),
     ("wettekst", "kern", "BOOLEAN NOT NULL DEFAULT 1"),
     ("wettekst", "stijl", "VARCHAR(8)"),
+    ("kaart", "status", "VARCHAR(10)"),
+    ("kaart", "herkomst", "VARCHAR(300)"),
 ]
 
 

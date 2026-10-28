@@ -15,6 +15,8 @@
     <span class="stil klein">{{ n_('{n} kaart', '{n} kaarten', actief | length) }}{% if l.vak %} · {{ l.vak }}{% endif %}{% if l.examen %} · {{ _('examen {datum}', datum=l.examen.strftime('%d-%m-%Y')) }}{% set dagen = (l.examen - vandaag).days %}{% if dagen >= 0 %} ({{ n_('nog {n} dag', 'nog {n} dagen', dagen) }}){% endif %}{% endif %}</span>
     {% if actief %}<span class="voortgang" aria-label="{{ _('{a} van {b} gekend', a=gekend, b=actief | length) }}"><span style="width: {{ (100 * gekend / actief | length) | round | int }}%"></span></span>{% endif %}
     <span class="stil klein">{{ _('{a} van {b} gekend', a=gekend, b=actief | length) }}{% if l.naar_wk %} · {{ _('Wunderkammer') }}{% if wk %}: {{ n_('{n} kaart in herhaling', '{n} kaarten in herhaling', wk | length) }}{% endif %}{% endif %}</span>
+    {% set voorstel = l.kaarten | selectattr('status', 'equalto', 'voorstel') | list %}
+    {% if voorstel %}<a class="klein" href="/leren/{{ l.id }}#voorstellen">{{ n_('{n} voorstel uit je notities', '{n} voorstellen uit je notities', voorstel | length) }}</a>{% endif %}
     {% if actief %}<a class="knop klein primair" href="/leren/{{ l.id }}/oefenen">{{ _('Oefenen') }}</a>{% endif %}
   </li>
 {% endfor %}

@@ -257,7 +257,8 @@ def wet_kort(stelsel: str, wet: str | None) -> str | None:
 _GELADEN = {"tijd": 0.0}
 _DE_WETTEN: dict[str, str] = {}  # kleine letters → afkorting ("patg" → "PatG", "sgb v" → "SGB 5")
 _DE_ART: set[str] = {"EGBGB", "GG"}  # Duitse wetten met artikelen in plaats van paragrafen (aangevuld uit de database)
-_DE_TOKEN = re.compile(r"(?<![\w.])((?:\d{1,2}\.\s?|\d+-)?[A-ZÄÖÜ][\wÄÖÜäöüß\-]*(?:\.[A-Za-z]+)*(?:\s(?:\d{1,2}|[IVX]{1,4}))?)(?![\w-])")
+# Een afkorting begint met een hoofdletter, of met een kleine letter gevolgd door een hoofdletter (eWpG, eIDKG).
+_DE_TOKEN = re.compile(r"(?<![\w.])((?:\d{1,2}\.\s?|\d+-)?(?:[A-ZÄÖÜ]|[a-zäöü](?=[\wÄÖÜäöüß\-]*[A-ZÄÖÜ]))[\wÄÖÜäöüß\-]*(?:\.[A-Za-z]+)*(?:\s(?:\d{1,2}|[IVX]{1,4}))?)(?![\w-])")
 _ROMEINS_NAAR = {1: "I", 2: "II", 3: "III", 4: "IV", 5: "V", 6: "VI", 7: "VII", 8: "VIII", 9: "IX", 10: "X", 11: "XI", 12: "XII", 14: "XIV"}
 
 

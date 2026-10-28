@@ -193,6 +193,17 @@ Uitgebreider gemotiveerd in de docstring van `synoptikon/models.py`.
    laatst gekozen leerlijst (`POST /leren/snel`; de keuze staat in een cookie);
    ⋯ ernaast kiest kaartsoort en lijst. Lijsten met "naar Wunderkammer" komen
    via `/api/wk/kaarten` in Wunderkammer.
+   **Kaarten uit notities**: `scripts/notities.sh` kopieert `~/vault/Humboldt`
+   naar `data/notities` (de container kan niet bij de rclone-mount) en draait
+   `synoptikon notities`. Elke nieuwe of gewijzigde notitie in een map met een
+   vak (`SYNOPTIKON_NOTITIES_VAKKEN`, of `vak:` in de frontmatter;
+   `synoptikon: nee` slaat een notitie over) gaat naar Claude, dat elke norm met
+   `artikel_lezen` controleert en kaarten voorstelt (artikel, kern, arrest,
+   vrij). Ze komen als voorstel in de lijst "Notities · <vak>"; op de
+   lijstpagina neem je ze over of wijs je ze af. Alleen overgenomen kaarten gaan
+   naar Wunderkammer; afgewezen kaarten worden niet opnieuw voorgesteld. Cron:
+   `30 2 * * * ~/synoptikon/scripts/notities.sh >> ~/synoptikon/data/notities.log 2>&1`
+   (hoogstens 10 notities per nacht; `--droog` toont wat aan de beurt is).
 10. **Onderzoek door Claude** (bij een vraag, of meteen bij "Nieuwe vraag"): kies de
    stelsels; Claude leest de wetteksten via de lokale import (tools
    `artikel_lezen`, `wetteksten_doorzoeken`, `wet_zoeken`,

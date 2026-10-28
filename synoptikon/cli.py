@@ -256,6 +256,20 @@ def cmd_systematiek(args) -> int:
     return 0
 
 
+def cmd_notities(args) -> int:
+    from .services import notities
+
+    database.init_db()
+    if not notities.vakken():
+        print("Geen SYNOPTIKON_NOTITIES_VAKKEN ingesteld; er is niets te doen.")
+        return 0
+    with database.session() as s:
+        u = notities.verwerk(s, profiel_id=args.profiel, maximum=args.max, droog=args.droog)
+    print(f"{'Te verwerken' if args.droog else 'Verwerkt'}: {u.notities} notities, {u.voorstellen} voorstellen, "
+          f"{u.ongewijzigd} ongewijzigd, {u.over} voor een volgende ronde, {u.fouten} fouten")
+    return 1 if u.fouten else 0
+
+
 def cmd_rebuild_fts(_args) -> int:
     database.init_db()
     database.rebuild_fts()
@@ -331,6 +345,11 @@ def main(argv: list[str] | None = None) -> int:
     s.add_argument("id")
     s.add_argument("--versie", help="specifieke versie (standaard de laatst opgehaalde)")
     s.set_defaults(fn=cmd_systematiek)
+    s = sub.add_parser("notities", help="kaartvoorstellen uit nieuwe en gewijzigde notities (Claude), per vak in 'Notities · <vak>'")
+    s.add_argument("--profiel", type=int, default=1)
+    s.add_argument("--max", type=int, default=10, help="hoogstens zoveel notities per ronde (standaard 10)")
+    s.add_argument("--droog", action="store_true", help="alleen tonen welke notities aan de beurt zijn")
+    s.set_defaults(fn=cmd_notities)
     sub.add_parser("rebuild-fts", help="zoekindex opnieuw opbouwen").set_defaults(fn=cmd_rebuild_fts)
     s = sub.add_parser("serve", help="ontwikkelserver starten")
     s.add_argument("--host", default="127.0.0.1")

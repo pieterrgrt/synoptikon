@@ -107,7 +107,7 @@ def kaarten(profiel: str = "", db: Session = Depends(get_session)):
     uit = []
     for l in lijsten:
         for k in l.kaarten:
-            if not k.actief:
+            if not k.actief or k.status:  # uit, of een voorstel uit een notitie
                 continue
             voor, achter, z = bouwer.html(k)
             ref = leren.ref_van(k)

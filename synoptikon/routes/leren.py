@@ -16,7 +16,7 @@ from ..auth import huidig_profiel
 from ..db import get_session
 from ..i18n import _
 from ..models import ARRESTSOORTEN, ARTIKELSOORTEN, KAARTSOORTEN, Bron, Kaart, Leerlijst
-from ..services import leren
+from ..services import leren, notities
 from ..services.artikelen import Ref, herken
 from ..services.correspondentie import thema_s_voor, wettekst_artikel
 from ..services.helpers import actieve_stelsels, leeg_naar_none
@@ -188,9 +188,20 @@ def kaart_oefen(request: Request, kid: int, gekend: str = Form(...), db: Session
 def lijst(request: Request, lid: int, db: Session = Depends(get_session)):
     lijst = _lijst(request, db, lid)
     bouwer = leren.Bouwer(db)
-    kaarten = [(k, bouwer.zijden(k)) for k in lijst.kaarten]
+    kaarten = [(k, bouwer.zijden(k)) for k in lijst.kaarten if k.status is None]
+    voorstellen = [(k, bouwer.zijden(k)) for k in lijst.kaarten if k.status == "voorstel"]
     lijsten = leren.lijsten_van(db, _pid(request))
-    return render(request, "leerlijst.html", lijst=lijst, kaarten=kaarten, vakken=_vakken(lijsten), vandaag=date.today())
+    return render(request, "leerlijst.html", lijst=lijst, kaarten=kaarten, voorstellen=voorstellen, vakken=_vakken(lijsten),
+                  vandaag=date.today())
+
+
+@router.post("/leren/{lid}/voorstellen")
+async def voorstellen_beoordelen(request: Request, lid: int, db: Session = Depends(get_session)):
+    """Voorstellen uit notities: aangevinkte overnemen, de rest afwijzen."""
+    lijst = _lijst(request, db, lid)
+    form = await request.form()
+    over, af = notities.beoordeel(lijst, {int(x) for x in form.getlist("kaart") if str(x).isdigit()})
+    return RedirectResponse(f"/leren/{lid}?overgenomen={over}&afgewezen={af}", status_code=303)
 
 
 @router.post("/leren/{lid}")

@@ -271,6 +271,12 @@ def test_alle_duitse_wetten_herkennen_en_doorzoeken(client):
         art.laad_wetnamen(s)
         wid = w.id
         assert [(r.stelsel, r.nummer, r.wet) for r in herken("§ 1 PatG")] == [("DE", "1", "PatG")]
+        # een afkorting met een kleine beginletter (eWpG) is geen § 2 BGB
+        e = Geparseerd(wet_id="ewpg", titel="Gesetz über elektronische Wertpapiere", versie="2026-05-06", bron_url=None,
+                       artikelen=[Artikel("2", "Ein Wertpapier kann auch als elektronisches Wertpapier begeben werden.", "Elektronisches Wertpapier", None)])
+        store.sla_op(s, "DE", e, "eWpG", kern=False)
+        art.laad_wetnamen(s)
+        assert [(r.stelsel, r.nummer, r.wet) for r in herken("§ 2 Abs. 1 eWpG")] == [("DE", "2", "eWpG")]
         assert w not in wetboek.wetten(s, "DE") and w in wetboek.wetten(s, "DE", alle=True)
         assert wetboek.zoek_wetten(s, "DE", "patg")[0][0].id == wid
     r = client.get("/stelsels/DE/wetten?q=PatG", follow_redirects=False)

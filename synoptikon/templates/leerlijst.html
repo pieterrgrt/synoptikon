@@ -11,6 +11,28 @@
 </div>
 <p class="stil klein">{{ n_('{n} kaart', '{n} kaarten', kaarten | length) }}{% if lijst.vak %} · {{ lijst.vak }}{% endif %}{% if lijst.examen %} · {{ _('examen {datum}', datum=lijst.examen.strftime('%d-%m-%Y')) }}{% endif %} · {% if lijst.naar_wk %}{{ _('herhaling in Wunderkammer') }}{% else %}{{ _('niet naar Wunderkammer') }}{% endif %}</p>
 {% if lijst.omschrijving %}<div class="hint">{{ lijst.omschrijving | md }}</div>{% endif %}
+{% if request.query_params.get('overgenomen') %}<p class="melding ok" role="status">{{ _('{a} overgenomen, {b} afgewezen.', a=request.query_params.get('overgenomen'), b=request.query_params.get('afgewezen', '0')) }}</p>{% endif %}
+
+{% if voorstellen %}
+<section class="blok" id="voorstellen">
+  <h2>{{ n_('{n} voorstel uit je notities', '{n} voorstellen uit je notities', voorstellen | length) }}</h2>
+  <p class="hint">{{ _('Claude las je notities en stelde deze kaarten voor; de wettekst komt uit Synoptikon. Vink uit wat je niet wilt. Wat je overneemt gaat naar Wunderkammer; afgewezen kaarten worden niet opnieuw voorgesteld.') }}</p>
+  <form method="post" action="/leren/{{ lijst.id }}/voorstellen">
+    <ul class="kaartenlijst">
+    {% for k, z in voorstellen %}
+      <li class="kaart-rij">
+        <div class="kaart-kop"><label class="vinkje"><input type="checkbox" name="kaart" value="{{ k.id }}" checked> <span class="label">{{ k.soort_label }}</span></label>
+          {% if k.herkomst %}<span class="stil klein">{{ k.herkomst }}</span>{% endif %}
+          <a class="klein" href="/leren/kaart/{{ k.id }}">{{ _('bewerken') }}</a>
+        </div>
+        <details class="kaart-voorbeeld"><summary>{{ z.voor | md }}</summary><div class="kaart-achter">{{ z.achter | md }}</div></details>
+      </li>
+    {% endfor %}
+    </ul>
+    <div class="acties"><button class="knop primair">{{ _('Aangevinkte overnemen, de rest afwijzen') }}</button></div>
+  </form>
+</section>
+{% endif %}
 
 <p><a class="knop klein" href="/leren/nieuw?lijst={{ lijst.id }}&terug=/leren/{{ lijst.id }}">＋ {{ _('Vrije kaart of arrest') }}</a> <span class="hint">{{ _('Artikelen voeg je toe met ☆ Leren bij het artikel.') }}</span></p>
 

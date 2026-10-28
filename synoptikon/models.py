@@ -712,6 +712,10 @@ class Kaart(Base):
     antwoord: Mapped[str | None] = mapped_column(Text)  # arrest: de rechtsregel
     notitie: Mapped[str | None] = mapped_column(Text)  # komt onder het antwoord
     actief: Mapped[bool] = mapped_column(default=True)
+    # Uit een notitie (services/notities.py): eerst een voorstel, dat je overneemt (status leeg) of afwijst. Een
+    # afgewezen kaart blijft bewaard, zodat dezelfde kaart bij de volgende ronde niet opnieuw wordt voorgesteld.
+    status: Mapped[str | None] = mapped_column(String(10))  # leeg | voorstel | afgewezen
+    herkomst: Mapped[str | None] = mapped_column(String(300))  # pad van de notitie
     gekend: Mapped[bool | None] = mapped_column()  # laatste oefenresultaat in Synoptikon
     geoefend: Mapped[datetime | None] = mapped_column(DateTime)
     aangemaakt: Mapped[datetime] = mapped_column(DateTime, default=now)
@@ -739,6 +743,22 @@ class KaartStand(Base):
     laatst: Mapped[datetime | None] = mapped_column(DateTime)
     laatste_score: Mapped[int | None] = mapped_column(Integer)  # 1 opnieuw … 4 makkelijk
     bijgewerkt: Mapped[datetime] = mapped_column(DateTime, default=now, onupdate=now)
+
+
+class NotitieBestand(Base):
+    """Een notitie uit de vault die kaartvoorstellen heeft opgeleverd; de hash bepaalt of ze opnieuw aan de beurt is."""
+
+    __tablename__ = "notitie_bestand"
+    __table_args__ = (UniqueConstraint("profiel_id", "pad"),)
+
+    id: Mapped[int] = mapped_column(primary_key=True)
+    profiel_id: Mapped[int] = mapped_column(ForeignKey("profiel.id", ondelete="CASCADE"), index=True)
+    pad: Mapped[str] = mapped_column(String(300))  # relatief, bijv. "Zivilrecht 1A/1 Einführung/Vorlesung.md"
+    vak: Mapped[str | None] = mapped_column(String(60))
+    hash: Mapped[str] = mapped_column(String(64))
+    voorstellen: Mapped[int] = mapped_column(Integer, default=0)  # bij de laatste ronde
+    fout: Mapped[str | None] = mapped_column(Text)
+    verwerkt: Mapped[datetime] = mapped_column(DateTime, default=now)
 
 
 # --- Claude ----------------------------------------------------------------------------
