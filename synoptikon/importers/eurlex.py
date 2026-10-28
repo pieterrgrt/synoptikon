@@ -29,6 +29,13 @@ from .http import client
 
 CELLAR = "http://publications.europa.eu/resource/celex/{celex}"
 EURLEX = "https://eur-lex.europa.eu/legal-content/{taal}/TXT/?uri=CELEX:{celex}"
+# Bovengrens voor één document. Een paar handelingen zijn honderden MB (ingebedde afbeeldingen; 2018/688: 433 MB)
+# en zouden geparseerd meer dan een GB geheugen kosten; die worden niet opgehaald.
+MAX_BYTES = 60_000_000
+
+
+class TeGroot(Exception):
+    pass
 TAAL3 = dict(nl="nld", de="deu", fr="fra", it="ita", en="eng", es="spa")
 
 _ART_RE = re.compile(r"^(?:Artikel|Article|Artículo|Articolo|Artigo|Art\.)\s+(\d+\s?(?:[a-z]{0,3}|bis|ter|quater)|[IVXL]+(?:\.-\d+)?|premier|1er|primo|unique|único|unico)"
@@ -364,9 +371,20 @@ def download(celex: str, taal: str = "de", c=None) -> str | None:
     c = c or client()
     try:
         for accept in ("application/xhtml+xml", "text/html"):
-            r = c.get(url, headers={"Accept": accept, "Accept-Language": TAAL3.get(taal, taal)}, follow_redirects=True, timeout=180)
-            if r.status_code == 200 and r.content:
-                return r.content.decode("utf-8", "replace")
+            with c.stream("GET", url, headers={"Accept": accept, "Accept-Language": TAAL3.get(taal, taal)}, follow_redirects=True,
+                          timeout=180) as r:
+                if r.status_code == 200:
+                    if int(r.headers.get("content-length") or 0) > MAX_BYTES:
+                        raise TeGroot(f"{celex}: {int(r.headers['content-length']) // 1_000_000} MB")
+                    delen, n = [], 0
+                    for stuk in r.iter_bytes():
+                        n += len(stuk)
+                        if n > MAX_BYTES:
+                            raise TeGroot(f"{celex}: meer dan {MAX_BYTES // 1_000_000} MB")
+                        delen.append(stuk)
+                    if n:
+                        return b"".join(delen).decode("utf-8", "replace")
+                    continue
             # 300: de Cellar heeft meerdere manifestaties en kiest niet; behandelen als "niet in deze vorm".
             if r.status_code not in (300, 404, 406):
                 r.raise_for_status()
