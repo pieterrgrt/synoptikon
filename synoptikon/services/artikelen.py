@@ -256,6 +256,7 @@ def wet_kort(stelsel: str, wet: str | None) -> str | None:
 
 _GELADEN = {"tijd": 0.0}
 _DE_WETTEN: dict[str, str] = {}  # kleine letters → afkorting ("patg" → "PatG", "sgb v" → "SGB 5")
+_DE_ART: set[str] = {"EGBGB", "GG"}  # Duitse wetten met artikelen in plaats van paragrafen (aangevuld uit de database)
 _DE_TOKEN = re.compile(r"(?<![\w.])((?:\d{1,2}\.\s?|\d+-)?[A-ZÄÖÜ][\wÄÖÜäöüß\-]*(?:\.[A-Za-z]+)*(?:\s(?:\d{1,2}|[IVX]{1,4}))?)(?![\w-])")
 _ROMEINS_NAAR = {1: "I", 2: "II", 3: "III", 4: "IV", 5: "V", 6: "VI", 7: "VII", 8: "VIII", 9: "IX", 10: "X", 11: "XI", 12: "XII", 14: "XIV"}
 
@@ -271,6 +272,7 @@ def laad_wetnamen(db=None) -> None:
         db = session_factory()()
     try:
         de = db.scalars(select(Wettekst.wet).where(Wettekst.stelsel_code == "DE", Wettekst.wet.is_not(None)).distinct()).all()
+        art = db.scalars(select(Wettekst.wet).where(Wettekst.stelsel_code == "DE", Wettekst.stijl == "Art")).all()
         eu = db.execute(select(EuHandeling.celex, EuHandeling.soort, EuHandeling.nummer)).all()
     finally:
         if eigen:
@@ -283,6 +285,7 @@ def laad_wetnamen(db=None) -> None:
             namen.setdefault(f"{m.group(1)} {_ROMEINS_NAAR[int(m.group(2))]}".lower(), w)
     _DE_WETTEN.clear()
     _DE_WETTEN.update(namen)
+    _DE_ART.update(w for w in art if w)
     eunamen.laad([tuple(r) for r in eu])
     _GELADEN["tijd"] = time.time()
 
@@ -346,6 +349,8 @@ def citeer(stelsel: str, nummer: str | None, wet: str | None = None, tot: str | 
     if re.match(r"^(?:\(|[^\d\s(]{3,})", nummer):  # bijlage, preambule, protocol: "Anlage 2 1. BImSchV", "Protokoll 2 Art. 9 AEUV"
         return f"{nr}{d} {w}".strip()
     stijl = regels(stelsel).stijl
+    if stelsel == "DE" and wet in _DE_ART:
+        stijl = "Art"
     if stijl == "§":
         return f"{'§§' if tot else '§'} {nr}{d} {w}".strip()
     if stijl == "Art":

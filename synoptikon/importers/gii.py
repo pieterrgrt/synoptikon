@@ -78,6 +78,7 @@ def parse(xml_bytes: bytes, wet_id: str, bron_url: str | None = None) -> Geparse
     artikelen: list[Artikel] = []
     huidige_kz = ""
     zonder_nummer: list[str] = []
+    met_art = met_paragraaf = 0
     for i, norm in enumerate(root.findall("norm")):
         enbez = _tekst(norm.find("metadaten/enbez"))
         g = norm.find("metadaten/gliederungseinheit")
@@ -92,13 +93,15 @@ def parse(xml_bytes: bytes, wet_id: str, bron_url: str | None = None) -> Geparse
         if enbez.lower() in ("inhaltsübersicht", "inhaltsverzeichnis"):
             continue
         kz = _tekst(g.find("gliederungskennzahl")) if g is not None else huidige_kz
+        met_art += enbez.startswith("Art")
+        met_paragraaf += enbez.startswith("§")
         nummer = re.sub(r"^(?:§+|Art\.?|Artikel)\s*", "", enbez).strip() or enbez
         tekst = _inhoud(norm) or "[weggefallen]"
         artikelen.append(Artikel(nummer=nummer, tekst=tekst, opschrift=re.sub(r"\s+", " ", _tekst(norm.find("metadaten/titel"))) or None, pad=pad_voor(kz) if kz else None))
     if zonder_nummer and not artikelen:
         artikelen.append(Artikel(nummer="Text", tekst="\n\n".join(zonder_nummer)))
     return Geparseerd(wet_id=wet_id, titel=titel, versie=versie, bron_url=bron_url, artikelen=artikelen, ruw=xml_bytes, ruw_extensie="xml",
-                      afkorting=afkorting)
+                      afkorting=afkorting, stijl="Art" if met_art > met_paragraaf else None)
 
 
 def parse_zip(zip_bytes: bytes, wet_id: str, bron_url: str | None = None) -> Geparseerd:

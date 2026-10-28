@@ -413,6 +413,7 @@ class Wettekst(Base):
     opgehaald: Mapped[datetime] = mapped_column(DateTime, default=now)
     taal: Mapped[str | None] = mapped_column(String(5))  # taal van de tekst als het stelsel er meer heeft (EU); None = de taal van het stelsel
     kern: Mapped[bool] = mapped_column(default=True)  # uit het register (systematiek, overzicht); False = bulkimport (alle wetten)
+    stijl: Mapped[str | None] = mapped_column(String(8))  # citeerwijze als die afwijkt van het stelsel: "Art" (GG, EGBGB)
 
     artikelen: Mapped[list["WettekstArtikel"]] = relationship(
         back_populates="wettekst", cascade="all, delete-orphan", order_by="WettekstArtikel.volgorde"

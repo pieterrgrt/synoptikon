@@ -106,9 +106,14 @@ def zoek_wetten(db: Session, stelsel: str, q: str = "", pagina: int = 1, per_pag
                 voorwaarden.append(Wettekst.wet.in_(sleutels))
         stmt = stmt.where(or_(*voorwaarden))
     totaal = db.scalar(select(func.count()).select_from(stmt.subquery())) or 0
-    # Afkorting voorop: wat men zoekt ("PatG") staat dan bovenaan, daarna de kern en de titel.
-    exact = (func.lower(Wettekst.wet) == q.lower()) if q else Wettekst.kern
-    rijen = db.scalars(stmt.order_by(exact.desc(), Wettekst.kern.desc(), Wettekst.titel).offset((pagina - 1) * per_pagina).limit(per_pagina)).all()
+    # Wat men zoekt bovenaan: precies de afkorting ("PatG"), dan titels die ermee beginnen ("Patentgesetz"), dan de
+    # kern, dan korte titels (de wet zelf vóór de verordeningen erbij).
+    if q:
+        volgorde = [(func.lower(Wettekst.wet) == q.lower()).desc(), Wettekst.titel.ilike(f"{q}%").desc(), Wettekst.wet.ilike(f"{q}%").desc(),
+                    Wettekst.kern.desc(), func.length(Wettekst.titel), Wettekst.titel]
+    else:
+        volgorde = [Wettekst.kern.desc(), Wettekst.titel]
+    rijen = db.scalars(stmt.order_by(*volgorde).offset((pagina - 1) * per_pagina).limit(per_pagina)).all()
     return list(rijen), totaal
 
 

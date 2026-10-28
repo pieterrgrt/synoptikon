@@ -34,7 +34,7 @@ def sla_op(db: Session, stelsel_code: str, g: Geparseerd, wet: str | None = None
         db.delete(bestaand)
     db.flush()
     w = Wettekst(stelsel_code=stelsel_code, wet_id=g.wet_id, wet=wet or None, titel=g.titel[:300], versie=g.versie, bron_url=g.bron_url,
-                 bestand=bestand, taal=taal, kern=kern)
+                 bestand=bestand, taal=taal, kern=kern, stijl=g.stijl)
     gezien: set[str] = set()
     for i, a in enumerate(g.artikelen):
         if a.nummer[:40] in gezien:

@@ -275,3 +275,10 @@ def test_alle_duitse_wetten_herkennen_en_doorzoeken(client):
     assert r.status_code == 303 and r.headers["location"] == f"/stelsels/DE/wet/{wid}"
     assert "Patente werden für Erfindungen erteilt" in client.get(f"/stelsels/DE/wet/{wid}?deel=Erster Abschnitt Das Patent").text
     assert "Patente werden" in client.get("/artikelen/DE/1?wet=PatG").text
+
+
+def test_duitse_wetten_met_artikelen():
+    from synoptikon.services.artikelen import Ref
+
+    assert Ref("DE", "1", "GG").citeer == "Art. 1 GG"
+    assert Ref("DE", "1", "PatG").citeer == "§ 1 PatG"
