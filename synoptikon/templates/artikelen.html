@@ -1,44 +1,49 @@
 {% extends "base.html" %}
 {% import "_artikel.html" as m %}
-{% block titel %}Artikelen · Synoptikon{% endblock %}
+{% block titel %}{{ _('Artikelen') }} · Synoptikon{% endblock %}
 {% block inhoud %}
-<h1>Artikelen</h1>
+<h1>{{ _('Artikelen') }}</h1>
 <form method="get" class="formulier compact zoekgroot">
-  <input type="search" name="q" value="{{ q }}" autofocus placeholder="3:84 · art. 5.69 BW · § 929 BGB · Art. 41 OR · art. 1337 c.c. · s 17 SGA 1979 · UCC § 2-401">
-  <select name="stelsel" style="width:auto" aria-label="Stelsel"><option value="">stelsel herkennen</option>{% for s in stelsels %}<option value="{{ s.code }}" {% if s.code == f_stelsel %}selected{% endif %}>{{ s.code }}</option>{% endfor %}</select>
-  <button class="knop primair">Opzoeken</button>
+  <input type="search" name="q" value="{{ q }}" autofocus aria-label="{{ _('Artikel of woorden') }}" placeholder="{{ _('artikelnummer of woorden') }}: 3:84 · dwaling · art. 5.69 BW · § 929 BGB · Art. 41 OR · art. 1337 c.c. · s 17 SGA 1979 · UCC § 2-401">
+  <select name="stelsel" style="width:auto" aria-label="{{ _('Stelsel') }}"><option value="">{{ _('stelsel herkennen') }}</option>{% for s in stelsels %}<option value="{{ s.code }}" {% if s.code == f_stelsel %}selected{% endif %}>{{ s.code }}</option>{% endfor %}</select>
+  <button class="knop primair">{{ _('Opzoeken') }}</button>
 </form>
-<p class="hint">Een artikelnummer toont de plaats in de systematiek en de corresponderende artikelen in de andere stelsels. NL herken je aan de dubbele punt (3:84), BE aan de punt (5.69) of "oud BW", DE aan § of BGB, FR aan C. civ. of een streepje (1112-1); voor CH, IT, ES en de common law noem je de wet (Art. 41 OR, art. 2043 c.c., art. 1902 CC, s 2 MA 1967, UCC § 2-207, s 18 ACL). Een kaal nummer kan DE of FR zijn, "CC" Spanje of Frankrijk.</p>
+<p class="hint">{{ _('Een artikelnummer toont de plaats in de systematiek en de corresponderende artikelen in de andere stelsels. NL herken je aan de dubbele punt (3:84), BE aan de punt (5.69) of "oud BW", DE aan § of BGB, FR aan C. civ. of een streepje (1112-1); voor CH, IT, ES en de common law noem je de wet (Art. 41 OR, art. 2043 c.c., art. 1902 CC, s 2 MA 1967, UCC § 2-207, s 18 ACL). Een kaal nummer zoekt in alle ingelezen wetten.') }}</p>
 {% if q %}
   {% if kandidaten %}
-  <p class="kandidaten">Bedoel je {% for r in kandidaten %}<a class="knop klein" href="{{ r.url }}">{{ r.citeer }}</a>{% endfor %}</p>
+  <p>{{ _('Bedoel je:') }}</p>
+  <ul class="treffers">{% for r, wa in kandidaten %}<li>{{ vlag(r.stelsel) }}<a href="{{ r.url }}">{{ r.citeer }}</a>{% if wa and wa.opschrift %} <span class="stil">· {{ wa.opschrift }}</span>{% elif not wa %} <span class="stil">· {{ _('geen tekst') }}</span>{% endif %}</li>{% endfor %}</ul>
+  {% elif treffers %}
+  <p class="hint">{{ _('Geen artikelnummer in “{q}”; artikelen waarvan de tekst de woorden bevat', q=q) }}{% if f_stelsel %} ({{ f_stelsel }}){% endif %}:</p>
+  <ul class="treffers">{% for r, wa, snippet in treffers %}<li>{{ vlag(r.stelsel) }}<a href="{{ r.url }}">{{ r.citeer }}</a>{% if wa.opschrift %} <span class="stil">· {{ wa.opschrift }}</span>{% endif %}<p class="snippet serif">{{ snippet | safe }}</p></li>{% endfor %}</ul>
+  <p class="hint"><a href="/zoeken?q={{ q | urlencode }}">{{ _('Ook in vragen, bronnen en begrippen zoeken') }}</a></p>
   {% else %}
-  <p class="melding">Geen artikelnummer herkend in “{{ q }}”. Zoek je tekst, gebruik dan <a href="/zoeken?q={{ q | urlencode }}">zoeken</a>.</p>
+  <p class="melding">{{ _('Niets gevonden voor “{q}”.', q=q) }} <a href="/zoeken?q={{ q | urlencode }}">{{ _('Zoeken in de hele kennisbank') }}</a></p>
   {% endif %}
 {% endif %}
 
-<h2>Correspondentietabel <span class="stil">({{ aantal }} thema's)</span></h2>
-<p class="hint">Per functionele vraag de artikelen die haar beantwoorden, per rechtsfamilie gegroepeerd. In de common law is de hoofdbron vaak een arrest (⚖); statutes vullen aan. Klik op een artikel voor de plaats in de systematiek en de tekst, op een thema voor de synopse op artikelniveau.</p>
-<nav class="familie-filter" aria-label="Rechtsfamilie">
-  <a href="/artikelen" {% if not f_familie %}aria-current="page"{% endif %}>Alle stelsels</a>
-  {% for k in families_in_tabel %}<a class="fam-{{ k }}" href="/artikelen?familie={{ k }}" {% if f_familie == k %}aria-current="page"{% endif %}>{{ RECHTSFAMILIES[k][0] }}</a>{% endfor %}
+<h2>{{ _('Correspondentietabel') }} <span class="stil">({{ n_('{n} thema', '{n} thema\'s', aantal) }})</span></h2>
+<p class="hint">{{ _('Per functionele vraag de artikelen die haar beantwoorden, per rechtsfamilie gegroepeerd. In de common law is de hoofdbron vaak een arrest (⚖); statutes vullen aan. Klik op een artikel voor de plaats in de systematiek en de tekst, op een thema voor de synopse op artikelniveau.') }}</p>
+<nav class="familie-filter" aria-label="{{ _('Rechtsfamilie') }}">
+  <a href="/artikelen" {% if not f_familie %}aria-current="page"{% endif %}>{{ _('Alle stelsels') }}</a>
+  {% for k in families_in_tabel %}<a class="fam-{{ k }}" href="/artikelen?familie={{ k }}" {% if f_familie == k %}aria-current="page"{% endif %}>{{ _(RECHTSFAMILIES[k][0]) }}</a>{% endfor %}
 </nav>
 {% set families = per_familie(kolommen) %}
 {% for gebied, thema_s in groepen.items() %}
 <section class="blok">
-  <h3 class="gebied">{{ gebied }}</h3>
+  <h3 class="gebied">{{ vt(gebied) }}</h3>
   <div class="tabel-schuif">
   <table class="tabel correspondentie">
     <thead>
       <tr class="familierij"><th></th>{% for f in families %}<th colspan="{{ f.stelsels | length }}" class="fam-{{ f.sleutel or 'overig' }}" title="{{ f.kenmerk }}">{{ f.naam }}</th>{% endfor %}</tr>
-      <tr><th>Thema</th>{% for f in families %}{% for s in f.stelsels %}<th class="fam-{{ f.sleutel or 'overig' }}{% if loop.first %} fam-begin{% endif %}" title="{{ s.naam }}">{{ vlag(s.code) }}{{ s.code }}</th>{% endfor %}{% endfor %}</tr>
+      <tr><th>{{ _('Thema') }}</th>{% for f in families %}{% for s in f.stelsels %}<th class="fam-{{ f.sleutel or 'overig' }}{% if loop.first %} fam-begin{% endif %}" title="{{ vt(s.naam) }}">{{ vlag(s.code) }}{{ s.code }}</th>{% endfor %}{% endfor %}</tr>
     </thead>
     <tbody>
     {% for c in thema_s %}
     <tr>
-      <td><a href="/artikelen/thema/{{ c.id }}">{{ c.titel }}</a></td>
+      <td><a href="/artikelen/thema/{{ c.id }}">{{ vt(c.titel) }}</a></td>
       {% for f in families %}{% for s in f.stelsels %}
-      <td class="fam-{{ f.sleutel or 'overig' }}{% if loop.first %} fam-begin{% endif %}"><ul class="ref-lijst">{% for a in c.voor(s.code) %}<li>{% if a.nummer is none %}{% if a.rol in ('case law', 'rechtspraak') %}<span class="zaak" title="{{ a.opmerking or '' }}">⚖ {{ (a.opmerking or 'rechtspraak').split(': ')[0] | md_inline }}</span>{% else %}<span class="stil" title="{{ a.opmerking or '' }}">—</span>{% endif %}{% else %}<a href="{{ a.ref.url }}" title="{{ a.rol or '' }}{% if a.opmerking %}: {{ a.opmerking }}{% endif %}">{{ a.ref.citeer }}</a>{% endif %}</li>{% endfor %}</ul></td>
+      <td class="fam-{{ f.sleutel or 'overig' }}{% if loop.first %} fam-begin{% endif %}"><ul class="ref-lijst">{% for a in c.voor(s.code) %}<li>{% if a.nummer is none %}{% if a.rol in ('case law', 'rechtspraak') %}<span class="zaak" title="{{ vt(a.opmerking) or '' }}">⚖ {{ (a.opmerking or _('rechtspraak')).split(': ')[0] | md_inline }}</span>{% else %}<span class="stil" title="{{ vt(a.opmerking) or '' }}">—</span>{% endif %}{% else %}<a href="{{ a.ref.url }}" title="{{ vt(a.rol) or '' }}{% if a.opmerking %}: {{ vt(a.opmerking) }}{% endif %}">{{ a.ref.citeer }}</a>{% endif %}</li>{% endfor %}</ul></td>
       {% endfor %}{% endfor %}
     </tr>
     {% endfor %}
@@ -49,15 +54,15 @@
 {% endfor %}
 
 <details class="blok">
-  <summary>Nieuw thema</summary>
+  <summary>{{ _('Nieuw thema') }}</summary>
   <form method="post" action="/artikelen/thema" class="formulier compact">
     <div class="rij">
-      <label>Titel <input name="titel" required placeholder="Functionele vraag, bijv. 'Verjaring van de koopprijs'"></label>
-      <label>Rechtsgebied <input name="rechtsgebied" list="rechtsgebieden"></label>
+      <label>{{ _('Titel') }} <input name="titel" required lang="nl" placeholder="Verjaring van de koopprijs"></label>
+      <label>{{ _('Rechtsgebied') }} <input name="rechtsgebied" list="rechtsgebieden" lang="nl"></label>
     </div>
     <datalist id="rechtsgebieden">{% for g in groepen %}<option value="{{ g }}">{% endfor %}</datalist>
-    <label>Toelichting <span class="hint">markdown</span><textarea name="toelichting" rows="2"></textarea></label>
-    <div class="acties"><button class="knop klein primair">Aanmaken</button></div>
+    <label>{{ _('Toelichting') }} <span class="hint">markdown</span><textarea name="toelichting" rows="2" lang="nl"></textarea></label>
+    <div class="acties"><button class="knop klein primair">{{ _('Aanmaken') }}</button></div>
   </form>
 </details>
 {% endblock %}

@@ -35,6 +35,16 @@ Keuzes, kort gemotiveerd:
 
 * **Concordantie** koppelt oude aan nieuwe nummering, met datum en grond.
 
+* **EuHandeling** is de catalogus van het geldende afgeleide Unierecht
+  (verordeningen en richtlijnen, ook uitvoerings- en gedelegeerde), uit de
+  Cellar van het Publicatiebureau, ingedeeld naar het repertorium
+  (**EuRepertorium**). **EuNim** zijn de nationale uitvoeringsmaatregelen
+  zoals de lidstaten ze bij de Commissie hebben gemeld; **Omzetting** is
+  mijn eigen koppeling op artikelniveau: welk artikel van welke nationale wet
+  welk artikel van de handeling omzet of uitvoert. Omzetting gebruikt
+  dezelfde (stelsel, wet, nummer[, tot])-vorm als Correspondentie, zodat de
+  artikelpagina beide kanten op kan wijzen.
+
 * **Correspondentie** is een thema ("vereisten voor overdracht") met per
   stelsel de artikelen die die functie vervullen (`CorrespondentieArtikel`).
   Groepen in plaats van paren: drie stelsels geven anders drie paren per
@@ -46,6 +56,7 @@ Keuzes, kort gemotiveerd:
 """
 from __future__ import annotations
 
+import re
 from datetime import date, datetime, timezone
 
 from sqlalchemy import (
@@ -58,6 +69,8 @@ from sqlalchemy import (
     UniqueConstraint,
 )
 from sqlalchemy.orm import DeclarativeBase, Mapped, mapped_column, relationship
+
+from .i18n import _
 
 
 def now() -> datetime:
@@ -97,7 +110,7 @@ class Stelsel(Base):
 
     @property
     def familie_naam(self) -> str:
-        return RECHTSFAMILIES.get(self.familie or "", ("Overig", ""))[0]
+        return _(RECHTSFAMILIES.get(self.familie or "", ("Overig", ""))[0])
 
 
 class Vraag(Base):
@@ -265,7 +278,7 @@ class BegripRelatie(Base):
 
     @property
     def type_label(self) -> str:
-        return RELATIE_TYPES.get(self.type, self.type)
+        return _(RELATIE_TYPES.get(self.type, self.type))
 
     def andere(self, begrip: Begrip) -> Begrip:
         return self.naar if self.van_id == begrip.id else self.van
@@ -392,6 +405,7 @@ class Wettekst(Base):
     id: Mapped[int] = mapped_column(primary_key=True)
     stelsel_code: Mapped[str] = mapped_column(ForeignKey("stelsel.code"))
     wet_id: Mapped[str] = mapped_column(String(80))  # BWBR0005291 | bgb | LEGITEXT000006070721 | 32007R0864
+    wet: Mapped[str | None] = mapped_column(String(60))  # citeerafkorting ("OR", "C. consom."); None = hoofdcodificatie
     titel: Mapped[str] = mapped_column(String(300))
     versie: Mapped[str] = mapped_column(String(40))  # geldigheidsdatum of versielabel van de bron
     bron_url: Mapped[str | None] = mapped_column(String(500))
@@ -416,3 +430,308 @@ class WettekstArtikel(Base):
     volgorde: Mapped[int] = mapped_column(Integer, default=0)
 
     wettekst: Mapped[Wettekst] = relationship(back_populates="artikelen")
+
+
+# --- Unierecht -----------------------------------------------------------------
+
+# Soorten handelingen (art. 288–291 VWEU): sleutel → (enkelvoud, meervoud).
+EU_SOORTEN: dict[str, tuple[str, str]] = {
+    "verordening": ("verordening", "verordeningen"),
+    "richtlijn": ("richtlijn", "richtlijnen"),
+    "kaderbesluit": ("kaderbesluit", "kaderbesluiten"),
+}
+# Variant: basishandeling (wetgevingshandeling of Raad/Commissie op verdragsgrondslag),
+# gedelegeerde handeling (art. 290 VWEU) of uitvoeringshandeling (art. 291 VWEU).
+EU_VARIANTEN: dict[str, str] = {"basis": "basishandeling", "gedelegeerd": "gedelegeerd (art. 290 VWEU)", "uitvoering": "uitvoering (art. 291 VWEU)"}
+
+
+class EuRepertorium(Base):
+    """Rubriek van het repertorium van de geldende wetgeving van de Unie ("13.30.10")."""
+
+    __tablename__ = "eu_repertorium"
+
+    code: Mapped[str] = mapped_column(String(20), primary_key=True)  # "13.30.10"
+    label: Mapped[str] = mapped_column(String(300))
+    ouder_code: Mapped[str | None] = mapped_column(String(20))
+    niveau: Mapped[int] = mapped_column(Integer, default=1)
+
+    @property
+    def toon_label(self) -> str:
+        """Rubrieknaam in de taal van het verzoek (zie `services.eu.rubrieklabels`)."""
+        from .i18n import taal
+
+        from .services.eu import rubrieklabel
+
+        return rubrieklabel(self.code, taal()) or self.label
+
+
+class EuHandeling(Base):
+    __tablename__ = "eu_handeling"
+
+    celex: Mapped[str] = mapped_column(String(20), primary_key=True)  # 32016R0679
+    soort: Mapped[str] = mapped_column(String(16))  # sleutel uit EU_SOORTEN
+    variant: Mapped[str] = mapped_column(String(12), default="basis")  # sleutel uit EU_VARIANTEN
+    nummer: Mapped[str | None] = mapped_column(String(20))  # "2016/679"
+    titel: Mapped[str] = mapped_column(Text)  # volledige titel in het Nederlands
+    roepnaam: Mapped[str | None] = mapped_column(String(120))  # "AVG", "AI-verordening"
+    datum: Mapped[date | None] = mapped_column(Date)  # datum van de handeling
+    in_werking: Mapped[date | None] = mapped_column(Date)  # eerste datum van inwerkingtreding
+    toepassing: Mapped[date | None] = mapped_column(Date)  # latere datum van toepassing, als die er is
+    geldig_tot: Mapped[date | None] = mapped_column(Date)  # None = onbepaald
+    omzettingstermijn: Mapped[date | None] = mapped_column(Date)  # alleen richtlijnen en kaderbesluiten
+    eer: Mapped[bool] = mapped_column(default=False)  # relevant voor de EER
+    eli: Mapped[str | None] = mapped_column(String(200))
+    repertorium: Mapped[str | None] = mapped_column(String(200))  # kommagescheiden codes
+    bijgewerkt: Mapped[datetime] = mapped_column(DateTime, default=now)
+
+    nims: Mapped[list["EuNim"]] = relationship(back_populates="handeling", cascade="all, delete-orphan", order_by="EuNim.datum")
+    omzettingen: Mapped[list["Omzetting"]] = relationship(back_populates="handeling", cascade="all, delete-orphan", order_by="Omzetting.volgorde")
+
+    @property
+    def soort_label(self) -> str:
+        return _(EU_SOORTEN.get(self.soort, (self.soort, ""))[0])
+
+    @property
+    def toon_titel(self) -> str:
+        """Officiële titel in de taal van het verzoek, als `services.eu.met_titels` die heeft opgehaald."""
+        return getattr(self, "_titel_vertaald", None) or self.titel
+
+    @property
+    def citeer(self) -> str:
+        """'Verordening (EU) 2016/679' — kort, zonder de rest van de titel."""
+        m = re.match(r"^(.*?\d{2,4}/\d+(?:/\w+)?)", self.toon_titel or "")
+        return m.group(1) if m else f"{self.soort_label.capitalize()} {self.nummer or self.celex}"
+
+    @property
+    def rep_codes(self) -> list[str]:
+        return [c for c in (self.repertorium or "").split(",") if c]
+
+    @property
+    def eurlex(self) -> str:
+        from .i18n import taal
+
+        return f"https://eur-lex.europa.eu/legal-content/{taal().upper()}/TXT/?uri=CELEX:{self.celex}"
+
+
+class EuNim(Base):
+    """Nationale uitvoeringsmaatregel zoals gemeld aan de Commissie (Cellar, sector 7)."""
+
+    __tablename__ = "eu_nim"
+    __table_args__ = (UniqueConstraint("celex", "nim_id"),)
+
+    id: Mapped[int] = mapped_column(primary_key=True)
+    celex: Mapped[str] = mapped_column(ForeignKey("eu_handeling.celex", ondelete="CASCADE"))
+    land: Mapped[str] = mapped_column(String(3))  # ISO 3166-1 alpha-3 zoals in Cellar: NLD, DEU, FRA …
+    nim_id: Mapped[str] = mapped_column(String(40))  # "72019L0771NLD_202202827"
+    titel: Mapped[str] = mapped_column(Text)
+    soort_akte: Mapped[str | None] = mapped_column(String(120))  # "Wet", "Gesetz", "Loi", "Decreto legislativo"
+    datum: Mapped[date | None] = mapped_column(Date)  # datum van het publicatieblad
+    vindplaats: Mapped[str | None] = mapped_column(String(120))  # "nr. 164, p. 1–18"
+
+    handeling: Mapped[EuHandeling] = relationship(back_populates="nims")
+
+
+# Soorten koppeling tussen een handeling en nationaal recht.
+OMZETTING_SOORTEN: dict[str, str] = {
+    "omzetting": "omzetting",  # richtlijn → nationale bepaling
+    "uitvoering": "uitvoering",  # verordening: sancties, toezicht, keuzes die de verordening laat
+    "verwijzing": "verwijzing",  # nationale bepaling verklaart de verordening van toepassing (IPR)
+    "navolging": "autonome navolging",  # geen lidstaat (CH) of na de Brexit (EN), maar naar het voorbeeld van de handeling
+    "voortgezet": "voortgezet als assimilated law",  # EN: retained EU law, sinds 2024 assimilated law
+}
+
+
+class Omzetting(Base):
+    """Artikel(en) van een nationale wet die (een artikel van) een EU-handeling omzetten of uitvoeren."""
+
+    __tablename__ = "omzetting"
+
+    id: Mapped[int] = mapped_column(primary_key=True)
+    celex: Mapped[str] = mapped_column(ForeignKey("eu_handeling.celex", ondelete="CASCADE"))
+    eu_artikel: Mapped[str | None] = mapped_column(String(40))  # "5", "10–12"; None = de handeling als geheel
+    stelsel_code: Mapped[str] = mapped_column(ForeignKey("stelsel.code"))
+    wet: Mapped[str | None] = mapped_column(String(60))  # None = hoofdcodificatie
+    wet_titel: Mapped[str | None] = mapped_column(String(300))  # voor wetten zonder artikelverwijzing ("Uitvoeringswet AVG")
+    nummer: Mapped[str | None] = mapped_column(String(40))  # None = de wet als geheel
+    tot: Mapped[str | None] = mapped_column(String(40))
+    soort: Mapped[str] = mapped_column(String(16), default="omzetting")  # sleutel uit OMZETTING_SOORTEN
+    opmerking: Mapped[str | None] = mapped_column(Text)
+    geverifieerd: Mapped[bool] = mapped_column(default=False)  # tegen de officiële tekst gecontroleerd
+    volgorde: Mapped[int] = mapped_column(Integer, default=0)
+
+    handeling: Mapped[EuHandeling] = relationship(back_populates="omzettingen")
+    stelsel: Mapped[Stelsel] = relationship()
+
+    @property
+    def ref(self):
+        from .services.artikelen import Ref
+
+        return Ref(self.stelsel_code, self.nummer, self.wet, self.tot)
+
+    @property
+    def soort_label(self) -> str:
+        return _(OMZETTING_SOORTEN.get(self.soort, self.soort))
+
+    @property
+    def wet_label(self) -> str:
+        """Naam van de wet als geheel (koppeling zonder artikelnummer)."""
+        from .services.artikelen import wetnaam
+
+        return self.wet_titel or wetnaam(self.stelsel_code, self.wet) or self.wet or ""
+
+
+class EuTitel(Base):
+    """Officiële titel van een handeling in een andere taal dan het Nederlands (Cellar)."""
+
+    __tablename__ = "eu_titel"
+
+    celex: Mapped[str] = mapped_column(ForeignKey("eu_handeling.celex", ondelete="CASCADE"), primary_key=True)
+    taal: Mapped[str] = mapped_column(String(5), primary_key=True)
+    titel: Mapped[str] = mapped_column(Text)
+
+
+class EuRepertoriumLabel(Base):
+    """Rubrieknaam van het repertorium in een andere taal dan het Nederlands (Cellar, EuroVoc-stijl)."""
+
+    __tablename__ = "eu_repertorium_label"
+
+    code: Mapped[str] = mapped_column(String(20), primary_key=True)
+    taal: Mapped[str] = mapped_column(String(5), primary_key=True)
+    label: Mapped[str] = mapped_column(String(300))
+
+
+class InhoudVertaling(Base):
+    """Vertaalgeheugen voor eigen inhoud: Nederlandse brontekst (als hash) → tekst in een andere taal.
+
+    Zie `i18n.py`. `herkomst` is "claude" (machinevertaling, niet
+    geverifieerd) of "eigen" (zelf ingevoerd of nagekeken).
+    """
+
+    __tablename__ = "inhoud_vertaling"
+
+    hash: Mapped[str] = mapped_column(String(40), primary_key=True)
+    taal: Mapped[str] = mapped_column(String(5), primary_key=True)
+    tekst: Mapped[str] = mapped_column(Text)
+    herkomst: Mapped[str] = mapped_column(String(12), default="claude")
+    gewijzigd: Mapped[datetime] = mapped_column(DateTime, default=now, onupdate=now)
+
+
+# Profielen: vast aantal plekken, elk met een eigen taal en wachtwoord.
+AANTAL_PROFIELEN = 5
+ROLLEN: dict[str, str] = {
+    "beheerder": "beheerder",  # alles, ook profielen beheren
+    "redacteur": "redacteur",  # lezen en invoeren
+    "lezer": "lezer",  # alleen lezen
+}
+
+
+class Profiel(Base):
+    __tablename__ = "profiel"
+
+    id: Mapped[int] = mapped_column(primary_key=True)
+    gebruikersnaam: Mapped[str] = mapped_column(String(40), unique=True)
+    naam: Mapped[str] = mapped_column(String(80))
+    rol: Mapped[str] = mapped_column(String(12), default="lezer")
+    taal: Mapped[str] = mapped_column(String(5), default="nl")
+    wachtwoord_hash: Mapped[str | None] = mapped_column(String(200))
+    actief: Mapped[bool] = mapped_column(default=False)
+    # Ophogen bij een nieuw wachtwoord of uitzetten: oude sessiecookies vervallen dan.
+    sessie_versie: Mapped[int] = mapped_column(Integer, default=0)
+    laatst_ingelogd: Mapped[datetime | None] = mapped_column(DateTime)
+
+    @property
+    def rol_label(self) -> str:
+        return _(ROLLEN.get(self.rol, self.rol))
+
+    @property
+    def mag_bewerken(self) -> bool:
+        return self.rol in ("beheerder", "redacteur")
+
+    @property
+    def is_beheerder(self) -> bool:
+        return self.rol == "beheerder"
+
+
+# --- leren ------------------------------------------------------------------------------
+# Leerlijsten zijn persoonlijk (per profiel). Synoptikon maakt de kaarten, Wunderkammer plant de herhaling: het haalt
+# de kaarten op via /api/wk/kaarten en meldt per kaart de stand terug (KaartStand). Oefenen in Synoptikon is stampen
+# zonder planning; alleen 'gekend / nog niet' wordt bijgehouden.
+
+# soort → (label, uitleg); de volgorde is die in het formulier.
+KAARTSOORTEN: dict[str, tuple[str, str]] = {
+    "artikel": ("artikel → inhoud", "Wat staat er in dit artikel?"),
+    "kern": ("inhoud → artikel", "Welk artikel regelt dit?"),
+    "plaats": ("waar staat het", "Plaats in de systematiek van de wet"),
+    "tegenhanger": ("tegenhanger", "Het corresponderende artikel in een ander stelsel"),
+    "arrest": ("arrest → rechtsregel", "Wat besliste de rechter?"),
+    "feiten": ("feiten → arrest", "Welk arrest hoort bij deze feiten?"),
+    "vrij": ("vrije kaart", "Eigen vraag en antwoord"),
+}
+ARTIKELSOORTEN = ("artikel", "kern", "plaats", "tegenhanger")
+ARRESTSOORTEN = ("arrest", "feiten")
+
+
+class Leerlijst(Base):
+    __tablename__ = "leerlijst"
+
+    id: Mapped[int] = mapped_column(primary_key=True)
+    profiel_id: Mapped[int] = mapped_column(ForeignKey("profiel.id", ondelete="CASCADE"), index=True)
+    naam: Mapped[str] = mapped_column(String(120))
+    omschrijving: Mapped[str | None] = mapped_column(Text)
+    vak: Mapped[str | None] = mapped_column(String(60))  # vak in Wunderkammer ("ZR Ia", "Sachenrecht"); leeg = Jura
+    examen: Mapped[date | None] = mapped_column(Date)
+    naar_wk: Mapped[bool] = mapped_column(default=True)  # door Wunderkammer laten herhalen
+    aangemaakt: Mapped[datetime] = mapped_column(DateTime, default=now)
+
+    kaarten: Mapped[list["Kaart"]] = relationship(back_populates="lijst", cascade="all, delete-orphan", order_by="Kaart.id")
+
+
+class Kaart(Base):
+    __tablename__ = "kaart"
+
+    id: Mapped[int] = mapped_column(primary_key=True)
+    uid: Mapped[str] = mapped_column(String(32), unique=True)  # stabiel voor Wunderkammer (gen_key "syn:<uid>")
+    lijst_id: Mapped[int] = mapped_column(ForeignKey("leerlijst.id", ondelete="CASCADE"), index=True)
+    soort: Mapped[str] = mapped_column(String(16))  # sleutel uit KAARTSOORTEN
+    # Artikel (artikel, kern, plaats, tegenhanger)
+    stelsel_code: Mapped[str | None] = mapped_column(String(8))
+    wet: Mapped[str | None] = mapped_column(String(40))
+    nummer: Mapped[str | None] = mapped_column(String(40))
+    doel_stelsel: Mapped[str | None] = mapped_column(String(8))  # tegenhanger: in welk stelsel
+    # Arrest (arrest, feiten): uit een bron, of met eigen zaaknaam en vindplaats
+    bron_id: Mapped[int | None] = mapped_column(ForeignKey("bron.id", ondelete="SET NULL"))
+    zaak: Mapped[str | None] = mapped_column(String(300))  # "HR 18 juni 1982 (Plas/Valburg)"
+    vindplaats: Mapped[str | None] = mapped_column(String(200))  # ECLI, NJ, BGHZ …
+    feiten: Mapped[str | None] = mapped_column(Text)
+    # Vrij te vullen; bij artikelkaarten overschrijft `vraag` de voorkant (kern: de omschrijving om naar te vragen)
+    vraag: Mapped[str | None] = mapped_column(Text)
+    antwoord: Mapped[str | None] = mapped_column(Text)  # arrest: de rechtsregel
+    notitie: Mapped[str | None] = mapped_column(Text)  # komt onder het antwoord
+    actief: Mapped[bool] = mapped_column(default=True)
+    gekend: Mapped[bool | None] = mapped_column()  # laatste oefenresultaat in Synoptikon
+    geoefend: Mapped[datetime | None] = mapped_column(DateTime)
+    aangemaakt: Mapped[datetime] = mapped_column(DateTime, default=now)
+    gewijzigd: Mapped[datetime] = mapped_column(DateTime, default=now, onupdate=now)
+
+    lijst: Mapped[Leerlijst] = relationship(back_populates="kaarten")
+    bron: Mapped["Bron | None"] = relationship()
+    stand: Mapped["KaartStand | None"] = relationship(cascade="all, delete-orphan", uselist=False)
+
+    @property
+    def soort_label(self) -> str:
+        return _(KAARTSOORTEN.get(self.soort, (self.soort, ""))[0])
+
+
+class KaartStand(Base):
+    """Wat Wunderkammer over een kaart terugmeldt (FSRS)."""
+
+    __tablename__ = "kaart_stand"
+
+    kaart_id: Mapped[int] = mapped_column(ForeignKey("kaart.id", ondelete="CASCADE"), primary_key=True)
+    due: Mapped[datetime | None] = mapped_column(DateTime)
+    stabiliteit: Mapped[float | None] = mapped_column()  # dagen
+    herhalingen: Mapped[int] = mapped_column(Integer, default=0)
+    missers: Mapped[int] = mapped_column(Integer, default=0)
+    laatst: Mapped[datetime | None] = mapped_column(DateTime)
+    laatste_score: Mapped[int | None] = mapped_column(Integer)  # 1 opnieuw … 4 makkelijk
+    bijgewerkt: Mapped[datetime] = mapped_column(DateTime, default=now, onupdate=now)

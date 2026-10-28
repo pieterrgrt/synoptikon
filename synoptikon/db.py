@@ -165,6 +165,39 @@ CREATE TRIGGER IF NOT EXISTS wa_au AFTER UPDATE ON wettekst_artikel BEGIN
     VALUES ('delete', old.id, old.nummer, old.opschrift, old.tekst);
     INSERT INTO wettekst_artikel_fts(rowid, nummer, opschrift, tekst) VALUES (new.id, new.nummer, new.opschrift, new.tekst);
 END;
+
+CREATE VIRTUAL TABLE IF NOT EXISTS eu_handeling_fts USING fts5(
+    celex, nummer, roepnaam, titel,
+    content='eu_handeling', content_rowid='rowid',
+    tokenize="unicode61 remove_diacritics 2"
+);
+CREATE TRIGGER IF NOT EXISTS eu_ai AFTER INSERT ON eu_handeling BEGIN
+    INSERT INTO eu_handeling_fts(rowid, celex, nummer, roepnaam, titel) VALUES (new.rowid, new.celex, new.nummer, new.roepnaam, new.titel);
+END;
+CREATE TRIGGER IF NOT EXISTS eu_ad AFTER DELETE ON eu_handeling BEGIN
+    INSERT INTO eu_handeling_fts(eu_handeling_fts, rowid, celex, nummer, roepnaam, titel)
+    VALUES ('delete', old.rowid, old.celex, old.nummer, old.roepnaam, old.titel);
+END;
+CREATE VIRTUAL TABLE IF NOT EXISTS eu_titel_fts USING fts5(
+    titel,
+    content='eu_titel', content_rowid='rowid',
+    tokenize="unicode61 remove_diacritics 2"
+);
+CREATE TRIGGER IF NOT EXISTS eut_ai AFTER INSERT ON eu_titel BEGIN
+    INSERT INTO eu_titel_fts(rowid, titel) VALUES (new.rowid, new.titel);
+END;
+CREATE TRIGGER IF NOT EXISTS eut_ad AFTER DELETE ON eu_titel BEGIN
+    INSERT INTO eu_titel_fts(eu_titel_fts, rowid, titel) VALUES ('delete', old.rowid, old.titel);
+END;
+CREATE TRIGGER IF NOT EXISTS eut_au AFTER UPDATE ON eu_titel BEGIN
+    INSERT INTO eu_titel_fts(eu_titel_fts, rowid, titel) VALUES ('delete', old.rowid, old.titel);
+    INSERT INTO eu_titel_fts(rowid, titel) VALUES (new.rowid, new.titel);
+END;
+CREATE TRIGGER IF NOT EXISTS eu_au AFTER UPDATE ON eu_handeling BEGIN
+    INSERT INTO eu_handeling_fts(eu_handeling_fts, rowid, celex, nummer, roepnaam, titel)
+    VALUES ('delete', old.rowid, old.celex, old.nummer, old.roepnaam, old.titel);
+    INSERT INTO eu_handeling_fts(rowid, celex, nummer, roepnaam, titel) VALUES (new.rowid, new.celex, new.nummer, new.roepnaam, new.titel);
+END;
 """
 
 
@@ -173,6 +206,7 @@ END;
 _NIEUWE_KOLOMMEN = [
     ("stelsel", "familie", "VARCHAR(20)"),
     ("systematiek", "wet", "VARCHAR(60)"),
+    ("wettekst", "wet", "VARCHAR(60)"),
 ]
 
 
@@ -184,13 +218,32 @@ def _migreer(conn) -> None:
 
 
 def init_db() -> None:
-    """Maakt tabellen, FTS-tabellen en triggers aan en voegt nieuwe kolommen toe (idempotent)."""
+    """Maakt tabellen, FTS-tabellen en triggers aan, voegt nieuwe kolommen toe en zorgt voor de profielplekken (idempotent)."""
     eng = engine()
     Base.metadata.create_all(eng)
     with eng.begin() as conn:
         _migreer(conn)
         for stmt in _splits_ddl(_FTS_DDL):
             conn.execute(text(stmt))
+    _profielen()
+
+
+def _profielen() -> None:
+    """Vijf vaste plekken. Profiel 1 is de beheerder en staat aan; de andere wachten op een naam en wachtwoord."""
+    from .models import AANTAL_PROFIELEN, Profiel
+
+    with session() as s:
+        for i in range(1, AANTAL_PROFIELEN + 1):
+            if s.get(Profiel, i) is None:
+                eerste = i == 1
+                s.add(Profiel(
+                    id=i,
+                    gebruikersnaam="beheerder" if eerste else f"profiel{i}",
+                    naam="Beheerder" if eerste else f"Profiel {i}",
+                    rol="beheerder" if eerste else "lezer",
+                    taal=settings.ui_lang if eerste else "nl",
+                    actief=eerste,
+                ))
 
 
 def _splits_ddl(ddl: str) -> list[str]:
@@ -216,5 +269,5 @@ def _splits_ddl(ddl: str) -> list[str]:
 def rebuild_fts() -> None:
     """Herindexeert alle FTS-tabellen vanuit de inhoudstabellen."""
     with engine().begin() as conn:
-        for tabel in ("vraag_fts", "bron_fts", "begrip_fts", "antwoord_fts", "wettekst_artikel_fts"):
+        for tabel in ("vraag_fts", "bron_fts", "begrip_fts", "antwoord_fts", "wettekst_artikel_fts", "eu_handeling_fts", "eu_titel_fts"):
             conn.execute(text(f"INSERT INTO {tabel}({tabel}) VALUES('rebuild')"))

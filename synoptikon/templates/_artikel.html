@@ -4,18 +4,18 @@
 {%- endmacro %}
 
 {% macro rol(r) -%}
-{% if r %}<span class="rol {{ r | lower | replace(' ', '-') }}">{{ r }}</span>{% endif %}
+{% if r %}<span class="rol {{ r | lower | replace(' ', '-') }}">{{ vt(r) }}</span>{% endif %}
 {%- endmacro %}
 
 {% macro lid(l, toon_tekst=True) -%}
 {% set a = l.artikel %}
 <div class="lid {% if a.nummer is none %}geen{% endif %}">
-  {% if a.nummer is none %}<span class="citeertitel">{{ '⚖ rechtspraak' if a.rol in ('case law', 'rechtspraak') else 'geen wettelijke regeling' }}</span>{% else %}<a class="citeertitel" href="{{ l.ref.url }}"{% if l.ref.wet_naam %} title="{{ l.ref.wet_naam }}"{% endif %}>{{ l.ref.citeer }}</a>{% endif %}
+  {% if a.nummer is none %}<span class="citeertitel">{{ '⚖ ' ~ _('rechtspraak') if a.rol in ('case law', 'rechtspraak') else _('geen wettelijke regeling') }}</span>{% else %}<a class="citeertitel" href="{{ l.ref.url }}"{% if l.ref.wet_naam %} title="{{ l.ref.wet_naam }}"{% endif %}>{{ l.ref.citeer }}</a>{% endif %}
   {{ rol(a.rol) }}
-  {% if a.opmerking %}<p class="opmerking">{{ a.opmerking | md_inline }}</p>{% endif %}
+  {% if a.opmerking %}<p class="opmerking">{{ vt(a.opmerking) | md_inline }}</p>{% endif %}
   {{ pad(l.pad, a.stelsel_code) }}
   {% if toon_tekst and l.tekst %}
-  <details><summary>tekst{% if l.tekst.opschrift %} · {{ l.tekst.opschrift }}{% endif %}</summary><div class="origineel">{{ l.tekst.tekst | md }}</div></details>
+  <details><summary>{{ _('tekst') }}{% if l.tekst.opschrift %} · {{ l.tekst.opschrift }}{% endif %}</summary><div class="origineel">{{ l.tekst.tekst | md }}</div></details>
   {% endif %}
 </div>
 {%- endmacro %}

@@ -1,0 +1,24 @@
+{% extends "base.html" %}
+{% block titel %}{{ k.label }} · {{ vt(stelsel.naam) }} · Synoptikon{% endblock %}
+{% block inhoud %}
+<p class="kruimel"><a href="/stelsels">{{ _('Stelsels') }}</a> › <a href="/stelsels/{{ stelsel.code }}#knoop-{{ k.id }}">{{ vlag(stelsel.code) }}{{ vt(stelsel.naam) }}</a></p>
+<nav class="pad wet-pad" aria-label="{{ _('Plaats in de systematiek') }}">{% for x in k.pad() %}{% if not loop.first %}<span class="sep">›</span>{% endif %}{% if loop.last %}<span aria-current="page">{{ x.label }}</span>{% else %}<a href="/stelsels/{{ stelsel.code }}/lees/{{ x.id }}">{{ x.label }}</a>{% endif %}{% endfor %}</nav>
+<h1>{{ k.label }}</h1>
+<p class="stil klein">{% if k.bereik %}{{ k.bereik }} · {% endif %}{{ n_('{n} artikel', '{n} artikelen', pl.onder.get(k.id, 0)) }} · <a href="/stelsels/{{ stelsel.code }}#knoop-{{ k.id }}">{{ _('in de systematiek') }}</a></p>
+
+{% if not toon_tekst %}
+<p class="hint">{{ n_('{n} artikel in dit onderdeel; kies een onderdeel.', '{n} artikelen in dit onderdeel; kies een onderdeel.', pl.onder.get(k.id, 0)) }}</p>
+<ul class="sys-lijst wortel wet-inhoud">{% for c in k.kinderen if pl.onder.get(c.id) %}<li class="sys-knoop"><div class="sys-blad"><a href="/stelsels/{{ stelsel.code }}/lees/{{ c.id }}">{{ c.label }}</a> <span class="sys-bereik">{{ c.bereik or '' }} · {{ pl.onder.get(c.id) }}</span></div></li>{% endfor %}</ul>
+{% endif %}
+
+{% if artikelen %}
+<div class="wettekst">{% include "_wetartikelen.html" %}</div>
+{% endif %}
+
+{% if vorige or volgende %}
+<nav class="bladeren wet-bladeren" aria-label="{{ _('Bladeren') }}">
+  {% if vorige %}<a class="knop klein" href="/stelsels/{{ stelsel.code }}/lees/{{ vorige.id }}" rel="prev">‹ {{ vorige.label | truncate(48) }}</a>{% else %}<span></span>{% endif %}
+  {% if volgende %}<a class="knop klein" href="/stelsels/{{ stelsel.code }}/lees/{{ volgende.id }}" rel="next">{{ volgende.label | truncate(48) }} ›</a>{% endif %}
+</nav>
+{% endif %}
+{% endblock %}

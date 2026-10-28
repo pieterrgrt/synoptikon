@@ -1,0 +1,78 @@
+{% extends "base.html" %}
+{% import "_artikel.html" as m %}
+{% block titel %}{{ h.roepnaam or h.citeer }} · Synoptikon{% endblock %}
+{% block inhoud %}
+<p class="kruimel"><a href="/eu">{{ _('Unierecht') }}</a>{% for pad in rubrieken[:1] %}{% for r in pad %} › <a href="/eu?rubriek={{ r.code }}">{{ r.toon_label }}</a>{% endfor %}{% endfor %}</p>
+<h1>{{ h.roepnaam or h.citeer }}</h1>
+<p class="bron-titel">{{ h.toon_titel }}</p>
+<p>
+  <span class="rol">{{ h.soort_label }}</span>{% if h.variant != 'basis' %}<span class="rol">{{ _(EU_VARIANTEN[h.variant]) }}</span>{% endif %}{% if h.eer %}<span class="rol">EER</span>{% endif %}
+  <a href="{{ h.eurlex }}" target="_blank" rel="noopener">EUR-Lex ↗</a>{% if h.eli %} · <a href="{{ h.eli }}" target="_blank" rel="noopener">ELI ↗</a>{% endif %}
+</p>
+<dl class="feiten">
+  <dt>CELEX</dt><dd>{{ h.celex }}</dd>
+  {% if h.datum %}<dt>{{ _('Datum') }}</dt><dd>{{ h.datum.strftime('%d-%m-%Y') }}</dd>{% endif %}
+  {% if h.in_werking %}<dt>{{ _('In werking') }}</dt><dd>{{ h.in_werking.strftime('%d-%m-%Y') }}</dd>{% endif %}
+  {% if h.omzettingstermijn %}<dt>{{ _('Omzettingstermijn') }}</dt><dd>{{ h.omzettingstermijn.strftime('%d-%m-%Y') }}{% if st.termijn_verstreken %} <span class="stil">({{ _('verstreken') }})</span>{% elif st.termijn_verstreken is false %} <span class="stil">({{ _('loopt') }})</span>{% endif %}</dd>{% endif %}
+  {% if h.geldig_tot %}<dt>{{ _('Geldig tot') }}</dt><dd>{{ h.geldig_tot.strftime('%d-%m-%Y') }}</dd>{% endif %}
+  {% if st.harmonisatie %}<dt>{{ _('Harmonisatie') }}</dt><dd>{{ _(st.harmonisatie[0]) }} <span class="stil">· {{ _(st.harmonisatie[1]) }} ({{ _('eigen aantekening') }})</span></dd>{% endif %}
+</dl>
+
+<h2>{{ _('Werking in de nationale rechtsorde') }}</h2>
+<ul class="logica">
+  {% for r in st.werking %}<li>{{ _(r.tekst) }}{% if r.bron %} <span class="stil">— {% if r.url %}<a href="{{ r.url }}" target="_blank" rel="noopener">{{ r.bron }}</a>{% else %}{{ r.bron }}{% endif %}</span>{% endif %}</li>{% endfor %}
+  {% if st.variant %}<li>{{ _(st.variant.tekst) }} <span class="stil">— <a href="{{ st.variant.url }}" target="_blank" rel="noopener">{{ st.variant.bron }}</a></span></li>{% endif %}
+</ul>
+
+<h2 id="omzetting">{{ _('Omzetting per stelsel') if h.soort != 'verordening' else _('Uitvoering per stelsel') }}</h2>
+<p class="hint">{{ _('Per stelsel: de status, de artikelen waar de regel in het nationale recht staat (eigen koppeling; ongecontroleerde regels zijn gemarkeerd) en de maatregelen die de lidstaat bij de Commissie meldde (Cellar).') }}</p>
+<div class="eu-stelsels">
+{% for code in kolommen %}
+  {% set st_code = per_code[code] %}
+  <section class="eu-stelsel fam-{{ st_code.familie }}">
+    <h3>{{ vlag(code) }}{{ vt(st_code.naam) }}</h3>
+    <p class="stil klein">{{ st.per_stelsel.get(code, '') }}</p>
+    {% for o in eigen.get(code, []) %}
+    <div class="lid">
+      {% if o.nummer %}<a class="citeertitel" href="{{ o.ref.url }}">{{ o.ref.citeer }}</a>{% else %}<span class="citeertitel">{{ o.wet_label }}</span>{% endif %}
+      {% if o.soort != 'omzetting' %}<span class="rol">{{ o.soort_label }}</span>{% endif %}
+      {% if o.eu_artikel %}<span class="stil klein">← {{ _('art.') }} {{ o.eu_artikel }}</span>{% endif %}
+      {% if not o.geverifieerd %}<span class="rol onzeker" title="{{ _('Eigen aantekening, niet tegen de officiële tekst gecontroleerd') }}">{{ _('niet geverifieerd') }}</span>{% endif %}
+      {% if o.nummer and o.wet_titel %}<p class="stil klein">{{ o.wet_titel }}</p>{% endif %}
+      {% if o.opmerking %}<p class="opmerking">{{ vt(o.opmerking) | md_inline }}</p>{% endif %}
+      {{ m.pad(paden.get(o.id), code) }}
+      <div class="mini-acties">
+        <form method="post" action="/eu/{{ h.celex }}/omzetting/{{ o.id }}/geverifieerd" class="inline"><button class="knop-tekst">{{ _('markeer als ongecontroleerd') if o.geverifieerd else _('gecontroleerd') }}</button></form>
+        <form method="post" action="/eu/{{ h.celex }}/omzetting/{{ o.id }}/verwijderen" class="inline"><button class="knop-tekst">{{ _('verwijderen') }}</button></form>
+      </div>
+    </div>
+    {% endfor %}
+    {% set lijst = nims.get(code, []) %}
+    {% if lijst %}
+    <details class="nims"><summary>{{ n_('{n} gemelde maatregel', '{n} gemelde maatregelen', lijst | length) }}</summary>
+      <ul class="lijst klein">{% for n in lijst %}<li>{{ n.titel }}{% if n.soort_akte or n.datum or n.vindplaats %} <span class="stil">({{ [n.soort_akte, n.datum.strftime('%d-%m-%Y') if n.datum else None, n.vindplaats] | select | join(', ') }})</span>{% endif %}</li>{% endfor %}</ul>
+      <p class="stil klein">{{ _('Bron:') }} <a href="https://eur-lex.europa.eu/legal-content/{{ huidige_taal() | upper }}/NIM/?uri=CELEX:{{ h.celex }}" target="_blank" rel="noopener">{{ _('EUR-Lex, nationale omzetting ↗') }}</a></p>
+    </details>
+    {% endif %}
+  </section>
+{% endfor %}
+</div>
+
+<details class="blok">
+  <summary>{{ _('Koppeling toevoegen') }}</summary>
+  <form method="post" action="/eu/{{ h.celex }}/omzetting" class="formulier compact">
+    <div class="rij">
+      <label>{{ _('Stelsel') }} <select name="stelsel_code">{% for s in stelsels %}{% if s.code != 'EU' %}<option value="{{ s.code }}">{{ s.code }} · {{ vt(s.naam) }}</option>{% endif %}{% endfor %}</select></label>
+      <label>{{ _('Soort') }} <select name="soort">{% for k, v in OMZETTING_SOORTEN.items() %}<option value="{{ k }}" {% if (k == 'uitvoering') == (h.soort == 'verordening') and k in ('omzetting', 'uitvoering') %}selected{% endif %}>{{ _(v) }}</option>{% endfor %}</select></label>
+      <label>{{ _('Art. van de handeling') }} <input name="eu_artikel" placeholder="10 · 9–16"></label>
+    </div>
+    <div class="rij">
+      <label>{{ _('Nationaal artikel') }} <input name="verwijzing" placeholder="art. 7:18 BW · § 434 BGB · L217-3 C. consom."></label>
+      <label>{{ _('of de wet als geheel') }} <input name="wet_titel" placeholder="Uitvoeringswet AVG"></label>
+    </div>
+    <label>{{ _('Opmerking') }} <input name="opmerking" lang="nl"></label>
+    <div class="acties"><button class="knop klein primair">{{ _('Toevoegen') }}</button></div>
+  </form>
+  <p class="hint">{{ _('Zelf ingevoerde koppelingen gelden als gecontroleerd.') }}</p>
+</details>
+{% endblock %}

@@ -4,6 +4,7 @@ from __future__ import annotations
 from sqlalchemy import select
 from sqlalchemy.orm import Session, selectinload
 
+from ..i18n import vt
 from ..models import Begrip, BegripRelatie, Vraag
 
 
@@ -23,15 +24,16 @@ def begrippenkaart(db: Session, vraag: Vraag | None = None, stelsels: list[str] 
             "id": g.id,
             "term": g.term,
             "stelsel": g.stelsel_code,
+            "familie": g.stelsel.familie or "overig",
             "taal": g.taal,
-            "definitie": g.definitie or "",
+            "definitie": vt(g.definitie) or "",
             "vindplaats": g.vindplaats or "",
             "vragen": [vb.vraag.slug for vb in g.vragen],
         }
         for g in begrippen
     ]
     kanten = [
-        {"id": r.id, "van": r.van_id, "naar": r.naar_id, "type": r.type, "label": r.type_label, "toelichting": r.toelichting or ""}
+        {"id": r.id, "van": r.van_id, "naar": r.naar_id, "type": r.type, "label": r.type_label, "toelichting": vt(r.toelichting) or ""}
         for r in relaties
         if r.van_id in ids and r.naar_id in ids
     ]

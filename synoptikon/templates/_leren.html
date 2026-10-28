@@ -1,0 +1,3 @@
+{# ☆ Leren bij een artikel of arrest; ★ als het al in een leerlijst staat. #}
+{% macro ster(r, bewaarde, terug) %}{% set b = (r.stelsel, r.wet, r.nummer) in bewaarde %}<a class="leren-ster{% if b %} bewaard{% endif %}" href="/leren/nieuw?stelsel={{ r.stelsel }}&amp;wet={{ (r.wet or '') | urlencode }}&amp;nummer={{ r.nummer | urlencode }}&amp;terug={{ terug | urlencode }}" title="{{ _('In een leerlijst bewaren') if not b else _('Staat in een leerlijst; nog een kaart maken') }}">{{ '★' if b else '☆' }} {{ _('Leren') }}</a>{% endmacro %}
+{% macro ster_bron(bron, bewaard, terug) %}<a class="leren-ster{% if bewaard %} bewaard{% endif %}" href="/leren/nieuw?bron={{ bron.id }}&amp;terug={{ terug | urlencode }}">{{ '★' if bewaard else '☆' }} {{ _('Leren') }}</a>{% endmacro %}

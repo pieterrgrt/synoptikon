@@ -5,8 +5,10 @@ from fastapi.responses import RedirectResponse
 from sqlalchemy import select
 from sqlalchemy.orm import Session, selectinload
 
+from ..auth import huidig_profiel
 from ..db import get_session
 from ..models import Bron, Concordantie, Systematiek, Vertaling, WettekstArtikel
+from ..services import leren
 from ..services.helpers import actieve_stelsels, leeg_naar_none, parse_datum
 from . import render
 
@@ -70,7 +72,9 @@ def bron_detail(request: Request, bron_id: int, db: Session = Depends(get_sessio
         raise HTTPException(404)
     concordanties = [c for c in db.scalars(select(Concordantie).where(Concordantie.stelsel_code == bron.stelsel_code)).all() if c.wet in bron.citeertitel and (c.oud in bron.citeertitel or (c.nieuw and c.nieuw in bron.citeertitel))]
     artikel = bron.wettekst_artikel
-    return render(request, "bron_detail.html", bron=bron, concordanties=concordanties, artikel=artikel)
+    p = huidig_profiel(request)
+    bewaard = bron.id in leren.bewaarde_bronnen(db, p.id if p else 1)
+    return render(request, "bron_detail.html", bron=bron, concordanties=concordanties, artikel=artikel, soorten=SOORTEN, bron_bewaard=bewaard)
 
 
 @router.get("/bronnen/{bron_id}/bewerken")

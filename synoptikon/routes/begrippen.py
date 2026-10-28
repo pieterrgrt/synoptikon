@@ -6,6 +6,7 @@ from sqlalchemy import select
 from sqlalchemy.orm import Session, selectinload
 
 from ..db import get_session
+from ..i18n import _
 from ..models import RELATIE_TYPES, Begrip, BegripRelatie, Vraag
 from ..services import export, graaf
 from ..services.helpers import actieve_stelsels, leeg_naar_none
@@ -13,13 +14,19 @@ from . import render
 
 router = APIRouter()
 
+# Teksten die kaart.js zelf toont; de pagina geeft ze vertaald mee.
+KAART_TEKSTEN = ("faux ami", "geen equivalent", "deels", "equivalent", "Nog geen begrippen.", "Sluiten", "Geen relaties.", "Open begrip")
+
 
 @router.get("/begrippen")
 def kaart(request: Request, vraag: str | None = None, db: Session = Depends(get_session)):
     vraag_obj = db.scalar(select(Vraag).where(Vraag.slug == vraag)) if vraag else None
     data = graaf.begrippenkaart(db, vraag_obj)
     vragen = db.scalars(select(Vraag).order_by(Vraag.titel)).all()
-    return render(request, "begrippenkaart.html", data=data, stelsels=actieve_stelsels(db), vragen=vragen, vraag=vraag_obj)
+    met_begrip = {k["stelsel"] for k in data["knopen"]}
+    kaart_stelsels = [s for s in actieve_stelsels(db) if s.code in met_begrip]
+    teksten = {t: _(t) for t in KAART_TEKSTEN}
+    return render(request, "begrippenkaart.html", data=data, kaart_stelsels=kaart_stelsels, vragen=vragen, vraag=vraag_obj, kaart_teksten=teksten)
 
 
 @router.get("/begrippen/kaart.json")

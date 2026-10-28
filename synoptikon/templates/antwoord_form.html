@@ -1,24 +1,25 @@
 {% extends "base.html" %}
-{% block titel %}Analyse {{ antwoord.stelsel_code }} · {{ vraag.titel }}{% endblock %}
+{% block titel %}{{ _('Analyse') }} {{ antwoord.stelsel_code }} · {{ vt(vraag.titel) }}{% endblock %}
 {% block inhoud %}
-<p class="kruimel"><a href="/vragen/{{ vraag.slug }}">{{ vraag.titel }}</a> › {{ antwoord.stelsel.naam }}</p>
-<h1>Analyse · {{ antwoord.stelsel.naam }}</h1>
+<p class="kruimel"><a href="/vragen/{{ vraag.slug }}">{{ vt(vraag.titel) }}</a> › {{ vt(antwoord.stelsel.naam) }}</p>
+<h1>{{ _('Analyse') }} · {{ vt(antwoord.stelsel.naam) }}</h1>
+{% if huidige_taal() != 'nl' %}<p class="hint">{{ _('Vul in het Nederlands in; vertalingen beheer je onder Vertalingen.') }}</p>{% endif %}
 <form method="post" class="formulier">
-  <label>Kern <span class="hint">één zin, bovenaan de kolom</span>
-    <input name="kern" value="{{ antwoord.kern or '' }}" maxlength="400">
+  <label>{{ _('Kern') }} <span class="hint">{{ _('één zin, bovenaan de kolom') }}</span>
+    <input name="kern" value="{{ antwoord.kern or '' }}" maxlength="400" lang="nl">
   </label>
-  <label>Analyse <span class="hint">markdown</span>
-    <textarea name="analyse" rows="24" class="mono">{{ antwoord.analyse or '' }}</textarea>
+  <label>{{ _('Analyse') }} <span class="hint">markdown</span>
+    <textarea name="analyse" rows="24" class="mono" lang="nl">{{ antwoord.analyse or '' }}</textarea>
   </label>
   <div class="acties">
-    <button class="knop primair" type="submit">Opslaan</button>
-    <a class="knop" href="/vragen/{{ vraag.slug }}#{{ antwoord.stelsel_code }}">Annuleren</a>
+    <button class="knop primair" type="submit">{{ _('Opslaan') }}</button>
+    <a class="knop" href="/vragen/{{ vraag.slug }}#{{ antwoord.stelsel_code }}">{{ _('Annuleren') }}</a>
   </div>
 </form>
 {% if antwoord.bronnen %}
-<h2>Gekoppelde bronnen</h2>
+<h2>{{ _('Gekoppelde bronnen') }}</h2>
 <ul class="lijst">
-  {% for ab in antwoord.bronnen %}<li><a href="/bronnen/{{ ab.bron.id }}">{{ ab.bron.citeertitel }}</a>{% if ab.rol %} <span class="rol">{{ ab.rol }}</span>{% endif %}</li>{% endfor %}
+  {% for ab in antwoord.bronnen %}<li><a href="/bronnen/{{ ab.bron.id }}">{{ ab.bron.citeertitel }}</a>{% if ab.rol %} <span class="rol">{{ vt(ab.rol) }}</span>{% endif %}</li>{% endfor %}
 </ul>
 {% endif %}
 {% endblock %}

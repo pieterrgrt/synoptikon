@@ -212,3 +212,20 @@ def test_stelsels_per_rechtsfamilie():
         families = per_familie(actieve_stelsels(s))
         assert [f.sleutel for f in families] == ["romaans", "germaans", "common_law", "supranationaal"]
         assert [x.code for x in families[2].stelsels] == ["EN", "US", "AU"]
+
+
+def test_volledige_wetsnamen_en_kale_nummers():
+    from synoptikon.services.artikelen import kale_nummers, noemt_wet
+
+    def een(t):
+        (r,) = herken(t)
+        return r.stelsel, r.nummer, r.wet
+
+    assert een("art. 33 Codice del consumo") == ("IT", "33", "c. cons.")
+    assert een("art. 2 Code civil suisse") == ("CH", "2", None)
+    assert een("s 2 Limitation Act 1980") == ("EN", "2", "LA 1980")
+    assert een("L110-1 Code de commerce") == ("FR", "L110-1", "C. com.")
+    assert noemt_wet("929 BGB") and not noemt_wet("art. 929")
+    assert kale_nummers("art. L. 217-3") == {"L217-3"}
+    assert kale_nummers("art. 1469 bis") == {"1469bis", "1469 bis", "1469-bis"}
+    assert kale_nummers("dwaling") == set()

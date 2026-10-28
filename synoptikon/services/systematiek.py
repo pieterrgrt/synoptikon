@@ -5,6 +5,11 @@ algemeen › Titel 4 Verkrijging en verlies van goederen › Afdeling 2
 Overdracht"). Daaruit volgt de volledige boom, tot op paragraaf- of
 sous-sectionniveau, met exacte bereiken.
 
+Een wettekst met een eigen afkorting (`Wettekst.wet`, bijv. "C. consom.")
+krijgt een eigen boom met die `wet`; bestaat er al precies één wortelknoop
+voor die wet ("Code de la consommation"), dan komt de boom daaronder, anders
+wordt die wortel aangemaakt. Knopen van andere wetten doen niet mee.
+
 Bestaande knopen worden herkend aan hun eerste twee woorden onder dezelfde
 ouder ("Titel 4", "Buch 3", "Livre III"), zodat de seed-boom en zelf
 aangemaakte knopen hun code, bronnen en correspondenties houden; alleen het
@@ -21,7 +26,7 @@ from sqlalchemy.orm import Session
 from ..models import Systematiek, Wettekst
 from .artikelen import formatteer_bereik, sleutel
 
-PREFIX = {"NL": "BW", "DE": "BGB", "FR": "CC"}
+PREFIX = {"NL": "BW", "DE": "BGB", "FR": "CC", "BE": "BE", "ES": "ES", "IT": "CCIT", "CH": "ZGB"}
 
 
 def _sleutel_label(label: str) -> str:
@@ -78,16 +83,37 @@ def bouw_uit_wettekst(db: Session, w: Wettekst) -> Resultaat:
             knoop = knoop.kinderen[k]
             knoop.nummers.append(a.nummer)
 
-    bestaand = list(db.scalars(select(Systematiek).where(Systematiek.stelsel_code == stelsel)).all())
-    codes = {k.code for k in bestaand}
+    wet = w.wet or None
+    alle = list(db.scalars(select(Systematiek).where(Systematiek.stelsel_code == stelsel)).all())
+    codes = {k.code for k in alle}
+    bestaand = [k for k in alle if (k.wet or None) == wet]
+    ids = {k.id for k in bestaand}
     per_ouder: dict[int | None, list[Systematiek]] = {}
     for k in bestaand:
-        per_ouder.setdefault(k.parent_id, []).append(k)
+        per_ouder.setdefault(k.parent_id if k.parent_id in ids else None, []).append(k)
+    prefix = PREFIX.get(stelsel, stelsel) if wet is None else re.sub(r"[^A-Z0-9]", "", wet.upper())
+
+    # Andere wet: de boom hangt onder één wortelknoop van die wet.
+    wortel_knoop: Systematiek | None = None
+    if wet is not None:
+        wortels = per_ouder.get(None, [])
+        eerste = set(wortel.kinderen)
+        if len(wortels) == 1 and _sleutel_label(wortels[0].label) not in eerste:
+            wortel_knoop = wortels[0]
+        elif not wortels:
+            wortel_knoop = Systematiek(stelsel_code=stelsel, code=prefix, wet=wet, label=f"{w.titel} ({wet})", volgorde=999)
+            codes.add(prefix)
+            db.add(wortel_knoop)
+            db.flush()
+            per_ouder[None] = [wortel_knoop]
+            res.nieuw += 1
+        if wortel_knoop is not None:
+            per_ouder.setdefault(wortel_knoop.id, [k for k in bestaand if k.parent_id == wortel_knoop.id])
 
     def code_voor(ouder: Systematiek | None, stuk: str) -> str:
         woorden = _sleutel_label(stuk).split()
         deel = woorden[1] if len(woorden) > 1 else woorden[0] if woorden else "x"
-        basis = f"{ouder.code if ouder else PREFIX.get(stelsel, w.wet_id.upper())}-{deel.upper() if not deel.isdigit() else deel}"
+        basis = f"{ouder.code if ouder else prefix}-{deel.upper() if not deel.isdigit() else deel}"
         code, n = basis, 2
         while code in codes:
             code, n = f"{basis}-{n}", n + 1
@@ -101,7 +127,7 @@ def bouw_uit_wettekst(db: Session, w: Wettekst) -> Resultaat:
             knoop = index.get(sleutel_)
             bereik = formatteer_bereik(stelsel, sub.nummers) or None
             if knoop is None:
-                knoop = Systematiek(stelsel_code=stelsel, parent=ouder, code=code_voor(ouder, sub.stuk), label=_mooi_label(sub.stuk), bereik=bereik)
+                knoop = Systematiek(stelsel_code=stelsel, parent=ouder, wet=wet, code=code_voor(ouder, sub.stuk), label=_mooi_label(sub.stuk), bereik=bereik)
                 db.add(knoop)
                 db.flush()
                 kinderen.append(knoop)
@@ -113,7 +139,9 @@ def bouw_uit_wettekst(db: Session, w: Wettekst) -> Resultaat:
             verwerk(sub, knoop)
         _hersorteer(stelsel, kinderen)
 
-    verwerk(wortel, None)
+    verwerk(wortel, wortel_knoop)
+    if wortel_knoop is not None:
+        wortel_knoop.bereik = formatteer_bereik(stelsel, [n for k in wortel.kinderen.values() for n in k.nummers]) or wortel_knoop.bereik
     db.flush()
     return res
 

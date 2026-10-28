@@ -1,0 +1,31 @@
+{% extends "base.html" %}
+{% block titel %}{{ _('Oefenen') }} · {{ lijst.naam }} · Synoptikon{% endblock %}
+{% block inhoud %}
+<p class="kruimel"><a href="/leren">{{ _('Leren') }}</a> › <a href="/leren/{{ lijst.id }}">{{ lijst.naam }}</a></p>
+{% if not aantal %}
+<p class="melding">{% if welke == 'nog' %}{{ _('Alles in deze lijst is gekend.') }}{% else %}{{ _('Deze lijst heeft geen actieve kaarten.') }}{% endif %} <a href="/leren/{{ lijst.id }}">{{ _('Terug naar de lijst') }}</a></p>
+{% else %}
+<div class="oefenen" id="oefenen" data-lijst="{{ lijst.id }}">
+  <div class="oefen-stand"><span id="oefen-teller"></span> <span class="voortgang"><span id="oefen-balk"></span></span></div>
+  <div class="flitskaart" id="flits" tabindex="0" role="button" aria-live="polite" aria-label="{{ _('Kaart; tik om om te draaien') }}">
+    <div class="flits-soort stil klein" id="flits-soort"></div>
+    <div class="flits-voor" id="flits-voor"></div>
+    <div class="flits-achter" id="flits-achter" hidden></div>
+  </div>
+  <div class="oefen-knoppen" id="knoppen-voor"><button type="button" class="knop primair groot" id="draai">{{ _('Omdraaien') }}</button></div>
+  <div class="oefen-knoppen" id="knoppen-achter" hidden>
+    <button type="button" class="knop groot nog" id="nog">{{ _('Nog niet') }}</button>
+    <button type="button" class="knop primair groot" id="gekend">{{ _('Gekend') }}</button>
+  </div>
+  <p class="klein"><a id="flits-link" href="#" hidden>{{ _('In Synoptikon lezen') }}</a></p>
+  <div id="oefen-klaar" hidden>
+    <h2>{{ _('Klaar') }}</h2>
+    <p id="oefen-uitslag"></p>
+    <p><a class="knop primair" href="/leren/{{ lijst.id }}/oefenen?welke=nog">{{ _('Opnieuw met wat nog niet gekend is') }}</a> <a class="knop" href="/leren/{{ lijst.id }}">{{ _('Terug naar de lijst') }}</a></p>
+  </div>
+</div>
+<script type="application/json" id="kaarten-data">{{ kaarten_json | safe }}</script>
+<script type="application/json" id="oefen-i18n">{{ {'van': _('{i} van {n}'), 'uitslag': _('{a} van {n} gekend.')} | tojson }}</script>
+<script src="/static/js/oefenen.js?v={{ sv }}"></script>
+{% endif %}
+{% endblock %}

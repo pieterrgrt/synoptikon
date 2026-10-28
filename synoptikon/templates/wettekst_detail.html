@@ -1,15 +1,15 @@
 {% extends "base.html" %}
 {% block titel %}{{ w.titel }} · Synoptikon{% endblock %}
 {% block inhoud %}
-<p class="kruimel"><a href="/wetteksten">Wetteksten</a> › {{ w.stelsel_code }}</p>
-<h1>{{ w.titel }} <span class="stil">versie {{ w.versie }}</span></h1>
-<form method="get" class="formulier compact rij"><input type="search" name="q" value="{{ q }}" placeholder="artikelnummer of opschrift"><button class="knop klein">Filter</button><span class="stil">{{ artikelen | length }} van {{ totaal }}</span></form>
+<p class="kruimel"><a href="/wetteksten">{{ _('Wetteksten') }}</a> › {{ w.stelsel_code }} · <a href="/stelsels/{{ w.stelsel_code }}/wet/{{ w.id }}">{{ _('Inhoudsopgave') }}</a></p>
+<h1>{{ w.titel }} <span class="stil">{{ _('versie {versie}', versie=w.versie) }}</span></h1>
+<form method="get" class="formulier compact rij"><input type="search" name="q" value="{{ q }}" placeholder="{{ _('artikelnummer of opschrift') }}" aria-label="{{ _('artikelnummer of opschrift') }}"><button class="knop klein">{{ _('Filter') }}</button><span class="stil">{{ _('{n} van {totaal}', n=artikelen | length, totaal=totaal) }}</span></form>
 <div class="wettekst">
 {% for a in artikelen %}
 <article class="bron soort-wet" id="{{ a.nummer }}">
   <header class="bron-kop"><span class="citeertitel">{{ a.nummer }}</span>{% if a.opschrift %} <span class="bron-titel">{{ a.opschrift }}</span>{% endif %}</header>
   {% if a.pad %}<p class="stil klein">{{ a.pad }}</p>{% endif %}
-  <div class="origineel" lang="{{ w.stelsel_code | lower if w.stelsel_code != 'EU' else 'en' }}">{{ a.tekst | md }}</div>
+  <div class="origineel" lang="{{ {'CH': 'de', 'BE': 'nl', 'EN': 'en', 'EU': 'nl', 'AU': 'en', 'US': 'en'}.get(w.stelsel_code, w.stelsel_code | lower) }}">{{ a.tekst | md }}</div>
 </article>
 {% endfor %}
 </div>

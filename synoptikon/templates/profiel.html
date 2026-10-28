@@ -1,0 +1,28 @@
+{% extends "base.html" %}
+{% block titel %}{{ _('Profiel') }} · Synoptikon{% endblock %}
+{% block mainclass %}pagina smal{% endblock %}
+{% block inhoud %}
+<h1>{{ p.naam }} <span class="stil">· {{ p.rol_label }}</span></h1>
+<p class="stil">{{ _('Gebruikersnaam') }}: <code>{{ p.gebruikersnaam }}</code></p>
+{% if klaar == 'gegevens' %}<p class="melding ok" role="status">{{ _('Opgeslagen.') }}</p>{% endif %}
+{% if klaar == 'wachtwoord' %}<p class="melding ok" role="status">{{ _('Wachtwoord gewijzigd. Andere apparaten moeten opnieuw inloggen.') }}</p>{% endif %}
+{% if fout %}<p class="melding fout" role="alert">{{ fout }}</p>{% endif %}
+
+<h2>{{ _('Naam en taal') }}</h2>
+<form method="post" action="/profiel/gegevens" class="formulier">
+  <label>{{ _('Naam') }} <input name="naam" value="{{ p.naam }}" required maxlength="80" autocomplete="name"></label>
+  <label>{{ _('Taal') }}
+    <select name="taal">{% for k, v in TALEN.items() %}<option value="{{ k }}" lang="{{ k }}" {% if k == p.taal %}selected{% endif %}>{{ v }}</option>{% endfor %}</select>
+  </label>
+  <div class="acties"><button class="knop primair">{{ _('Opslaan') }}</button></div>
+</form>
+
+<h2>{{ _('Wachtwoord wijzigen') }}</h2>
+<form method="post" action="/profiel/wachtwoord" class="formulier">
+  <input type="text" name="gebruikersnaam" value="{{ p.gebruikersnaam }}" autocomplete="username" hidden>
+  <label>{{ _('Huidig wachtwoord') }} <input type="password" name="huidig" required autocomplete="current-password"></label>
+  <label>{{ _('Nieuw wachtwoord') }} <span class="hint">{{ _('minstens {n} tekens', n=10) }}</span> <input type="password" name="nieuw" required minlength="10" autocomplete="new-password"></label>
+  <label>{{ _('Nogmaals') }} <input type="password" name="nogmaals" required minlength="10" autocomplete="new-password"></label>
+  <div class="acties"><button class="knop primair">{{ _('Wachtwoord wijzigen') }}</button></div>
+</form>
+{% endblock %}

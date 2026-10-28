@@ -1,47 +1,47 @@
 {% extends "base.html" %}
-{% block titel %}{{ vraag.titel }} · Synoptikon{% endblock %}
+{% block titel %}{{ vt(vraag.titel) }} · Synoptikon{% endblock %}
 {% block mainclass %}synopse-pagina{% endblock %}
 {% block inhoud %}
-{% set bewerkbaar = True %}
+{% set bewerkbaar = mag_bewerken %}
 <datalist id="rollen"><option value="hoofdregel"><option value="uitzondering"><option value="rechtspraak"><option value="literatuur"><option value="verbintenis"><option value="bescherming derden"><option value="conflictenrecht"></datalist>
 
 <header class="vraagkop">
   <div class="vraagkop-tekst">
-    <p class="kruimel">{{ vraag.rechtsgebied or 'Vraag' }}{% if vraag.tag_list %} · {% for t in vraag.tag_list %}<span class="tag">{{ t }}</span>{% endfor %}{% endif %}</p>
-    <h1>{{ vraag.titel }}</h1>
-    {% if vraag.omschrijving %}<div class="omschrijving">{{ vraag.omschrijving | md }}</div>{% endif %}
+    <p class="kruimel">{{ vt(vraag.rechtsgebied) or _('Vraag') }}{% if vraag.tag_list %} · {% for t in vraag.tag_list %}<span class="tag">{{ vt(t) }}</span>{% endfor %}{% endif %}</p>
+    <h1>{{ vt(vraag.titel) }}</h1>
+    {% if vraag.omschrijving %}<div class="omschrijving">{{ vt(vraag.omschrijving) | md }}</div>{% endif %}
   </div>
   <div class="vraagkop-acties">
-    <a class="knop klein" href="/vragen/{{ vraag.slug }}/bewerken">Bewerken</a>
-    <a class="knop klein" href="/begrippen?vraag={{ vraag.slug }}">Begrippenkaart</a>
+    <a class="knop klein" href="/vragen/{{ vraag.slug }}/bewerken">{{ _('Bewerken') }}</a>
+    <a class="knop klein" href="/begrippen?vraag={{ vraag.slug }}">{{ _('Begrippenkaart') }}</a>
     <details class="menu">
-      <summary class="knop klein">Exporteren</summary>
+      <summary class="knop klein">{{ _('Exporteren') }}</summary>
       <div class="menu-lijst">
         <a href="/vragen/{{ vraag.slug }}/export.md">Markdown</a>
         <a href="/vragen/{{ vraag.slug }}/export.pdf">PDF</a>
-        <a href="/vragen/{{ vraag.slug }}/print" target="_blank">Printweergave</a>
+        <a href="/vragen/{{ vraag.slug }}/print" target="_blank">{{ _('Printweergave') }}</a>
       </div>
     </details>
   </div>
 </header>
 
 <div class="synopse-balk" id="synopse-balk" data-vraag="{{ vraag.slug }}">
-  <span class="label">Kolommen</span>
+  <span class="label">{{ _('Kolommen') }}</span>
   {% for f in per_familie(stelsels) %}
   <span class="familie-groep fam-{{ f.sleutel or 'overig' }}">
-    <button type="button" class="familie-knop" data-familie="{{ f.sleutel or 'overig' }}" title="{{ f.naam }} aan/uit · {{ f.kenmerk }}">{{ f.naam }}</button>
+    <button type="button" class="familie-knop" data-familie="{{ f.sleutel or 'overig' }}" title="{{ _('{naam} aan/uit', naam=f.naam) }} · {{ f.kenmerk }}">{{ f.naam }}</button>
     {% for s in f.stelsels %}<label class="kolomschakel"><input type="checkbox" data-kolom="{{ s.code }}" data-familie="{{ f.sleutel or 'overig' }}" checked> {{ vlag(s.code) }}{{ s.code }}</label>{% endfor %}
   </span>
   {% endfor %}
   <span class="scheiding"></span>
-  <label class="kolomschakel">Vertaling
+  <label class="kolomschakel">{{ _('Vertaling') }}
     <select id="vertaal-keuze">
-      <option value="" {% if not vertaal_taal %}selected{% endif %}>geen</option>
-      {% for t in ['nl','de','fr','en'] %}<option value="{{ t }}" {% if vertaal_taal == t %}selected{% endif %}>{{ t }}</option>{% endfor %}
+      <option value="" {% if not vertaal_taal %}selected{% endif %}>{{ _('geen') }}</option>
+      {% for t in TALEN %}<option value="{{ t }}" {% if vertaal_taal == t %}selected{% endif %}>{{ t }}</option>{% endfor %}
     </select>
   </label>
-  <label class="kolomschakel"><input type="checkbox" id="toon-analyse" checked> analyse</label>
-  <span class="hint sleep-hint">sleep kolomkoppen om te herordenen</span>
+  <label class="kolomschakel"><input type="checkbox" id="toon-analyse" checked> {{ _('analyse') }}</label>
+  <span class="hint sleep-hint">{{ _('sleep kolomkoppen om te herordenen') }}</span>
 </div>
 
 <section class="synopse" id="synopse">
@@ -50,44 +50,44 @@
   <div class="kolom fam-{{ s.familie or 'overig' }}" data-kolom="{{ s.code }}" id="{{ s.code }}">
     <header class="kolomkop" draggable="true">
       <span class="greep" aria-hidden="true">⋮⋮</span>
-      <h2>{{ vlag(s.code) }}{{ s.naam }}</h2>
+      <h2>{{ vlag(s.code) }}{{ vt(s.naam) }}</h2>
       <span class="stelsel-code" title="{{ s.familie_naam }}">{{ s.code }}</span>
-      <a class="knop klein" href="/vragen/{{ vraag.slug }}/antwoord/{{ s.code }}" title="Analyse bewerken">✎</a>
+      <a class="knop klein" href="/vragen/{{ vraag.slug }}/antwoord/{{ s.code }}" title="{{ _('Analyse bewerken') }}" aria-label="{{ _('Analyse bewerken') }}">✎</a>
     </header>
-    {% if a and a.kern %}<p class="kern">{{ a.kern | md_inline }}</p>{% endif %}
+    {% if a and a.kern %}<p class="kern">{{ vt(a.kern) | md_inline }}</p>{% endif %}
     <div class="bronnen">
       {% if a %}{% for ab in a.bronnen %}{% include "_bron.html" with context %}{% endfor %}{% endif %}
-      {% if not a or not a.bronnen %}<p class="stil leeg">Nog geen bronnen.</p>{% endif %}
+      {% if not a or not a.bronnen %}<p class="stil leeg">{{ _('Nog geen bronnen.') }}</p>{% endif %}
     </div>
     {% if a and a.analyse %}
     <div class="analyse">
-      <h3 class="label">Analyse</h3>
-      {{ a.analyse | md }}
+      <h3 class="label">{{ _('Analyse') }}</h3>
+      {{ vt(a.analyse) | md }}
     </div>
     {% elif a %}
-    <p class="stil leeg analyse"><a href="/vragen/{{ vraag.slug }}/antwoord/{{ s.code }}">Analyse schrijven</a></p>
+    <p class="stil leeg analyse"><a href="/vragen/{{ vraag.slug }}/antwoord/{{ s.code }}">{{ _('Analyse schrijven') }}</a></p>
     {% endif %}
     {% set kolomnotities = vraag.notities | selectattr('stelsel_code', 'equalto', s.code) | list %}
     {% if kolomnotities %}
     <div class="notities-kolom">
-      {% for n in kolomnotities %}<div class="annotatie notitie"><span class="label">{{ n.aangemaakt.strftime('%d-%m-%Y') }}</span>{{ n.tekst | md }}</div>{% endfor %}
+      {% for n in kolomnotities %}<div class="annotatie notitie"><span class="label">{{ n.aangemaakt.strftime('%d-%m-%Y') }}</span>{{ vt(n.tekst) | md }}</div>{% endfor %}
     </div>
     {% endif %}
     <footer class="kolomvoet">
       <details>
-        <summary>+ bron koppelen</summary>
+        <summary>{{ _('+ bron koppelen') }}</summary>
         <form method="post" action="/vragen/{{ vraag.slug }}/bron/koppel" class="formulier compact">
-          <label>Bestaande bron
+          <label>{{ _('Bestaande bron') }}
             <select name="bron_id" required>
-              <option value="">— kies —</option>
+              <option value="">{{ _('— kies —') }}</option>
               {% for b in alle_bronnen if b.stelsel_code == s.code %}<option value="{{ b.id }}">{{ b.citeertitel }}{% if b.titel %} — {{ b.titel | truncate(50) }}{% endif %}</option>{% endfor %}
             </select>
           </label>
-          <div class="rij"><label>Rol <input name="rol" list="rollen"></label></div>
-          <label>Annotatie <textarea name="notitie" rows="2"></textarea></label>
-          <div class="acties"><button class="knop klein primair">Koppelen</button>
-          <a class="knop klein" href="/bronnen/nieuw?stelsel={{ s.code }}">Nieuwe bron</a>
-          <a class="knop klein" href="/invoer?vraag={{ vraag.slug }}">Snel invoeren</a></div>
+          <div class="rij"><label>{{ _('Rol') }} <input name="rol" list="rollen" lang="nl"></label></div>
+          <label>{{ _('Annotatie') }} <textarea name="notitie" rows="2" lang="nl"></textarea></label>
+          <div class="acties"><button class="knop klein primair">{{ _('Koppelen') }}</button>
+          <a class="knop klein" href="/bronnen/nieuw?stelsel={{ s.code }}">{{ _('Nieuwe bron') }}</a>
+          <a class="knop klein" href="/invoer?vraag={{ vraag.slug }}">{{ _('Snel invoeren') }}</a></div>
         </form>
       </details>
     </footer>
@@ -97,51 +97,51 @@
 
 <section class="onder-synopse">
   <div class="blok" id="begrippen">
-    <h2>Begrippen</h2>
+    <h2>{{ _('Begrippen') }}</h2>
     {% if vraag.begrippen %}
     <ul class="begrippen-rij">
       {% for vb in vraag.begrippen | sort(attribute='begrip.stelsel_code') %}
       {% set g = vb.begrip %}
       <li class="begrip-chip">
-        <a href="/begrippen/{{ g.id }}">{{ sc(g.stelsel_code) }} {{ g.term }}</a>
-        {% for r in g.relaties %}{% set ander = r.andere(g) %}<span class="relatie rel-{{ r.type }}" title="{{ r.type_label }}{% if r.toelichting %}: {{ r.toelichting }}{% endif %}">{{ ander.term }}</span>{% endfor %}
-        <form method="post" action="/vragen/{{ vraag.slug }}/begrip/{{ g.id }}/ontkoppel" class="inline"><button class="knop-tekst" title="Loskoppelen">×</button></form>
+        <a href="/begrippen/{{ g.id }}">{{ sc(g.stelsel_code) }} <span lang="{{ g.taal }}">{{ g.term }}</span></a>
+        {% for r in g.relaties %}{% set ander = r.andere(g) %}<span class="relatie rel-{{ r.type }}" title="{{ r.type_label }}{% if r.toelichting %}: {{ vt(r.toelichting) }}{% endif %}" lang="{{ ander.taal }}">{{ ander.term }}</span>{% endfor %}
+        <form method="post" action="/vragen/{{ vraag.slug }}/begrip/{{ g.id }}/ontkoppel" class="inline"><button class="knop-tekst" title="{{ _('Loskoppelen') }}" aria-label="{{ _('Loskoppelen') }}">×</button></form>
       </li>
       {% endfor %}
     </ul>
-    {% else %}<p class="stil">Nog geen begrippen gekoppeld.</p>{% endif %}
+    {% else %}<p class="stil">{{ _('Nog geen begrippen gekoppeld.') }}</p>{% endif %}
     <details>
-      <summary>+ begrip koppelen</summary>
+      <summary>{{ _('+ begrip koppelen') }}</summary>
       <form method="post" action="/vragen/{{ vraag.slug }}/begrip/koppel" class="formulier compact rij">
-        <select name="begrip_id" required><option value="">— kies —</option>{% for g in alle_begrippen %}<option value="{{ g.id }}">{{ g.stelsel_code }} · {{ g.term }}</option>{% endfor %}</select>
-        <button class="knop klein primair">Koppelen</button>
-        <a class="knop klein" href="/invoer?vraag={{ vraag.slug }}&tab=begrip">Nieuw begrip</a>
+        <select name="begrip_id" required aria-label="{{ _('Begrip') }}"><option value="">{{ _('— kies —') }}</option>{% for g in alle_begrippen %}<option value="{{ g.id }}">{{ g.stelsel_code }} · {{ g.term }}</option>{% endfor %}</select>
+        <button class="knop klein primair">{{ _('Koppelen') }}</button>
+        <a class="knop klein" href="/invoer?vraag={{ vraag.slug }}&tab=begrip">{{ _('Nieuw begrip') }}</a>
       </form>
     </details>
   </div>
 
   {% if concordanties %}
   <div class="blok">
-    <h2>Concordantie</h2>
+    <h2>{{ _('Concordantie') }}</h2>
     <table class="tabel">
-      <thead><tr><th>Stelsel</th><th>Oud</th><th>Nieuw</th><th>Datum</th><th>Grond</th></tr></thead>
-      <tbody>{% for c in concordanties %}<tr><td>{{ c.stelsel_code }}</td><td>{{ c.oud }} {{ c.wet }}</td><td>{{ c.nieuw or '— vervallen' }} {% if c.nieuw %}{{ c.wet }}{% endif %}</td><td>{{ c.datum or '' }}</td><td>{{ c.grond or '' }}{% if c.toelichting %} <span class="stil">{{ c.toelichting }}</span>{% endif %}</td></tr>{% endfor %}</tbody>
+      <thead><tr><th>{{ _('Stelsel') }}</th><th>{{ _('Oud') }}</th><th>{{ _('Nieuw') }}</th><th>{{ _('Datum') }}</th><th>{{ _('Grond') }}</th></tr></thead>
+      <tbody>{% for c in concordanties %}<tr><td>{{ c.stelsel_code }}</td><td>{{ c.oud }} {{ c.wet }}</td><td>{{ c.nieuw or '— ' ~ _('vervallen') }} {% if c.nieuw %}{{ c.wet }}{% endif %}</td><td>{{ c.datum or '' }}</td><td>{{ c.grond or '' }}{% if c.toelichting %} <span class="stil">{{ vt(c.toelichting) }}</span>{% endif %}</td></tr>{% endfor %}</tbody>
     </table>
   </div>
   {% endif %}
 
   <div class="blok" id="notities">
-    <h2>Notities</h2>
+    <h2>{{ _('Notities') }}</h2>
     {% set algemeen = vraag.notities | rejectattr('stelsel_code') | list %}
     {% for n in algemeen %}
-    <div class="annotatie notitie"><span class="label">{{ n.aangemaakt.strftime('%d-%m-%Y') }}</span>{{ n.tekst | md }}
-      <form method="post" action="/vragen/{{ vraag.slug }}/notitie/{{ n.id }}/verwijderen" class="inline" data-bevestig="Notitie verwijderen?"><button class="knop-tekst">verwijderen</button></form></div>
+    <div class="annotatie notitie"><span class="label">{{ n.aangemaakt.strftime('%d-%m-%Y') }}</span>{{ vt(n.tekst) | md }}
+      <form method="post" action="/vragen/{{ vraag.slug }}/notitie/{{ n.id }}/verwijderen" class="inline" data-bevestig="{{ _('Notitie verwijderen?') }}"><button class="knop-tekst">{{ _('verwijderen') }}</button></form></div>
     {% endfor %}
     <form method="post" action="/vragen/{{ vraag.slug }}/notitie" class="formulier compact">
-      <label>Nieuwe notitie <textarea name="tekst" rows="2" required></textarea></label>
-      <div class="rij"><select name="stelsel_code"><option value="">algemeen</option>{% for s in stelsels %}<option value="{{ s.code }}">{{ s.code }}</option>{% endfor %}</select><button class="knop klein primair">Toevoegen</button></div>
+      <label>{{ _('Nieuwe notitie') }} <textarea name="tekst" rows="2" required lang="nl"></textarea></label>
+      <div class="rij"><select name="stelsel_code" aria-label="{{ _('Stelsel') }}"><option value="">{{ _('algemeen') }}</option>{% for s in stelsels %}<option value="{{ s.code }}">{{ s.code }}</option>{% endfor %}</select><button class="knop klein primair">{{ _('Toevoegen') }}</button></div>
     </form>
   </div>
 </section>
 {% endblock %}
-{% block scripts %}<script src="/static/js/synopse.js"></script>{% endblock %}
+{% block scripts %}<script src="/static/js/synopse.js?v={{ sv }}"></script>{% endblock %}

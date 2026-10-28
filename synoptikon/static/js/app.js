@@ -42,4 +42,35 @@
   document.addEventListener('click', function (e) {
     document.querySelectorAll('details.menu[open]').forEach(function (d) { if (!d.contains(e.target)) d.removeAttribute('open'); });
   });
+  // Systematiek: artikeltekst pas ophalen als een knoop wordt opengeklapt.
+  function laadTekst(d) {
+    var boom = d.closest('[data-lees]');
+    if (!boom || !d.dataset.k || d.dataset.geladen) return;
+    d.dataset.geladen = '1';
+    var doel = d.querySelector('.sys-artikelen');
+    doel.textContent = '…';
+    fetch(boom.dataset.lees + d.dataset.k + '?fragment=1', { credentials: 'same-origin' }).then(function (r) {
+      if (!r.ok) throw new Error(r.status);
+      return r.text();
+    }).then(function (html) {
+      doel.innerHTML = html;
+      var a = d.dataset.artikel && document.getElementById(d.dataset.artikel);
+      if (a) { a.classList.add('gezocht-artikel'); a.scrollIntoView({ block: 'start' }); }
+    }).catch(function () { delete d.dataset.geladen; doel.textContent = ''; });
+  }
+  document.addEventListener('toggle', function (e) {
+    if (e.target.matches && e.target.matches('details.sys-tekst') && e.target.open) laadTekst(e.target);
+  }, true);
+  document.querySelectorAll('details.sys-tekst[open]').forEach(laadTekst);
+  // #knoop-123: het pad naar die knoop openklappen.
+  function openHash() {
+    var m = /^#knoop-\d+$/.test(location.hash) && document.getElementById(location.hash.slice(1));
+    if (!m) return;
+    for (var p = m; p; p = p.parentElement) if (p.tagName === 'DETAILS') p.open = true;
+    var eigen = m.querySelector(':scope > details');
+    if (eigen) eigen.open = true;
+    m.scrollIntoView({ block: 'start' });
+  }
+  openHash();
+  window.addEventListener('hashchange', openHash);
 })();

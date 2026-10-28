@@ -9,6 +9,7 @@ from sqlalchemy import select
 from sqlalchemy.orm import Session
 
 from ..models import RECHTSFAMILIES, Stelsel, Vraag
+from ..i18n import _
 
 
 def slugify(tekst: str) -> str:
@@ -60,7 +61,7 @@ def per_familie(stelsels) -> list[Familie]:
         groepen.setdefault(s.familie if s.familie in RECHTSFAMILIES else "", []).append(s)
     volgorde = [*RECHTSFAMILIES, ""]
     return [
-        Familie(k, *(RECHTSFAMILIES.get(k) or ("Overig", "Nog niet ingedeeld bij een rechtsfamilie")), groepen[k])
+        Familie(k, *(_(t) for t in (RECHTSFAMILIES.get(k) or ("Overig", "Nog niet ingedeeld bij een rechtsfamilie"))), groepen[k])
         for k in volgorde
         if k in groepen
     ]

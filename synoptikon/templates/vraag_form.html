@@ -1,27 +1,28 @@
 {% extends "base.html" %}
-{% block titel %}{{ 'Vraag bewerken' if vraag else 'Nieuwe vraag' }} · Synoptikon{% endblock %}
+{% block titel %}{{ _('Vraag bewerken') if vraag else _('Nieuwe vraag') }} · Synoptikon{% endblock %}
 {% block inhoud %}
-<h1>{{ 'Vraag bewerken' if vraag else 'Nieuwe vraag' }}</h1>
+<h1>{{ _('Vraag bewerken') if vraag else _('Nieuwe vraag') }}</h1>
+{% if huidige_taal() != 'nl' %}<p class="hint">{{ _('Vul in het Nederlands in; vertalingen beheer je onder Vertalingen.') }}</p>{% endif %}
 <form method="post" class="formulier">
-  <label>Vraag (tertium comparationis)
-    <input name="titel" required value="{{ vraag.titel if vraag else '' }}" placeholder="Hoe gaat eigendom van een roerende zaak over?">
+  <label>{{ _('Vraag (tertium comparationis)') }}
+    <input name="titel" required value="{{ vraag.titel if vraag else '' }}" lang="nl" placeholder="Hoe gaat eigendom van een roerende zaak over?">
   </label>
-  <label>Omschrijving <span class="hint">markdown</span>
-    <textarea name="omschrijving" rows="6">{{ vraag.omschrijving or '' if vraag else '' }}</textarea>
+  <label>{{ _('Omschrijving') }} <span class="hint">markdown</span>
+    <textarea name="omschrijving" rows="6" lang="nl">{{ vraag.omschrijving or '' if vraag else '' }}</textarea>
   </label>
   <div class="rij">
-    <label>Rechtsgebied <input name="rechtsgebied" value="{{ vraag.rechtsgebied or '' if vraag else '' }}" placeholder="Goederenrecht"></label>
-    <label>Tags <span class="hint">kommagescheiden</span> <input name="tags" value="{{ vraag.tags or '' if vraag else '' }}" placeholder="eigendom, levering, roerende zaken"></label>
+    <label>{{ _('Rechtsgebied') }} <input name="rechtsgebied" lang="nl" value="{{ vraag.rechtsgebied or '' if vraag else '' }}" placeholder="Goederenrecht"></label>
+    <label>{{ _('Tags') }} <span class="hint">{{ _('kommagescheiden') }}</span> <input name="tags" lang="nl" value="{{ vraag.tags or '' if vraag else '' }}" placeholder="eigendom, levering, roerende zaken"></label>
   </div>
-  <p class="hint">Voor elk actief stelsel ({% for s in stelsels %}{{ s.code }}{% if not loop.last %}, {% endif %}{% endfor %}) komt een kolom.</p>
+  <p class="hint">{{ _('Voor elk actief stelsel ({codes}) komt een kolom.', codes=stelsels | map(attribute='code') | join(', ')) }}</p>
   <div class="acties">
-    <button class="knop primair" type="submit">Opslaan</button>
-    <a class="knop" href="{{ '/vragen/' ~ vraag.slug if vraag else '/' }}">Annuleren</a>
+    <button class="knop primair" type="submit">{{ _('Opslaan') }}</button>
+    <a class="knop" href="{{ '/vragen/' ~ vraag.slug if vraag else '/' }}">{{ _('Annuleren') }}</a>
   </div>
 </form>
 {% if vraag %}
-<form method="post" action="/vragen/{{ vraag.slug }}/verwijderen" class="gevaar-zone" data-bevestig="Vraag en alle analyses verwijderen? Bronnen en begrippen blijven bestaan.">
-  <button class="knop gevaar" type="submit">Vraag verwijderen</button>
+<form method="post" action="/vragen/{{ vraag.slug }}/verwijderen" class="gevaar-zone" data-bevestig="{{ _('Vraag en alle analyses verwijderen? Bronnen en begrippen blijven bestaan.') }}">
+  <button class="knop gevaar" type="submit">{{ _('Vraag verwijderen') }}</button>
 </form>
 {% endif %}
 {% endblock %}

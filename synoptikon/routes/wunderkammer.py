@@ -15,6 +15,16 @@ Formaat `synoptikon-wunderkammer`, versie 1:
                              → {"artikelen": [{stelsel, wet, nummer, opschrift, tekst, pad: [..], versie, bron_url}]}
 
 De begrippenparen hebben de vorm van `/begrippen/export.json` (zie services/export.py).
+
+Kaarten uit de leerlijsten (versie 2). Synoptikon maakt ze, Wunderkammer plant de herhaling en meldt de stand terug:
+
+    GET  /api/wk/kaarten?profiel=pieter
+                             {"format", "version": 2, "exported", "profiel", "lijsten": [{id, naam, vak, examen, omschrijving}],
+                              "kaarten": [{uid, lijst, soort, soort_label, voor, achter, url, refs: [{stelsel, wet, nummer}],
+                              zaak, vindplaats, gewijzigd}]}
+                             Alleen actieve kaarten uit lijsten met "naar Wunderkammer"; voor/achter zijn HTML, url is een
+                             pad in Synoptikon. Een uid die niet meer meekomt is verwijderd of uitgezet.
+    POST /api/wk/kaarten/stand {"stand": [{uid, due, stability, reps, lapses, last_review, last_rating}]} → {"bijgewerkt": n}
 """
 from __future__ import annotations
 
@@ -24,13 +34,14 @@ import re
 from datetime import datetime, timezone
 
 from fastapi import APIRouter, Body, Depends, HTTPException, Request
-from sqlalchemy import select
+from sqlalchemy import func, select
 from sqlalchemy.orm import Session, selectinload
 
 from ..config import settings
 from ..db import get_session
-from ..models import Begrip, BegripRelatie
-from ..services import export
+from ..i18n import zet_taal
+from ..models import Begrip, BegripRelatie, Profiel
+from ..services import export, leren
 from ..services.artikelen import Ref
 from ..services.correspondentie import alle_correspondenties, wettekst_artikel
 
@@ -81,3 +92,37 @@ def artikelen(body: dict = Body(...), db: Session = Depends(get_session)):
                         pad=[re.sub(r"\s+", " ", p).strip() for p in (a.pad or "").split("›") if p.strip()],
                         versie=a.wettekst.versie, bron_url=a.wettekst.bron_url))
     return dict(format=FORMAT, version=1, artikelen=uit)
+
+
+@router.get("/kaarten", dependencies=[Depends(token_ok)])
+def kaarten(profiel: str = "", db: Session = Depends(get_session)):
+    p = db.scalar(select(Profiel).where(func.lower(Profiel.gebruikersnaam) == profiel.strip().lower())) if profiel.strip() else db.get(Profiel, 1)
+    if p is None:
+        raise HTTPException(404, "Onbekend profiel")
+    zet_taal(p.taal)
+    lijsten = [l for l in leren.lijsten_van(db, p.id) if l.naar_wk]
+    bouwer = leren.Bouwer(db)
+    uit = []
+    for l in lijsten:
+        for k in l.kaarten:
+            if not k.actief:
+                continue
+            voor, achter, z = bouwer.html(k)
+            ref = leren.ref_van(k)
+            uit.append(dict(uid=k.uid, lijst=l.id, soort=k.soort, soort_label=k.soort_label, voor=voor, achter=achter, url=z.url,
+                            refs=[dict(stelsel=ref.stelsel, wet=ref.wet, nummer=ref.nummer)] if ref else [],
+                            zaak=k.zaak or (k.bron.citeertitel if k.bron else None), vindplaats=k.vindplaats,
+                            gewijzigd=k.gewijzigd.isoformat()))
+    return dict(format=FORMAT, version=2, exported=datetime.now(timezone.utc).replace(microsecond=0).isoformat(),
+                profiel=p.gebruikersnaam,
+                lijsten=[dict(id=l.id, naam=l.naam, vak=l.vak, examen=l.examen.isoformat() if l.examen else None,
+                              omschrijving=l.omschrijving) for l in lijsten],
+                kaarten=uit)
+
+
+@router.post("/kaarten/stand", dependencies=[Depends(token_ok)])
+def kaarten_stand(body: dict = Body(...), db: Session = Depends(get_session)):
+    stand = body.get("stand")
+    if not isinstance(stand, list) or len(stand) > 5000:
+        raise HTTPException(422, "stand: lijst van hoogstens 5000")
+    return dict(bijgewerkt=leren.zet_stand(db, stand))

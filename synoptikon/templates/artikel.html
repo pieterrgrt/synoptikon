@@ -1,39 +1,53 @@
 {% extends "base.html" %}
 {% import "_artikel.html" as m %}
+{% import "_leren.html" as l %}
 {% block titel %}{{ ref.citeer }} · Synoptikon{% endblock %}
 {% block inhoud %}
-<p class="kruimel"><a href="/artikelen">Artikelen</a> › {{ stelsel.naam }}</p>
+<p class="kruimel"><a href="/artikelen">{{ _('Artikelen') }}</a> › {{ vt(stelsel.naam) }}{% if lezen %} › <a href="{% if lezen.knoop %}/stelsels/{{ stelsel.code }}#knoop-{{ lezen.knoop.id }}{% else %}/stelsels/{{ stelsel.code }}/wet/{{ lezen.wet.id }}{% endif %}">{{ lezen.wet.titel }}</a>{% endif %}</p>
 <div class="paginakop">
-  <h1>{{ ref.citeer }}</h1>
-  <form method="get" action="/artikelen" class="inline"><input type="search" name="q" placeholder="ander artikel: 6:162 · § 823 · 1240" aria-label="Ander artikel opzoeken"></form>
+  <h1>{{ ref.citeer }} {{ l.ster(ref, bewaarde_refs, request.url.path) }}</h1>
+  <form method="get" action="/artikelen" class="inline"><input type="search" name="q" placeholder="{{ _('ander artikel: 6:162 · § 823 · 1240') }}" aria-label="{{ _('Ander artikel opzoeken') }}"></form>
 </div>
 {% if tekst and tekst.opschrift %}<p class="bron-titel groot">{{ tekst.opschrift }}</p>{% endif %}
-{% if pad %}{{ m.pad(pad, ref.stelsel) }}{% elif not ref.wet %}<p class="pad">Niet geplaatst: de systematiek van {{ stelsel.naam }} heeft (nog) geen knoop voor dit nummer.</p>{% endif %}
+{% if pad %}{{ m.pad(pad, ref.stelsel) }}{% elif not ref.wet %}<p class="pad">{{ _('Niet geplaatst: de systematiek van {naam} heeft (nog) geen knoop voor dit nummer.', naam=vt(stelsel.naam)) }}</p>{% endif %}
 
 {% if tekst %}
 <article class="bron detail soort-wet">
   <div class="origineel" lang="{{ stelsel.taal }}">{{ tekst.tekst | md }}</div>
   <footer class="bron-voet">
-    <a href="{{ tekst.url }}">{{ 'bron in Synoptikon' if tekst.herkomst == 'bron' else 'geïmporteerde wettekst' }}</a>
-    {% if tekst.officieel %}<a href="{{ tekst.officieel }}" target="_blank" rel="noopener">officiële bron ↗</a>{% endif %}
+    <a href="{{ tekst.url }}">{{ _('bron in Synoptikon') if tekst.herkomst == 'bron' else _('geïmporteerde wettekst') }}</a>
+    {% if lezen %}<a href="{{ lezen.url }}">{{ _('in de wettekst lezen') }}{% if lezen.knoop %} · {{ lezen.knoop.label | truncate(60) }}{% elif lezen.deel %} · {{ lezen.deel.label | truncate(60) }}{% endif %}</a>{% endif %}
+    {% if tekst.officieel %}<a href="{{ tekst.officieel }}" target="_blank" rel="noopener">{{ _('officiële bron ↗') }}</a>{% endif %}
   </footer>
 </article>
+{% if lezen and (lezen.vorig or lezen.volgend) %}
+<nav class="bladeren wet-bladeren" aria-label="{{ _('Bladeren') }}">
+  {% if lezen.vorig %}<a class="knop klein" href="{{ lezen.vorig.url }}" rel="prev">‹ {{ lezen.vorig.citeer }}</a>{% else %}<span></span>{% endif %}
+  {% if lezen.volgend %}<a class="knop klein" href="{{ lezen.volgend.url }}" rel="next">{{ lezen.volgend.citeer }} ›</a>{% endif %}
+</nav>
+{% endif %}
 {% else %}
-<p class="stil">Geen tekst in Synoptikon. Voer het artikel in als <a href="/bronnen/nieuw?stelsel={{ ref.stelsel }}">bron</a> of importeer de wet (<a href="/wetteksten">wetteksten</a>).</p>
+<p class="stil">{{ _('Geen tekst in Synoptikon.') }}{% if mag_bewerken %} <a href="/bronnen/nieuw?stelsel={{ ref.stelsel }}">{{ _('Voer het artikel in als bron') }}</a> · <a href="/wetteksten">{{ _('wetteksten') }}</a>{% endif %}</p>
 {% endif %}
 
-<h2>Corresponderende artikelen</h2>
+{% if europees %}
+<h2>{{ _('Europese herkomst') }}</h2>
+<ul class="lijst">{% for o in europees %}<li>{{ _('{soort} van', soort=o.soort_label | capitalize) }} <a href="/eu/{{ o.celex }}#omzetting">{{ o.handeling.roepnaam or o.handeling.citeer }}</a>{% if o.eu_artikel %}, {{ _('art.') }} {{ o.eu_artikel }}{% endif %}{% if o.tot %} <span class="stil">({{ _('via') }} {{ o.ref.citeer }})</span>{% endif %}{% if not o.geverifieerd %} <span class="rol onzeker">{{ _('niet geverifieerd') }}</span>{% endif %}{% if o.opmerking %} <span class="stil">· {{ vt(o.opmerking) | md_inline }}</span>{% endif %}</li>{% endfor %}</ul>
+<p class="hint">{{ _('Uitleg in het licht van de richtlijn: zie de werking op de pagina van de handeling.') if europees[0].handeling.soort == 'richtlijn' else _('Uitleg in het licht van de handeling: zie de werking op de pagina van de handeling.') }}</p>
+{% endif %}
+
+<h2>{{ _('Corresponderende artikelen') }}</h2>
 {% for c, eigen, kolommen in thema_s %}
 <section class="thema">
-  <h3><a href="/artikelen/thema/{{ c.id }}">{{ c.titel }}</a></h3>
-  <p class="stil klein">{% if c.rechtsgebied %}{{ c.rechtsgebied }} · {% endif %}hier als {% for e in eigen %}<strong>{{ e.ref.citeer }}</strong>{{ m.rol(e.rol) }}{% if not loop.last %}, {% endif %}{% endfor %}</p>
-  {% for e in eigen %}{% if e.opmerking %}<p class="opmerking klein">{{ e.opmerking | md_inline }}</p>{% endif %}{% endfor %}
-  {% if c.toelichting %}<div class="annotatie">{{ c.toelichting | md }}</div>{% endif %}
+  <h3><a href="/artikelen/thema/{{ c.id }}">{{ vt(c.titel) }}</a></h3>
+  <p class="stil klein">{% if c.rechtsgebied %}{{ vt(c.rechtsgebied) }} · {% endif %}{{ _('hier als') }} {% for e in eigen %}<strong>{{ e.ref.citeer }}</strong>{{ m.rol(e.rol) }}{% if not loop.last %}, {% endif %}{% endfor %}</p>
+  {% for e in eigen %}{% if e.opmerking %}<p class="opmerking klein">{{ vt(e.opmerking) | md_inline }}</p>{% endif %}{% endfor %}
+  {% if c.toelichting %}<div class="annotatie">{{ vt(c.toelichting) | md }}</div>{% endif %}
   <div class="thema-kolommen">
   {% for code, leden in kolommen.items() %}
     {% if leden %}
     <div class="thema-kolom fam-{{ per_code[code].familie if code in per_code else '' }}">
-      <h4>{{ vlag(code) }}{{ per_code[code].naam if code in per_code else code }}{% if code == ref.stelsel %} · ook{% endif %}</h4>
+      <h4>{{ vlag(code) }}{{ vt(per_code[code].naam) if code in per_code else code }}{% if code == ref.stelsel %} · {{ _('ook') }}{% endif %}</h4>
       {% for l in leden %}{{ m.lid(l) }}{% endfor %}
     </div>
     {% endif %}
@@ -41,48 +55,48 @@
   </div>
 </section>
 {% else %}
-<p class="stil">Dit artikel staat nog in geen enkel thema.</p>
+<p class="stil">{{ _('Dit artikel staat nog in geen enkel thema.') }}</p>
 {% endfor %}
 
 <details class="blok">
-  <summary>Aan een thema koppelen</summary>
+  <summary>{{ _('Aan een thema koppelen') }}</summary>
   {% if alle_thema_s %}
   <form method="post" class="formulier compact" action="/artikelen/koppel">
     <input type="hidden" name="stelsel_code" value="{{ ref.stelsel }}">
     <input type="hidden" name="verwijzing" value="{{ ref.citeer }}">
     <input type="hidden" name="terug" value="{{ ref.url }}">
     <div class="rij">
-      <label>Bestaand thema <select name="thema_id" required>{% for c in alle_thema_s %}<option value="{{ c.id }}">{{ c.titel }}</option>{% endfor %}</select></label>
-      <label>Rol <input name="rol" placeholder="hoofdregel · deels · faux ami"></label>
+      <label>{{ _('Bestaand thema') }} <select name="thema_id" required>{% for c in alle_thema_s %}<option value="{{ c.id }}">{{ vt(c.titel) }}</option>{% endfor %}</select></label>
+      <label>{{ _('Rol') }} <input name="rol" placeholder="{{ _('hoofdregel · deels · faux ami') }}"></label>
     </div>
-    <label>Opmerking <input name="opmerking"></label>
-    <div class="acties"><button class="knop klein primair">Koppelen</button></div>
+    <label>{{ _('Opmerking') }} <input name="opmerking"></label>
+    <div class="acties"><button class="knop klein primair">{{ _('Koppelen') }}</button></div>
   </form>
   {% endif %}
   <form method="post" action="/artikelen/thema" class="formulier compact">
     <input type="hidden" name="stelsel_code" value="{{ ref.stelsel }}">
     <input type="hidden" name="verwijzing" value="{{ ref.citeer }}">
     <div class="rij">
-      <label>Nieuw thema <input name="titel" required placeholder="Functionele vraag"></label>
-      <label>Rechtsgebied <input name="rechtsgebied"></label>
-      <label>Rol <input name="rol" value="hoofdregel"></label>
+      <label>{{ _('Nieuw thema') }} <input name="titel" required placeholder="{{ _('Functionele vraag') }}"></label>
+      <label>{{ _('Rechtsgebied') }} <input name="rechtsgebied"></label>
+      <label>{{ _('Rol') }} <input name="rol" value="hoofdregel"></label>
     </div>
-    <div class="acties"><button class="knop klein">Thema aanmaken</button></div>
+    <div class="acties"><button class="knop klein">{{ _('Thema aanmaken') }}</button></div>
   </form>
 </details>
 
 {% if buren %}
-<h2>Verder in {{ pad[-1].label }}</h2>
+<h2>{{ _('Verder in {plaats}', plaats=pad[-1].label) }}</h2>
 <p class="buren">{% for b in buren %}<a href="{{ b.url }}">{{ b.citeer }}</a>{% endfor %}</p>
 {% endif %}
 
 {% if concordanties %}
-<h2>Concordantie</h2>
-<ul class="lijst">{% for c in concordanties %}<li>{{ c.oud }} → {{ c.nieuw or 'vervallen' }}{% if c.wet not in (c.nieuw or '') %} {{ c.wet }}{% endif %}{% if c.datum %} ({{ c.datum }}){% endif %}{% if c.grond %}, {{ c.grond }}{% endif %}{% if c.toelichting %} <span class="stil">{{ c.toelichting }}</span>{% endif %}</li>{% endfor %}</ul>
+<h2>{{ _('Concordantie') }}</h2>
+<ul class="lijst">{% for c in concordanties %}<li>{{ c.oud }} → {{ c.nieuw or _('vervallen') }}{% if c.wet not in (c.nieuw or '') %} {{ c.wet }}{% endif %}{% if c.datum %} ({{ c.datum }}){% endif %}{% if c.grond %}, {{ c.grond }}{% endif %}{% if c.toelichting %} <span class="stil">{{ vt(c.toelichting) }}</span>{% endif %}</li>{% endfor %}</ul>
 {% endif %}
 
 {% if gebruik %}
-<h2>Gebruikt bij</h2>
-<ul class="lijst">{% for ab in gebruik %}<li><a href="/vragen/{{ ab.antwoord.vraag.slug }}#{{ ab.antwoord.stelsel_code }}">{{ ab.antwoord.vraag.titel }}</a>{{ m.rol(ab.rol) }}</li>{% endfor %}</ul>
+<h2>{{ _('Gebruikt bij') }}</h2>
+<ul class="lijst">{% for ab in gebruik %}<li><a href="/vragen/{{ ab.antwoord.vraag.slug }}#{{ ab.antwoord.stelsel_code }}">{{ vt(ab.antwoord.vraag.titel) }}</a>{{ m.rol(ab.rol) }}</li>{% endfor %}</ul>
 {% endif %}
 {% endblock %}

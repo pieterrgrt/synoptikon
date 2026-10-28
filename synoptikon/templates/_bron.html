@@ -3,37 +3,37 @@
 <article class="bron soort-{{ b.soort }}" id="bron-{{ ab.id }}">
   <header class="bron-kop">
     <a class="citeertitel" href="/bronnen/{{ b.id }}">{{ b.citeertitel }}</a>
-    {% if ab.rol %}<span class="rol">{{ ab.rol }}</span>{% endif %}
-    {% if not b.is_geldig %}<span class="rol vervallen" title="{{ b.geldig_van }} – {{ b.geldig_tot }}">niet (meer) geldend</span>{% endif %}
+    {% if ab.rol %}<span class="rol">{{ vt(ab.rol) }}</span>{% endif %}
+    {% if not b.is_geldig %}<span class="rol vervallen" title="{{ b.geldig_van }} – {{ b.geldig_tot }}">{{ _('niet (meer) geldend') }}</span>{% endif %}
   </header>
-  {% if b.titel and b.titel != b.citeertitel %}<p class="bron-titel">{{ b.titel }}</p>{% endif %}
+  {% if b.titel and b.titel != b.citeertitel %}<p class="bron-titel" lang="{{ b.taal }}">{{ b.titel }}</p>{% endif %}
   {% if b.tekst %}
   <div class="origineel" lang="{{ b.taal }}">{{ b.tekst | md }}</div>
   {% endif %}
   {% set v = b.vertaling(vertaal_taal) if vertaal_taal and b.taal != vertaal_taal else None %}
   {% if v %}
-  <div class="vertaling" lang="{{ v.taal }}"><span class="label">vertaling · {{ v.herkomst }}</span>{{ v.tekst | md }}</div>
+  <div class="vertaling" lang="{{ v.taal }}"><span class="label">{{ _('vertaling') }} · {{ _(v.herkomst) }}</span>{{ v.tekst | md }}</div>
   {% endif %}
   {% if ab.notitie %}
-  <div class="annotatie">{{ ab.notitie | md }}</div>
+  <div class="annotatie">{{ vt(ab.notitie) | md }}</div>
   {% endif %}
   <footer class="bron-voet">
     {% if b.vindplaats %}<span class="vindplaats">{{ b.vindplaats_type }} {{ b.vindplaats }}</span>{% endif %}
-    {% if b.url %}<a href="{{ b.url }}" rel="noopener" target="_blank">officiële bron ↗</a>{% endif %}
-    {% set r = artikel_ref(b) %}{% if r %}<a href="{{ r.url }}" title="Plaats in de systematiek en corresponderende artikelen in andere stelsels">⇄ vergelijk</a>{% endif %}
+    {% if b.url %}<a href="{{ b.url }}" rel="noopener" target="_blank">{{ _('officiële bron ↗') }}</a>{% endif %}
+    {% set r = artikel_ref(b) %}{% if r %}<a href="{{ r.url }}" title="{{ _('Plaats in de systematiek en corresponderende artikelen in andere stelsels') }}">⇄ {{ _('vergelijk') }}</a>{% endif %}
     {% if b.systematiek %}<a class="stil" href="/stelsels/{{ b.stelsel_code }}?vraag={{ vraag.slug }}">{{ b.systematiek.pad() | map(attribute='label') | join(' › ') }}</a>{% endif %}
     {% if bewerkbaar %}
     <details class="inline-bewerk">
-      <summary>bewerk koppeling</summary>
+      <summary>{{ _('bewerk koppeling') }}</summary>
       <form method="post" action="/vragen/{{ vraag.slug }}/bron/{{ ab.id }}/bewerken" class="formulier compact">
         <div class="rij">
-          <label>Rol <input name="rol" value="{{ ab.rol or '' }}" list="rollen"></label>
-          <label>Volgorde <input name="volgorde" type="number" value="{{ ab.volgorde }}" style="width:5em"></label>
+          <label>{{ _('Rol') }} <input name="rol" value="{{ ab.rol or '' }}" list="rollen" lang="nl"></label>
+          <label>{{ _('Volgorde') }} <input name="volgorde" type="number" value="{{ ab.volgorde }}" style="width:5em"></label>
         </div>
-        <label>Annotatie <span class="hint">markdown</span><textarea name="notitie" rows="3">{{ ab.notitie or '' }}</textarea></label>
-        <div class="acties"><button class="knop klein primair">Opslaan</button></div>
+        <label>{{ _('Annotatie') }} <span class="hint">markdown</span><textarea name="notitie" rows="3" lang="nl">{{ ab.notitie or '' }}</textarea></label>
+        <div class="acties"><button class="knop klein primair">{{ _('Opslaan') }}</button></div>
       </form>
-      <form method="post" action="/vragen/{{ vraag.slug }}/bron/{{ ab.id }}/ontkoppel" data-bevestig="Bron loskoppelen van deze vraag? De bron zelf blijft bestaan."><button class="knop klein gevaar">Loskoppelen</button></form>
+      <form method="post" action="/vragen/{{ vraag.slug }}/bron/{{ ab.id }}/ontkoppel" data-bevestig="{{ _('Bron loskoppelen van deze vraag? De bron zelf blijft bestaan.') }}"><button class="knop klein gevaar">{{ _('Loskoppelen') }}</button></form>
     </details>
     {% endif %}
   </footer>

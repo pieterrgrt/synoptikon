@@ -35,11 +35,15 @@ from dataclasses import dataclass, field
 from typing import Iterable
 from urllib.parse import quote
 
+from ..i18n import _ as vertaal
+
 _LATIJN = ["bis", "ter", "quater", "quinquies", "sexies", "septies", "octies", "novies", "decies",
            "undecies", "duodecies", "terdecies", "quaterdecies", "quinquiesdecies", "sexiesdecies",
            "septiesdecies", "octiesdecies"]
 _LATIJN_WAARDE = {w: i + 2 for i, w in enumerate(_LATIJN)}
-_LAT = "|".join(sorted(_LATIJN, key=len, reverse=True))
+# Italiaanse codes tellen verder: 135-quindecies … 135-duodevicies, 135-vicies, 135-vicies-semel, 135-vicies-ter.
+_LATIJN_WAARDE.update({"quindecies": 15, "sexdecies": 16, "duodevicies": 18, "undevicies": 19, "vicies": 20, "semel": 1})
+_LAT = "|".join(sorted(_LATIJN_WAARDE, key=len, reverse=True))
 
 
 @dataclass(frozen=True)
@@ -77,7 +81,7 @@ REGELS: dict[str, Regels] = {
     "IT": Regels(
         "c.c.",
         ("disp. att. c.c.", "c.p.c.", "c. cons.", "CCII", "c. ass.", "l. 218/1995", "l. 184/1983", "l. 898/1970", "l. 76/2016", "l. 392/1978", "Cost."),
-        nummer=rf"\d+(?:\s?-?\s?(?:{_LAT}))?",
+        nummer=rf"\d+(?:\s?-?\s?(?:{_LAT})(?:-(?:{_LAT}))?)?",
         namen={"c.c.": "Codice civile (1942)", "c.p.c.": "Codice di procedura civile", "c. cons.": "Codice del consumo (d.lgs. 206/2005)",
                "CCII": "Codice della crisi d'impresa e dell'insolvenza (d.lgs. 14/2019)", "c. ass.": "Codice delle assicurazioni private",
                "l. 218/1995": "Riforma del sistema italiano di diritto internazionale privato", "l. 184/1983": "Diritto del minore ad una famiglia (adozione)",
@@ -161,6 +165,45 @@ REGELS: dict[str, Regels] = {
 }
 
 HOOFDWET = {code: r.hoofdwet for code, r in REGELS.items() if r.hoofdwet}
+
+# Volledige namen die men intypt in plaats van de afkorting. Aangevuld met de
+# volledige titels uit `Regels.namen` (zonder jaartal tussen haakjes).
+_NAMEN_HAND = [
+    ("Code civil suisse", "ZGB"), ("CC suisse", "ZGB"), ("CCS", "ZGB"), ("Zivilgesetzbuch", "ZGB"), ("Code des obligations", "OR"),
+    ("Code de la consommation", "C. consom."), ("Code de commerce", "C. com."), ("Code du travail", "C. trav."),
+    ("Code de procédure civile", "C. proc. civ."), ("Code des assurances", "C. assur."),
+    ("Codice civile", "c.c."), ("Codice del consumo", "c. cons."), ("Codice di procedura civile", "c.p.c."),
+    ("Código Civil", "CC"), ("Codigo Civil", "CC"), ("Código de Comercio", "CCom"), ("Codigo de Comercio", "CCom"),
+    ("Ley General para la Defensa de los Consumidores y Usuarios", "TRLGDCU"),
+    ("Bürgerliches Gesetzbuch", "BGB"), ("Handelsgesetzbuch", "HGB"), ("Produkthaftungsgesetz", "ProdHaftG"),
+    ("Einführungsgesetz zum Bürgerlichen Gesetzbuche", "EGBGB"),
+    ("Burgerlijk Wetboek", "BW"), ("Wetboek van Koophandel", "WvK"), ("Wetboek van Burgerlijke Rechtsvordering", "Rv"), ("Faillissementswet", "Fw"),
+]
+
+
+def _namen() -> list[tuple[re.Pattern, str]]:
+    paren = [*_NAMEN_HAND]
+    for r in REGELS.values():
+        for afk, naam in r.namen.items():
+            naam = re.sub(r"\s*\([^()]*\)$", "", naam).strip()
+            if len(naam) > 5 and naam.lower() != afk.lower():
+                paren.append((naam, afk))
+    gezien, uit = set(), []
+    for naam, afk in sorted(paren, key=lambda p: len(p[0]), reverse=True):
+        if naam.lower() not in gezien:
+            gezien.add(naam.lower())
+            uit.append((re.compile(r"(?<!\w)" + re.escape(naam).replace(r"\ ", r"\s+") + r"(?!\w)", re.I), afk))
+    return uit
+
+
+_NAMEN = _namen()
+
+
+def vervang_namen(tekst: str) -> str:
+    """Volledige wetsnamen als afkorting: "art. 33 Codice del consumo" → "art. 33 c. cons."."""
+    for patroon, afk in _NAMEN:
+        tekst = patroon.sub(afk, tekst)
+    return tekst
 ANDERE_WETTEN = {code: list(r.andere) for code, r in REGELS.items()}
 _ONBEKEND = Regels(None)
 
@@ -215,7 +258,7 @@ class Ref:
 
 def citeer(stelsel: str, nummer: str | None, wet: str | None = None, tot: str | None = None, detail: str | None = None) -> str:
     if nummer is None:
-        return "geen wettelijke regeling"
+        return vertaal("geen wettelijke regeling")
     w = wet or HOOFDWET.get(stelsel, "")
     nr = f"{nummer}{_STREEP}{tot}" if tot else nummer
     d = (detail if detail.startswith("(") else f" {detail}") if detail else ""
@@ -448,7 +491,7 @@ def herken(tekst: str, stelsel: str | None = None) -> list[Ref]:
     "1196 C. civ." of "1112-1" → FR; "Art. 41 OR" → CH; "s 17 SGA 1979" → EN; "UCC § 2-401" → US.
     Een kaal nummer ("929") is dubbelzinnig: DE én FR; "art. 1902 CC" kan ES of FR zijn.
     """
-    t = tekst.strip()
+    t = vervang_namen(tekst.strip())
     if not t or len(t) > 80 or not re.search(r"\d", t):
         return []
     if stelsel:
@@ -480,6 +523,25 @@ def herken(tekst: str, stelsel: str | None = None) -> list[Ref]:
         if r and r.nummer:
             uit.append(r)
     return uit
+
+
+def noemt_wet(tekst: str) -> bool:
+    """Of de invoer een wet noemt ("BGB", "c. cons.", "Code de commerce"), of alleen een nummer is."""
+    return bool(_wet_treffers(vervang_namen(tekst)))
+
+
+def kale_nummers(tekst: str) -> set[str]:
+    """Schrijfwijzen waaronder een kaal nummer ("art. 1469 bis", "L. 217-3", "§ 929") in een wettekst kan staan."""
+    t = _PREFIX.sub("", tekst.strip())
+    _, t = _detail(t)
+    m = re.fullmatch(rf"([LRD])?\.?\s?(\d+[a-z]{{0,3}}(?:-\d+)*)(?:\s?-?\s?({_LAT}))?\.?", t.strip(), re.I)
+    if not m:
+        return set()
+    basis = (m.group(1) or "").upper() + m.group(2)
+    if not m.group(3):
+        return {basis}
+    lat = m.group(3).lower()
+    return {f"{basis}{lat}", f"{basis} {lat}", f"{basis}-{lat}"}
 
 
 def ref_uit_bron(bron) -> Ref | None:

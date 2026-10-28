@@ -1,0 +1,34 @@
+{% extends "base.html" %}
+{% block titel %}{{ _('Vertalingen') }} · Synoptikon{% endblock %}
+{% block inhoud %}
+<h1>{{ _('Vertalingen') }}</h1>
+<p class="hint">{{ _('Eigen inhoud wordt in het Nederlands ingevoerd en per taal vertaald. Machinevertalingen zijn gemarkeerd tot je ze nakijkt; opslaan geldt als nagekeken. Wijzig je de Nederlandse tekst, dan valt de weergave terug op het Nederlands tot er een nieuwe vertaling is.') }}</p>
+<div class="vertaal-stand">
+  {% for t in doeltalen %}{% set k, n = stand[t] %}
+  <a href="?doel={{ t }}&toon={{ toon }}" class="knop klein {% if t == doel %}primair{% endif %}" lang="{{ t }}" {% if t == doel %}aria-current="page"{% endif %}>{{ TALEN[t] }} <span class="stil">{{ k }}/{{ n }}</span></a>
+  {% endfor %}
+</div>
+<nav class="tabs" aria-label="{{ _('Filter') }}">
+  <a href="?doel={{ doel }}&toon=ontbrekend" {% if toon == 'ontbrekend' %}aria-current="page"{% endif %}>{{ _('Ontbreekt') }}</a>
+  <a href="?doel={{ doel }}&toon=machine" {% if toon == 'machine' %}aria-current="page"{% endif %}>{{ _('Nog na te kijken') }}</a>
+  <a href="?doel={{ doel }}&toon=alles" {% if toon == 'alles' %}aria-current="page"{% endif %}>{{ _('Alles') }}</a>
+</nav>
+<p class="stil" role="status">{{ n_('{n} tekst', '{n} teksten', aantal) }}</p>
+{% for b in items %}{% set v = klaar.get(b.hash) %}
+<form method="post" action="/vertalingen" class="formulier blok vertaal-item" id="v-{{ b.hash }}">
+  <input type="hidden" name="doel" value="{{ doel }}"><input type="hidden" name="h" value="{{ b.hash }}">
+  <input type="hidden" name="terug" value="/vertalingen?doel={{ doel }}&toon={{ toon }}&pagina={{ pagina }}">
+  <p class="stil klein">{{ _(b.soort) }} · <a href="{{ b.url }}">{{ b.waar | truncate(80) }}</a>{% if v and v.herkomst != 'eigen' %} · <span class="rol onzeker">{{ _('niet geverifieerd') }}</span>{% endif %}</p>
+  <div class="vertaal-bron" lang="nl">{{ b.tekst | md }}</div>
+  <label>{{ TALEN[doel] }} <textarea name="tekst" rows="{{ [3, (b.tekst | length // 70) + 2] | max }}" lang="{{ doel }}">{{ v.tekst if v else '' }}</textarea></label>
+  <div class="acties"><button class="knop klein primair">{{ _('Opslaan') }}</button></div>
+</form>
+{% endfor %}
+{% if paginas > 1 %}
+<nav class="bladeren">
+  {% if pagina > 1 %}<a class="knop klein" href="?doel={{ doel }}&toon={{ toon }}&pagina={{ pagina - 1 }}" rel="prev">‹ {{ _('vorige') }}</a>{% endif %}
+  <span class="stil">{{ _('pagina {p} van {n}', p=pagina, n=paginas) }}</span>
+  {% if pagina < paginas %}<a class="knop klein" href="?doel={{ doel }}&toon={{ toon }}&pagina={{ pagina + 1 }}" rel="next">{{ _('volgende') }} ›</a>{% endif %}
+</nav>
+{% endif %}
+{% endblock %}

@@ -37,7 +37,11 @@ docker compose run --rm app synoptikon hash-password  # → SYNOPTIKON_PASSWORD_
 sudo chown -R 10001:10001 data      # de container draait als uid 10001
 docker compose up -d --build
 docker compose exec app synoptikon seed
+docker compose exec app synoptikon profiel 1 --gebruikersnaam <naam> --naam <Naam>
 ```
+
+Inloggen gaat met gebruikersnaam en wachtwoord. Profiel 1 (de beheerder)
+logt in met `SYNOPTIKON_PASSWORD_HASH` zolang het geen eigen wachtwoord heeft.
 
 De app luistert alleen op `127.0.0.1:8765`. Data (SQLite-database en opgeslagen
 wetteksten) staat in `./data`, gemount als `/data` in de container.
@@ -91,8 +95,10 @@ uit als je de app achter nginx basic auth zet. Strikte CSP (`script-src
 **Pictogram.** De Σ uit Source Serif 4 (gewicht 600, opsz 8) als omtrek in
 `static/favicon.svg`, dus onafhankelijk van geïnstalleerde lettertypen; in
 dark mode (van browser of systeem) lichtrood op donker, zoals de app zelf.
-`favicon.ico` (16/32/48), `apple-touch-icon.png` (180) en de manifest-iconen
-(192/512) zijn daaruit gerenderd, in de lichte variant. Pas je de SVG aan,
+`favicon.ico` (16/32/48) is daaruit gerenderd, in de lichte variant.
+`apple-touch-icon.png` (180) en de manifest-iconen (192/512) zijn ook uit die
+omtrek gerenderd, maar met een lichtere Σ (#c8645d) op crème: een beginschermicoon
+heeft geen aparte dark-modevariant, en in dark mode viel het donkerrood daar weg. Pas je de SVG aan,
 verhoog dan `?v=` in `templates/_iconen.html`. `/favicon.ico` en `/apple-touch-icon.png`
 zijn ook zonder login bereikbaar, zodat een startpagina, dashboard of
 telefoonbeginscherm het pictogram kan ophalen.
@@ -119,7 +125,10 @@ PDF-route een 501 en blijft de rest werken (Markdown en de printweergave met
 | `systematiek` | Boom per stelsel: het volledige BW (alle boeken en niveaus, gegenereerd uit de officiële BWB-XML), BGB (Buch › Abschnitt › Titel › Untertitel) en de Code civil (Livre › Titre › Sous-titre › Chapitre › Section › Sous-section) met artikelbereiken. |
 | `correspondentie`, `correspondentie_artikel` | Thema (functionele vraag) met per stelsel de artikelen die haar beantwoorden: (stelsel, wet, nummer[–tot]), rol en opmerking. Zonder nummer = geen wettelijke regeling. |
 | `concordantie` | Oude → nieuwe nummering met datum en grond (art. 1382 → 1240 C. civ.; art. 2014 → 3:86 BW). |
-| `wettekst`, `wettekst_artikel` | Lokale kopie van geïmporteerde wetten met versie, datum, herkomst en ruw bestand. |
+| `wettekst`, `wettekst_artikel` | Lokale kopie van geïmporteerde wetten met versie, datum, herkomst, ruw bestand en citeerafkorting (`wet`: `OR`, `C. consom.`; leeg = hoofdcodificatie). |
+| `eu_handeling`, `eu_repertorium` | Catalogus van het geldende afgeleide Unierecht (verordeningen, richtlijnen, kaderbesluiten; ook gedelegeerd en uitvoering) uit Cellar, met omzettingstermijn en rubrieken van het repertorium. |
+| `eu_nim` | Nationale uitvoeringsmaatregelen zoals de lidstaten ze meldden (NL, BE, FR, IT, ES, DE en het VK vóór de Brexit). |
+| `omzetting` | Eigen koppeling op artikelniveau: welk nationaal artikel (of welke wet) welk artikel van een handeling omzet, uitvoert, ernaar verwijst of haar autonoom navolgt; met vlag `geverifieerd`. |
 
 Uitgebreider gemotiveerd in de docstring van `synoptikon/models.py`.
 
@@ -148,8 +157,58 @@ Uitgebreider gemotiveerd in de docstring van `synoptikon/models.py`.
    In de stelselweergave toont ⇄ per knoop hoeveel thema's erin vallen;
    `/stelsels/NL/knoop/<id>` laat zien waar de tegenhangers in de andere
    wetboeken staan (BW 3.4.2 valt in DE uiteen over Sachen- én Schuldrecht).
-6. **Snel invoeren** (`/invoer`): drie tabbladen (bron, notitie, begrip),
+6. **Unierecht** (`/eu`): de 17.600 geldende verordeningen en richtlijnen,
+   doorzoekbaar op roepnaam (AVG, DSA), nummer (2019/771), CELEX of tekst,
+   gefilterd op soort en variant en te doorbladeren via het repertorium.
+   `/eu/<celex>` toont de werking in de nationale rechtsorde (art. 288–291
+   VWEU met de leidende arresten: Variola, Von Colson, Marleasing, Faccini
+   Dori, Francovich …), omzettingstermijn en harmonisatieniveau, en per
+   stelsel de status (EN: Brexit en assimilated law; CH: autonome
+   navolging), de artikelen waarin de handeling is omgezet (met hun plaats
+   in de systematiek) en de gemelde maatregelen. `/eu/omzetting` is de matrix
+   handeling × stelsel. Omgekeerd toont elke artikelpagina onder "Europese
+   herkomst" welke richtlijn het artikel omzet.
+7. **Snel invoeren** (`/invoer`): drie tabbladen (bron, notitie, begrip),
    gekoppeld aan een vraag; één scherm op de telefoon.
+8. **Wetten lezen** (`/stelsels` → een wet → `/stelsels/<code>/wet/<id>`):
+   zoals op Légifrance. Inhoudsopgave uit de opschriften van de wettekst
+   zelf (waar de bron die niet meegeeft, zoals de Codice civile, uit de
+   systematiek), dan per afdeling de volledige tekst, met vorige/volgende
+   afdeling en "Ga naar artikel". Op de artikelpagina: vorig/volgend
+   artikel en een link terug naar de afdeling.
+
+## Profielen en talen
+
+**Profielen.** Vijf vaste plekken (`/beheer/profielen`, alleen de
+beheerder). Rollen: beheerder (alles), redacteur (lezen en invoeren), lezer
+(alleen lezen; de server weigert elke POST behalve profiel, taal en
+uitloggen). Een profiel gaat pas aan met een wachtwoord; een nieuw wachtwoord
+of uitzetten hoogt de sessieversie op, waardoor dat profiel overal wordt
+uitgelogd. Iedereen beheert zijn eigen naam, taal en wachtwoord op `/profiel`.
+Vanaf de server: `synoptikon profiel` (overzicht) en `synoptikon profiel 2
+--gebruikersnaam … --rol redacteur --wachtwoord --aan`.
+
+**Talen.** NL, FR, DE, IT, EN en ES. De taal komt uit het profiel, anders
+uit een cookie, anders uit de browser (`Accept-Language`); wisselen kan
+via het menu ⋯ en op de inlogpagina. Twee lagen (`synoptikon/i18n.py`):
+
+* *Interface*: `_('…')` in templates en code, catalogi in
+  `synoptikon/i18n/<taal>.json` met de Nederlandse tekst als sleutel.
+  `python -m synoptikon.i18n_teksten fr` toont wat ontbreekt;
+  `tests/test_i18n.py` eist dat alles vertaald is.
+* *Eigen inhoud* (vragen, analyses, definities, relaties, thema's,
+  opmerkingen): ingevoerd in het Nederlands, vertaald via `vt()` uit het
+  vertaalgeheugen (tabel `inhoud_vertaling`, sleutel = hash van de
+  Nederlandse tekst). Verandert de bron, dan valt de weergave terug op het
+  Nederlands. De standaardvertalingen (machine, niet geverifieerd) staan in
+  `synoptikon/seed/vertalingen/`; nakijken en aanvullen op `/vertalingen`,
+  of `synoptikon vertalingen export --taal fr` → vertalen → `synoptikon
+  vertalingen import --taal fr --bestand …`. Een balk bovenaan meldt dat de
+  inhoud vertaald is en schakelt naar het origineel.
+* *Bron in de oorspronkelijke taal*: wetteksten, termen en citeertitels
+  worden nooit vertaald; ze dragen een `lang`-attribuut voor
+  schermlezers. EU-titels en repertoriumrubrieken komen in de officiële
+  versie uit Cellar (`synoptikon eu-talen`).
 
 Verder: `/bronnen` (lijst, detail met vertalingen), `/concordantie`,
 `/wetteksten` (geïmporteerde versies), `/stelsels` (beheer).
@@ -160,26 +219,50 @@ Alle importers slaan het ruwe bestand op onder `data/wetteksten/<stelsel>/<wet>/
 en de artikelen in `wettekst_artikel`. Lezen gebeurt daarna uitsluitend uit
 de database; de app doet nooit live-calls.
 
+Het register (`synoptikon/importers/register.py`) bevat per stelsel de
+burgerlijke wetboeken en de wetten waarin het Unierecht is omgezet; één
+opdracht haalt ze allemaal:
+
 ```bash
-synoptikon import nl BWBR0005291        # BW Boek 3 (wetten.overheid.nl, BWB-XML)
-synoptikon import nl BWBR0005289        # BW Boek 6
-# BW: 1 BWBR0002656 · 2 BWBR0003045 · 4 BWBR0002761 · 5 BWBR0005288 · 7 BWBR0005290
-#     7A BWBR0006000 · 8 BWBR0005034 · 10 BWBR0030068
-synoptikon import de bgb                # gesetze-im-internet.de, xml.zip
-synoptikon import eu 32007R0864 --taal NL   # EUR-Lex HTML op CELEX
-synoptikon import fr LEGITEXT000006070721 --artikelen 1112,1196,2276 --datum 2024-01-01
-synoptikon import de bgb --bestand ~/Downloads/xml.zip   # uit een lokaal bestand
+scripts/legi_ophalen.sh data/legi            # FR: LEGI-dump van de DILA (1,1 GB gestreamd, alleen de codes uitgepakt)
+synoptikon import-alles --legi data/legi --systematiek
+synoptikon eu-catalogus                      # Cellar: handelingen, repertorium, nationale maatregelen (~1 min)
+synoptikon seed                              # laadt o.a. de omzettingstabel
 ```
 
-Légifrance gebruikt de PISTE-API (OAuth2 client credentials) met
-`LEGIFRANCE_CLIENT_ID` en `LEGIFRANCE_CLIENT_SECRET` uit de omgeving;
-`LEGIFRANCE_SANDBOX=1` kiest de sandbox. Zonder sleutel meldt de importer dat
-hij overslaat en eindigt met exitcode 0. Omdat de Code civil ~2.800 artikelen
-heeft en elk artikel één API-call is, geef je bij voorkeur `--artikelen`.
+| Stelsel | Bron | Wetten | Geconsolideerd |
+|---|---|---|---|
+| NL | wetten.overheid.nl (BWB-XML) | BW Boek 1–8, 10 | ja |
+| DE | gesetze-im-internet.de | BGB, EGBGB, HGB, ProdHaftG, UWG | ja |
+| FR | LEGI (DILA, licence ouverte) | Code civil, Code de la consommation, Code de commerce | ja, op vandaag |
+| IT | Normattiva (Akoma Ntoso) | Codice civile, Codice del consumo | ja |
+| ES | BOE, API datos abiertos | Código Civil, TRLGDCU, Código de Comercio | ja |
+| CH | Fedlex (Akoma Ntoso) | ZGB, OR, IPRG, PrHG | ja, laatste geldende stand |
+| BE | Staatsblad via etaamb.openjustice.be | nieuw BW Boek 1, 2 (titel 3), 3, 4, 5, 8 | **nee**: tekst zoals bekendgemaakt |
+| EN | legislation.gov.uk (CLML) | SGA 1979, SGSA 1982, CRA 2015, UCTA 1977, MA 1967, C(RTP)A 1999, LR(FC)A 1943, LA 1980, CPA 1987, OLA 1957, LPA 1925 | ja |
 
-wetten.overheid.nl heeft geen directe XML-URL meer; de importer volgt de
-doorverwijzing naar de geldende versie en vraagt de XML op via het
-exportformulier van die pagina.
+Justel (BE) en Légifrance (FR) weigeren geautomatiseerde toegang; de
+Belgische tekst komt daarom uit de spiegel van het Staatsblad, en BE Boek 6,
+het WER en het oud BW ontbreken. Voor US (UCC, Restatements) en AU (ACL) is
+er geen open bron zonder scraping; daar blijft het bij de systematiek.
+
+Losse wetten:
+
+```bash
+synoptikon import nl BWBR0005291                       # BW Boek 3
+synoptikon import ch cc/27/317_321_377 --wet OR        # Fedlex-ELI
+synoptikon import it "urn:nir:stato:decreto.legislativo:2005-09-06;206" --wet "c. cons."
+synoptikon import es BOE-A-2007-20555 --wet TRLGDCU
+synoptikon import en ukpga/1979/54 --wet "SGA 1979"
+synoptikon import fr LEGITEXT000006069565 --wet "C. consom." --bestand data/legi
+synoptikon import eu 32007R0864 --taal NL              # EUR-Lex HTML op CELEX
+```
+
+De **omzettingstabel** (`synoptikon/seed/omzetting.py`) is eigen
+aantekening en laadt met `geverifieerd=False`; de app markeert die regels.
+Alle artikelen die erin staan zijn getoetst op bestaan in de geïmporteerde
+officiële teksten, niet op inhoud. Wat je zelf controleert of toevoegt
+(op `/eu/<celex>`), geldt als geverifieerd.
 
 **Systematiek uit een import.** De BW-boom is volledig (gegenereerd uit de
 officiële XML, versies 2024–2026); de BGB-boom gaat tot Untertitel, de Code
@@ -234,7 +317,7 @@ dan `SYNOPTIKON_AUTH_MODE=none`.
 
 ```bash
 pip install -e ".[pdf,dev]"
-pytest                     # 32 tests: auth, synopse, zoeken, export, invoer, parsers, artikelen
+pytest                     # 55 tests: auth, synopse, zoeken, export, invoer, parsers, artikelen, Unierecht
 synoptikon rebuild-fts     # zoekindex opnieuw opbouwen na handmatige DB-ingrepen
 synoptikon seed --overschrijf   # voorbeeldvragen opnieuw laden
 synoptikon seed                 # ook om een bestaande database bij te werken: vult systematiek
