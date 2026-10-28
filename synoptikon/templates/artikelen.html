@@ -1,14 +1,14 @@
 {% extends "base.html" %}
 {% import "_artikel.html" as m %}
-{% block titel %}{{ _('Artikelen') }} · Synoptikon{% endblock %}
+{% block titel %}{{ _('Vergelijken') }} · Synoptikon{% endblock %}
 {% block inhoud %}
-<h1>{{ _('Artikelen') }}</h1>
-<form method="get" class="formulier compact zoekgroot">
-  <input type="search" name="q" value="{{ q }}" autofocus aria-label="{{ _('Artikel of woorden') }}" placeholder="{{ _('artikelnummer of woorden') }}: 3:84 · dwaling · art. 5.69 BW · § 929 BGB · Art. 41 OR · art. 1337 c.c. · s 17 SGA 1979 · UCC § 2-401">
-  <select name="stelsel" style="width:auto" aria-label="{{ _('Stelsel') }}"><option value="">{{ _('stelsel herkennen') }}</option>{% for s in stelsels %}<option value="{{ s.code }}" {% if s.code == f_stelsel %}selected{% endif %}>{{ s.code }}</option>{% endfor %}</select>
-  <button class="knop primair">{{ _('Opzoeken') }}</button>
-</form>
-<p class="hint">{{ _('Een artikelnummer toont de plaats in de systematiek en de corresponderende artikelen in de andere stelsels. NL herken je aan de dubbele punt (3:84), BE aan de punt (5.69) of "oud BW", DE aan § of BGB, FR aan C. civ. of een streepje (1112-1); voor CH, IT, ES en de common law noem je de wet (Art. 41 OR, art. 2043 c.c., art. 1902 CC, s 2 MA 1967, UCC § 2-207, s 18 ACL). Een kaal nummer zoekt in alle ingelezen wetten.') }}</p>
+<div class="paginakop">
+  <h1>{{ _('Vergelijken') }}</h1>
+  <form method="get" action="/opzoeken" class="inline sys-zoek" role="search">
+    <input type="search" name="q" placeholder="{{ _('Artikel opzoeken: 3:84 BW, § 929 BGB…') }}" aria-label="{{ _('Opzoeken') }}">
+  </form>
+</div>
+<p class="hint">{{ _('Zoek een artikel op; op de artikelpagina staan de plaats in de systematiek en de corresponderende artikelen in de andere stelsels.') }}</p>
 {% if q %}
   {% if kandidaten %}
   <p>{{ _('Bedoel je:') }}</p>
@@ -16,9 +16,9 @@
   {% elif treffers %}
   <p class="hint">{{ _('Geen artikelnummer in “{q}”; artikelen waarvan de tekst de woorden bevat', q=q) }}{% if f_stelsel %} ({{ f_stelsel }}){% endif %}:</p>
   <ul class="treffers">{% for r, wa, snippet in treffers %}<li>{{ vlag(r.stelsel) }}<a href="{{ r.url }}">{{ r.citeer }}</a>{% if wa.opschrift %} <span class="stil">· {{ wa.opschrift }}</span>{% endif %}<p class="snippet serif">{{ snippet | safe }}</p></li>{% endfor %}</ul>
-  <p class="hint"><a href="/zoeken?q={{ q | urlencode }}">{{ _('Ook in vragen, bronnen en begrippen zoeken') }}</a></p>
+  <p class="hint"><a href="/opzoeken?q={{ q | urlencode }}">{{ _('Ook in vragen, bronnen en begrippen zoeken') }}</a></p>
   {% else %}
-  <p class="melding">{{ _('Niets gevonden voor “{q}”.', q=q) }} <a href="/zoeken?q={{ q | urlencode }}">{{ _('Zoeken in de hele kennisbank') }}</a></p>
+  <p class="melding">{{ _('Niets gevonden voor “{q}”.', q=q) }} <a href="/opzoeken?q={{ q | urlencode }}">{{ _('Zoeken in de hele kennisbank') }}</a></p>
   {% endif %}
 {% endif %}
 

@@ -13,7 +13,7 @@ from ..models import RECHTSFAMILIES, Antwoord, AntwoordBron, Bron, Stelsel, Syst
 from ..models import Wettekst
 from ..services import correspondentie as corr
 from ..auth import huidig_profiel
-from ..services import leren, wetboek
+from ..services import leren, wetboek, zoeken
 from ..services.artikelen import herken, plaatser, ref_uit_bron
 from ..services.helpers import actieve_stelsels, leeg_naar_none, per_familie, stelsels_per_code
 from . import render
@@ -24,7 +24,12 @@ router = APIRouter()
 @router.get("/stelsels")
 def overzicht(request: Request, db: Session = Depends(get_session)):
     stelsels = db.scalars(select(Stelsel).order_by(Stelsel.volgorde)).all()
-    return render(request, "stelsels.html", families=per_familie(stelsels), wetten={s.code: wetboek.wetten(db, s.code) for s in stelsels},
+    wetten = {}
+    for s in stelsels:
+        register = wetboek.wetten(db, s.code)
+        ids = {w.id for w in register}
+        wetten[s.code] = register + [w for w in wetboek.belangrijk(db, s.code) if w.id not in ids]
+    return render(request, "stelsels.html", families=per_familie(stelsels), wetten=wetten,
                   aantallen={s.code: wetboek.aantal_wetten(db, s.code) for s in stelsels})
 
 
@@ -44,7 +49,10 @@ def alle_wetten(request: Request, code: str, q: str = "", p: int = 1, db: Sessio
 
 @router.get("/stelsels/{code}/wet/{wid}")
 def wet(request: Request, code: str, wid: int, deel: str = "", artikel: str = "", db: Session = Depends(get_session)):
-    """Een wet lezen: inhoudsopgave, of één afdeling met de volledige tekst van haar artikelen."""
+    """Een wet lezen: inhoudsopgave, of één afdeling met de volledige tekst van haar artikelen.
+
+    Het veld bovenaan neemt een artikelnummer (springt naar het artikel) of woorden (zoekt in de tekst van deze wet).
+    """
     w = db.get(Wettekst, wid)
     if w is None or w.stelsel_code != code:
         raise HTTPException(404)
@@ -56,7 +64,13 @@ def wet(request: Request, code: str, wid: int, deel: str = "", artikel: str = ""
             gevonden = next((d for d in [ih.wortel, *ih.volgorde] if kandidaat in d.artikelen), None)
             if gevonden is not None:
                 return RedirectResponse(f"/stelsels/{code}/wet/{wid}?deel={quote(gevonden.sleutel)}#art-{quote(kandidaat)}", status_code=303)
-        return RedirectResponse(f"/artikelen?q={quote(nr)}&stelsel={code}", status_code=303)
+        treffers = zoeken.wetsartikelen(db, nr, code, 60, wettekst_id=w.id)
+        if not treffers:
+            afk = wetboek.toon_afkorting(w) or ""
+            return RedirectResponse(f"/opzoeken?q={quote((nr + ' ' + afk).strip())}&stelsel={code}", status_code=303)
+        return render(request, "wetboek.html", stelsel=db.get(Stelsel, code), w=w, ih=ih, d=ih.wortel, wetten=[], aantal_wetten=0,
+                      artikelen=[], plek={}, toon_tekst=False, vorige=None, volgende=None, ref=lambda n: wetboek.ref(w, n),
+                      zoek=nr, treffers=treffers, bewaarde_refs=_bewaarde(request, db))
     d = wetboek.deel(ih, deel)
     if d is None:
         raise HTTPException(404)
@@ -82,6 +96,8 @@ def wet(request: Request, code: str, wid: int, deel: str = "", artikel: str = ""
         vorige=vorige,
         volgende=volgende,
         ref=lambda nr: wetboek.ref(w, nr),
+        bewaarde_refs=_bewaarde(request, db),
+        in_systematiek=w.kern and w.id in wetboek.plaatsing(db, code).wortel,
     )
 
 

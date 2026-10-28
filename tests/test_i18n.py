@@ -65,7 +65,7 @@ def test_wet_lezen(client):
             s.add(WettekstArtikel(wettekst_id=w.id, nummer=nr, tekst=f"Tekst {nr}", pad=pad, volgorde=i))
         wid = w.id
     r = client.get("/stelsels")
-    assert f"/stelsels/FR?wet={wid}" in r.text
+    assert f"/stelsels/FR/wet/{wid}" in r.text
     # Een wet openen gaat naar haar plek in de systematiek.
     r = client.get(f"/stelsels/FR?wet={wid}", follow_redirects=False)
     assert r.status_code == 303 and r.headers["location"].startswith("/stelsels/FR#knoop-")

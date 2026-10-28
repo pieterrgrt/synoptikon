@@ -15,26 +15,31 @@
 <header class="kop">
   <a class="merk" href="/"><span class="merk-teken" aria-hidden="true">Σ</span> Synoptikon</a>
   <nav class="nav" aria-label="{{ _('Hoofdmenu') }}">
-    <a href="/" {% if request.url.path == '/' %}aria-current="page"{% endif %}>{{ _('Vragen') }}</a>
-    <a href="/begrippen" {% if request.url.path.startswith('/begrippen') %}aria-current="page"{% endif %}>{{ _('Begrippen') }}</a>
-    <a href="/artikelen" {% if request.url.path.startswith('/artikelen') %}aria-current="page"{% endif %}>{{ _('Artikelen') }}</a>
-    <a href="/stelsels" {% if request.url.path.startswith('/stelsels') %}aria-current="page"{% endif %}>{{ _('Stelsels') }}</a>
-    <a href="/eu" {% if request.url.path.startswith('/eu') %}aria-current="page"{% endif %}>{{ _('EU') }}</a>
-    <a href="/bronnen" {% if request.url.path.startswith('/bronnen') %}aria-current="page"{% endif %}>{{ _('Bronnen') }}</a>
-    <a href="/leren" {% if request.url.path.startswith('/leren') %}aria-current="page"{% endif %}>{{ _('Leren') }}</a>
-    {% if mag_bewerken %}<a href="/invoer" {% if request.url.path.startswith('/invoer') %}aria-current="page"{% endif %}>{{ _('Invoer') }}</a>{% endif %}
+    {% set huidig_pad = request.url.path %}
+    <a href="/opzoeken" {% if huidig_pad.startswith('/opzoeken') %}aria-current="page"{% endif %}>{{ _('Opzoeken') }}</a>
+    <a href="/stelsels" {% if huidig_pad.startswith('/stelsels') or huidig_pad.startswith('/eu') or huidig_pad.startswith('/wetteksten') %}aria-current="page"{% endif %}>{{ _('Wetten') }}</a>
+    <a href="/" {% if huidig_pad == '/' or huidig_pad.startswith('/vragen') %}aria-current="page"{% endif %}>{{ _('Vragen') }}</a>
+    <a href="/artikelen" {% if huidig_pad.startswith('/artikelen') or huidig_pad.startswith('/concordantie') %}aria-current="page"{% endif %}>{{ _('Vergelijken') }}</a>
+    <a href="/begrippen" {% if huidig_pad.startswith('/begrippen') %}aria-current="page"{% endif %}>{{ _('Begrippen') }}</a>
+    <a href="/leren" {% if huidig_pad.startswith('/leren') %}aria-current="page"{% endif %}>{{ _('Leren') }}</a>
   </nav>
-  <form class="zoekveld" action="/zoeken" method="get" role="search">
-    <input type="search" name="q" placeholder="{{ _('Zoek…') }}" value="{{ request.query_params.get('q', '') }}" aria-label="{{ _('Zoeken') }}">
+  {% if not huidig_pad.startswith('/opzoeken') %}
+  <form class="zoekveld" action="/opzoeken" method="get" role="search">
+    <input type="search" name="q" placeholder="{{ _('Opzoeken: artikel, wet, uitspraak…') }}" aria-label="{{ _('Opzoeken') }}" enterkeyhint="search">
   </form>
+  {% endif %}
   <div class="kop-acties">
     <button type="button" class="knop-icoon" id="thema-knop" title="{{ _('Licht/donker') }}" aria-label="{{ _('Thema wisselen') }}">◐</button>
     <details class="menu">
       <summary class="knop-icoon" aria-label="{{ _('Meer') }}">⋯</summary>
       <div class="menu-lijst">
         {% if profiel %}<a href="/profiel"><strong>{{ profiel.naam }}</strong> <span class="stil">· {{ profiel.rol_label }}</span></a>{% endif %}
+        {% if mag_bewerken %}<a href="/invoer">{{ _('Snel invoeren') }}</a>{% endif %}
+        <a href="/bronnen">{{ _('Bronnen') }}</a>
+        <a href="/eu">{{ _('EU-catalogus') }}</a>
+        <a href="/eu/omzetting">{{ _('Omzetting') }}</a>
         <a href="/concordantie">{{ _('Concordantie') }}</a>
-        <a href="/wetteksten">{{ _('Wetteksten') }}</a>
+        <a href="/wetteksten">{{ _('Geïmporteerde versies') }}</a>
         <a href="/begrippen/export.json">{{ _('Begrippenparen (JSON)') }}</a>
         {% if mag_bewerken %}<a href="/vertalingen">{{ _('Vertalingen') }}</a>{% endif %}
         {% if profiel and profiel.is_beheerder %}<a href="/beheer/profielen">{{ _('Profielen') }}</a>{% endif %}

@@ -80,6 +80,33 @@ def wetten(db: Session, stelsel: str, alle: bool = False) -> list[Wettekst]:
     return sorted(gekozen, key=lambda w: (w.wet is not None, w.id))
 
 
+# De wetten die je het vaakst opent, bovenaan het overzicht van een stelsel met duizenden wetten (DE: afkorting,
+# EU: CELEX). Wat (nog) niet geïmporteerd is, valt weg.
+BELANGRIJK: dict[str, list[str]] = {
+    "DE": ["GG", "EGBGB", "HGB", "AktG", "GmbHG", "UmwG", "ZPO", "FamFG", "GVG", "InsO", "ZVG", "GBO", "WEG", "ErbbauRG",
+           "BeurkG", "StGB", "StPO", "OWiG", "JGG", "VwVfG", "VwGO", "BVerfGG", "BauGB", "AO", "EStG", "UStG", "UWG", "GWB",
+           "UrhG", "PatG", "MarkenG", "AGG", "BDSG", "DDG", "ProdHaftG", "VVG", "KSchG", "BetrVG", "TzBfG", "ArbGG",
+           "AufenthG", "AsylG", "RDG", "BRAO"],
+    "EU": ["12016M", "12016E", "12016P", "32016R0679", "32008R0593", "32007R0864", "32012R1215", "32019R1111", "32012R0650",
+           "32015R0848", "32022R2065", "32022R1925", "32024R1689", "32023R2854", "32022R2554", "32022L2555", "31993L0013",
+           "32011L0083", "32019L0771", "32019L0770", "31985L0374", "32005L0029", "32000L0031", "32006L0123"],
+}
+
+
+def belangrijk(db: Session, stelsel: str) -> list[Wettekst]:
+    sleutels = BELANGRIJK.get(stelsel)
+    if not sleutels:
+        return []
+    q = select(Wettekst).where(Wettekst.stelsel_code == stelsel)
+    if stelsel == "EU":
+        q = q.where(or_(Wettekst.wet_id.in_(sleutels), *[Wettekst.wet_id.like(f"{c}.%") for c in sleutels[:3]]))
+    else:
+        q = q.where(Wettekst.wet.in_(sleutels))
+    gekozen = _kies_taal(list(db.scalars(q.order_by(Wettekst.opgehaald.desc())).all()))
+    plek = {k: i for i, k in enumerate(sleutels)}
+    return sorted(gekozen, key=lambda w: plek.get(_basis(w) if stelsel == "EU" else w.wet, 999))
+
+
 def aantal_wetten(db: Session, stelsel: str) -> int:
     """Aantal wetten van een stelsel (EU: handelingen, niet hun taalversies)."""
     q = select(func.count(func.distinct(Wettekst.wet_id))).where(Wettekst.stelsel_code == stelsel)
@@ -310,3 +337,12 @@ def artikelen_bij(db: Session, paren: list[tuple[int, str]]) -> list[WettekstArt
             for a in db.scalars(select(WettekstArtikel).where(WettekstArtikel.wettekst_id == wid, WettekstArtikel.nummer.in_(nrs[i:i + 500]))):
                 gevonden[(wid, a.nummer)] = a
     return [gevonden[p] for p in paren if p in gevonden]
+
+
+def lees_url(db: Session, r: Ref, wa: WettekstArtikel | None = None) -> str | None:
+    """Het artikel in de leesweergave van zijn wet (de afdeling waarin het staat, op het artikel); anders de artikelpagina."""
+    if wa is None:
+        return r.url
+    from urllib.parse import quote
+
+    return f"/stelsels/{wa.wettekst.stelsel_code}/wet/{wa.wettekst_id}?artikel={quote(wa.nummer)}"

@@ -46,6 +46,12 @@ class Settings:
     sso_geheim: str | None = field(default_factory=lambda: _env("SYNOPTIKON_SSO_SECRET"))
     sso_domein: str | None = field(default_factory=lambda: _env("SYNOPTIKON_SSO_DOMEIN"))
 
+    # Claude (services/claude.py): opzoeken op /opzoeken en rechtsvergelijkend onderzoek bij een vraag. Zonder sleutel
+    # werkt alles behalve die twee. Het maandbudget is een harde grens; daarboven weigert de app elke aanroep.
+    anthropic_api_key: str | None = field(default_factory=lambda: _env("SYNOPTIKON_ANTHROPIC_API_KEY") or _env("ANTHROPIC_API_KEY"))
+    claude_model: str = field(default_factory=lambda: _env("SYNOPTIKON_CLAUDE_MODEL", "claude-opus-5-5"))
+    llm_budget_usd: float = field(default_factory=lambda: float(_env("SYNOPTIKON_LLM_BUDGET_USD", "20")))
+
     # Standaardtaal voor vertalingen in de synopse.
     ui_lang: str = field(default_factory=lambda: _env("SYNOPTIKON_UI_LANG", "nl"))
 

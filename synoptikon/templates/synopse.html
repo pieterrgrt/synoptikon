@@ -25,6 +25,8 @@
   </div>
 </header>
 
+{% include "_onderzoek.html" %}
+
 <div class="synopse-balk" id="synopse-balk" data-vraag="{{ vraag.slug }}">
   <span class="label">{{ _('Kolommen') }}</span>
   {% for f in per_familie(stelsels) %}
@@ -144,4 +146,4 @@
   </div>
 </section>
 {% endblock %}
-{% block scripts %}<script src="/static/js/synopse.js?v={{ sv }}"></script>{% endblock %}
+{% block scripts %}<script src="/static/js/synopse.js?v={{ sv }}"></script><script src="/static/js/bezig.js?v={{ sv }}"></script>{% endblock %}

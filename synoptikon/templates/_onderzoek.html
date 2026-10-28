@@ -1,0 +1,34 @@
+{# Onderzoek door Claude bij een vraag (ok = laatste Onderzoek of None). Zolang het loopt, ververst bezig.js dit blok. #}
+<section class="blok onderzoek" id="onderzoek" {% if ok and ok.status in ('wacht', 'bezig') %}data-bezig="/vragen/{{ vraag.slug }}/onderzoek"{% endif %}>
+  {% if ok and ok.status in ('wacht', 'bezig') %}
+  <p role="status"><span class="draaier" aria-hidden="true"></span> {{ _('Claude onderzoekt deze vraag voor {codes}.', codes=ok.stelsels.replace(',', ', ')) }}
+    {% if ok.voortgang %}<span class="stil klein">{{ ok.voortgang }}</span>{% endif %}</p>
+  <p class="hint">{{ _('Dit duurt een paar minuten. Je kunt de pagina sluiten; het resultaat komt vanzelf in de synopse.') }}</p>
+  {% else %}
+  {% if ok and ok.status == 'fout' %}<p class="melding fout">{{ _('Het onderzoek is mislukt:') }} {{ ok.fout }}</p>{% endif %}
+  {% if ok and ok.status == 'klaar' and ok.resultaat %}
+  <h2>{{ _('Vergelijking') }} <span class="tag">Claude · {{ _('niet geverifieerd') }}</span></h2>
+  <div class="synthese">{{ ok.resultaat.synthese | md }}</div>
+  <p class="hint">{{ _('Onderzocht op {datum} voor {codes} (${usd}). Lege kernen en analyses zijn ingevuld en de bronnen gekoppeld; wat je zelf schreef bleef staan.', datum=ok.klaar.strftime('%d-%m-%Y') if ok.klaar else '', codes=ok.stelsels.replace(',', ', '), usd='%.2f' % ok.usd) }}</p>
+  {% set eigen = ok.resultaat.stelsels | selectattr('code', 'in', vraag_gevuld) | list %}
+  {% if eigen %}
+  <details><summary>{{ _('Claudes analyse waar je zelf al iets had geschreven') }}</summary>
+    {% for s in eigen %}<h3>{{ sc(s.code) }} {{ s.kern }}</h3>{{ s.analyse | md }}{% endfor %}
+  </details>
+  {% endif %}
+  {% endif %}
+  {% if claude_aan and mag_bewerken %}
+  <details class="onderzoek-start" {% if not ok %}open{% endif %}>
+    <summary>{{ _('Claude laten onderzoeken') if not ok else _('Opnieuw laten onderzoeken') }}</summary>
+    <form method="post" action="/vragen/{{ vraag.slug }}/onderzoek" class="formulier compact">
+      <fieldset class="stelsel-keuze"><legend>{{ _('Stelsels') }}</legend>
+        {% for s in stelsels %}<label class="kolomschakel"><input type="checkbox" name="stelsel" value="{{ s.code }}" {% if s.code in standaard_stelsels %}checked{% endif %}> {{ vlag(s.code) }}{{ s.code }}</label>{% endfor %}
+      </fieldset>
+      <label>{{ _('Aanwijzingen (optioneel)') }} <textarea name="opdracht" rows="2" lang="nl" placeholder="{{ _('Bijv. let op de BGH-rechtspraak na 2002; vergelijk ook met het DCFR') }}"></textarea></label>
+      <p class="hint">{{ _('Claude leest de wetteksten uit Synoptikon, zoekt rechtspraak op het web en schrijft per stelsel kern, analyse en bronnen, plus een vergelijking. Een onderzoek kost meestal enkele dollars.') }}</p>
+      <div class="acties"><button class="knop primair">{{ _('Onderzoek starten') }}</button></div>
+    </form>
+  </details>
+  {% endif %}
+  {% endif %}
+</section>

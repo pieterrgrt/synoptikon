@@ -543,3 +543,53 @@ label.vinkje input { width: auto; }
 .doelen { display: flex; flex-wrap: wrap; gap: .3rem 1rem; padding-left: 1.6rem; }
 .leren-ster { font-family: var(--sans); font-size: .78rem; margin-left: .4rem; white-space: nowrap; }
 .leren-ster.bewaard { color: var(--accent); }
+
+/* Opzoeken: één veld, het gevondene meteen eronder, het logboek van vandaag onderaan */
+.verborgen { position: absolute; width: 1px; height: 1px; overflow: hidden; clip: rect(0 0 0 0); }
+.opzoek-veld { display: flex; gap: .5rem; align-items: stretch; margin-bottom: 1rem; }
+.opzoek-veld input { font-size: 1.2rem; flex: 1; padding: .55rem .7rem; }
+.opzoek-veld select { width: auto; flex: 0 0 auto; }
+.gevonden { border-left: 3px solid var(--accent); padding-left: .9rem; margin: 1rem 0 1.5rem; }
+.gevonden .origineel { font-size: 1.05rem; }
+.pad { color: var(--inkt-3); margin: .2rem 0 .5rem; }
+.wet-snel { display: inline-flex; gap: .3rem; margin-left: .5rem; vertical-align: middle; }
+.wet-snel input { width: 9rem !important; padding: .15rem .4rem !important; font-size: .85rem !important; }
+.claude-vraag { margin: 1.2rem 0; padding: .8rem 1rem; background: var(--papier-2); border-radius: var(--radius); display: flex; flex-wrap: wrap; gap: .5rem 1rem; align-items: center; }
+.claude-vraag p { margin: 0; width: 100%; }
+.treffer-groep summary { cursor: pointer; }
+.treffer-groep summary h2 { font-size: 1.1rem; margin: 0; }
+.opzoeking { border: 1px solid var(--lijn); border-radius: var(--radius); padding: .6rem .9rem; margin: .6rem 0; background: var(--papier); }
+.opzoeking.groot { border-left: 3px solid var(--accent); margin: 1rem 0 1.5rem; }
+.opzoeking-kop { display: flex; justify-content: space-between; gap: .5rem; }
+.opzoeking-invoer { font-family: var(--mono); font-size: .85rem; color: var(--inkt-2); }
+.opzoeking-titel { margin: .3rem 0; font-family: var(--serif); font-weight: 600; }
+.opzoeking .toelichting { font-size: .92rem; color: var(--inkt-2); }
+.bewaar-form { display: inline-flex; gap: .4rem; align-items: center; }
+.bewaar-form select { width: auto; max-width: 12rem; font-size: .85rem; padding: .2rem .4rem; }
+.draaier { display: inline-block; width: .8em; height: .8em; border: 2px solid var(--lijn); border-top-color: var(--accent); border-radius: 50%; animation: draai 1s linear infinite; vertical-align: -.1em; }
+@keyframes draai { to { transform: rotate(360deg); } }
+.leren-ster form { display: inline; }
+.leren-ster .knop-tekst { font-size: inherit; padding: 0; color: inherit; }
+.leren-ster a { margin-left: .3rem; color: var(--inkt-3); }
+@media (max-width: 720px) {
+  .opzoek-veld { flex-wrap: wrap; }
+  .opzoek-veld input { flex-basis: 100%; }
+  .opzoek-veld button { flex: 1; }
+  .wet-snel { display: flex; margin: .3rem 0 0; }
+}
+.wet-lijst.lang li.extra { display: none; }
+.meer-wetten summary { cursor: pointer; color: var(--accent); }
+.stelsel-links { display: flex; flex-wrap: wrap; gap: .3rem 1rem; margin-bottom: 0; }
+.meer-wetten summary { cursor: pointer; color: var(--accent); }
+.stelsel-links { display: flex; flex-wrap: wrap; gap: .3rem 1rem; margin-bottom: 0; }
+.onderzoek { border: 1px solid var(--lijn); border-radius: var(--radius); padding: .7rem 1rem; background: var(--papier-2); }
+.onderzoek .synthese { font-family: var(--serif); }
+.onderzoek-start { border: 0; padding: 0; margin: .5rem 0; }
+.onderzoek-start summary { cursor: pointer; color: var(--accent); }
+.stelsel-keuze { border: 0; padding: 0; margin: 0; display: flex; flex-wrap: wrap; gap: .3rem .8rem; }
+.stelsel-keuze legend { font-size: .9rem; color: var(--inkt-2); padding: 0; margin-bottom: .2rem; }
+.formulier label.kolomschakel { flex-direction: row; align-items: center; gap: .3rem; }
+.nav a { white-space: nowrap; }
+.stelsel-sprong { display: flex; flex-wrap: wrap; gap: .35rem; margin: .5rem 0 1rem; }
+.stelsel-sprong a { font-size: .8rem; font-weight: 600; letter-spacing: .05em; padding: .15rem .5rem; border: 1px solid var(--lijn); border-radius: 1rem; color: var(--inkt-2); }
+.stelsel-kaart { scroll-margin-top: 7rem; }

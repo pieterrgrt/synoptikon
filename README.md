@@ -128,6 +128,7 @@ PDF-route een 501 en blijft de rest werken (Markdown en de printweergave met
 | `wettekst`, `wettekst_artikel` | Lokale kopie van geïmporteerde wetten met versie, datum, herkomst, ruw bestand en citeerafkorting (`wet`: `OR`, `C. consom.`; leeg = hoofdcodificatie). |
 | `eu_handeling`, `eu_repertorium` | Catalogus van het geldende afgeleide Unierecht (verordeningen, richtlijnen, kaderbesluiten; ook gedelegeerd en uitvoering) uit Cellar, met omzettingstermijn en rubrieken van het repertorium. |
 | `eu_nim` | Nationale uitvoeringsmaatregelen zoals de lidstaten ze meldden (NL, BE, FR, IT, ES, DE en het VK vóór de Brexit). |
+| `opzoeking`, `onderzoek`, `llm_gebruik` | Logboek van Opzoeken, onderzoek door Claude bij een vraag, en elke API-aanroep (voor het maandbudget). |
 | `omzetting` | Eigen koppeling op artikelniveau: welk nationaal artikel (of welke wet) welk artikel van een handeling omzet, uitvoert, ernaar verwijst of haar autonoom navolgt; met vlag `geverifieerd`. |
 
 Uitgebreider gemotiveerd in de docstring van `synoptikon/models.py`.
@@ -144,9 +145,17 @@ Uitgebreider gemotiveerd in de docstring van `synoptikon/models.py`.
 3. **Stelselweergave** (`/stelsels/<code>?vraag=<slug>`): systematiekboom met
    de bronnen van een vraag gemarkeerd. Wissel tussen de tabs en je ziet
    § 812 BGB in het Schuldrecht staan waar NL alles in Boek 3 houdt.
-4. **Zoeken** (`/zoeken?q=`): vragen, bronnen, begrippen, analyses en
-   geïmporteerde wetteksten; prefix-zoeken, accenten genegeerd; `3:84`,
-   `§ 929` en ECLI's werken.
+4. **Opzoeken** (`/opzoeken?q=`, ook het veld in de kop; `/zoeken` stuurt hierheen): de
+   enige zoekingang. Typ wat je hoort: een artikel (`§ 823 BGB`, `Art. 2 GG`,
+   `6:162 BW`, `Art. 6 DSGVO`) geeft meteen de tekst met de plaats in de wet;
+   een wet (`Grundgesetz`, `StGB`, `AVG`, `Rome I`) de wet zelf, in elk stelsel
+   en onder elke naam; een uitspraak de eigen bronnen; daarna EU-handelingen,
+   full-text in alle wetteksten (register eerst, te filteren per stelsel) en de
+   eigen inhoud. Wat er niet precies bij zit, zoekt Claude op ("Claude laten
+   opzoeken"): waar het staat, wat er staat (wettekst altijd uit de lokale
+   import, rechtspraak van het web, gemarkeerd) en een korte toelichting. Wat
+   je opzoekt komt in "Vandaag opgezocht" (tabel `opzoeking`), het logboek van
+   een college; elk item gaat met één tik als kaart naar een leerlijst.
 5. **Artikelen** (`/artikelen`, `/artikelen/NL/3:84`): typ een artikelnummer
    (`3:84`, `§ 929`, `art. 1196 C. civ.`, `1112-1`) en zie de plaats in de
    systematiek, de tekst (uit een bron of een geïmporteerde wet) en per thema
@@ -170,12 +179,38 @@ Uitgebreider gemotiveerd in de docstring van `synoptikon/models.py`.
    herkomst" welke richtlijn het artikel omzet.
 7. **Snel invoeren** (`/invoer`): drie tabbladen (bron, notitie, begrip),
    gekoppeld aan een vraag; één scherm op de telefoon.
-8. **Wetten lezen** (`/stelsels` → een wet → `/stelsels/<code>/wet/<id>`):
-   zoals op Légifrance. Inhoudsopgave uit de opschriften van de wettekst
-   zelf (waar de bron die niet meegeeft, zoals de Codice civile, uit de
-   systematiek), dan per afdeling de volledige tekst, met vorige/volgende
-   afdeling en "Ga naar artikel". Op de artikelpagina: vorig/volgend
-   artikel en een link terug naar de afdeling.
+8. **Wetten** (`/stelsels` → een wet → `/stelsels/<code>/wet/<id>`): per stelsel de
+   wetten uit het register en de belangrijkste andere (`wetboek.BELANGRIJK`: GG,
+   StGB, ZPO, VwVfG … en VEU, VWEU, Handvest, AVG, Rome I …), plus alle andere
+   via "Alle n wetten". Elke wet, ook het BGB en elke EU-handeling, leest zoals
+   op Légifrance: inhoudsopgave uit de opschriften van de wettekst zelf (waar de
+   bron die niet meegeeft, zoals de Codice civile, uit de systematiek), dan per
+   afdeling de volledige tekst, met vorige/volgende afdeling. Het veld bovenaan
+   neemt een artikelnummer of woorden (zoekt in deze wet). Bij elk artikel
+   ☆ Bewaren.
+9. **Bewaren voor Wunderkammer**: ☆ bij elk artikel (leesweergave, systematiek,
+   artikelpagina, opzoeken) en elke uitspraak maakt met één tik een kaart in de
+   laatst gekozen leerlijst (`POST /leren/snel`; de keuze staat in een cookie);
+   ⋯ ernaast kiest kaartsoort en lijst. Lijsten met "naar Wunderkammer" komen
+   via `/api/wk/kaarten` in Wunderkammer.
+10. **Onderzoek door Claude** (bij een vraag, of meteen bij "Nieuwe vraag"): kies de
+   stelsels; Claude leest de wetteksten via de lokale import (tools
+   `artikel_lezen`, `wetteksten_doorzoeken`, `wet_zoeken`,
+   `eigen_bronnen_doorzoeken`), zoekt rechtspraak op het web en levert per stelsel
+   kern, analyse en bronnen, plus een functionele vergelijking. Lege kernen en
+   analyses worden ingevuld en gemarkeerd ("niet geverifieerd"), wetsartikelen
+   worden bronnen met de lokale tekst; wat je zelf schreef blijft staan. Draait op
+   de achtergrond; de pagina toont de voortgang (tabel `onderzoek`).
+
+### Claude
+
+`SYNOPTIKON_ANTHROPIC_API_KEY` aan = opzoeken en onderzoek aan
+(`services/claude.py`). Model `SYNOPTIKON_CLAUDE_MODEL` (standaard
+`claude-opus-5-5`), harde grens `SYNOPTIKON_LLM_BUDGET_USD` per kalendermaand
+(standaard 20; elke aanroep staat in `llm_gebruik`). Opzoeken draait op effort
+`low` met hoogstens 3 webzoekacties (enkele centen), onderzoek op `high` met
+hoogstens 12 (meestal enkele dollars). Weigeringen gaan via server-side
+`fallbacks: "default"`.
 
 ## Profielen en talen
 
@@ -338,7 +373,7 @@ dan `SYNOPTIKON_AUTH_MODE=none`.
 
 ```bash
 pip install -e ".[pdf,dev]"
-pytest                     # 55 tests: auth, synopse, zoeken, export, invoer, parsers, artikelen, Unierecht
+pytest                     # 87 tests: auth, synopse, opzoeken, Claude (nep-client), export, invoer, parsers, artikelen, Unierecht
 synoptikon rebuild-fts     # zoekindex opnieuw opbouwen na handmatige DB-ingrepen
 synoptikon seed --overschrijf   # voorbeeldvragen opnieuw laden
 synoptikon seed                 # ook om een bestaande database bij te werken: vult systematiek

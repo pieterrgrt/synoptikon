@@ -1,7 +1,7 @@
 {% extends "base.html" %}
 {% block titel %}{{ _('Alle wetten') }} · {{ vt(stelsel.naam) }} · Synoptikon{% endblock %}
 {% block inhoud %}
-<p class="kruimel"><a href="/stelsels">{{ _('Stelsels') }}</a> › <a href="/stelsels/{{ stelsel.code }}">{{ vlag(stelsel.code) }}{{ vt(stelsel.naam) }}</a></p>
+<p class="kruimel"><a href="/stelsels">{{ _('Wetten') }}</a> › <a href="/stelsels/{{ stelsel.code }}">{{ vlag(stelsel.code) }}{{ vt(stelsel.naam) }}</a></p>
 <h1>{{ _('Alle wetten') }} · {{ vt(stelsel.naam) }}</h1>
 <form method="get" class="formulier compact zoekgroot">
   <input type="search" name="q" value="{{ q }}" aria-label="{{ _('Wet zoeken') }}" placeholder="{{ _('Titel of afkorting, bijv. PatG, DSGVO, 2019/771') }}">

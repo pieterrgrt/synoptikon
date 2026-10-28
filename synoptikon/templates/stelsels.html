@@ -1,22 +1,33 @@
 {% extends "base.html" %}
-{% block titel %}{{ _('Stelsels') }} · Synoptikon{% endblock %}
+{% block titel %}{{ _('Wetten') }} · Synoptikon{% endblock %}
 {% block inhoud %}
-<h1>{{ _('Stelsels') }}</h1>
-<p class="hint">{{ _('Per rechtsfamilie. Kies een wet om de tekst te lezen, van inhoudsopgave tot artikel; de systematiek laat zien waar een onderwerp in elk stelsel staat.') }}</p>
+<div class="paginakop">
+  <h1>{{ _('Wetten') }}</h1>
+  <form method="get" action="/opzoeken" class="inline sys-zoek" role="search">
+    <input type="search" name="q" placeholder="{{ _('Wet of artikel: StGB, Art. 20 GG, AVG…') }}" aria-label="{{ _('Wet of artikel opzoeken') }}">
+  </form>
+</div>
+<p class="hint">{{ _('Per stelsel de belangrijkste wetten; elke wet lees je hetzelfde: inhoudsopgave, afdeling, artikel, en bij elk artikel ☆ om het te bewaren. De systematiek laat zien waar een onderwerp in het stelsel staat.') }}</p>
+<nav class="stelsel-sprong" aria-label="{{ _('Stelsels') }}">{% for f in families %}{% for s in f.stelsels if s.actief %}<a href="#stelsel-{{ s.code }}">{{ vlag(s.code) }}{{ s.code }}</a>{% endfor %}{% endfor %}</nav>
 {% for f in families %}
 <section class="blok familie-blok fam-{{ f.sleutel or 'overig' }}">
   <h2 class="familie-kop">{{ f.naam }}</h2>
   {% if f.kenmerk %}<p class="stil">{{ f.kenmerk }}</p>{% endif %}
   <div class="stelsel-kaarten">
   {% for s in f.stelsels if s.actief %}
-    <div class="stelsel-kaart">
-      <h3><a href="/stelsels/{{ s.code }}">{{ vlag(s.code) }}{{ vt(s.naam) }}</a> <span class="stelsel-code">{{ s.code }}</span></h3>
+    <div class="stelsel-kaart" id="stelsel-{{ s.code }}">
+      <h3>{{ vlag(s.code) }}{{ vt(s.naam) }} <span class="stelsel-code">{{ s.code }}</span></h3>
       {% if s.toelichting %}<p class="stil klein">{{ vt(s.toelichting) }}</p>{% endif %}
-      {% if wetten[s.code] or aantallen[s.code] %}
-      <ul class="wet-lijst">{% for w in wetten[s.code] %}<li><a href="/stelsels/{{ s.code }}?wet={{ w.id }}">{{ wet_titel(w) }}</a>{% if w.wet %} <span class="stil">{{ wet_afk(w) }}</span>{% endif %}</li>{% endfor %}</ul>
-      {% if aantallen[s.code] > wetten[s.code] | length %}<p class="klein"><a href="/stelsels/{{ s.code }}/wetten">{{ _('Alle {n} wetten doorzoeken', n=aantallen[s.code]) }} →</a></p>{% endif %}
+      {% set ws = wetten[s.code] %}
+      {% if ws %}
+      <ul class="wet-lijst">{% for w in ws[:8] %}<li><a href="/stelsels/{{ s.code }}/wet/{{ w.id }}">{{ wet_titel(w) }}</a>{% if w.wet %} <span class="stil">{{ wet_afk(w) }}</span>{% endif %}</li>{% endfor %}</ul>
+      {% if ws | length > 8 %}<details class="meer-wetten"><summary class="klein">{{ _('nog {n}', n=ws | length - 8) }}</summary><ul class="wet-lijst">{% for w in ws[8:] %}<li><a href="/stelsels/{{ s.code }}/wet/{{ w.id }}">{{ wet_titel(w) }}</a>{% if w.wet %} <span class="stil">{{ wet_afk(w) }}</span>{% endif %}</li>{% endfor %}</ul></details>{% endif %}
       {% else %}<p class="stil klein">{{ _('Geen geïmporteerde wettekst; alleen de systematiek.') }}</p>{% endif %}
-      <p class="klein"><a href="/stelsels/{{ s.code }}">{{ _('Systematiek') }} →</a></p>
+      <p class="klein stelsel-links">
+        {% if aantallen[s.code] > ws | length %}<a href="/stelsels/{{ s.code }}/wetten">{{ _('Alle {n} wetten', n=aantallen[s.code]) }} →</a>{% endif %}
+        <a href="/stelsels/{{ s.code }}">{{ _('Systematiek') }} →</a>
+        {% if s.code == 'EU' %}<a href="/eu">{{ _('Catalogus en omzetting') }} →</a>{% endif %}
+      </p>
     </div>
   {% endfor %}
   </div>

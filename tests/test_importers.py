@@ -77,7 +77,7 @@ def test_store_en_zoekindex():
         assert w.bestand and (database.settings.wetteksten_dir / w.bestand).exists()
         assert len(w.artikelen) == 2
         res = zoek(s, "Besitzkonstitut")
-        assert any(t.titel.endswith("930") for t in res.wetteksten)
+        assert any("930" in t.titel for t in res.wetteksten)
         # opnieuw opslaan van dezelfde versie vervangt in plaats van dupliceert
         store.sla_op(s, "DE", g)
         from sqlalchemy import select

@@ -104,7 +104,9 @@ def test_artikel_opzoeken(client):
     assert r.status_code == 303 and r.headers["location"] == "/artikelen/NL/3:84"
     r = client.get("/artikelen", params={"q": "929"})
     assert "/artikelen/DE/929" in r.text and "/artikelen/FR/929" in r.text
-    assert "Artikel:" in client.get("/zoeken", params={"q": "§ 823"}).text
+    # Opzoeken: het artikel bovenaan, met link naar de vergelijking; /zoeken stuurt door.
+    html = client.get("/zoeken", params={"q": "§ 823"}).text
+    assert "/artikelen/DE/823" in html and 'class="opzoek-veld"' in html
     assert "art. 6:162 BW" in client.get("/artikelen/DE/823").text
     # niet-hoofdwet
     assert "art. 6:185 BW" in client.get("/artikelen/DE/1", params={"wet": "ProdHaftG"}).text
