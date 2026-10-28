@@ -178,6 +178,17 @@ REGELS: dict[str, Regels] = {
     ),
 }
 
+
+
+def _uitbreidingen() -> None:
+    """Citeerregels uit `services/regels_<regio>.py` (elk met een dict `REGELS`, zelfde vorm als hier)."""
+    from ..plugins import modules
+    for m in modules(__package__, "regels_"):
+        REGELS.update(m.REGELS)
+
+
+_uitbreidingen()
+
 HOOFDWET = {code: r.hoofdwet for code, r in REGELS.items() if r.hoofdwet}
 
 # Volledige namen die men intypt in plaats van de afkorting. Aangevuld met de

@@ -111,8 +111,10 @@ def cmd_import(args) -> int:
                 g = etaamb.parse(data.decode("utf-8", "replace"), args.id)
             elif bron == "gr":
                 g = lawspot.parse(data.decode("utf-8", "replace"), args.id)
-            else:
+            elif bron == "en":
                 g = legislation_uk.parse(data, args.id)
+            else:
+                g = _importer_voor(bron).parse(data, args.id)
         else:
             haal = {
                 "nl": lambda: bwb.haal_op(args.id),
@@ -126,7 +128,7 @@ def cmd_import(args) -> int:
                 "en": lambda: legislation_uk.haal_op(args.id),
                 "gr": lambda: lawspot.haal_op(args.id),
             }
-            g = haal[bron]()
+            g = haal[bron]() if bron in haal else _importer_voor(bron).haal_op(args.id)
     except ImportOvergeslagen as e:
         print(e)
         return 0
@@ -145,6 +147,16 @@ def cmd_import(args) -> int:
         if args.systematiek:
             _systematiek(s, w)
     return 0
+
+
+def _importer_voor(bron: str):
+    """Importer van een uitbreiding: die van de eerste registerregel van dit stelsel (importers/register_<regio>.py)."""
+    from .importers import register
+    from .plugins import importer
+    for w in register.WETTEN:
+        if w.stelsel.lower() == bron:
+            return importer(w.importer)
+    raise SystemExit(f"Geen importer voor stelsel {bron.upper()}")
 
 
 def cmd_import_alles(args) -> int:

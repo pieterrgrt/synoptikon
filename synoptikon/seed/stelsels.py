@@ -112,3 +112,14 @@ CONCORDANTIES = [
     ("DE", "BGB", "§ 242 (c.i.c. ongeschreven)", "§ 311 Abs. 2, § 241 Abs. 2", "2002-01-01", "Gesetz zur Modernisierung des Schuldrechts (BGBl. I 2001, 3138)", "Culpa in contrahendo gecodificeerd; voorheen gewoonterecht op basis van RGZ 78, 239."),
     ("DE", "BGB", "§ 276 a.F. (positive Vertragsverletzung)", "§ 280 Abs. 1", "2002-01-01", "Schuldrechtsmodernisierung", "Eenheidstatbestand Pflichtverletzung."),
 ]
+
+
+def _uitbreidingen() -> None:
+    """Stelsels en systematiek uit `stelsels_<regio>.py` (elk met `STELSELS` en `SYSTEMATIEK`, zelfde vorm als hier)."""
+    from ..plugins import modules
+    for m in modules(__package__, "stelsels_"):
+        STELSELS.extend(m.STELSELS)
+        SYSTEMATIEK.update(m.SYSTEMATIEK)
+
+
+_uitbreidingen()

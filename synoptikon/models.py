@@ -90,6 +90,9 @@ RECHTSFAMILIES: dict[str, tuple[str, str]] = {
     "nordisch": ("Nordische rechtsfamilie", "Scandinavisch recht: pragmatisch, weinig codificatie van het algemene deel"),
     "gemengd": ("Gemengde stelsels", "Civil law-kern met common law-bovenbouw: Louisiana, Québec, Schotland, Zuid-Afrika"),
     "common_law": ("Common law", "Rechtersrecht en precedent; statutes vullen aan en worden restrictief uitgelegd"),
+    "post_sovjet": ("Post-Sovjetstelsels", "Rusland en de GOS: civil law naar Duits-Nederlands model, met Sovjeterfgoed in uitvoering en rechtspraak"),
+    "islamitisch": ("Islamitisch en gemengd-islamitisch recht", "Sharia als bron naast een Frans of Egyptisch geïnspireerd burgerlijk wetboek"),
+    "oost_aziatisch": ("Oost-Aziatische stelsels", "Receptie van Duits en Frans civil law (Japan, Korea, Taiwan) en het Chinese socialistische recht"),
     "supranationaal": ("Europees en eenvormig recht", "EU-recht, verdragen en soft law (CISG, PECL, DCFR) als gemeenschappelijke maatstaf"),
 }
 

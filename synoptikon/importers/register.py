@@ -139,4 +139,20 @@ def haal_op(w: Wet, legi_map: str | None = None):
     if w.importer == "uk":
         from . import legislation_uk
         return legislation_uk.haal_op(w.id, titel=w.titel)
-    raise ValueError(f"Onbekende importer {w.importer}")
+    # Importers van de regio-uitbreidingen (register_<regio>.py): elke module heeft `haal_op(id, titel=…)`.
+    from ..plugins import importer
+    try:
+        mod = importer(w.importer)
+    except ModuleNotFoundError:
+        raise ValueError(f"Onbekende importer {w.importer}") from None
+    return mod.haal_op(w.id, titel=w.titel)
+
+
+def _uitbreidingen() -> None:
+    """Registerregels uit `register_<regio>.py` (elk met een lijst `WETTEN`) achter de vaste regels."""
+    from ..plugins import modules
+    for m in modules(__package__, "register_"):
+        WETTEN.extend(m.WETTEN)
+
+
+_uitbreidingen()
