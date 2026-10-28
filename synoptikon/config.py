@@ -40,6 +40,11 @@ class Settings:
 
     # Koppeling met Wunderkammer (routes/wunderkammer.py): Bearer-token, minstens 24 tekens; leeg = uit.
     wk_token: str | None = field(default_factory=lambda: _env("SYNOPTIKON_WK_TOKEN"))
+    wk_url: str = field(default_factory=lambda: _env("SYNOPTIKON_WK_URL", "https://kammer.regoort.me").rstrip("/"))
+
+    @property
+    def wk_ingesteld(self) -> bool:
+        return len(self.wk_token or "") >= 24
 
     # Eén aanmelding met de andere apps op het domein (sso.py): gedeeld geheim (≥ 32 tekens, hetzelfde als WK_SSO_SECRET
     # in Wunderkammer) en het cookiedomein, bijv. ".regoort.me". Leeg = uit.

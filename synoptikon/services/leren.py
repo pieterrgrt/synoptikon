@@ -15,7 +15,7 @@ from sqlalchemy.orm import Session, selectinload
 
 from .. import md
 from ..i18n import _
-from ..models import ARRESTSOORTEN, ARTIKELSOORTEN, Bron, Kaart, KaartStand, Leerlijst, Stelsel, now
+from ..models import ARRESTSOORTEN, ARTIKELSOORTEN, Bron, Kaart, KaartStand, Leerlijst, Profiel, Stelsel, now
 from . import correspondentie as corr
 from .artikelen import Ref
 
@@ -193,9 +193,13 @@ def _datum(s) -> datetime | None:
     return d.replace(tzinfo=timezone.utc) if d.tzinfo is None else d.astimezone(timezone.utc)
 
 
-def zet_stand(db: Session, items: list[dict]) -> int:
-    """Stand uit Wunderkammer bijwerken: [{uid, due, stability, reps, lapses, last_review, last_rating}]."""
-    per_uid = {k.uid: k for k in db.scalars(select(Kaart).where(Kaart.uid.in_([str(i.get("uid")) for i in items if isinstance(i, dict)]))).all()}
+def zet_stand(db: Session, items: list[dict], alleen_gekoppeld: bool = False) -> int:
+    """Stand uit Wunderkammer bijwerken: [{uid, due, stability, reps, lapses, last_review, last_rating}].
+    `alleen_gekoppeld`: kaarten van profielen die de koppeling uit hebben gezet blijven buiten beschouwing."""
+    q = select(Kaart).where(Kaart.uid.in_([str(i.get("uid")) for i in items if isinstance(i, dict)]))
+    if alleen_gekoppeld:
+        q = q.join(Leerlijst).join(Profiel, Profiel.id == Leerlijst.profiel_id).where(Profiel.wunderkammer.is_(True))
+    per_uid = {k.uid: k for k in db.scalars(q).all()}
     n = 0
     for i in items:
         k = per_uid.get(str(i.get("uid"))) if isinstance(i, dict) else None

@@ -2,7 +2,7 @@
 
 Wunderkammer (Pieters leer-app, module Jura) haalt hier de wettekst van de artikelen die in zijn kaarten staan, de
 correspondentietabel en de begrippenparen op, en bewaart ze zelf (herhalen werkt dus ook als Synoptikon even weg is).
-Alleen lezen; er wordt niets in Synoptikon geschreven.
+Wettekst, thema's en begrippen alleen lezen; bij de kaarten meldt Wunderkammer de stand terug.
 
 - `SYNOPTIKON_WK_TOKEN` (≥ 24 tekens) aan; leeg = de routes bestaan niet (404).
 - `Authorization: Bearer <token>`; Wunderkammer zet hetzelfde in `WK_SYNOPTIKON_TOKEN`.
@@ -16,7 +16,8 @@ Formaat `synoptikon-wunderkammer`, versie 1:
 
 De begrippenparen hebben de vorm van `/begrippen/export.json` (zie services/export.py).
 
-Kaarten uit de leerlijsten (versie 2). Synoptikon maakt ze, Wunderkammer plant de herhaling en meldt de stand terug:
+Kaarten uit de leerlijsten (versie 2). Synoptikon maakt ze, Wunderkammer plant de herhaling en meldt de stand terug.
+Alleen voor profielen die de koppeling op /profiel aan hebben gezet; anders 403 (en wordt hun stand genegeerd):
 
     GET  /api/wk/kaarten?profiel=pieter
                              {"format", "version": 2, "exported", "profiel", "lijsten": [{id, naam, vak, examen, omschrijving}],
@@ -40,7 +41,7 @@ from sqlalchemy.orm import Session, selectinload
 from ..config import settings
 from ..db import get_session
 from ..i18n import zet_taal
-from ..models import Begrip, BegripRelatie, Profiel
+from ..models import Begrip, BegripRelatie, Profiel, now
 from ..services import export, leren
 from ..services.artikelen import Ref
 from ..services.correspondentie import alle_correspondenties, wettekst_artikel
@@ -101,6 +102,9 @@ def kaarten(profiel: str = "", db: Session = Depends(get_session)):
     p = db.scalar(select(Profiel).where(func.lower(Profiel.gebruikersnaam) == profiel.strip().lower())) if profiel.strip() else db.get(Profiel, 1)
     if p is None:
         raise HTTPException(404, "Onbekend profiel")
+    if not p.wunderkammer:
+        raise HTTPException(403, "De koppeling met Wunderkammer staat uit voor dit profiel (Synoptikon › Profiel).")
+    p.wk_gezien = now()
     zet_taal(p.taal)
     lijsten = [l for l in leren.lijsten_van(db, p.id) if l.naar_wk]
     bouwer = leren.Bouwer(db)
@@ -127,4 +131,4 @@ def kaarten_stand(body: dict = Body(...), db: Session = Depends(get_session)):
     stand = body.get("stand")
     if not isinstance(stand, list) or len(stand) > 5000:
         raise HTTPException(422, "stand: lijst van hoogstens 5000")
-    return dict(bijgewerkt=leren.zet_stand(db, stand))
+    return dict(bijgewerkt=leren.zet_stand(db, stand, alleen_gekoppeld=True))

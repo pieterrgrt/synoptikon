@@ -17,7 +17,7 @@
     <label class="vinkje"><input type="radio" name="lijst" value="nieuw" {% if not lijsten %}checked{% endif %} required> {{ _('Nieuwe lijst:') }}</label>
     <div class="rij">
       <input name="nieuwe_lijst" placeholder="{{ _('Examen goederenrecht') }}" aria-label="{{ _('Naam van de nieuwe lijst') }}">
-      <input name="vak" list="vakken" placeholder="{{ _('vak (Wunderkammer)') }}" aria-label="{{ _('Vak in Wunderkammer') }}" autocapitalize="none">
+      <input name="vak" list="vakken" placeholder="{{ _('vak (Wunderkammer)') if wk else _('vak') }}" aria-label="{{ _('Vak in Wunderkammer') if wk else _('Vak') }}" autocapitalize="none">
     </div>
     <datalist id="vakken">{% for v in vakken %}<option value="{{ v }}">{% endfor %}</datalist>
   </fieldset>

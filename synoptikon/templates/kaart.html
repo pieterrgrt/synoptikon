@@ -10,7 +10,7 @@
   <div class="flits-achter">{{ achter | safe }}</div>
 </div>
 {% if z.url %}<p class="klein"><a href="{{ z.url }}">{{ _('In Synoptikon lezen') }}</a></p>{% endif %}
-{% if k.stand %}<p class="stil klein">{{ _('Wunderkammer') }}: {{ n_('{n} herhaling', '{n} herhalingen', k.stand.herhalingen) }}, {{ n_('{n} misser', '{n} missers', k.stand.missers) }}{% if k.stand.due %} · {{ _('volgende {datum}', datum=k.stand.due.strftime('%d-%m-%Y')) }}{% endif %}</p>{% endif %}
+{% if wk and k.stand %}<p class="stil klein">{{ _('Wunderkammer') }}: {{ n_('{n} herhaling', '{n} herhalingen', k.stand.herhalingen) }}, {{ n_('{n} misser', '{n} missers', k.stand.missers) }}{% if k.stand.due %} · {{ _('volgende {datum}', datum=k.stand.due.strftime('%d-%m-%Y')) }}{% endif %}</p>{% endif %}
 
 <form method="post" action="/leren/kaart/{{ k.id }}" class="formulier">
   {% if k.soort in ('arrest', 'feiten') %}
@@ -27,7 +27,7 @@
   {% if k.soort in ('arrest', 'feiten', 'vrij') %}<label>{% if k.soort == 'vrij' %}{{ _('Antwoord') }}{% else %}{{ _('Rechtsregel') }}{% endif %} <span class="hint">markdown</span><textarea name="antwoord" rows="4">{{ k.antwoord or '' }}</textarea></label>{% endif %}
   <label>{{ _('Notitie') }} <span class="hint">{{ _('komt onder het antwoord · markdown') }}</span><textarea name="notitie" rows="3">{{ k.notitie or '' }}</textarea></label>
   <label>{{ _('Lijst') }} <select name="lijst">{% for l in lijsten %}<option value="{{ l.id }}" {% if l.id == k.lijst_id %}selected{% endif %}>{{ l.naam }}</option>{% endfor %}</select></label>
-  <label class="vinkje"><input type="checkbox" name="actief" value="1" {% if k.actief %}checked{% endif %}> {{ _('Actief (oefenen en Wunderkammer)') }}</label>
+  <label class="vinkje"><input type="checkbox" name="actief" value="1" {% if k.actief %}checked{% endif %}> {{ _('Actief (oefenen en Wunderkammer)') if wk else _('Actief') }}</label>
   <div class="acties"><button class="knop primair">{{ _('Opslaan') }}</button> <a class="knop" href="/leren/{{ k.lijst.id }}">{{ _('Terug') }}</a></div>
 </form>
 <form method="post" action="/leren/kaart/{{ k.id }}/verwijder" data-bevestig="{{ _('Deze kaart verwijderen?') }}" class="compact"><button class="knop klein gevaar">{{ _('Kaart verwijderen') }}</button></form>

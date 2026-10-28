@@ -213,7 +213,14 @@ _NIEUWE_KOLOMMEN = [
     ("wettekst", "stijl", "VARCHAR(8)"),
     ("kaart", "status", "VARCHAR(10)"),
     ("kaart", "herkomst", "VARCHAR(300)"),
+    ("profiel", "wunderkammer", "BOOLEAN NOT NULL DEFAULT 0"),
+    ("profiel", "wk_gezien", "DATETIME"),
 ]
+
+# Eenmalig na het toevoegen van een kolom.
+_NA_KOLOM = {
+    ("profiel", "wunderkammer"): "UPDATE profiel SET wunderkammer = 1 WHERE id IN (SELECT profiel_id FROM leerlijst WHERE naar_wk = 1)",
+}
 
 
 def _migreer(conn) -> None:
@@ -221,6 +228,8 @@ def _migreer(conn) -> None:
         bestaand = {r[1] for r in conn.execute(text(f"PRAGMA table_info({tabel})"))}
         if bestaand and kolom not in bestaand:
             conn.execute(text(f"ALTER TABLE {tabel} ADD COLUMN {kolom} {soort}"))
+            if (tabel, kolom) in _NA_KOLOM:
+                conn.execute(text(_NA_KOLOM[(tabel, kolom)]))
 
 
 def init_db() -> None:

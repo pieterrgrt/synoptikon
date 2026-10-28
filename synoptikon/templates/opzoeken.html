@@ -13,7 +13,7 @@
   </select>
   <button class="knop primair">{{ _('Zoek') }}</button>
 </form>
-{% if not q %}<p class="hint">{{ _('Een artikel, een wet of een uitspraak, zoals je het hoort. Wat Synoptikon zelf niet vindt, zoekt Claude op. Met ☆ gaat het naar je leerlijst en zo naar Wunderkammer.') }}</p>{% endif %}
+{% if not q %}<p class="hint">{{ _('Een artikel, een wet of een uitspraak, zoals je het hoort. Wat Synoptikon zelf niet vindt, zoekt Claude op. Met ☆ gaat het naar je leerlijst en zo naar Wunderkammer.') if wk else _('Een artikel, een wet of een uitspraak, zoals je het hoort. Wat Synoptikon zelf niet vindt, zoekt Claude op. Met ☆ gaat het naar je leerlijst.') }}</p>{% endif %}
 
 {% if open_id %}{% for o in logboek if o.id == open_id %}{% with groot = true %}{% include "_opzoeking.html" %}{% endwith %}{% endfor %}{% endif %}
 

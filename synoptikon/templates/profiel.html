@@ -5,6 +5,7 @@
 <h1>{{ p.naam }} <span class="stil">· {{ p.rol_label }}</span></h1>
 <p class="stil">{{ _('Gebruikersnaam') }}: <code>{{ p.gebruikersnaam }}</code></p>
 {% if klaar == 'gegevens' %}<p class="melding ok" role="status">{{ _('Opgeslagen.') }}</p>{% endif %}
+{% if klaar == 'wunderkammer' %}<p class="melding ok" role="status">{{ _('Opgeslagen.') }}</p>{% endif %}
 {% if klaar == 'wachtwoord' %}<p class="melding ok" role="status">{{ _('Wachtwoord gewijzigd. Andere apparaten moeten opnieuw inloggen.') }}</p>{% endif %}
 {% if fout %}<p class="melding fout" role="alert">{{ fout }}</p>{% endif %}
 
@@ -16,6 +17,18 @@
   </label>
   <div class="acties"><button class="knop primair">{{ _('Opslaan') }}</button></div>
 </form>
+
+<h2 id="wunderkammer">{{ _('Koppeling met Wunderkammer') }}</h2>
+<p class="hint">{{ _('Wunderkammer is de herhaal-app. Met de koppeling aan haalt Wunderkammer de kaarten uit je leerlijsten op en plant de herhaling; de stand per kaart komt hier terug. Wunderkammer leest ook de wetteksten bij de normen in je eigen kaarten.') }}</p>
+{% if wk_ingesteld %}
+<form method="post" action="/profiel/wunderkammer" class="formulier">
+  <label class="vinkje"><input type="checkbox" name="aan" value="1" {% if p.wunderkammer %}checked{% endif %}> {{ _('Kaarten uit mijn leerlijsten herhalen in Wunderkammer') }}</label>
+  {% if p.wunderkammer %}<p class="stil klein">{% if p.wk_gezien %}{{ _('Laatst opgehaald: {datum}.', datum=p.wk_gezien.strftime('%d-%m-%Y %H:%M')) }}{% else %}{{ _('Wunderkammer heeft nog niets opgehaald.') }}{% endif %} {{ n_('{n} kaart in herhaling', '{n} kaarten in herhaling', wk_herhaling) }} · <a href="{{ wk_url }}/jura">{{ _('Wunderkammer openen') }}</a></p>{% endif %}
+  <div class="acties"><button class="knop primair">{{ _('Opslaan') }}</button></div>
+</form>
+{% else %}
+<p class="stil">{{ _('Nog niet beschikbaar: de beheerder moet eerst een token instellen (SYNOPTIKON_WK_TOKEN, en hetzelfde in Wunderkammer).') }}</p>
+{% endif %}
 
 <h2>{{ _('Wachtwoord wijzigen') }}</h2>
 <form method="post" action="/profiel/wachtwoord" class="formulier">

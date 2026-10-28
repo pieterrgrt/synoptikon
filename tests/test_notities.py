@@ -87,6 +87,7 @@ def test_vakken_en_bestanden(map_):
 
 def test_voorstellen_beoordelen_en_wunderkammer(map_, nep, client, monkeypatch):
     _wettekst()
+    client.post("/profiel/wunderkammer", data={"aan": "1"})
     monkeypatch.setattr(settings, "wk_token", TOKEN)
     with database.session() as s:
         u = notities.verwerk(s, profiel_id=1)

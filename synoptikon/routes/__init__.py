@@ -7,6 +7,8 @@ from typing import Any
 from fastapi import Request
 from fastapi.responses import HTMLResponse
 
+from ..config import settings
+
 
 def render(request: Request, naam: str, status_code: int = 200, **context: Any) -> HTMLResponse:
     from ..main import templates
@@ -15,4 +17,6 @@ def render(request: Request, naam: str, status_code: int = 200, **context: Any) 
     profiel = getattr(request.state, "profiel", None)
     context.setdefault("profiel", profiel)
     context.setdefault("mag_bewerken", profiel is None or profiel.mag_bewerken)
+    # Koppeling met Wunderkammer aan voor dit profiel: dan pas verwijzen de pagina's ernaar.
+    context.setdefault("wk", settings.wk_ingesteld and (profiel is None or profiel.wunderkammer))
     return templates.TemplateResponse(request, naam, context, status_code=status_code)

@@ -73,9 +73,18 @@ def inhoud_origineel(origineel: str = Form("0"), terug: str = Form("/")):
     return resp
 
 
+def _wk_stand(db: Session, p: Profiel) -> dict:
+    """Voor het blok Wunderkammer op /profiel: is de koppeling ingesteld, en wat staat er in herhaling."""
+    from ..models import Kaart, KaartStand, Leerlijst
+
+    n = db.scalar(select(func.count()).select_from(KaartStand).join(Kaart).join(Leerlijst).where(Leerlijst.profiel_id == p.id)) or 0
+    return dict(wk_ingesteld=settings.wk_ingesteld, wk_url=settings.wk_url, wk_herhaling=n)
+
+
 @router.get("/profiel")
 def profiel(request: Request, db: Session = Depends(get_session), klaar: str = ""):
-    return render(request, "profiel.html", p=_mijn(request, db), fout=None, klaar=klaar)
+    p = _mijn(request, db)
+    return render(request, "profiel.html", p=p, fout=None, klaar=klaar, **_wk_stand(db, p))
 
 
 @router.post("/profiel/gegevens")
@@ -89,6 +98,13 @@ def profiel_gegevens(request: Request, naam: str = Form(...), taal: str = Form(.
     return resp
 
 
+@router.post("/profiel/wunderkammer")
+def profiel_wunderkammer(request: Request, aan: str = Form(""), db: Session = Depends(get_session)):
+    p = _mijn(request, db)
+    p.wunderkammer = aan == "1"
+    return RedirectResponse("/profiel?klaar=wunderkammer#wunderkammer", status_code=303)
+
+
 @router.post("/profiel/wachtwoord")
 def profiel_wachtwoord(request: Request, huidig: str = Form(...), nieuw: str = Form(...), nogmaals: str = Form(...),
                        db: Session = Depends(get_session)):
@@ -98,7 +114,7 @@ def profiel_wachtwoord(request: Request, huidig: str = Form(...), nieuw: str = F
         fout = _("Het huidige wachtwoord klopt niet.")
     fout = fout or _wachtwoord_fout(nieuw, nogmaals)
     if fout:
-        return render(request, "profiel.html", status_code=400, p=p, fout=fout, klaar="")
+        return render(request, "profiel.html", status_code=400, p=p, fout=fout, klaar="", **_wk_stand(db, p))
     p.wachtwoord_hash = auth.hash_password(nieuw)
     p.sessie_versie += 1  # andere apparaten opnieuw laten inloggen
     db.flush()

@@ -642,6 +642,9 @@ class Profiel(Base):
     # Ophogen bij een nieuw wachtwoord of uitzetten: oude sessiecookies vervallen dan.
     sessie_versie: Mapped[int] = mapped_column(Integer, default=0)
     laatst_ingelogd: Mapped[datetime | None] = mapped_column(DateTime)
+    # Koppeling met Wunderkammer (routes/wunderkammer.py), per profiel aan te zetten op /profiel.
+    wunderkammer: Mapped[bool] = mapped_column(default=False)
+    wk_gezien: Mapped[datetime | None] = mapped_column(DateTime)  # laatst dat Wunderkammer de kaarten ophaalde
 
     @property
     def rol_label(self) -> str:

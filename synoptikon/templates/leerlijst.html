@@ -9,14 +9,14 @@
     {% if kaarten | rejectattr('0.gekend') | list %}<a class="knop" href="/leren/{{ lijst.id }}/oefenen?welke=nog">{{ _('Alleen nog niet gekend') }}</a>{% endif %}{% endif %}
   </div>
 </div>
-<p class="stil klein">{{ n_('{n} kaart', '{n} kaarten', kaarten | length) }}{% if lijst.vak %} · {{ lijst.vak }}{% endif %}{% if lijst.examen %} · {{ _('examen {datum}', datum=lijst.examen.strftime('%d-%m-%Y')) }}{% endif %} · {% if lijst.naar_wk %}{{ _('herhaling in Wunderkammer') }}{% else %}{{ _('niet naar Wunderkammer') }}{% endif %}</p>
+<p class="stil klein">{{ n_('{n} kaart', '{n} kaarten', kaarten | length) }}{% if lijst.vak %} · {{ lijst.vak }}{% endif %}{% if lijst.examen %} · {{ _('examen {datum}', datum=lijst.examen.strftime('%d-%m-%Y')) }}{% endif %}{% if wk %} · {% if lijst.naar_wk %}{{ _('herhaling in Wunderkammer') }}{% else %}{{ _('niet naar Wunderkammer') }}{% endif %}{% endif %}</p>
 {% if lijst.omschrijving %}<div class="hint">{{ lijst.omschrijving | md }}</div>{% endif %}
 {% if request.query_params.get('overgenomen') %}<p class="melding ok" role="status">{{ _('{a} overgenomen, {b} afgewezen.', a=request.query_params.get('overgenomen'), b=request.query_params.get('afgewezen', '0')) }}</p>{% endif %}
 
 {% if voorstellen %}
 <section class="blok" id="voorstellen">
   <h2>{{ n_('{n} voorstel uit je notities', '{n} voorstellen uit je notities', voorstellen | length) }}</h2>
-  <p class="hint">{{ _('Claude las je notities en stelde deze kaarten voor; de wettekst komt uit Synoptikon. Vink uit wat je niet wilt. Wat je overneemt gaat naar Wunderkammer; afgewezen kaarten worden niet opnieuw voorgesteld.') }}</p>
+  <p class="hint">{{ _('Claude las je notities en stelde deze kaarten voor; de wettekst komt uit Synoptikon. Vink uit wat je niet wilt. Wat je overneemt gaat naar Wunderkammer; afgewezen kaarten worden niet opnieuw voorgesteld.') if wk else _('Claude las je notities en stelde deze kaarten voor; de wettekst komt uit Synoptikon. Vink uit wat je niet wilt; afgewezen kaarten worden niet opnieuw voorgesteld.') }}</p>
   <form method="post" action="/leren/{{ lijst.id }}/voorstellen">
     <ul class="kaartenlijst">
     {% for k, z in voorstellen %}
@@ -42,7 +42,7 @@
   <li class="kaart-rij{% if not k.actief %} uit{% endif %}">
     <div class="kaart-kop"><span class="label">{{ k.soort_label }}</span>
       {% if k.gekend is true %}<span class="status gekend">{{ _('gekend') }}</span>{% elif k.gekend is false %}<span class="status nog">{{ _('nog niet') }}</span>{% endif %}
-      {% if k.stand %}<span class="stil klein" title="{{ _('Stand in Wunderkammer') }}">WK: {% if k.stand.due %}{{ _('volgende {datum}', datum=k.stand.due.strftime('%d-%m')) }}{% endif %}{% if k.stand.stabiliteit %} · {{ _('{n} d stabiel', n=k.stand.stabiliteit | round | int) }}{% endif %}{% if k.stand.missers %} · {{ n_('{n} misser', '{n} missers', k.stand.missers) }}{% endif %}</span>{% endif %}
+      {% if wk and k.stand %}<span class="stil klein" title="{{ _('Stand in Wunderkammer') }}">WK: {% if k.stand.due %}{{ _('volgende {datum}', datum=k.stand.due.strftime('%d-%m')) }}{% endif %}{% if k.stand.stabiliteit %} · {{ _('{n} d stabiel', n=k.stand.stabiliteit | round | int) }}{% endif %}{% if k.stand.missers %} · {{ n_('{n} misser', '{n} missers', k.stand.missers) }}{% endif %}</span>{% endif %}
       {% if not k.actief %}<span class="stil klein">{{ _('uit') }}</span>{% endif %}
       <a class="klein" href="/leren/kaart/{{ k.id }}">{{ _('bewerken') }}</a>
     </div>
@@ -57,12 +57,13 @@
   <form method="post" action="/leren/{{ lijst.id }}" class="formulier compact">
     <label>{{ _('Naam') }} <input name="naam" required value="{{ lijst.naam }}"></label>
     <div class="rij">
-      <label>{{ _('Vak in Wunderkammer') }} <input name="vak" list="vakken" value="{{ lijst.vak or '' }}" autocapitalize="none"></label>
+      <label>{{ _('Vak in Wunderkammer') if wk else _('Vak') }} <input name="vak" list="vakken" value="{{ lijst.vak or '' }}" autocapitalize="none"></label>
       <label>{{ _('Examen') }} <input type="date" name="examen" value="{{ lijst.examen or '' }}"></label>
     </div>
     <datalist id="vakken">{% for v in vakken %}<option value="{{ v }}">{% endfor %}</datalist>
     <label>{{ _('Omschrijving') }} <textarea name="omschrijving" rows="2">{{ lijst.omschrijving or '' }}</textarea></label>
-    <label class="vinkje"><input type="checkbox" name="naar_wk" value="1" {% if lijst.naar_wk %}checked{% endif %}> {{ _('Herhalen in Wunderkammer') }}</label>
+    {% if wk %}<label class="vinkje"><input type="checkbox" name="naar_wk" value="1" {% if lijst.naar_wk %}checked{% endif %}> {{ _('Herhalen in Wunderkammer') }}</label>
+    {% elif lijst.naar_wk %}<input type="hidden" name="naar_wk" value="1">{% endif %}
     <div class="acties"><button class="knop primair">{{ _('Opslaan') }}</button> <a class="knop" href="/leren/{{ lijst.id }}/export.md">{{ _('Exporteren (markdown)') }}</a></div>
   </form>
   <form method="post" action="/leren/{{ lijst.id }}/verwijder" data-bevestig="{{ _('Deze lijst met al haar kaarten verwijderen?') }}" class="compact"><button class="knop klein gevaar">{{ _('Lijst verwijderen') }}</button></form>

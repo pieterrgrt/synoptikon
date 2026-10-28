@@ -72,6 +72,11 @@ def test_arrest_en_vrije_kaart(client):
     assert r.status_code == 400
 
 
+def _lijst_id(naam: str) -> int:
+    with database.session() as s:
+        return s.query(Leerlijst).filter_by(naam=naam).one().id
+
+
 def test_api_kaarten_en_stand(anoniem, client):
     _wettekst()
     client.post("/leren/nieuw", data={"lijst": "nieuw", "nieuwe_lijst": "API", "stelsel": "DE", "nummer": "930", "soort": "artikel"})
@@ -79,6 +84,13 @@ def test_api_kaarten_en_stand(anoniem, client):
     h = {"Authorization": f"Bearer {TOKEN}"}
     try:
         assert anoniem.get("/api/wk/kaarten").status_code == 401
+        # De koppeling staat per profiel aan of uit (op /profiel); uit: 403, en de pagina's noemen Wunderkammer niet.
+        client.post("/profiel/wunderkammer", data={})
+        assert anoniem.get("/api/wk/kaarten", headers=h).status_code == 403
+        assert "naar_wk" not in client.get("/leren").text and "Herhalen in Wunderkammer" not in client.get(
+            f"/leren/{_lijst_id('API')}").text
+        assert 'name="aan" value="1"' in client.get("/profiel").text
+        client.post("/profiel/wunderkammer", data={"aan": "1"})
         data = anoniem.get("/api/wk/kaarten", headers=h).json()
         assert data["version"] == 2 and data["kaarten"]
         k = next(k for k in data["kaarten"] if k["refs"] and k["refs"][0]["nummer"] == "930")
@@ -90,6 +102,14 @@ def test_api_kaarten_en_stand(anoniem, client):
         with database.session() as s:
             kaart = s.query(Kaart).filter_by(uid=k["uid"]).one()
             assert kaart.stand.herhalingen == 3 and kaart.stand.missers == 1
+            assert s.get(Profiel, 1).wk_gezien is not None
+        assert "Laatst opgehaald" in client.get("/profiel").text and "Herhalen in Wunderkammer" in client.get(
+            f"/leren/{_lijst_id('API')}").text
+        # Uit: de stand van dit profiel wordt genegeerd.
+        client.post("/profiel/wunderkammer", data={})
+        r = anoniem.post("/api/wk/kaarten/stand", headers=h, json={"stand": [{"uid": k["uid"], "reps": 9}]})
+        assert r.json() == {"bijgewerkt": 0}
+        client.post("/profiel/wunderkammer", data={"aan": "1"})
     finally:
         settings.wk_token = None
 
