@@ -41,6 +41,11 @@ class Settings:
     # Koppeling met Wunderkammer (routes/wunderkammer.py): Bearer-token, minstens 24 tekens; leeg = uit.
     wk_token: str | None = field(default_factory=lambda: _env("SYNOPTIKON_WK_TOKEN"))
 
+    # Eén aanmelding met de andere apps op het domein (sso.py): gedeeld geheim (≥ 32 tekens, hetzelfde als WK_SSO_SECRET
+    # in Wunderkammer) en het cookiedomein, bijv. ".regoort.me". Leeg = uit.
+    sso_geheim: str | None = field(default_factory=lambda: _env("SYNOPTIKON_SSO_SECRET"))
+    sso_domein: str | None = field(default_factory=lambda: _env("SYNOPTIKON_SSO_DOMEIN"))
+
     # Standaardtaal voor vertalingen in de synopse.
     ui_lang: str = field(default_factory=lambda: _env("SYNOPTIKON_UI_LANG", "nl"))
 

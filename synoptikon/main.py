@@ -13,7 +13,7 @@ from markupsafe import Markup, escape
 from starlette.middleware.base import BaseHTTPMiddleware
 
 from . import __version__, i18n, md
-from .auth import huidig_profiel, is_ingelogd
+from .auth import COOKIE, huidig_profiel, is_ingelogd, maak_sessie_token, profiel_uit_sso
 from .config import settings
 from .db import init_db
 from .models import RECHTSFAMILIES, RELATIE_TYPES
@@ -121,6 +121,10 @@ class AuthMiddleware(BaseHTTPMiddleware):
         pad = request.url.path
         open_pad = pad.startswith(_OPEN_PADEN)
         ingelogd = not open_pad and is_ingelogd(request)
+        via_sso = None
+        if not open_pad and not ingelogd:
+            via_sso = profiel_uit_sso(request)  # elders op het domein ingelogd (Wunderkammer)
+            ingelogd = via_sso is not None
         if open_pad and not pad.startswith(("/static/", "/api/wk/")):
             huidig_profiel(request)  # voor de taal op /login en /taal
         i18n.zet_taal(_taal_van(request), origineel=request.cookies.get("inhoud") == "origineel")
@@ -133,6 +137,9 @@ class AuthMiddleware(BaseHTTPMiddleware):
         else:
             volgende = pad + (f"?{request.url.query}" if request.url.query else "")
             response = RedirectResponse(f"/login?volgende={volgende}", status_code=303)
+        if via_sso is not None:
+            response.set_cookie(COOKIE, maak_sessie_token(via_sso), max_age=settings.session_days * 86400, httponly=True,
+                                secure=settings.cookie_secure, samesite="lax", path="/")
         # Bescheiden beveiligingskoppen; nginx mag ze overschrijven.
         response.headers.setdefault("X-Content-Type-Options", "nosniff")
         response.headers.setdefault("Referrer-Policy", "same-origin")

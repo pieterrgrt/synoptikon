@@ -24,6 +24,7 @@ from fastapi import Request
 from itsdangerous import BadSignature, URLSafeTimedSerializer
 from sqlalchemy import func, select
 
+from . import sso
 from .config import settings
 from .db import session_factory
 from .models import Profiel
@@ -56,6 +57,15 @@ def verify_password(wachtwoord: str, opgeslagen: str | None) -> bool:
     opgeslagen = (opgeslagen or "").strip().strip("'\"")
     if not opgeslagen.startswith(("scrypt:", "scrypt$")):
         return False
+    delen = opgeslagen.replace("$", ":").split(":")
+    if len(delen) == 6:
+        # Formaat van Wunderkammer (scrypt:N:r:p:salt:digest, gewone base64): één wachtwoord voor beide apps.
+        try:
+            n, r, p = (int(x) for x in delen[1:4])
+            salt, verwacht = base64.b64decode(delen[4]), base64.b64decode(delen[5])
+        except (ValueError, TypeError):
+            return False
+        return hmac.compare_digest(hashlib.scrypt(wachtwoord.encode(), salt=salt, n=n, r=r, p=p, dklen=len(verwacht)), verwacht)
     try:
         _, salt_s, digest_s = opgeslagen.replace("$", ":").split(":")
         salt = _unb64(salt_s)
@@ -109,6 +119,20 @@ def huidig_profiel(request: Request) -> Profiel | None:
                 s.expunge(p)
     else:
         p = profiel_uit_cookie(request.cookies.get(COOKIE))
+    request.state.profiel = p
+    return p
+
+
+def profiel_uit_sso(request: Request) -> Profiel | None:
+    """Het profiel bij een geldige domeincookie (sso.py), als dat profiel bestaat en aan staat."""
+    naam = sso.lees(request.cookies.get(sso.COOKIE), settings.sso_geheim)
+    if not naam:
+        return None
+    with session_factory()() as s:
+        p = s.scalars(select(Profiel).where(func.lower(Profiel.gebruikersnaam) == naam)).first()
+        if p is None or not p.actief:
+            return None
+        s.expunge(p)
     request.state.profiel = p
     return p
 

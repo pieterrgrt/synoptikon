@@ -14,6 +14,7 @@ verdragen (VEU, VWEU, Handvest) in alle zes talen van de interface.
 from __future__ import annotations
 
 import time
+from collections import deque
 from collections.abc import Callable, Iterable
 from concurrent.futures import ThreadPoolExecutor
 
@@ -34,21 +35,40 @@ def _parallel(taken: Iterable, werk: Callable, schrijf: Callable, parallel: int,
     taken = list(taken)
     begin = time.time()
     with ThreadPoolExecutor(max_workers=parallel) as pool:
-        for i, (taak, toekomst) in enumerate(((t, pool.submit(werk, t)) for t in taken), 1):
+        # Een begrensde wachtrij: `parallel` downloads tegelijk, en nooit meer dan een paar documenten in het geheugen.
+        rij: deque = deque()
+        volgende = iter(taken)
+
+        def vul() -> None:
+            while len(rij) < parallel * 2:
+                t = next(volgende, _KLAAR)
+                if t is _KLAAR:
+                    return
+                rij.append((t, pool.submit(werk, t)))
+
+        vul()
+        i = 0
+        while rij:
+            taak, toekomst = rij.popleft()
+            vul()
+            i += 1
             try:
                 uit = toekomst.result()
             except Exception as e:  # netwerk, parser: melden en door
                 tel["fout"] += 1
                 melder(f"FOUT {taak}: {type(e).__name__}: {e}"[:300])
-                continue
+                uit = False
             if uit is None:
                 tel["overgeslagen"] += 1
-            else:
+            elif uit is not False:
                 schrijf(taak, uit)
                 tel["nieuw"] += 1
             if i % elke == 0:
                 melder(f"{i}/{len(taken)} · {tel} · {time.time() - begin:.0f}s")
     return tel
+
+
+_KLAAR = object()
 
 
 # --- DE -----------------------------------------------------------------------------
@@ -80,6 +100,7 @@ def duitsland(sessie: Callable[[], Session], parallel: int = 4, limiet: int | No
         n += 1
         if n % 25 == 0:
             s.commit()
+            s.expunge_all()  # expire_on_commit staat uit: zonder dit blijven alle teksten in het geheugen
 
     try:
         tel = _parallel(taken, werk, schrijf, parallel, melder)
@@ -170,6 +191,7 @@ def europa(sessie: Callable[[], Session], parallel: int = 4, limiet: int | None 
         n += 1
         if n % 20 == 0:
             s.commit()
+            s.expunge_all()
 
     try:
         tel = _parallel(taken, werk, schrijf, parallel, melder)

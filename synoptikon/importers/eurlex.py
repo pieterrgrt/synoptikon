@@ -170,7 +170,7 @@ def _blokken_xhtml(bron: str) -> list[tuple[str, str]] | None:
 class _Alineas(HTMLParser):
     """Oudere HTML zonder geldige XML: elke <p>, <td>-rij of kop wordt een blok."""
 
-    BLOK = {"p", "h1", "h2", "h3", "h4", "tr", "li"}
+    BLOK = {"p", "h1", "h2", "h3", "h4", "tr", "li", "div"}
 
     def __init__(self) -> None:
         super().__init__(convert_charrefs=True)
@@ -208,7 +208,10 @@ class _Alineas(HTMLParser):
 
 
 def blokken(bron: str) -> list[tuple[str, str]]:
-    b = _blokken_xhtml(bron) if bron.lstrip().startswith("<?xml") or "xmlns" in bron[:2000] else None
+    # Zeer grote documenten (tarieflijsten, bijlagen van tientallen MB) streamend: een ElementTree-boom kost het
+    # tienvoudige aan geheugen.
+    xml = (bron.lstrip().startswith("<?xml") or "xmlns" in bron[:2000]) and len(bron) < 15_000_000
+    b = _blokken_xhtml(bron) if xml else None
     if b is None:
         p = _Alineas()
         p.feed(bron)
