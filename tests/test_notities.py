@@ -164,8 +164,10 @@ def test_voorstellen_per_notitie_en_per_kaart(map_, nep, client):
     _wettekst()
     with database.session() as s:
         notities.verwerk(s, profiel_id=1)
-        lijst = next(l for l in s.query(Leerlijst).filter_by(profiel_id=1) if any(k.status == "voorstel" for k in l.kaarten))
-        ids = [k.id for k in lijst.kaarten if k.status == "voorstel"]
+        # Alleen voorstellen uit notities (met herkomst); andere tests laten ook losse voorstellen achter.
+        lijst = next(l for l in s.query(Leerlijst).filter_by(profiel_id=1)
+                     if any(k.status == "voorstel" and k.herkomst for k in l.kaarten))
+        ids = [k.id for k in lijst.kaarten if k.status == "voorstel" and k.herkomst]
         lid = lijst.id
     html = client.get(f"/leren/voorstellen?lijst={lid}").text
     assert "voorstellen.js" in html and f'data-kaart="{ids[0]}"' in html
