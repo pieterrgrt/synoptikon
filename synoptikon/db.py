@@ -215,6 +215,10 @@ _NIEUWE_KOLOMMEN = [
     ("kaart", "herkomst", "VARCHAR(300)"),
     ("profiel", "wunderkammer", "BOOLEAN NOT NULL DEFAULT 0"),
     ("profiel", "wk_gezien", "DATETIME"),
+    ("wettekst", "hash", "VARCHAR(64)"),
+    ("wettekst", "gecontroleerd", "DATETIME"),
+    ("wettekst", "aantal", "INTEGER"),
+    ("wettekst", "grootte", "INTEGER"),
 ]
 
 # Eenmalig na het toevoegen van een kolom.

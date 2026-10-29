@@ -74,5 +74,23 @@ class Settings:
     def wetteksten_dir(self) -> Path:
         return self.data_dir / "wetteksten"
 
+    # Opslag van de ruwe bestanden (importers/store.py). Het archief mag buiten de datamap staan (een grotere schijf, of
+    # wat scripts/storagebox.sh naar een Storage Box spiegelt); standaard is het dezelfde map als de wetteksten.
+    # RUW_HOUDEN: zoveel versies per wet lokaal, oudere naar het archief (of weg als archief = lokaal); 0 = alles houden.
+    archief_env: str | None = field(default_factory=lambda: _env("SYNOPTIKON_ARCHIEF_DIR"))
+    ruw_houden: int = field(default_factory=lambda: int(_env("SYNOPTIKON_RUW_HOUDEN", "0")))
+    # Uitgepakte LEGI-dump (FR), bijgehouden door `synoptikon legi` en `synoptikon bijwerken`.
+    legi_env: str | None = field(default_factory=lambda: _env("SYNOPTIKON_LEGI_DIR"))
+    # Bijwerken stopt netjes als er minder vrij is op de schijf van de datamap, het archief of de LEGI-map.
+    min_vrij_gb: float = field(default_factory=lambda: float(_env("SYNOPTIKON_MIN_VRIJ_GB", "4")))
+
+    @property
+    def archief_dir(self) -> Path:
+        return Path(self.archief_env).resolve() if self.archief_env else self.wetteksten_dir
+
+    @property
+    def legi_dir(self) -> Path:
+        return Path(self.legi_env).resolve() if self.legi_env else self.data_dir / "legi"
+
 
 settings = Settings()
