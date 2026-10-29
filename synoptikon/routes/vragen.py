@@ -9,6 +9,7 @@ from ..db import get_session
 from ..models import Antwoord, AntwoordBron, Begrip, Bron, Concordantie, Notitie, Stelsel, Vraag, VraagBegrip
 from ..services import claude, export, onderzoek
 from ..services.helpers import actieve_stelsels, leeg_naar_none, unieke_slug
+from ..services.stelselkeuze import ook_uit, stelselkeuze
 from . import render
 
 router = APIRouter()
@@ -57,7 +58,7 @@ def index(request: Request, db: Session = Depends(get_session)):
 @router.get("/vragen/nieuw")
 def vraag_nieuw(request: Request, db: Session = Depends(get_session)):
     return render(request, "vraag_form.html", vraag=None, stelsels=actieve_stelsels(db), claude_aan=claude.beschikbaar(),
-                  standaard_stelsels=_standaard(db))
+                  standaard_stelsels=_standaard(db, request))
 
 
 @router.post("/vragen/nieuw")
@@ -84,7 +85,7 @@ def vraag_maak(
     db.flush()
     if laat_onderzoeken == "1" and claude.beschikbaar():
         actief = {s.code for s in actieve_stelsels(db)}
-        codes = [c for c in stelsel if c in actief] or _standaard(db)
+        codes = [c for c in stelsel if c in actief] or _standaard(db, request)
         onderzoek.start(db, vraag, codes)
         return RedirectResponse(f"/vragen/{vraag.slug}#onderzoek", status_code=303)
     return RedirectResponse(f"/vragen/{vraag.slug}", status_code=303)
@@ -93,14 +94,15 @@ def vraag_maak(
 STANDAARD = ("NL", "DE", "FR", "EU")
 
 
-def _standaard(db: Session) -> list[str]:
-    actief = [s.code for s in actieve_stelsels(db)]
-    return [c for c in STANDAARD if c in actief] or actief[:4]
+def _standaard(db: Session, request: Request) -> list[str]:
+    """Voorgevinkt bij Claudes onderzoek: NL, DE, FR en EU voor zover het mijn stelsels zijn, anders de eerste vier."""
+    mijn = stelselkeuze(db, request).codes
+    return [c for c in STANDAARD if c in mijn] or mijn[:4]
 
 
-def _onderzoek_context(db: Session, vraag: Vraag) -> dict:
+def _onderzoek_context(db: Session, vraag: Vraag, request: Request) -> dict:
     gevuld = [a.stelsel_code for a in vraag.antwoorden if a.analyse and not a.analyse.startswith(onderzoek.MARKERING)]
-    return dict(ok=onderzoek.laatste(db, vraag), claude_aan=claude.beschikbaar(), standaard_stelsels=_standaard(db), vraag_gevuld=gevuld)
+    return dict(ok=onderzoek.laatste(db, vraag), claude_aan=claude.beschikbaar(), standaard_stelsels=_standaard(db, request), vraag_gevuld=gevuld)
 
 
 @router.post("/vragen/{slug}/onderzoek")
@@ -112,7 +114,7 @@ async def onderzoek_start(request: Request, slug: str, db: Session = Depends(get
     lopend = onderzoek.laatste(db, vraag)
     if lopend is None or lopend.status not in ("wacht", "bezig"):
         actief = {s.code for s in actieve_stelsels(db)}
-        codes = [str(c) for c in form.getlist("stelsel") if str(c) in actief] or _standaard(db)
+        codes = [str(c) for c in form.getlist("stelsel") if str(c) in actief] or _standaard(db, request)
         onderzoek.start(db, vraag, codes, str(form.get("opdracht") or ""))
     return RedirectResponse(f"/vragen/{vraag.slug}#onderzoek", status_code=303)
 
@@ -120,13 +122,17 @@ async def onderzoek_start(request: Request, slug: str, db: Session = Depends(get
 @router.get("/vragen/{slug}/onderzoek")
 def onderzoek_stand(request: Request, slug: str, db: Session = Depends(get_session)):
     vraag = _laad_vraag(db, slug)
-    return render(request, "_onderzoek.html", vraag=vraag, stelsels=actieve_stelsels(db), **_onderzoek_context(db, vraag))
+    return render(request, "_onderzoek.html", vraag=vraag, stelsels=actieve_stelsels(db), **_onderzoek_context(db, vraag, request))
 
 
 @router.get("/vragen/{slug}")
 def synopse(request: Request, slug: str, vertaling: str | None = None, db: Session = Depends(get_session)):
     vraag = _laad_vraag(db, slug)
-    stelsels = actieve_stelsels(db)
+    # Kolommen: mijn stelsels, de stelsels waar deze vraag al iets heeft, en wat via 'meer stelsels…' (?ook=) erbij kwam.
+    gevuld = [a.stelsel_code for a in vraag.antwoorden if a.kern or a.analyse or a.bronnen]
+    ook = ook_uit(request)
+    keuze = stelselkeuze(db, request, [*gevuld, *ook])
+    stelsels = keuze.eigen
     # Alle bronnen, voor het koppelformulier; gegroepeerd per stelsel.
     alle_bronnen = db.scalars(select(Bron).order_by(Bron.stelsel_code, Bron.soort, Bron.citeertitel)).all()
     gekoppeld = {ab.bron_id for a in vraag.antwoorden for ab in a.bronnen}
@@ -137,11 +143,14 @@ def synopse(request: Request, slug: str, vertaling: str | None = None, db: Sessi
         "synopse.html",
         vraag=vraag,
         stelsels=stelsels,
+        overige_stelsels=keuze.overig,
+        alle_stelsels=keuze.alle,
+        ook=ook,
         vertaal_taal=vertaling,
         alle_bronnen=[b for b in alle_bronnen if b.id not in gekoppeld],
         alle_begrippen=[g for g in alle_begrippen if g.id not in gekoppelde_begrippen],
         concordanties=_concordanties_voor(db, vraag),
-        **_onderzoek_context(db, vraag),
+        **_onderzoek_context(db, vraag, request),
     )
 
 

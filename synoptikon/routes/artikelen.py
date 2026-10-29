@@ -23,13 +23,15 @@ from ..services import eu, leren, wetboek, zoeken
 from ..services.artikelen import Ref, herken, lees, sleutel
 from ..models import RECHTSFAMILIES
 from ..services.helpers import actieve_stelsels, leeg_naar_none, stelsels_per_code
+from ..services.stelselkeuze import ook_uit, stelselkeuze
 from . import render
 
 router = APIRouter()
 
 
-def _codes(db: Session) -> list[str]:
-    return [s.code for s in actieve_stelsels(db)]
+def _codes(db: Session, request: Request) -> list[str]:
+    """Alle actieve stelsels, mijn stelsels eerst."""
+    return [s.code for s in stelselkeuze(db, request).alle]
 
 
 @router.get("/artikelen")
@@ -46,9 +48,13 @@ def overzicht(request: Request, q: str = "", stelsel: str = "", familie: str = "
     groepen: OrderedDict[str, list[Correspondentie]] = OrderedDict()
     for c in thema_s:
         groepen.setdefault(c.rechtsgebied or "Overig", []).append(c)
-    stelsels = actieve_stelsels(db)
+    # Kolommen: mijn stelsels die in een thema voorkomen (plus ?ook=); de andere onder 'meer stelsels…'.
+    ook = ook_uit(request)
+    keuze = stelselkeuze(db, request, ook)
+    stelsels = keuze.alle
     gebruikt = {a.stelsel_code for c in thema_s for a in c.artikelen}
-    kolommen = [s for s in stelsels if s.code in gebruikt] or stelsels
+    kolommen = [s for s in keuze.eigen if s.code in gebruikt] or keuze.eigen
+    overige_kolommen = [s for s in keuze.overig if s.code in gebruikt]
     families_in_tabel = [k for k in RECHTSFAMILIES if any(s.familie == k for s in kolommen)]
     if familie in RECHTSFAMILIES:
         kolommen = [s for s in kolommen if s.familie == familie]
@@ -63,6 +69,8 @@ def overzicht(request: Request, q: str = "", stelsel: str = "", familie: str = "
         treffers=treffers,
         groepen=groepen,
         kolommen=kolommen,
+        overige_kolommen=overige_kolommen,
+        ook=ook,
         stelsels=stelsels,
         aantal=len(thema_s),
     )
@@ -77,8 +85,10 @@ def thema(request: Request, cid: int, db: Session = Depends(get_session)):
     if c is None:
         raise HTTPException(404)
     ctx = corr.Context(db)
-    stelsels = actieve_stelsels(db)
-    kolommen = corr.per_stelsel(ctx, c, [s.code for s in stelsels])
+    # Lege kolommen alleen voor mijn stelsels; een ander stelsel verschijnt zodra het een artikel in het thema heeft.
+    keuze = stelselkeuze(db, request)
+    stelsels = keuze.alle
+    kolommen = corr.per_stelsel(ctx, c, keuze.codes)
     per_code = stelsels_per_code(db)
     namen = {code: st.naam for code, st in per_code.items()}
     return render(request, "thema.html", c=c, kolommen=kolommen, namen=namen, per_code=per_code, stelsels=stelsels)
@@ -190,7 +200,7 @@ def artikel(request: Request, stelsel: str, nummer: str, wet: str | None = None,
         if ref.nummer != nummer:
             return RedirectResponse(ref.url, status_code=303)
     ctx = corr.Context(db)
-    codes = _codes(db)
+    codes = _codes(db, request)
     thema_s = []
     for c, eigen in corr.thema_s_voor(db, ref.stelsel, ref.nummer, ref.wet):
         thema_s.append((c, eigen, corr.per_stelsel(ctx, c, codes, behalve=eigen[0] if len(eigen) == 1 else None)))

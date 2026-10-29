@@ -5,8 +5,7 @@
   <h1>{{ _('Begrippen') }}</h1>
   <div class="acties"><a class="knop klein" href="/begrippen">{{ _('Kaart') }}</a><a class="knop klein" href="/begrippen/export.json">{{ _('Export JSON') }}</a><a class="knop" href="/begrippen/nieuw">{{ _('+ Begrip') }}</a></div>
 </div>
-<div class="kolommen-los">
-{% for s in stelsels if s.code in per_stelsel %}
+{% macro sectie(s) %}
 <section class="blok">
   <h2>{{ vt(s.naam) }}</h2>
   <ul class="lijst">
@@ -17,6 +16,15 @@
   {% endfor %}
   </ul>
 </section>
-{% endfor %}
+{% endmacro %}
+{% set met = stelsels | selectattr('code', 'in', per_stelsel) | list %}
+{% set eigen, overig = splits_stelsels(met, mijn) %}
+<div class="kolommen-los">
+{% for s in eigen %}{{ sectie(s) }}{% endfor %}
 </div>
+{% if overig %}
+<details class="blok meer-stelsels"><summary>{{ _('meer stelsels…') }} <span class="stil">({{ overig | length }})</span></summary>
+<div class="kolommen-los">{% for s in overig %}{{ sectie(s) }}{% endfor %}</div>
+</details>
+{% endif %}
 {% endblock %}

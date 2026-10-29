@@ -16,7 +16,10 @@
     </form>
   </div>
 </div>
-<nav class="stelsel-tabs">{% for f in per_familie(stelsels) %}<span class="tab-familie fam-{{ f.sleutel or 'overig' }}" title="{{ f.naam }}">{% for s in f.stelsels %}<a href="/stelsels/{{ s.code }}{% if vraag %}?vraag={{ vraag.slug }}{% endif %}" {% if s.code == stelsel.code %}aria-current="page"{% endif %}>{{ vlag(s.code) }}{{ vt(s.naam) }}</a>{% endfor %}</span>{% endfor %}</nav>
+{% import "_stelsels.html" as st with context %}
+{% set eigen_tabs, overige_tabs = splits_stelsels(stelsels, mijn, stelsel.code) %}
+{% macro tab(s) %}<a href="/stelsels/{{ s.code }}{% if vraag %}?vraag={{ vraag.slug }}{% endif %}" {% if s.code == stelsel.code %}aria-current="page"{% endif %}>{{ vlag(s.code) }}{{ vt(s.naam) }}</a>{% endmacro %}
+<nav class="stelsel-tabs">{% for f in per_familie(eigen_tabs) %}<span class="tab-familie fam-{{ f.sleutel or 'overig' }}" title="{{ f.naam }}">{% for s in f.stelsels %}{{ tab(s) }}{% endfor %}</span>{% endfor %}{% if overige_tabs %} {{ st.meer(overige_tabs, tab) }}{% endif %}</nav>
 <p class="stil klein">{{ stelsel.familie_naam }}{% if stelsel.toelichting %} · {{ vt(stelsel.toelichting) }}{% endif %}</p>
 {% if artikel %}<p class="melding">{% if gezocht %}<a href="{{ gezocht.url }}">{{ gezocht.citeer }}</a>{% if gezocht_knoop %} {{ _('staat in de gemarkeerde knoop.') }}{% else %} {{ _('valt buiten de ingevoerde systematiek.') }}{% endif %} <a href="{{ gezocht.url }}">{{ _('Corresponderende artikelen →') }}</a>{% else %}{{ _('Geen artikelnummer herkend in “{artikel}”.', artikel=artikel) }}{% endif %}</p>{% endif %}
 {% if vraag %}<p class="melding">{{ _('Gemarkeerd: bronnen van') }} <a href="/vragen/{{ vraag.slug }}">{{ vt(vraag.titel) }}</a>. {{ _('Vergelijk met de andere stelsels via de tabs hierboven: zo worden structuurverschillen zichtbaar.') }}</p>{% endif %}

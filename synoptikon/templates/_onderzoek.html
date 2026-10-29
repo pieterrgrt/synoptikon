@@ -22,7 +22,8 @@
     <summary>{{ _('Claude laten onderzoeken') if not ok else _('Opnieuw laten onderzoeken') }}</summary>
     <form method="post" action="/vragen/{{ vraag.slug }}/onderzoek" class="formulier compact">
       <fieldset class="stelsel-keuze"><legend>{{ _('Stelsels') }}</legend>
-        {% for s in stelsels %}<label class="kolomschakel"><input type="checkbox" name="stelsel" value="{{ s.code }}" {% if s.code in standaard_stelsels %}checked{% endif %}> {{ vlag(s.code) }}{{ s.code }}</label>{% endfor %}
+        {% import "_stelsels.html" as st with context %}
+        {% call(s) st.keuze(alle_stelsels | default(stelsels), standaard_stelsels) %}<label class="kolomschakel"><input type="checkbox" name="stelsel" value="{{ s.code }}" {% if s.code in standaard_stelsels %}checked{% endif %}> {{ vlag(s.code) }}{{ s.code }}</label>{% endcall %}
       </fieldset>
       <label>{{ _('Aanwijzingen (optioneel)') }} <textarea name="opdracht" rows="2" lang="nl" placeholder="{{ _('Bijv. let op de BGH-rechtspraak na 2002; vergelijk ook met het DCFR') }}"></textarea></label>
       <p class="hint">{{ _('Claude leest de wetteksten uit Synoptikon, zoekt rechtspraak op het web en schrijft per stelsel kern, analyse en bronnen, plus een vergelijking. Een onderzoek kost meestal enkele dollars.') }}</p>

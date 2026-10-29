@@ -8,13 +8,13 @@
   </form>
 </div>
 <p class="hint">{{ _('Per stelsel de belangrijkste wetten; elke wet lees je hetzelfde: inhoudsopgave, afdeling, artikel, en bij elk artikel ☆ om het te bewaren. De systematiek laat zien waar een onderwerp in het stelsel staat.') }}</p>
-<nav class="stelsel-sprong" aria-label="{{ _('Stelsels') }}">{% for f in families %}{% for s in f.stelsels if s.actief %}<a href="#stelsel-{{ s.code }}">{{ vlag(s.code) }}{{ s.code }}</a>{% endfor %}{% endfor %}</nav>
+<nav class="stelsel-sprong" aria-label="{{ _('Stelsels') }}">{% for f in families %}{% for s in f.stelsels %}<a href="#stelsel-{{ s.code }}">{{ vlag(s.code) }}{{ s.code }}</a>{% endfor %}{% endfor %}</nav>
 {% for f in families %}
 <section class="blok familie-blok fam-{{ f.sleutel or 'overig' }}">
   <h2 class="familie-kop">{{ f.naam }}</h2>
   {% if f.kenmerk %}<p class="stil">{{ f.kenmerk }}</p>{% endif %}
   <div class="stelsel-kaarten">
-  {% for s in f.stelsels if s.actief %}
+  {% for s in f.stelsels %}
     <div class="stelsel-kaart" id="stelsel-{{ s.code }}">
       <h3>{{ vlag(s.code) }}{{ vt(s.naam) }} <span class="stelsel-code">{{ s.code }}</span></h3>
       {% if s.toelichting %}<p class="stil klein">{{ vt(s.toelichting) }}</p>{% endif %}
@@ -24,7 +24,7 @@
       {% if ws | length > 8 %}<details class="meer-wetten"><summary class="klein">{{ _('nog {n}', n=ws | length - 8) }}</summary><ul class="wet-lijst">{% for w in ws[8:] %}<li><a href="/stelsels/{{ s.code }}/wet/{{ w.id }}">{{ wet_titel(w) }}</a>{% if w.wet %} <span class="stil">{{ wet_afk(w) }}</span>{% endif %}</li>{% endfor %}</ul></details>{% endif %}
       {% else %}<p class="stil klein">{{ _('Geen geïmporteerde wettekst; alleen de systematiek.') }}</p>{% endif %}
       <p class="klein stelsel-links">
-        {% if aantallen[s.code] > ws | length %}<a href="/stelsels/{{ s.code }}/wetten">{{ _('Alle {n} wetten', n=aantallen[s.code]) }} →</a>{% endif %}
+        {% if aantallen.get(s.code, 0) > ws | length %}<a href="/stelsels/{{ s.code }}/wetten">{{ _('Alle {n} wetten', n=aantallen[s.code]) }} →</a>{% endif %}
         <a href="/stelsels/{{ s.code }}">{{ _('Systematiek') }} →</a>
         {% if s.code == 'EU' %}<a href="/eu">{{ _('Catalogus en omzetting') }} →</a>{% endif %}
       </p>
@@ -34,14 +34,30 @@
 </section>
 {% endfor %}
 
-<details class="blok">
+{% macro cijfers(s) %}{% set t = tellingen.get(s.code, (0, 0)) %}<span class="cijfers">{{ n_('{n} wet', '{n} wetten', t[0]) }} · {{ n_('{n} artikel', '{n} artikelen', t[1]) }} · {% if s.code in open_bron %}{{ _('open bron') }}{% else %}<span title="{{ _('Geen open, machineleesbare bron in het register; alleen de systematiek of eigen invoer.') }}">{{ _('geen open bron') }}</span>{% endif %}</span>{% endmacro %}
+{% if overig %}
+<details class="blok meer-stelsels-blok">
+<summary>{{ _('meer stelsels…') }} <span class="stil">({{ overig | length }})</span></summary>
+<p class="hint">{{ _('Beschikbaar, maar niet bij je eigen stelsels. Op je profiel kies je welke stelsels je gebruikt.') }} <a href="/profiel#stelsels">{{ _('Mijn stelsels') }} →</a></p>
+{% for r in per_regio(overig) %}
+<details class="kiezer-regio"><summary>{{ r.naam }} <span class="stil klein">({{ r.stelsels | length }})</span></summary>
+<ul class="stelsel-rijen">{% for s in r.stelsels %}<li class="fam-{{ s.familie or 'overig' }}"><a href="/stelsels/{{ s.code }}">{{ vlag(s.code) }}{{ vt(s.naam) }}</a> <span class="stelsel-code">{{ s.code }}</span> <span class="stil klein">{{ s.familie_naam }}</span>{{ cijfers(s) }}{% if tellingen.get(s.code, (0, 0))[0] %} <a class="klein" href="/stelsels/{{ s.code }}/wetten">{{ _('wetten') }} →</a>{% endif %}</li>{% endfor %}</ul>
+</details>
+{% endfor %}
+</details>
+{% endif %}
+
+<details class="blok" id="beheer">
 <summary>{{ _('Stelsels beheren') }}</summary>
 <p class="hint">{{ _('De familie bepaalt de volgorde en groepering van de kolommen in de synopse, de correspondentietabel en de thema\'s; de indeling volgt Zweigert/Kötz, met Nederland bij de Romaanse familie vanwege het Code civil-erfgoed.') }}</p>
+<p class="hint">{{ _('Actief = beschikbaar in de app. Wat iemand ziet, kiest ieder op zijn profiel.') }}</p>
+{% for r in beheer %}
+<details class="kiezer-regio"><summary>{{ r.naam }} <span class="stil klein">({{ r.stelsels | selectattr('actief') | list | length }}/{{ r.stelsels | length }})</span></summary>
 <div class="tabel-schuif">
 <table class="tabel">
-  <thead><tr><th>{{ _('Code') }}</th><th>{{ _('Naam') }}</th><th>{{ _('Taal') }}</th><th>{{ _('Familie') }}</th><th>{{ _('Actief') }}</th><th></th></tr></thead>
+  <thead><tr><th>{{ _('Code') }}</th><th>{{ _('Naam') }}</th><th>{{ _('Taal') }}</th><th>{{ _('Familie') }}</th><th>{{ _('Inhoud') }}</th><th>{{ _('Actief') }}</th><th></th></tr></thead>
   <tbody>
-  {% for f in families %}{% for s in f.stelsels %}
+  {% for s in r.stelsels %}
   <tr>
     <td>{{ sc(s.code) }}</td>
     <td><a href="/stelsels/{{ s.code }}">{{ vt(s.naam) }}</a></td>
@@ -52,13 +68,16 @@
         {% for k, fam in RECHTSFAMILIES.items() %}<option value="{{ k }}" {% if s.familie == k %}selected{% endif %}>{{ _(fam[0]) }}</option>{% endfor %}
       </select>
     </form></td>
+    <td class="klein">{{ cijfers(s) }}</td>
     <td>{{ _('ja') if s.actief else _('nee') }}</td>
     <td><form method="post" action="/stelsels/{{ s.code }}/actief" class="inline"><input type="hidden" name="actief" value="{{ '0' if s.actief else '1' }}"><button class="knop klein">{{ _('Uitzetten') if s.actief else _('Aanzetten') }}</button></form></td>
   </tr>
-  {% endfor %}{% endfor %}
+  {% endfor %}
   </tbody>
 </table>
 </div>
+</details>
+{% endfor %}
 <h3>{{ _('Stelsel toevoegen') }}</h3>
 <form method="post" class="formulier compact">
   <div class="rij">

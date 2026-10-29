@@ -20,6 +20,7 @@ from ..services import eu
 from ..services.artikelen import lees
 from ..services.eu_logica import status
 from ..services.helpers import actieve_stelsels, leeg_naar_none, stelsels_per_code
+from ..services.stelselkeuze import ook_uit, splits, mijn_codes
 from . import render
 
 router = APIRouter()
@@ -45,8 +46,12 @@ def overzicht(request: Request, q: str = "", soort: str = "", variant: str = "",
 def matrix(request: Request, db: Session = Depends(get_session)):
     handelingen, per = eu.omzettingsmatrix(db)
     per_code = stelsels_per_code(db)
-    kolommen = [per_code[c] for c in STELSELS_EU if c in per_code]
-    return render(request, "eu_omzetting.html", handelingen=handelingen, per=per, kolommen=kolommen)
+    # De vaste kolommen plus elk stelsel met een koppeling; mijn stelsels (en ?ook=) in de tabel, de rest eronder.
+    met_data = {c for p in per.values() for c in p}
+    codes = [*STELSELS_EU, *sorted(met_data - set(STELSELS_EU))]
+    ook = ook_uit(request)
+    kolommen, overig = splits([per_code[c] for c in codes if c in per_code and c != "EU"], mijn_codes(request), ook)
+    return render(request, "eu_omzetting.html", handelingen=handelingen, per=per, kolommen=kolommen, overige_kolommen=overig, ook=ook)
 
 
 @router.get("/eu/{celex}")

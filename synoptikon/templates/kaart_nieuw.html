@@ -28,7 +28,7 @@
       {% for s in artikelsoorten if s != 'tegenhanger' %}<label class="vinkje"><input type="checkbox" name="soort" value="{{ s }}" {% if s == 'artikel' %}checked{% endif %}> <strong>{{ _(soorten[s][0]) }}</strong> <span class="stil klein">{{ _(soorten[s][1]) }}</span></label>{% endfor %}
       {% if doelen %}
       <label class="vinkje"><input type="checkbox" name="soort" value="tegenhanger"> <strong>{{ _(soorten['tegenhanger'][0]) }}</strong> <span class="stil klein">{{ _(soorten['tegenhanger'][1]) }}</span></label>
-      <div class="doelen">{% for s in doelen %}<label class="vinkje klein"><input type="checkbox" name="doel" value="{{ s.code }}"> {{ vlag(s.code) }}{{ vt(s.naam) }}</label>{% endfor %}</div>
+      {% import "_stelsels.html" as st with context %}<div class="doelen">{% call(s) st.keuze(doelen) %}<label class="vinkje klein"><input type="checkbox" name="doel" value="{{ s.code }}"> {{ vlag(s.code) }}{{ vt(s.naam) }}</label>{% endcall %}</div>
       {% endif %}
       <label>{{ _('Omschrijving voor “inhoud → artikel”') }} <span class="hint">{{ _('leeg = het opschrift') }}</span><input name="vraag" placeholder="{{ wa.opschrift if wa and wa.opschrift else _('bijv. vereisten voor overdracht') }}"></label>
     {% else %}

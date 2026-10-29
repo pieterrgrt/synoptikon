@@ -1,4 +1,5 @@
 {% extends "base.html" %}
+{% import "_stelsels.html" as st with context %}
 {% block titel %}{{ _('Concordantie') }} · Synoptikon{% endblock %}
 {% block inhoud %}
 <h1>{{ _('Concordantie') }}</h1>
@@ -15,7 +16,7 @@
 <h2>{{ _('Toevoegen') }}</h2>
 <form method="post" class="formulier compact">
   <div class="rij">
-    <label>{{ _('Stelsel') }} <select name="stelsel_code">{% for s in stelsels %}<option value="{{ s.code }}">{{ s.code }}</option>{% endfor %}</select></label>
+    <label>{{ _('Stelsel') }} <select name="stelsel_code">{% call(s) st.opties(stelsels) %}<option value="{{ s.code }}">{{ s.code }}</option>{% endcall %}</select></label>
     <label>{{ _('Wet') }} <input name="wet" required placeholder="C. civ."></label>
     <label>{{ _('Oud') }} <input name="oud" required placeholder="art. 1382"></label>
     <label>{{ _('Nieuw') }} <input name="nieuw" placeholder="art. 1240"></label>

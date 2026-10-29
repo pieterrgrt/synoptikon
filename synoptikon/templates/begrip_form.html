@@ -1,11 +1,12 @@
 {% extends "base.html" %}
+{% import "_stelsels.html" as st with context %}
 {% block titel %}{{ _('Begrip bewerken') if begrip else _('Nieuw begrip') }} · Synoptikon{% endblock %}
 {% block inhoud %}
 <h1>{{ _('Begrip bewerken') if begrip else _('Nieuw begrip') }}</h1>
 {% if huidige_taal() != 'nl' %}<p class="hint">{{ _('De term in de oorspronkelijke taal; de definitie in het Nederlands. Vertalingen beheer je onder Vertalingen.') }}</p>{% endif %}
 <form method="post" class="formulier">
   <div class="rij">
-    <label>{{ _('Stelsel') }} <select name="stelsel_code" id="stelsel_code" required>{% for s in stelsels %}<option value="{{ s.code }}" data-taal="{{ s.taal }}" {% if begrip and begrip.stelsel_code == s.code %}selected{% endif %}>{{ vt(s.naam) }}</option>{% endfor %}</select></label>
+    <label>{{ _('Stelsel') }} <select name="stelsel_code" id="stelsel_code" required>{% call(s) st.opties(stelsels, begrip.stelsel_code if begrip else '') %}<option value="{{ s.code }}" data-taal="{{ s.taal }}" {% if begrip and begrip.stelsel_code == s.code %}selected{% endif %}>{{ vt(s.naam) }}</option>{% endcall %}</select></label>
     <label>{{ _('Taal') }} <input name="taal" id="taal" size="4" required value="{{ begrip.taal if begrip else (stelsels[0].taal if stelsels else 'nl') }}"></label>
   </div>
   <label>{{ _('Term') }} <input name="term" required value="{{ begrip.term if begrip else '' }}" class="serif"></label>

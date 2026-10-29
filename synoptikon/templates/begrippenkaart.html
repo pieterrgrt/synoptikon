@@ -21,15 +21,19 @@
   <span class="legenda-item"><i class="lijn rel-faux_ami"></i> {{ _('faux ami') }}</span>
   <span class="legenda-item"><i class="lijn rel-geen"></i> {{ _('geen equivalent') }}</span>
 </div>
+{% import "_stelsels.html" as st with context %}
+{% set eigen_kaart, overig_kaart = splits_stelsels(kaart_stelsels, mijn) %}
 <details class="kaart-filter" open>
 <summary>{{ _('Stelsels') }} <span class="stil">({{ kaart_stelsels | length }})</span></summary>
 <div class="kaart-legenda kaart-stelsels">
-  {% for f in per_familie(kaart_stelsels) %}
+  {% for f in per_familie(eigen_kaart) %}
   <span class="familie-groep fam-{{ f.sleutel or 'overig' }}">
     <button type="button" class="familie-knop" data-familie="{{ f.sleutel or 'overig' }}" title="{{ f.kenmerk }}">{{ f.naam }}</button>
     {% for s in f.stelsels %}<label class="kolomschakel"><input type="checkbox" data-stelsel="{{ s.code }}" checked> {{ sc(s.code) }}</label>{% endfor %}
   </span>
   {% endfor %}
+  {% macro vakje(s) %}<label class="kolomschakel"><input type="checkbox" data-stelsel="{{ s.code }}"> {{ sc(s.code) }}</label>{% endmacro %}
+  {% if overig_kaart %}{{ st.meer(overig_kaart, vakje) }}{% endif %}
 </div>
 </details>
 <div class="kaart-wrap">
