@@ -296,6 +296,16 @@ synoptikon import-bulk eu          # alle ±17.600 geldende EU-handelingen, Duit
 synoptikon import-bulk eu --verdragen   # alleen VEU, VWEU en Handvest, in alle zes talen
 ```
 
+```bash
+synoptikon import-bulk nl          # alle ±4.400 geldende wetten, rijkswetten en AMvB's uit het BWB (±2,5 uur)
+synoptikon legi --alle             # FR: LEGI-dump met alle geldende codes (eenmalig ±1,1 GB gestreamd)
+synoptikon import-bulk fr          # daarna alle ±75 codes uit de dump
+```
+
+NL komt uit de SRU-zoekdienst van het BWB (lijst met de datum van de geldende toestand) en de toestand-XML in de
+repository van officiële overheidspublicaties; de citeerafkorting (Awb, Rv) uit de kop van het WTI-bestand. FR krijgt
+de gangbare citeerwijze (C. trav., CSP) uit `legi.AFKORTINGEN`, anders de titel.
+
 Een tweede run haalt alleen op wat ontbreekt (EU: ook een nieuwere consolidatie). Bulkwetten staan niet in het
 overzicht van Stelsels en niet in de systematiek, maar zijn te vinden via **Alle wetten doorzoeken**
 (`/stelsels/DE/wetten`, `/stelsels/EU/wetten`), via de artikelzoeker ("§ 1 PatG", "Art. 6 DSGVO") en de zoekfunctie.
@@ -304,6 +314,40 @@ overzicht van Stelsels en niet in de systematiek, maar zijn te vinden via **Alle
 geautomatiseerde toegang. Elke EU-wet heeft één interne sleutel ("VWEU", "Rome I", "Verordening 2016/679",
 `services/eunamen.py`); getoond wordt de naam in de taal van de interface (AEUV, TFUE, TFEU; DSGVO, RGPD, GDPR) en
 bij invoer wordt elke schrijfwijze herkend. De verdragen staan er in zes talen; de rest in het Duits.
+
+**Bijhouden** (`synoptikon/importers/bijwerken.py`): `synoptikon bijwerken` loopt alle bronnen af (het register met
+alle `register_*.py`, DE, NL, FR, EU en de EU-catalogus) en slaat alleen op wat echt veranderde: niet de versie
+alleen, maar een sha256 over de artikelen (`wettekst.hash`). Een registerwet met een nieuwe stand krijgt een nieuwe
+versie; een bulkwet wordt in place bijgewerkt, artikel voor artikel. DE gaat met conditional GET (ETag), NL en EU
+vergelijken eerst de versie uit de lijst van de bron, FR verwerkt eerst de dagelijkse aanvullingen van de LEGI-dump.
+
+```bash
+synoptikon bijwerken --deel 3/7              # het derde van zeven vaste delen van elke bron (zo doet de timer het)
+synoptikon bijwerken --bron nl --stelsel NL --droog   # alleen tonen wat aan de beurt is
+synoptikon bijwerken --max-minuten 60 --limiet 20
+```
+
+De verdeling volgt uit een hash van de wet, dus elke wet komt één keer per week aan de beurt, altijd op dezelfde dag.
+De ronde stopt netjes bij `--max-minuten`, bij minder dan `SYNOPTIKON_MIN_VRIJ_GB` (4) vrij op de schijf van de
+datamap, het archief of de LEGI-map, of als de container voor 85 % vol zit. Eén ronde tegelijk (slot in de datamap).
+Elke bron schrijft een regel in de tabel `bijwerking`; `/wetteksten` toont de beheerder per stelsel wetten, artikelen,
+tekst in MB, laatst gecontroleerd en gewijzigd, en de laatste fouten.
+
+Alle importers gaan via `importers/http.py`: minstens `SYNOPTIKON_HTTP_TUSSENTIJD` (1 s) tussen twee verzoeken aan
+dezelfde host, over alle threads heen; opnieuw bij 429/5xx met oplopende wachttijd en `Retry-After`
+(`SYNOPTIKON_HTTP_POGINGEN`, 4); ETag en Last-Modified per URL in `data/http_validators.json`.
+
+Planning: `deploy/systemd/` bevat user-units (stijl van `~/werkomgeving/systemd/`). Installeren:
+
+```bash
+cp deploy/systemd/synoptikon-*.{service,timer} ~/.config/systemd/user/
+systemctl --user daemon-reload
+systemctl --user enable --now synoptikon-bijwerken.timer synoptikon-storagebox.timer
+```
+
+`synoptikon-bijwerken` draait elke nacht om 01:30 (Europe/Berlin) `docker exec synoptikon … bijwerken --deel
+<weekdag>/7 --max-minuten 240`, met `nice` en `ionice` binnen de container. De app leest nooit uit de ruwe bestanden,
+alleen uit de database.
 
 Justel (BE) en Légifrance (FR) weigeren geautomatiseerde toegang; de
 Belgische tekst komt daarom uit de spiegel van het Staatsblad, en BE Boek 6,
@@ -371,6 +415,23 @@ Kopieert de database consistent (`sqlite3 .backup`, WAL-veilig) als
 en bewaart de laatste 14 (`BACKUP_KEEP`). Als cron op de host, bijv.
 `17 3 * * * /home/claude/synoptikon/scripts/backup.sh /home/claude/sync/synoptikon`.
 Terugzetten: `gunzip` en het bestand als `data/synoptikon.db` terugplaatsen.
+
+**Archief.** De ruwe bestanden (`data/wetteksten/…`) mogen naar een andere schijf: `SYNOPTIKON_ARCHIEF_DIR` (in
+Docker een extra volume). `SYNOPTIKON_RUW_HOUDEN=N` houdt per wet de laatste N versies lokaal en zet oudere in het
+archief (of gooit ze weg als archief en datamap dezelfde zijn); standaard 0 = alles houden.
+
+**Storage Box.** `scripts/storagebox.sh` (wekelijks via `synoptikon-storagebox.timer`) maakt een verse
+database-back-up en spiegelt het archief en de back-ups met `rclone sync` naar `storagebox:synoptikon/`, met
+`--bwlimit` (`STORAGEBOX_BWLIMIT`, 4M), `nice` en `ionice`; wat lokaal verdwijnt, gaat daar naar `oud/<datum>`.
+Zonder remote `storagebox:` meldt het dat en doet het niets. Aanzetten:
+
+1. In Hetzner Robot een sub-account voor de Storage Box aanmaken (eigen basismap, SSH aan; het script schrijft daarin in `synoptikon/`) en de eigen
+   publieke SSH-sleutel daar toevoegen.
+2. `rclone config create storagebox sftp host <uXXXXX-subN>.your-storagebox.de port 23 user <uXXXXX-subN> key_file ~/.ssh/id_ed25519`
+3. `rclone mkdir storagebox:synoptikon && scripts/storagebox.sh`
+
+Staat het archief op de host ergens anders dan `data/wetteksten`, zet dan `SYNOPTIKON_ARCHIEF_DIR` (hostpad) in de
+service-unit (`Environment=`).
 
 ## Nginx
 
