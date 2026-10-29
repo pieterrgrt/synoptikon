@@ -177,3 +177,9 @@ def test_pgdl_cc():
 def test_portugese_verwijzingen():
     assert ("PT", "405", None) in _herken("art. 405.º CC")
     assert _herken("art. 13.º CRP") == [("PT", "13", "CRP")]
+
+
+def test_verwijzingen_zonder_importer():
+    assert _herken("§ 2910 OZ") == [("CZ", "2910", None)]
+    assert _herken("Ptk. 6:519") == [("HU", "6:519", None)]
+    assert _herken("art. 1350 NCC") == [("RO", "1350", None)]

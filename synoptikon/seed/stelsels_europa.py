@@ -241,6 +241,38 @@ PT = [
     ("CC-PT-V", "Livro V · Direito das sucessões", "art. 2024–2334", []),
 ]
 
+# CZ, HU, RO: nog zonder importer; hoofdindeling van het burgerlijk wetboek met de hand uit de officiële indeling.
+# De eindnummers van de Hongaarse boeken (3:405, 4:243 …) na een eerste import controleren.
+CZ = [
+    ("OZ-1", "Část první · Obecná část", "§§ 1–654", []),
+    ("OZ-2", "Část druhá · Rodinné právo", "§§ 655–975", []),
+    ("OZ-3", "Část třetí · Absolutní majetková práva", "§§ 976–1720", []),
+    ("OZ-4", "Část čtvrtá · Relativní majetková práva", "§§ 1721–3014", []),
+    ("OZ-5", "Část pátá · Ustanovení společná, přechodná a závěrečná", "§§ 3015–3081", []),
+]
+
+HU = [
+    ("PTK-1", "Első könyv · Bevezető rendelkezések", "1:1–1:6", []),
+    ("PTK-2", "Második könyv · Az ember mint jogalany", "2:1–2:54", []),
+    ("PTK-3", "Harmadik könyv · Jogi személy", "3:1–3:405", []),
+    ("PTK-4", "Negyedik könyv · Családjog", "4:1–4:243", []),
+    ("PTK-5", "Ötödik könyv · Dologi jog", "5:1–5:187", []),
+    ("PTK-6", "Hatodik könyv · Kötelmi jog", "6:1–6:593", []),
+    ("PTK-7", "Hetedik könyv · Öröklési jog", "7:1–7:102", []),
+    ("PTK-8", "Nyolcadik könyv · Záró rendelkezések", "8:1–8:6", []),
+]
+
+RO = [
+    ("NCC-0", "Titlul preliminar", "art. 1–24", []),
+    ("NCC-1", "Cartea I · Despre persoane", "art. 25–257", []),
+    ("NCC-2", "Cartea a II-a · Despre familie", "art. 258–534", []),
+    ("NCC-3", "Cartea a III-a · Despre bunuri", "art. 535–952", []),
+    ("NCC-4", "Cartea a IV-a · Despre moștenire și liberalități", "art. 953–1163", []),
+    ("NCC-5", "Cartea a V-a · Despre obligații", "art. 1164–2499", []),
+    ("NCC-6", "Cartea a VI-a · Despre prescripția extinctivă, decădere și calculul termenelor", "art. 2500–2556", []),
+    ("NCC-7", "Cartea a VII-a · Dispoziții de drept internațional privat", "art. 2557–2664", []),
+]
+
 # code, naam, taal, toelichting, actief, rechtsfamilie (zelfde vorm als seed/stelsels.py)
 STELSELS = [
     ("DK", "Denemarken", "da", "Geen burgerlijk wetboek: losse vermogensrechtelijke wetten (Aftaleloven 1917, Købeloven 1906), deels in Scandinavische samenwerking tot stand gekomen; Danske Lov (1683) geldt nog in enkele artikelen", True, "nordisch"),
@@ -249,6 +281,9 @@ STELSELS = [
     ("SE", "Zweden", "sv", "Geen burgerlijk wetboek: losse vermogensrechtelijke wetten in Scandinavische samenwerking (Avtalslagen 1915, Köplagen 1990); van het Rijkswetboek van 1734 leven de balkar voort", True, "nordisch"),
     ("PL", "Polen", "pl", "Kodeks cywilny (1964): pandektensysteem met een algemeen deel, voortbouwend op het Kodeks zobowiązań (1933); nog geen wettekst, want de ELI-API van de Sejm geeft de geconsolideerde tekst alleen als PDF", True, "germaans"),
     ("PT", "Portugal", "pt", "Código Civil (1966, Antunes Varela): pandektensysteem naar Duits voorbeeld binnen de Romaanse traditie, opvolger van het Código de Seabra (1867); tekst via de PGDL (geconsolideerd, geen officiële bron)", True, "romaans"),
+    ("CZ", "Tsjechië", "cs", "Občanský zákoník (zákon č. 89/2012 Sb.): hercodificatie naar het voorbeeld van het ABGB en de Duitstalige traditie, na het socialistische wetboek van 1964; nog geen wettekst (e-Sbírka nog niet aangesloten)", True, "germaans"),
+    ("HU", "Hongarije", "hu", "Polgári Törvénykönyv (2013. évi V. törvény): monistisch wetboek met het handelsrecht erin, naar Duits en Nederlands voorbeeld, nummering per boek (6:519); nog geen wettekst", True, "germaans"),
+    ("RO", "Roemenië", "ro", "Noul Cod civil (Legea nr. 287/2009, 2011): monistisch wetboek naar het voorbeeld van de Code civil du Québec, opvolger van de Franse codificatie van 1864; nog geen wettekst", True, "romaans"),
     ("AT", "Oostenrijk", "de", "Allgemeines bürgerliches Gesetzbuch (1811): natuurrechtelijke codificatie, gemoderniseerd door de Teilnovellen (1914–1916) en latere hervormingen", True, "germaans"),
 ]
 
@@ -260,4 +295,7 @@ SYSTEMATIEK = {
     "SE": SE,
     "PL": PL,
     "PT": PT,
+    "CZ": CZ,
+    "HU": HU,
+    "RO": RO,
 }

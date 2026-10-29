@@ -13,6 +13,8 @@
   `art. 148 KK`); de gangbare kleine letters (`k.c.`) zijn niet opgenomen, omdat ze als eigen wet zouden tellen.
 * **PT** (CC): `art. 405.º CC`, `artigo 483.º do Código Civil`; letters met een streepje (`1305-A`; "1305.º-A" verliest
   de letter). "CC" deelt PT met ES.
+* **CZ** (OZ): `§ 2910 OZ`, `§ 1 ZOK`; **HU** (Ptk.): `Ptk. 6:519`, nummer boek:paragraaf; **RO** (NCC): `art. 1350 NCC`
+  ("C. civ." is al van FR).
 """
 from __future__ import annotations
 
@@ -94,5 +96,32 @@ REGELS: dict[str, Regels] = {
                "LDC": "Lei de Defesa do Consumidor", "CPC": "Código de Processo Civil", "CP": "Código Penal",
                "RJCCG": "Regime jurídico das cláusulas contratuais gerais (DL 446/85)", "CT": "Código do Trabalho",
                "CIRE": "Código da Insolvência e da Recuperação de Empresas"},
+    ),
+    "CZ": Regels(
+        "OZ",
+        ("ZOK", "OSŘ", "TZ", "ZMPS", "Ústava", "ZOS"),
+        stijl="§",
+        nummer=r"\d+[a-z]?",
+        namen={"OZ": "Občanský zákoník (zákon č. 89/2012 Sb.)", "ZOK": "Zákon o obchodních korporacích (č. 90/2012 Sb.)",
+               "OSŘ": "Občanský soudní řád (č. 99/1963 Sb.)", "TZ": "Trestní zákoník (č. 40/2009 Sb.)",
+               "ZMPS": "Zákon o mezinárodním právu soukromém (č. 91/2012 Sb.)", "Ústava": "Ústava České republiky (1993)",
+               "ZOS": "Zákon o ochraně spotřebitele (č. 634/1992 Sb.)"},
+    ),
+    "HU": Regels(
+        "Ptk.",
+        ("Pp.", "Btk.", "Alaptörvény", "Nmjtv.", "Fgytv."),
+        stijl="§",
+        nummer=r"\d:\d+(?:/[A-Z])?|\d+",
+        namen={"Ptk.": "Polgári Törvénykönyv (2013. évi V. törvény)", "Pp.": "Polgári perrendtartás (2016. évi CXXX. törvény)",
+               "Btk.": "Büntető Törvénykönyv (2012. évi C. törvény)", "Alaptörvény": "Magyarország Alaptörvénye (2011)",
+               "Nmjtv.": "A nemzetközi magánjogról szóló 2017. évi XXVIII. törvény", "Fgytv.": "A fogyasztóvédelemről szóló 1997. évi CLV. törvény"},
+    ),
+    "RO": Regels(
+        "NCC",
+        ("NCPC", "NCP", "Constituția României", "Legea 31/1990"),
+        nummer=r"\d+(?:\^\d+|[¹²³⁴⁵⁶⁷⁸⁹])?",
+        namen={"NCC": "Noul Cod civil (Legea nr. 287/2009)", "NCPC": "Noul Cod de procedură civilă (Legea nr. 134/2010)",
+               "NCP": "Noul Cod penal (Legea nr. 286/2009)", "Constituția României": "Constituția României (1991)",
+               "Legea 31/1990": "Legea societăților nr. 31/1990"},
     ),
 }

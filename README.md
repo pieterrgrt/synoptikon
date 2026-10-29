@@ -294,6 +294,7 @@ synoptikon seed                              # laadt o.a. de omzettingstabel
 | SE | Riksdagens öppna data (SFS, stand SFST) | RF, AvtL, KöpL, KKL, SkL, PreskL, ABL, RB, BrB | ja |
 | PL | geen: de ELI-API van de Sejm geeft de geconsolideerde tekst alleen als PDF | — (alleen stelsel, systematiek KC, citeerregels) | — |
 | PT | PGDL (pgdlisboa.pt), versão actualizada | CC, CRP, CSC, LDC, CPC, CP | ja, maar geen officiële bron |
+| CZ, HU, RO | nog geen importer | — (alleen stelsel, systematiek, citeerregels) | — |
 
 **Alle wetten van een bron** (`synoptikon/importers/bulk.py`), naast het register:
 
