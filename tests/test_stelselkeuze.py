@@ -149,3 +149,24 @@ def test_welkom_bij_eerste_keer(client):
     assert r.status_code == 303 and r.headers["location"] == "/vragen/nieuw"
     assert client.get("/vragen/nieuw", headers={"accept": "text/html"}, follow_redirects=False).status_code == 200
     _herstel(client)
+
+
+def test_migratie_neemt_actieve_stelsels(tmp_path):
+    """Een bestaande database zonder de kolom: actieve profielen krijgen de actieve stelsels van nu."""
+    import sqlite3
+
+    from sqlalchemy import create_engine
+
+    from synoptikon.db import _migreer
+
+    pad = tmp_path / "oud.db"
+    c = sqlite3.connect(pad)
+    c.executescript("""CREATE TABLE stelsel (code TEXT, actief INT, volgorde INT);
+        INSERT INTO stelsel VALUES ('NL', 1, 10), ('DE', 1, 20), ('XY', 0, 30);
+        CREATE TABLE profiel (id INT, actief INT, laatst_ingelogd TEXT);
+        INSERT INTO profiel VALUES (1, 1, NULL), (2, 0, NULL);
+        CREATE TABLE leerlijst (profiel_id INT, naar_wk INT);""")
+    c.close()
+    with create_engine(f"sqlite:///{pad}").begin() as conn:
+        _migreer(conn)
+    assert dict(sqlite3.connect(pad).execute("SELECT id, stelsels FROM profiel").fetchall()) == {1: "NL,DE", 2: None}
