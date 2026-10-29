@@ -648,6 +648,13 @@ class Profiel(Base):
     # Koppeling met Wunderkammer (routes/wunderkammer.py), per profiel aan te zetten op /profiel.
     wunderkammer: Mapped[bool] = mapped_column(default=False)
     wk_gezien: Mapped[datetime | None] = mapped_column(DateTime)  # laatst dat Wunderkammer de kaarten ophaalde
+    # Mijn stelsels (kommagescheiden codes), te kiezen op /profiel: alleen die staan in kiezers, filters en kolommen, de
+    # rest onder 'meer stelsels…'. None = nog niet gekozen: dan alle actieve, en na het inloggen de stap /welkom.
+    stelsels: Mapped[str | None] = mapped_column(Text)
+
+    @property
+    def stelsel_codes(self) -> list[str] | None:
+        return None if self.stelsels is None else [c for c in self.stelsels.split(",") if c]
 
     @property
     def rol_label(self) -> str:

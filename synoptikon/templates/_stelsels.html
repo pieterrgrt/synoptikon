@@ -1,0 +1,32 @@
+{# Mijn stelsels eerst, de rest in een rustige uitklap (services/stelselkeuze.py). Importeren met
+   {% import "_stelsels.html" as st with context %}, zodat `mijn` (de keuze van het profiel) zichtbaar is.
+   `gekozen`: codes die bij de eigen stelsels blijven staan (het filter van nu, een aangevinkt vakje). #}
+
+{# Vakjes, knoppen of links: {% call(s) st.keuze(stelsels, gekozen) %}<label>…{{ s.code }}</label>{% endcall %} #}
+{% macro keuze(stelsels, gekozen=()) -%}
+{%- set eigen, overig = splits_stelsels(stelsels, mijn, gekozen) -%}
+{%- for s in eigen %}{{ caller(s) }}{% endfor -%}
+{%- if overig %}{{ meer(overig, caller) }}{% endif -%}
+{%- endmacro %}
+
+{% macro meer(overig, maak) -%}
+<details class="meer-stelsels"><summary>{{ _('meer stelsels…') }} <span class="stil">({{ overig | length }})</span></summary>
+<div class="meer-stelsels-lijst">{% for r in per_regio(overig) %}<div class="regio-rij"><span class="regio-naam">{{ r.naam }}</span> {% for s in r.stelsels %}{{ maak(s) }}{% endfor %}</div>{% endfor %}</div>
+</details>
+{%- endmacro %}
+
+{# Opties in een <select>: {% call(s) st.opties(stelsels, gekozen) %}<option …>{% endcall %} #}
+{% macro opties(stelsels, gekozen=()) -%}
+{%- set eigen, overig = splits_stelsels(stelsels, mijn, gekozen) -%}
+{%- if overig %}<optgroup label="{{ _('Mijn stelsels') }}">{% endif %}{% for s in eigen %}{{ caller(s) }}{% endfor %}{% if overig %}</optgroup>{% endif -%}
+{%- for r in per_regio(overig) %}<optgroup label="{{ r.naam }}">{% for s in r.stelsels %}{{ caller(s) }}{% endfor %}</optgroup>{% endfor -%}
+{%- endmacro %}
+
+{# Kolommen erbij zetten op een pagina met een tabel: links met ?ook=<code>. #}
+{% macro meer_kolommen(overig, ook=()) -%}
+{%- if overig %}
+<details class="meer-stelsels"><summary>{{ _('meer stelsels…') }} <span class="stil">({{ overig | length }})</span></summary>
+<div class="meer-stelsels-lijst">{% for r in per_regio(overig) %}<div class="regio-rij"><span class="regio-naam">{{ r.naam }}</span> {% for s in r.stelsels %}<a class="stelsel-erbij" href="?{{ {'ook': (ook | list + [s.code]) | join(',')} | urlencode }}" title="{{ vt(s.naam) }}">{{ vlag(s.code) }}{{ s.code }}</a> {% endfor %}</div>{% endfor %}</div>
+</details>
+{%- endif %}
+{%- endmacro %}

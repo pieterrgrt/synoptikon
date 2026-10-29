@@ -593,3 +593,20 @@ label.vinkje input { width: auto; }
 .stelsel-sprong { display: flex; flex-wrap: wrap; gap: .35rem; margin: .5rem 0 1rem; }
 .stelsel-sprong a { font-size: .8rem; font-weight: 600; letter-spacing: .05em; padding: .15rem .5rem; border: 1px solid var(--lijn); border-radius: 1rem; color: var(--inkt-2); }
 .stelsel-kaart { scroll-margin-top: 7rem; }
+/* Mijn stelsels: de rest rustig onder 'meer stelsels…', per regio; de kiezer op /profiel en /welkom. */
+.meer-stelsels { display: inline-block; vertical-align: top; }
+.meer-stelsels[open] { display: block; flex-basis: 100%; margin: .3rem 0; }
+.meer-stelsels > summary { color: var(--inkt-3); font-size: .85rem; }
+.meer-stelsels-lijst { display: grid; gap: .25rem; margin: .3rem 0 .2rem; padding-left: .5rem; border-left: 2px solid var(--lijn); }
+.regio-rij { display: flex; flex-wrap: wrap; align-items: center; gap: .2rem .7rem; }
+.regio-naam { font-size: .72rem; text-transform: uppercase; letter-spacing: .06em; color: var(--inkt-3); flex-basis: 100%; }
+.stelsel-erbij { font-size: .85rem; white-space: nowrap; }
+.stelselkiezer .kiezer-zoek { margin-bottom: .5rem; }
+.kiezer-regio { border-bottom: 1px solid var(--lijn); padding: .35rem 0; }
+.kiezer-regio > summary { color: var(--inkt); font-size: 1rem; }
+.kiezer-lijst { list-style: none; margin: .3rem 0 .2rem; padding: 0; display: grid; grid-template-columns: repeat(auto-fill, minmax(15rem, 1fr)); gap: .1rem 1rem; }
+.kiezer-lijst label.vinkje { display: flex; align-items: baseline; gap: .35rem; padding: .25rem 0; }
+.kiezer-alles { margin: .2rem 0; }
+.stelsel-rijen { list-style: none; padding: 0; margin: .2rem 0 .6rem; }
+.stelsel-rijen li { display: flex; flex-wrap: wrap; align-items: baseline; gap: .1rem .6rem; padding: .3rem 0; border-bottom: 1px solid var(--lijn); }
+.stelsel-rijen .cijfers { margin-left: auto; color: var(--inkt-3); font-size: .85rem; font-variant-numeric: tabular-nums; }

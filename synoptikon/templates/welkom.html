@@ -1,0 +1,8 @@
+{% extends "base.html" %}
+{% block titel %}{{ _('Welkom') }} · Synoptikon{% endblock %}
+{% block mainclass %}pagina smal{% endblock %}
+{% block inhoud %}
+<h1>{{ _('Welke stelsels gebruik je?') }}</h1>
+<p class="hint">{{ _('Kies de stelsels waarmee je werkt; alleen die staan in de kolommen, kiezers en filters. De andere blijven bereikbaar onder ‘meer stelsels…’, en op je profiel pas je dit later aan.') }}</p>
+{% with kiezer_actie = '/profiel/stelsels', knop_tekst = _('Verder') %}{% include "_stelselkiezer.html" %}{% endwith %}
+{% endblock %}
