@@ -1,0 +1,19 @@
+[Unit]
+Description=Synoptikon: wetteksten bijwerken (een zevende van elke bron per nacht)
+After=network-online.target docker.service
+
+[Service]
+Type=oneshot
+Environment=PATH=/usr/local/bin:/usr/bin:/bin
+# Dag van de week (1 = maandag) = deel van zeven: elke wet komt één keer per week aan de beurt, altijd op dezelfde dag.
+# De ronde draait in de container (data op /data) en stopt zelf na 4 uur, bij minder dan SYNOPTIKON_MIN_VRIJ_GB vrij of
+# als het geheugen van de container (384M, gedeeld met de webapp) voor 85 % vol is.
+# Nice/IOSchedulingClass/MemoryMax hieronder gelden alleen voor de docker-client; daarom ook nice en ionice binnenin.
+ExecStart=/bin/sh -c 'exec docker exec synoptikon nice -n 19 ionice -c 3 synoptikon bijwerken --deel "$(date +%%u)/7" --max-minuten 240'
+Nice=19
+IOSchedulingClass=idle
+CPUSchedulingPolicy=batch
+MemoryMax=256M
+TimeoutStartSec=5h
+# Exitcode 1 = er waren fouten bij enkele wetten (staan in het logboek op /wetteksten); geen reden voor een rode unit.
+SuccessExitStatus=1

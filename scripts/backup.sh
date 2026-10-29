@@ -3,7 +3,8 @@
 # die je kunt laten synchroniseren (Nextcloud, rsync, …).
 #
 # Gebruik:  scripts/backup.sh [DOELMAP]      (standaard ./backups)
-# Env:      SYNOPTIKON_DATA_DIR (standaard ./data), BACKUP_KEEP (standaard 14)
+# Env:      SYNOPTIKON_DATA_DIR (standaard ./data), BACKUP_KEEP (standaard 14),
+#           BACKUP_ZONDER_WETTEKSTEN=1: alleen de database (scripts/storagebox.sh spiegelt de wetteksten los)
 #
 # De database wordt met `sqlite3 .backup` consistent gekopieerd (WAL-veilig);
 # ontbreekt sqlite3 op de host, dan via Python. Wetteksten gaan als tar.gz.
@@ -34,7 +35,7 @@ else
     echo "geen database gevonden op $DB" >&2
 fi
 
-if [[ -d "$DATA/wetteksten" ]] && [[ -n "$(ls -A "$DATA/wetteksten" 2>/dev/null)" ]]; then
+if [[ -z "${BACKUP_ZONDER_WETTEKSTEN:-}" ]] && [[ -d "$DATA/wetteksten" ]] && [[ -n "$(ls -A "$DATA/wetteksten" 2>/dev/null)" ]]; then
     tar -czf "$DOEL/wetteksten-$STEMPEL.tar.gz" -C "$DATA" wetteksten
     echo "wetteksten → $DOEL/wetteksten-$STEMPEL.tar.gz"
 fi

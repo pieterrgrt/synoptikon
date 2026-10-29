@@ -189,7 +189,9 @@ def geldende(c=None, peildatum: date | None = None, soorten: tuple[str, ...] = S
             while start:
                 r = c.get(SRU, params={"operation": "searchRetrieve", "version": "2.0", "x-connection": "BWB", "startRecord": start,
                                        "maximumRecords": per_pagina, "query": f"overheidbwb.geldigheidsdatum=={peil} and dcterms.type=={soort}"})
-                r.raise_for_status()
+                # De zoekdienst antwoordt met status 406 en toch een volledige, geldige respons (2026); daarom op de inhoud.
+                if r.status_code != 406 or b"searchRetrieveResponse" not in r.content[:2000]:
+                    r.raise_for_status()
                 pagina, start = parse_sru(r.content)
                 for reg in pagina:
                     gezien.setdefault(reg.id, reg)
