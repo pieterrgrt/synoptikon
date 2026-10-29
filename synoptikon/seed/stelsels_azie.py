@@ -1,12 +1,14 @@
 """Stelsels in Azië en Oceanië (regio-uitbreiding, zie `plugins.py`). Bronnen per stelsel: `importers/register_azie.py`."""
 
-from .systematiek_azie import JP
+from .systematiek_azie import JP, TW
 
 # code, naam, taal, toelichting, actief, rechtsfamilie (zelfde vorm als seed/stelsels.py)
 STELSELS = [
     ("JP", "Japan", "ja", "民法 (1896/1898): pandektistisch naar het Duitse ontwerp, met Franse sporen (eigendom gaat over bij de overeenkomst); schuldrecht herzien in 2017", True, "oost_aziatisch"),
+    ("TW", "Taiwan", "zh", "民法 (1929/1930) van de Republiek China: naar het BGB en het Zwitserse ZGB/OR, deels via Japan; sinds 1949 in Taiwan, sindsdien herzien", True, "oost_aziatisch"),
 ]
 
 SYSTEMATIEK = {
     "JP": JP,
+    "TW": TW,
 }

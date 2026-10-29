@@ -1,6 +1,9 @@
 """Citeerregels voor Azië en Oceanië (regio-uitbreiding, zie `plugins.py`).
 
 * **JP**: 民法709条, 第709条の2, 会社法第429条第1項. Nummers met の voor ingevoegde artikelen (`709の2`).
+* **TW**: 民法第184條第1項, 第7條之1 (ingevoegd artikel, bij de bron `7-1`), 消保法 voor 消費者保護法.
+
+Dezelfde wetsnaam in twee stelsels ("民法第709条": JP of TW) geeft, zoals "art. 1902 CC" (ES of FR), beide.
 
 `cjk` (in `VOORBEWERKING`) maakt van "第七百九条" of "709条" een gewone verwijzing ("art. 709") vóór de herkenning;
 `NAMEN` zijn de volledige wetsnamen, die korter zijn dan de vijf tekens die `artikelen._namen` voor titels eist.
@@ -20,10 +23,18 @@ REGELS: dict[str, Regels] = {
                "通則法": "法の適用に関する通則法", "会社法": "会社法 (平成17年法律第86号)", "商法": "商法 (明治32年法律第48号)",
                "刑法": "刑法 (明治40年法律第45号)"},
     ),
+    "TW": Regels(
+        "民法",
+        ("憲法", "公司法", "消保法", "民訴法", "刑法", "涉民法"),
+        nummer=r"\d+(?:-\d+)?",
+        namen={"民法": "民法 (1929/1930)", "憲法": "中華民國憲法", "公司法": "公司法 (1929)", "消保法": "消費者保護法",
+               "民訴法": "民事訴訟法", "刑法": "中華民國刑法", "涉民法": "涉外民事法律適用法"},
+    ),
 }
 
 NAMEN = [
     ("日本国憲法", "憲法"), ("消費者契約法", "消契法"), ("民事訴訟法", "民訴法"), ("法の適用に関する通則法", "通則法"),
+    ("中華民國憲法", "憲法"), ("消費者保護法", "消保法"), ("中華民國刑法", "刑法"), ("涉外民事法律適用法", "涉民法"),
 ]
 
 
