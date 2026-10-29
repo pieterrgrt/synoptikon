@@ -2,6 +2,7 @@
 {% block titel %}{{ vt(vraag.titel) }} · Synoptikon{% endblock %}
 {% block mainclass %}synopse-pagina{% endblock %}
 {% block inhoud %}
+{% import "_stelsels.html" as st with context %}
 {% set bewerkbaar = mag_bewerken %}
 <datalist id="rollen"><option value="hoofdregel"><option value="uitzondering"><option value="rechtspraak"><option value="literatuur"><option value="verbintenis"><option value="bescherming derden"><option value="conflictenrecht"></datalist>
 
@@ -35,6 +36,7 @@
     {% for s in f.stelsels %}<label class="kolomschakel"><input type="checkbox" data-kolom="{{ s.code }}" data-familie="{{ f.sleutel or 'overig' }}" checked> {{ vlag(s.code) }}{{ s.code }}</label>{% endfor %}
   </span>
   {% endfor %}
+  {{ st.meer_kolommen(overige_stelsels, ook) }}
   <span class="scheiding"></span>
   <label class="kolomschakel">{{ _('Vertaling') }}
     <select id="vertaal-keuze">
@@ -141,7 +143,7 @@
     {% endfor %}
     <form method="post" action="/vragen/{{ vraag.slug }}/notitie" class="formulier compact">
       <label>{{ _('Nieuwe notitie') }} <textarea name="tekst" rows="2" required lang="nl"></textarea></label>
-      <div class="rij"><select name="stelsel_code" aria-label="{{ _('Stelsel') }}"><option value="">{{ _('algemeen') }}</option>{% for s in stelsels %}<option value="{{ s.code }}">{{ s.code }}</option>{% endfor %}</select><button class="knop klein primair">{{ _('Toevoegen') }}</button></div>
+      <div class="rij"><select name="stelsel_code" aria-label="{{ _('Stelsel') }}"><option value="">{{ _('algemeen') }}</option>{% call(s) st.opties(alle_stelsels) %}<option value="{{ s.code }}">{{ s.code }}</option>{% endcall %}</select><button class="knop klein primair">{{ _('Toevoegen') }}</button></div>
     </form>
   </div>
 </section>

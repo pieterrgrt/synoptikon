@@ -675,6 +675,13 @@ class Profiel(Base):
     # Zelf aangemeld met de uitnodigingscode (/aanmelden): geen domeincookie (sso.py) in of uit, anders kon wie een
     # gebruikersnaam van een ander Wunderkammer-account kiest, dat account overnemen.
     zelf_aangemeld: Mapped[bool] = mapped_column(default=False)
+    # Mijn stelsels (kommagescheiden codes), te kiezen op /profiel: alleen die staan in kiezers, filters en kolommen, de
+    # rest onder 'meer stelsels…'. None = nog niet gekozen: dan alle actieve, en na het inloggen de stap /welkom.
+    stelsels: Mapped[str | None] = mapped_column(Text)
+
+    @property
+    def stelsel_codes(self) -> list[str] | None:
+        return None if self.stelsels is None else [c for c in self.stelsels.split(",") if c]
 
     @property
     def rol_label(self) -> str:

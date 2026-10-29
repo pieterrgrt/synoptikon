@@ -1,4 +1,5 @@
-"""Profielen: eigen profiel (naam, taal, wachtwoord), beheer van de vijf plekken, taalkeuze."""
+"""Profielen: eigen profiel (naam, taal, mijn stelsels, wachtwoord), beheer van de vijf plekken, taalkeuze, en de
+stap /welkom bij de eerste keer inloggen (welke stelsels gebruik je?)."""
 from __future__ import annotations
 
 from urllib.parse import quote
@@ -13,6 +14,8 @@ from ..config import settings
 from ..db import get_session
 from ..i18n import TALEN, _
 from ..models import ROLLEN, Profiel
+from ..services import stelselkeuze
+from ..services.helpers import actieve_stelsels
 from . import render
 
 router = APIRouter()
@@ -91,10 +94,38 @@ def _wk_stand(db: Session, p: Profiel) -> dict:
     return dict(wk_ingesteld=settings.wk_ingesteld, wk_url=settings.wk_url, wk_herhaling=n)
 
 
+def _kiezer(db: Session, p: Profiel) -> dict:
+    """Voor de stelselkiezer: de beschikbare (actieve) stelsels en wat gekozen is (zonder keuze: alles)."""
+    beschikbaar = actieve_stelsels(db)
+    codes = p.stelsel_codes
+    return dict(beschikbaar=beschikbaar, gekozen=set(codes if codes is not None else (s.code for s in beschikbaar)))
+
+
 @router.get("/profiel")
 def profiel(request: Request, db: Session = Depends(get_session), klaar: str = ""):
     p = _mijn(request, db)
-    return render(request, "profiel.html", p=p, fout=None, klaar=klaar, **_wk_stand(db, p))
+    return render(request, "profiel.html", p=p, fout=None, klaar=klaar, **_wk_stand(db, p), **_kiezer(db, p))
+
+
+@router.post("/profiel/stelsels")
+async def profiel_stelsels(request: Request, db: Session = Depends(get_session)):
+    p = _mijn(request, db)
+    form = await request.form()
+    stelselkeuze.bewaar(db, p.id, form.getlist("stelsel"))
+    volgende = str(form.get("volgende") or "")
+    if volgende:
+        return RedirectResponse(_terug(volgende), status_code=303)
+    return RedirectResponse("/profiel?klaar=stelsels#stelsels", status_code=303)
+
+
+@router.get("/welkom")
+def welkom(request: Request, volgende: str = "/", db: Session = Depends(get_session)):
+    """Eerste keer ingelogd zonder keuze: welke stelsels gebruik je? Voorstel naar de taal van het profiel."""
+    p = _mijn(request, db)
+    k = _kiezer(db, p)
+    if p.stelsels is None:
+        k["gekozen"] = set(stelselkeuze.voorstel(db, p.taal))
+    return render(request, "welkom.html", p=p, terug=_terug(volgende), **k)
 
 
 @router.post("/profiel/gegevens")
@@ -124,7 +155,7 @@ def profiel_wachtwoord(request: Request, huidig: str = Form(...), nieuw: str = F
         fout = _("Het huidige wachtwoord klopt niet.")
     fout = fout or _wachtwoord_fout(nieuw, nogmaals)
     if fout:
-        return render(request, "profiel.html", status_code=400, p=p, fout=fout, klaar="", **_wk_stand(db, p))
+        return render(request, "profiel.html", status_code=400, p=p, fout=fout, klaar="", **_wk_stand(db, p), **_kiezer(db, p))
     p.wachtwoord_hash = auth.hash_password(nieuw)
     p.sessie_versie += 1  # andere apparaten opnieuw laten inloggen
     db.flush()

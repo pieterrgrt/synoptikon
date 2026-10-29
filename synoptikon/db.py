@@ -241,12 +241,27 @@ _NIEUWE_KOLOMMEN = [
     ("wettekst", "gecontroleerd", "DATETIME"),
     ("wettekst", "aantal", "INTEGER"),
     ("wettekst", "grootte", "INTEGER"),
+    ("profiel", "stelsels", "TEXT"),
 ]
 
-# Eenmalig na het toevoegen van een kolom.
+
+def _mijn_stelsels_sql() -> str:
+    """Bestaande profielen houden wat ze zagen: de stelsels die nu actief zijn. Stelsels uit de regio-uitbreidingen
+    (`seed/stelsels_<regio>.py`) tellen niet mee, ook als ze al geseed zijn: die kiest ieder zelf op /profiel."""
+    from .plugins import modules
+
+    nieuw = sorted({r[0] for m in modules("synoptikon.seed", "stelsels_") for r in getattr(m, "STELSELS", [])})
+    behalve = f" AND code NOT IN ({', '.join(repr(c) for c in nieuw)})" if nieuw else ""
+    return ("UPDATE profiel SET stelsels = (SELECT group_concat(code, ',') FROM "
+            f"(SELECT code FROM stelsel WHERE actief = 1{behalve} ORDER BY volgorde)) "
+            "WHERE id = 1 OR actief = 1 OR laatst_ingelogd IS NOT NULL")
+
+
+# Eenmalig na het toevoegen van een kolom (tekst, of een functie die de tekst geeft).
 _NA_KOLOM = {
     ("profiel", "wunderkammer"): "UPDATE profiel SET wunderkammer = 1 WHERE id IN (SELECT profiel_id FROM leerlijst WHERE naar_wk = 1)",
     ("leerlijst", "deelcode"): "CREATE UNIQUE INDEX IF NOT EXISTS ix_leerlijst_deelcode ON leerlijst(deelcode)",
+    ("profiel", "stelsels"): _mijn_stelsels_sql,
 }
 
 
@@ -256,7 +271,8 @@ def _migreer(conn) -> None:
         if bestaand and kolom not in bestaand:
             conn.execute(text(f"ALTER TABLE {tabel} ADD COLUMN {kolom} {soort}"))
             if (tabel, kolom) in _NA_KOLOM:
-                conn.execute(text(_NA_KOLOM[(tabel, kolom)]))
+                sql = _NA_KOLOM[(tabel, kolom)]
+                conn.execute(text(sql() if callable(sql) else sql))
 
 
 def init_db() -> None:

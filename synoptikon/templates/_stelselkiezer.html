@@ -1,0 +1,19 @@
+{# Kiezer voor mijn stelsels (/profiel en /welkom): per regio inklapbaar, zoekveld bovenaan, 'alles in deze regio'.
+   Verwacht `beschikbaar` (de actieve stelsels), `gekozen` (codes) en `kiezer_actie` (het formulieradres). #}
+<form method="post" action="{{ kiezer_actie }}" class="formulier stelselkiezer" data-stelselkiezer>
+  {% if terug is defined and terug %}<input type="hidden" name="volgende" value="{{ terug }}">{% endif %}
+  <input type="search" class="kiezer-zoek" placeholder="{{ _('Zoek een stelsel: naam, code of familie') }}" aria-label="{{ _('Zoek een stelsel') }}" hidden>
+  {% for r in per_regio(beschikbaar) %}
+  {% set n = r.stelsels | selectattr('code', 'in', gekozen) | list | length %}
+  <details class="kiezer-regio" data-regio="{{ r.sleutel }}" {% if n %}open{% endif %}>
+    <summary>{{ r.naam }} <span class="stil klein" data-telling>{{ _('{n} van {m}', n=n, m=r.stelsels | length) }}</span></summary>
+    <button type="button" class="knop-tekst klein kiezer-alles" hidden>{{ _('alles in deze regio') }}</button>
+    <ul class="kiezer-lijst">
+    {% for s in r.stelsels %}
+      <li data-zoek="{{ (s.code ~ ' ' ~ vt(s.naam) ~ ' ' ~ s.naam ~ ' ' ~ s.familie_naam) | lower }}"><label class="vinkje"><input type="checkbox" name="stelsel" value="{{ s.code }}" {% if s.code in gekozen %}checked{% endif %}> {{ vlag(s.code) }}<span>{{ vt(s.naam) }}</span> <span class="stelsel-code">{{ s.code }}</span> <span class="stil klein">{{ s.familie_naam }}</span></label></li>
+    {% endfor %}
+    </ul>
+  </details>
+  {% endfor %}
+  <div class="acties"><button class="knop primair">{{ knop_tekst if knop_tekst is defined else _('Opslaan') }}</button></div>
+</form>

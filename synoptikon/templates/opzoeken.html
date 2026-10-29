@@ -1,5 +1,6 @@
 {% extends "base.html" %}
 {% import "_leren.html" as l %}
+{% import "_stelsels.html" as st with context %}
 {% block titel %}{% if q %}{{ q }} · {% endif %}{{ _('Opzoeken') }} · Synoptikon{% endblock %}
 {% block inhoud %}
 {% set terug = request.url.path ~ '?' ~ request.url.query %}
@@ -8,12 +9,16 @@
   <input id="opzoek-q" type="search" name="q" value="{{ q }}" {% if not q %}autofocus{% endif %} autocomplete="off" autocapitalize="off" enterkeyhint="search"
          placeholder="{{ _('§ 823 BGB · Art. 2 GG · 6:162 BW · DSGVO · Baris/Riezenkamp') }}">
   <select name="stelsel" aria-label="{{ _('Stelsel') }}">
-    <option value="">{{ _('alle stelsels') }}</option>
-    {% for s in stelsels %}<option value="{{ s.code }}" {% if f_stelsel == s.code %}selected{% endif %}>{{ s.code }}</option>{% endfor %}
+    <option value="">{{ _('mijn stelsels') if mijn is not none and not alle else _('alle stelsels') }}</option>
+    {% call(s) st.opties(stelsels, f_stelsel) %}<option value="{{ s.code }}" {% if f_stelsel == s.code %}selected{% endif %}>{{ s.code }}</option>{% endcall %}
   </select>
+  {% if alle %}<input type="hidden" name="alle" value="1">{% endif %}
   <button class="knop primair">{{ _('Zoek') }}</button>
 </form>
 {% if not q %}<p class="hint">{{ _('Een artikel, een wet of een uitspraak, zoals je het hoort. Wat Synoptikon zelf niet vindt, zoekt Claude op. Met ☆ gaat het naar je leerlijst en zo naar Wunderkammer.') if wk else _('Een artikel, een wet of een uitspraak, zoals je het hoort. Wat Synoptikon zelf niet vindt, zoekt Claude op. Met ☆ gaat het naar je leerlijst.') }}</p>{% endif %}
+
+{% if q and beperkt %}<p class="hint zoek-bereik">{{ _('Gezocht in je eigen stelsels.') }}{% if verborgen %} {{ n_('{n} treffer in andere stelsels.', '{n} treffers in andere stelsels.', verborgen) }}{% endif %} <a href="{{ request.url.include_query_params(alle=1) }}">{{ _('Ook in alle andere') }} →</a></p>
+{% elif q and alle and mijn is not none %}<p class="hint zoek-bereik">{{ _('Gezocht in alle stelsels.') }} <a href="{{ request.url.remove_query_params(['alle', 'p']) }}">{{ _('Alleen in mijn stelsels') }}</a></p>{% endif %}
 
 {% if open_id %}{% for o in logboek if o.id == open_id %}{% with groot = true %}{% include "_opzoeking.html" %}{% endwith %}{% endfor %}{% endif %}
 

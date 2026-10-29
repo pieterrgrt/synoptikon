@@ -1,4 +1,5 @@
 {% extends "base.html" %}
+{% import "_stelsels.html" as st with context %}
 {% block titel %}{{ k.soort_label }} · {{ _('Leren') }} · Synoptikon{% endblock %}
 {% block inhoud %}
 <p class="kruimel"><a href="/leren">{{ _('Leren') }}</a> › <a href="/leren/{{ k.lijst.id }}">{{ k.lijst.naam }}</a></p>
@@ -21,7 +22,7 @@
   <label>{{ _('Feiten') }} <span class="hint">markdown</span><textarea name="feiten" rows="3">{{ k.feiten or '' }}</textarea></label>
   {% endif %}
   {% if k.soort == 'tegenhanger' %}
-  <label>{{ _('Tegenhanger in') }} <select name="doel_stelsel">{% for s in stelsels %}<option value="{{ s.code }}" {% if s.code == k.doel_stelsel %}selected{% endif %}>{{ vt(s.naam) }}</option>{% endfor %}</select></label>
+  <label>{{ _('Tegenhanger in') }} <select name="doel_stelsel">{% call(s) st.opties(stelsels, k.doel_stelsel) %}<option value="{{ s.code }}" {% if s.code == k.doel_stelsel %}selected{% endif %}>{{ vt(s.naam) }}</option>{% endcall %}</select></label>
   {% endif %}
   <label>{% if k.soort == 'kern' %}{{ _('Omschrijving (voorkant)') }}{% else %}{{ _('Eigen voorkant') }} <span class="hint">{{ _('leeg = automatisch') }}</span>{% endif %}<textarea name="vraag" rows="2">{{ k.vraag or '' }}</textarea></label>
   {% if k.soort in ('arrest', 'feiten', 'vrij') %}<label>{% if k.soort == 'vrij' %}{{ _('Antwoord') }}{% else %}{{ _('Rechtsregel') }}{% endif %} <span class="hint">markdown</span><textarea name="antwoord" rows="4">{{ k.antwoord or '' }}</textarea></label>{% endif %}

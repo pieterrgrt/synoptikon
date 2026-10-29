@@ -2,6 +2,7 @@
 from __future__ import annotations
 
 import threading
+from urllib.parse import quote
 from contextlib import asynccontextmanager
 from pathlib import Path
 
@@ -19,7 +20,7 @@ from .db import init_db
 from .models import RECHTSFAMILIES, RELATIE_TYPES
 from .routes import auth as auth_routes
 from .routes import artikelen, begrippen, bronnen, eu, gedeeld, invoer, leren, opzoeken, profielen, stelsels, vertalingen, vragen, wetteksten, wunderkammer
-from .services import wetboek
+from .services import stelselkeuze, wetboek
 from .services.artikelen import ref_uit_bron, wetnaam
 from .services.helpers import per_familie
 
@@ -56,6 +57,8 @@ templates.env.globals["wet_titel"] = wetboek.toon_titel
 templates.env.globals["wet_afk"] = wetboek.toon_afkorting
 templates.env.globals["RECHTSFAMILIES"] = RECHTSFAMILIES
 templates.env.globals["per_familie"] = per_familie
+templates.env.globals["per_regio"] = stelselkeuze.per_regio
+templates.env.globals["splits_stelsels"] = stelselkeuze.splits
 # Versie van css/js voor de cache: nginx bewaart /static/ zeven dagen als immutable.
 templates.env.globals["sv"] = str(max(int(f.stat().st_mtime) for d in ("css", "js") for f in (HIER / "static" / d).iterdir()))
 templates.env.globals["_"] = i18n._
@@ -123,6 +126,14 @@ def _taal_van(request: Request) -> str:
     return i18n.kies_taal(request.headers.get("accept-language"))
 
 
+def _eerst_welkom(request: Request, profiel) -> bool:
+    """Een profiel zonder eigen stelselkeuze krijgt bij de eerste pagina die de browser opent de stap /welkom. Alleen
+    bij het openen van een pagina (Accept: text/html), niet bij fragmenten, JSON of formulieren."""
+    return (profiel is not None and profiel.stelsels is None and request.method == "GET"
+            and "text/html" in request.headers.get("accept", "") and not request.headers.get("hx-request")
+            and not request.url.path.startswith(("/welkom", "/profiel", "/logout", "/api/", "/taal", "/beheer")))
+
+
 class AuthMiddleware(BaseHTTPMiddleware):
     async def dispatch(self, request: Request, call_next):
         pad = request.url.path
@@ -139,6 +150,9 @@ class AuthMiddleware(BaseHTTPMiddleware):
         if ingelogd and request.method not in ("GET", "HEAD") and not pad.startswith(_LEZER_POST) \
                 and profiel is not None and not profiel.mag_bewerken:
             response = PlainTextResponse(i18n._("Dit profiel mag alleen lezen."), status_code=403)
+        elif ingelogd and _eerst_welkom(request, profiel):
+            volgende = pad + (f"?{request.url.query}" if request.url.query else "")
+            response = RedirectResponse(f"/welkom?volgende={quote(volgende)}", status_code=303)
         elif open_pad or ingelogd:
             response = await call_next(request)
         else:

@@ -1,4 +1,5 @@
 {% extends "base.html" %}
+{% import "_stelsels.html" as st with context %}
 {% import "_artikel.html" as m %}
 {% block titel %}{{ vt(c.titel) }} · Synoptikon{% endblock %}
 {% block inhoud %}
@@ -22,7 +23,7 @@
   <summary>{{ _('Artikel toevoegen') }}</summary>
   <form method="post" action="/artikelen/thema/{{ c.id }}/artikel" class="formulier compact">
     <div class="rij">
-      <label>{{ _('Stelsel') }} <select name="stelsel_code">{% for s in stelsels %}<option value="{{ s.code }}">{{ s.code }}</option>{% endfor %}</select></label>
+      <label>{{ _('Stelsel') }} <select name="stelsel_code">{% call(s) st.opties(stelsels) %}<option value="{{ s.code }}">{{ s.code }}</option>{% endcall %}</select></label>
       <label>{{ _('Artikel') }} <input name="verwijzing" required placeholder="6:162 · § 823 Abs. 1 · art. 1240 · art. 1132–1136 · § 1 ProdHaftG · —"></label>
       <label>{{ _('Rol') }} <input name="rol" lang="nl" placeholder="hoofdregel · deels · faux ami · geen regeling"></label>
     </div>

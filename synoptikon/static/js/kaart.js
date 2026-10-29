@@ -52,10 +52,13 @@
   });
   stelsels.forEach(function (s) { if (!anker[s]) anker[s] = { x: CX, y: CY, hoek: null }; });
 
+  // Stelsels die niet bij mijn stelsels horen staan onder 'meer stelsels…' en beginnen uitgevinkt.
+  var uit = {};
+  document.querySelectorAll('input[data-stelsel]').forEach(function (cb) { if (!cb.checked) uit[cb.dataset.stelsel] = true; });
   var knopen = data.knopen.map(function (k, i) {
     var a = anker[k.stelsel], r = straal(k);
     var doel = a.hoek === null ? { x: CX, y: CY + (r - R) * 0.6 } : { x: CX + Math.cos(a.hoek) * r, y: CY + Math.sin(a.hoek) * r };
-    return Object.assign({}, k, { doel: doel, x: doel.x + Math.cos(i * 2.4) * 30, y: doel.y + Math.sin(i * 2.4) * 30, vx: 0, vy: 0, zichtbaar: true });
+    return Object.assign({}, k, { doel: doel, x: doel.x + Math.cos(i * 2.4) * 30, y: doel.y + Math.sin(i * 2.4) * 30, vx: 0, vy: 0, zichtbaar: !uit[k.stelsel] });
   });
   var perId = {}; knopen.forEach(function (k) { perId[k.id] = k; });
   var kanten = data.kanten.filter(function (e) { return perId[e.van] && perId[e.naar]; }).map(function (e) {

@@ -1,11 +1,12 @@
 {% extends "base.html" %}
+{% import "_stelsels.html" as st with context %}
 {% block titel %}{{ _('Bron bewerken') if bron else _('Nieuwe bron') }} · Synoptikon{% endblock %}
 {% block inhoud %}
 <h1>{{ _('Bron bewerken') if bron else _('Nieuwe bron') }}</h1>
 <form method="post" class="formulier">
   <div class="rij">
     <label>{{ _('Stelsel') }}
-      <select name="stelsel_code" id="stelsel_code" required>{% for s in stelsels %}<option value="{{ s.code }}" data-taal="{{ s.taal }}" {% if (bron and bron.stelsel_code == s.code) or (not bron and vooraf_stelsel == s.code) %}selected{% endif %}>{{ vt(s.naam) }}</option>{% endfor %}</select>
+      <select name="stelsel_code" id="stelsel_code" required>{% call(s) st.opties(stelsels, bron.stelsel_code if bron else vooraf_stelsel) %}<option value="{{ s.code }}" data-taal="{{ s.taal }}" {% if (bron and bron.stelsel_code == s.code) or (not bron and vooraf_stelsel == s.code) %}selected{% endif %}>{{ vt(s.naam) }}</option>{% endcall %}</select>
     </label>
     <label>{{ _('Soort') }}
       <select name="soort" required>{% for k, v in soorten.items() %}<option value="{{ k }}" {% if bron and bron.soort == k %}selected{% endif %}>{{ _(v) }}</option>{% endfor %}</select>

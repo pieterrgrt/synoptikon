@@ -74,3 +74,46 @@
   openHash();
   window.addEventListener('hashchange', openHash);
 })();
+
+// Stelselkiezer (/profiel, /welkom): zoeken over alle regio's, 'alles in deze regio', telling per regio.
+(function () {
+  document.querySelectorAll('[data-stelselkiezer]').forEach(function (form) {
+    var zoek = form.querySelector('.kiezer-zoek');
+    var regios = Array.prototype.slice.call(form.querySelectorAll('.kiezer-regio'));
+    var dicht = {};
+    function tel(r) {
+      var vakjes = r.querySelectorAll('input[type=checkbox]');
+      var n = r.querySelectorAll('input[type=checkbox]:checked').length;
+      var t = r.querySelector('[data-telling]');
+      if (t) t.textContent = t.textContent.replace(/^\d+/, n);
+      var knop = r.querySelector('.kiezer-alles');
+      if (knop) knop.dataset.aan = n === vakjes.length ? '1' : '';
+    }
+    zoek.hidden = false;
+    zoek.addEventListener('input', function () {
+      var q = zoek.value.trim().toLowerCase();
+      regios.forEach(function (r, i) {
+        if (!(i in dicht)) dicht[i] = !r.open;
+        var raak = 0;
+        r.querySelectorAll('li[data-zoek]').forEach(function (li) {
+          var ja = !q || li.dataset.zoek.indexOf(q) >= 0;
+          li.hidden = !ja; if (ja) raak++;
+        });
+        r.hidden = q && !raak;
+        r.open = q ? raak > 0 : !dicht[i];
+      });
+      if (!q) dicht = {};
+    });
+    regios.forEach(function (r) {
+      var knop = r.querySelector('.kiezer-alles');
+      knop.hidden = false;
+      knop.addEventListener('click', function () {
+        var aan = knop.dataset.aan !== '1';
+        r.querySelectorAll('li:not([hidden]) input[type=checkbox]').forEach(function (cb) { cb.checked = aan; });
+        tel(r);
+      });
+      r.addEventListener('change', function () { tel(r); });
+      tel(r);
+    });
+  });
+})();

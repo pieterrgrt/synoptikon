@@ -67,6 +67,9 @@ def _uit_gegevens() -> set[str]:
     uit |= set(SOORTEN.values()) | set(SOORTEN)  # ook de sleutels: de systematiek toont b.soort
     uit |= {"eigen", "officieel", "literatuur"}  # herkomst van een bronvertaling
     from .routes.begrippen import KAART_TEKSTEN
+    from .seed.regios import REGIOS
+
+    uit |= set(REGIOS.values())
 
     uit |= set(KAART_TEKSTEN)
     for niveau, grond in HARMONISATIE.values():

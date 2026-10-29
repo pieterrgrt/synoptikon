@@ -5,6 +5,7 @@ wetteksten (eerst de wetten uit het register) en in de eigen inhoud, en het logb
 """
 from __future__ import annotations
 
+import inspect
 from urllib.parse import quote
 
 from fastapi import APIRouter, Depends, Form, HTTPException, Request
@@ -18,6 +19,7 @@ from ..models import Kaart, Leerlijst, Opzoeking
 from ..services import claude, leren, opzoeken, zoeken
 from ..services.artikelen import Ref
 from ..services.helpers import actieve_stelsels
+from ..services.stelselkeuze import stelselkeuze
 from . import render
 
 router = APIRouter()
@@ -35,27 +37,66 @@ def zoeken_oud(request: Request):
 
 
 @router.get("/opzoeken")
-def pagina(request: Request, q: str = "", stelsel: str = "", p: int = 1, o: int | None = None, db: Session = Depends(get_session)):
+def pagina(request: Request, q: str = "", stelsel: str = "", alle: int = 0, p: int = 1, o: int | None = None,
+           db: Session = Depends(get_session)):
     pid = _pid(request)
     q = q.strip()
     stelsel = stelsel.upper() if stelsel else ""
+    # Zonder gekozen stelsel zoekt Opzoeken in mijn stelsels; `alle=1` ook in alle andere.
+    keuze = stelselkeuze(db, request, [stelsel])
+    codes = keuze.codes if keuze.overig and not stelsel and not alle else None
     uitkomst = resultaat = None
+    verborgen = 0
     if q:
-        uitkomst = opzoeken.lokaal(db, q, stelsel)
-        if p == 1:
-            opzoeken.log_lokaal(db, pid, q, uitkomst)
-        resultaat = zoeken.zoek(db, q, limiet=PER_PAGINA, stelsel=stelsel)
+        uitkomst = _met_stelsels(opzoeken.lokaal, db, q, stelsel, stelsels=codes)
+        resultaat = _met_stelsels(zoeken.zoek, db, q, limiet=PER_PAGINA, stelsel=stelsel, stelsels=codes)
         if p > 1:
             resultaat.wetteksten = [zoeken.Treffer("wettekst", Ref(wa.wettekst.stelsel_code, wa.nummer, wa.wettekst.wet).citeer, s,
                                                    Ref(wa.wettekst.stelsel_code, wa.nummer, wa.wettekst.wet).url, wa.wettekst.stelsel_code, wa.opschrift)
-                                    for wa, s in zoeken.wetsartikelen(db, q, stelsel, PER_PAGINA, vanaf=(p - 1) * PER_PAGINA)]
+                                    for wa, s in _met_stelsels(zoeken.wetsartikelen, db, q, stelsel, PER_PAGINA, vanaf=(p - 1) * PER_PAGINA, stelsels=codes)]
+        if codes is not None:
+            verborgen = _alleen_eigen(uitkomst, resultaat, set(codes))
+        if p == 1:
+            opzoeken.log_lokaal(db, pid, q, uitkomst)
     lijsten = leren.lijsten_van(db, pid)
     return render(
         request, "opzoeken.html", q=q, f_stelsel=stelsel, p=max(1, p), uitkomst=uitkomst, resultaat=resultaat,
-        stelsels=actieve_stelsels(db), logboek=opzoeken.vandaag(db, pid), lijsten=lijsten,
+        stelsels=keuze.alle, beperkt=codes is not None, alle=bool(alle), verborgen=verborgen,
+        logboek=opzoeken.vandaag(db, pid), lijsten=lijsten,
         gekozen_lijst=_gekozen(request, lijsten), claude_aan=claude.beschikbaar(), open_id=o,
         bewaarde_refs=leren.bewaarde_refs(db, pid), per_pagina=PER_PAGINA,
     )
+
+
+def _met_stelsels(functie, *args, stelsels: list[str] | None, **kw):
+    """Roept een zoekfunctie aan met `stelsels=` als die de parameter kent (services/opzoeken.py, zoeken.py)."""
+    if stelsels is not None and "stelsels" in inspect.signature(functie).parameters:
+        kw["stelsels"] = stelsels
+    return functie(*args, **kw)
+
+
+def _alleen_eigen(uitkomst, resultaat, codes: set[str]) -> int:
+    """Haalt treffers uit andere stelsels weg (voor zover de zoekfunctie dat niet zelf deed) en telt ze.
+
+    Een artikel dat met naam en toenaam is opgezocht (§ 1295 ABGB) blijft staan als er anders niets overblijft. Wat
+    geen stelsel heeft (vragen, EU-handelingen) blijft altijd staan."""
+    weg = 0
+
+    def filter_(lijst, attr="stelsel"):
+        nonlocal weg
+        houden = [x for x in lijst if not getattr(x, attr, None) or getattr(x, attr) in codes]
+        weg += len(lijst) - len(houden)
+        return houden
+
+    arts = [g for g in uitkomst.artikelen if not g.stelsel or g.stelsel in codes]
+    if arts:
+        weg += len(uitkomst.artikelen) - len(arts)
+        uitkomst.artikelen = arts
+    uitkomst.wetten = filter_(uitkomst.wetten)
+    uitkomst.uitspraken = filter_(uitkomst.uitspraken)
+    for veld in ("wetteksten", "bronnen", "begrippen", "antwoorden", "vertalingen"):
+        setattr(resultaat, veld, filter_(getattr(resultaat, veld)))
+    return weg
 
 
 def _gekozen(request: Request, lijsten: list[Leerlijst]) -> int | None:

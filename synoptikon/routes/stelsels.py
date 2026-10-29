@@ -15,7 +15,8 @@ from ..services import correspondentie as corr
 from ..auth import huidig_profiel
 from ..services import leren, wetboek, zoeken
 from ..services.artikelen import herken, plaatser, ref_uit_bron
-from ..services.helpers import actieve_stelsels, leeg_naar_none, per_familie, stelsels_per_code
+from ..services import stelselkeuze
+from ..services.helpers import actieve_stelsels, leeg_naar_none, op_familie, per_familie, stelsels_per_code
 from . import render
 
 router = APIRouter()
@@ -23,14 +24,19 @@ router = APIRouter()
 
 @router.get("/stelsels")
 def overzicht(request: Request, db: Session = Depends(get_session)):
+    """Wetten per stelsel: kaarten voor mijn stelsels, de andere beschikbare per regio in een uitklap met het aantal
+    wetten en artikelen en of er een open bron is; daaronder het beheer (alle stelsels, ook de uitgezette)."""
     stelsels = db.scalars(select(Stelsel).order_by(Stelsel.volgorde)).all()
+    keuze = stelselkeuze.stelselkeuze(db, request)
     wetten = {}
-    for s in stelsels:
+    for s in keuze.eigen:
         register = wetboek.wetten(db, s.code)
         ids = {w.id for w in register}
         wetten[s.code] = register + [w for w in wetboek.belangrijk(db, s.code) if w.id not in ids]
-    return render(request, "stelsels.html", families=per_familie(stelsels), wetten=wetten,
-                  aantallen={s.code: wetboek.aantal_wetten(db, s.code) for s in stelsels})
+    tellingen = stelselkeuze.aantallen(db)
+    return render(request, "stelsels.html", families=per_familie(keuze.eigen), wetten=wetten, overig=keuze.overig,
+                  aantallen={c: n for c, (n, _a) in tellingen.items()}, tellingen=tellingen,
+                  open_bron=stelselkeuze.met_open_bron(), beheer=stelselkeuze.per_regio(op_familie(stelsels)))
 
 
 @router.get("/stelsels/{code}/wetten")

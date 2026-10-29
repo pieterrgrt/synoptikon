@@ -1,5 +1,6 @@
 {% extends "base.html" %}
 {% import "_artikel.html" as m %}
+{% import "_stelsels.html" as st with context %}
 {% block titel %}{{ _('Vergelijken') }} · Synoptikon{% endblock %}
 {% block inhoud %}
 <div class="paginakop">
@@ -28,6 +29,7 @@
   <a href="/artikelen" {% if not f_familie %}aria-current="page"{% endif %}>{{ _('Alle stelsels') }}</a>
   {% for k in families_in_tabel %}<a class="fam-{{ k }}" href="/artikelen?familie={{ k }}" {% if f_familie == k %}aria-current="page"{% endif %}>{{ _(RECHTSFAMILIES[k][0]) }}</a>{% endfor %}
 </nav>
+{{ st.meer_kolommen(overige_kolommen, ook) }}
 {% set families = per_familie(kolommen) %}
 {% for gebied, thema_s in groepen.items() %}
 <section class="blok">

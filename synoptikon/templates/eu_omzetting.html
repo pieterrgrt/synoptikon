@@ -4,6 +4,8 @@
 <p class="kruimel"><a href="/eu">{{ _('Unierecht') }}</a></p>
 <h1>{{ _('Omzettingsmatrix') }}</h1>
 <p class="hint">{{ _('Waar staat een richtlijn of verordening in het nationale recht? Per handeling en stelsel de artikelen die haar omzetten of uitvoeren. Cursief: de wet als geheel, zonder artikelverwijzing.') }} <span class="rol onzeker">?</span> = {{ _('eigen aantekening, nog niet tegen de officiële tekst gecontroleerd.') }} {{ _('CH is geen lidstaat (autonome navolging); voor EN geldt omzetting van vóór de Brexit als nationaal recht door.') }}</p>
+{% import "_stelsels.html" as st with context %}
+{{ st.meer_kolommen(overige_kolommen, ook) }}
 <div class="tabel-schuif">
 <table class="tabel correspondentie">
   <thead><tr><th>{{ _('Handeling') }}</th>{% for s in kolommen %}<th class="fam-{{ s.familie }}" title="{{ vt(s.naam) }}">{{ vlag(s.code) }}{{ s.code }}</th>{% endfor %}</tr></thead>
