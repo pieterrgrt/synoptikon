@@ -209,9 +209,10 @@ def wetsartikelen(db: Session, q: str, stelsel: str = "", limiet: int = 40, wet:
 
 
 def zoek(db: Session, q: str, limiet: int = 30, stelsel: str = "", stelsels: list[str] | None = None,
-         wetteksten: bool = True) -> Zoekresultaat:
+         wetteksten: bool = True, voorkeur: list[str] | None = None) -> Zoekresultaat:
     """Full-text in alles. `stelsel` of `stelsels` beperkt de bronnen, begrippen, analyses en wetteksten tot die
-    stelsels (None of leeg = alle); EU-handelingen alleen als EU erbij is. `wetteksten`: ook de wetsartikelen."""
+    stelsels (None of leeg = alle); EU-handelingen alleen als EU erbij is. `wetteksten`: ook de wetsartikelen,
+    die uit de stelsels in `voorkeur` (die van de gebruiker) eerst."""
     res = Zoekresultaat(q=q)
     match = fts_query(q)
     if not match:
@@ -275,7 +276,7 @@ def zoek(db: Session, q: str, limiet: int = 30, stelsel: str = "", stelsels: lis
                 Treffer("antwoord", vt(a.vraag.titel), snippet or "", f"/vragen/{a.vraag.slug}#{a.stelsel_code}", a.stelsel_code)
             )
 
-    for wa, snippet in (wetsartikelen(db, q, stelsel, limiet, stelsels=stelsels) if wetteksten else []):
+    for wa, snippet in (wetsartikelen(db, q, stelsel, limiet, stelsels=stelsels, voorkeur=voorkeur) if wetteksten else []):
         res.wetteksten.append(
             Treffer(
                 "wettekst",
