@@ -212,8 +212,12 @@ def test_stelsels_per_rechtsfamilie():
 
     with database.session() as s:
         families = per_familie(actieve_stelsels(s))
-        assert [f.sleutel for f in families] == ["romaans", "germaans", "common_law", "supranationaal"]
-        assert [x.code for x in families[2].stelsels] == ["EN", "US", "AU"]
+        # Regio-uitbreidingen (seed/stelsels_<regio>.py) voegen families en stelsels toe; de kern blijft in deze volgorde.
+        sleutels = [f.sleutel for f in families]
+        kern = ["romaans", "germaans", "common_law", "supranationaal"]
+        assert [s for s in sleutels if s in kern] == kern
+        common = families[sleutels.index("common_law")]
+        assert [x.code for x in common.stelsels][:3] == ["EN", "US", "AU"]
 
 
 def test_volledige_wetsnamen_en_kale_nummers():
