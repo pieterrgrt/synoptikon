@@ -1,5 +1,5 @@
 {% extends "base.html" %}
-{% import "_stelsels.html" as st with context %}
+{% import "_stelsels.html" as sk with context %}
 {% import "_artikel.html" as m %}
 {% block titel %}{{ h.roepnaam or h.citeer }} · Synoptikon{% endblock %}
 {% block inhoud %}
@@ -63,7 +63,7 @@
   <summary>{{ _('Koppeling toevoegen') }}</summary>
   <form method="post" action="/eu/{{ h.celex }}/omzetting" class="formulier compact">
     <div class="rij">
-      <label>{{ _('Stelsel') }} <select name="stelsel_code">{% call(s) st.opties(stelsels) %}{% if s.code != 'EU' %}<option value="{{ s.code }}">{{ s.code }} · {{ vt(s.naam) }}</option>{% endif %}{% endcall %}</select></label>
+      <label>{{ _('Stelsel') }} <select name="stelsel_code">{% call(s) sk.opties(stelsels) %}{% if s.code != 'EU' %}<option value="{{ s.code }}">{{ s.code }} · {{ vt(s.naam) }}</option>{% endif %}{% endcall %}</select></label>
       <label>{{ _('Soort') }} <select name="soort">{% for k, v in OMZETTING_SOORTEN.items() %}<option value="{{ k }}" {% if (k == 'uitvoering') == (h.soort == 'verordening') and k in ('omzetting', 'uitvoering') %}selected{% endif %}>{{ _(v) }}</option>{% endfor %}</select></label>
       <label>{{ _('Art. van de handeling') }} <input name="eu_artikel" placeholder="10 · 9–16"></label>
     </div>
