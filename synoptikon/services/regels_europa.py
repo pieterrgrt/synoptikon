@@ -5,6 +5,8 @@
 * **DK** (geen hoofdwet): `§ 36 aftl.`, `§ 4 a kbl.`, `§ 76, stk. 1, kbl.`; letters met een spatie (`§ 9 a`).
 * **FI** (geen hoofdwet): `OikTL 36 §`, `36 § OikTL`; wetten die per hoofdstuk nummeren als hoofdstuk:paragraaf
   (`RL 21:1`, `KSL 7 a:14 a`, `OK 17:1`), de schrijfwijze van de Finse praktijk. "21 luku 1 §" wordt niet herkend.
+* **NO** (geen hoofdwet): `avtl. § 36`, `tvl. § 1-1` (nieuwere wetten nummeren per hoofdstuk met een streepje),
+  `§ 38 a`.
 """
 from __future__ import annotations
 
@@ -44,5 +46,17 @@ REGELS: dict[str, Regels] = {
                "VahL": "Vahingonkorvauslaki", "VanhL": "Laki velan vanhentumisesta", "OYL": "Osakeyhtiölaki", "OK": "Oikeudenkäymiskaari",
                "RL": "Rikoslaki", "MK": "Maakaari", "PK": "Perintökaari", "AL": "Avioliittolaki",
                "TSL": "Työsopimuslaki", "HolhTL": "Laki holhoustoimesta", "KorkoL": "Korkolaki"},
+    ),
+    "NO": Regels(
+        None,
+        ("Grl.", "avtl.", "kjl.", "fkjl.", "skl.", "foreldelsesl.", "asl.", "tvl.", "strl.", "husleieloven", "ekteskapsl.",
+         "arvel.", "tingl.", "panteloven", "markedsføringsl.", "angrerettl.", "finansavtalel.", "asal.", "deknl.", "konkursl."),
+        stijl="§",
+        nummer=r"\d+(?:-\d+)?(?:\s?[a-zæøå](?![\wæøå]))?",
+        namen={"Grl.": "Kongeriket Norges Grunnlov (1814)", "avtl.": "Avtaleloven", "kjl.": "Kjøpsloven", "fkjl.": "Forbrukerkjøpsloven",
+               "skl.": "Skadeserstatningsloven", "foreldelsesl.": "Foreldelsesloven", "asl.": "Aksjeloven", "tvl.": "Tvisteloven",
+               "strl.": "Straffeloven", "ekteskapsl.": "Ekteskapsloven", "arvel.": "Arveloven",
+               "tingl.": "Tinglysingsloven", "markedsføringsl.": "Markedsføringsloven", "angrerettl.": "Angrerettloven",
+               "finansavtalel.": "Finansavtaleloven", "asal.": "Allmennaksjeloven", "deknl.": "Dekningsloven", "konkursl.": "Konkursloven"},
     ),
 }

@@ -109,10 +109,32 @@ FI = [
     ]),
 ]
 
+# NO: geen burgerlijk wetboek; zelfde opzet als DK, de hoofdstukken komen uit de import.
+NO = [
+    ("NO-FORMUE", "Formuerett (avtaler, kjøp, erstatning)", "", [
+        ("NO-AVTL", "Avtaleloven (1918)", "", [], "avtl."),
+        ("NO-KJL", "Kjøpsloven (1988)", "", [], "kjl."),
+        ("NO-FKJL", "Forbrukerkjøpsloven (2002)", "", [], "fkjl."),
+        ("NO-SKL", "Skadeserstatningsloven (1969)", "", [], "skl."),
+        ("NO-FORELDL", "Foreldelsesloven (1979)", "", [], "foreldelsesl."),
+    ]),
+    ("NO-SELSKAP", "Selskapsrett", "", [
+        ("NO-ASL", "Aksjeloven (1997)", "", [], "asl."),
+    ]),
+    ("NO-PROSESS", "Sivilprosess", "", [
+        ("NO-TVL", "Tvisteloven (2005)", "", [], "tvl."),
+    ]),
+    ("NO-OFF", "Statsforfatning og strafferett", "", [
+        ("NO-GRL", "Kongeriket Norges Grunnlov (1814)", "", [], "Grl."),
+        ("NO-STRL", "Straffeloven (2005)", "", [], "strl."),
+    ]),
+]
+
 # code, naam, taal, toelichting, actief, rechtsfamilie (zelfde vorm als seed/stelsels.py)
 STELSELS = [
     ("DK", "Denemarken", "da", "Geen burgerlijk wetboek: losse vermogensrechtelijke wetten (Aftaleloven 1917, Købeloven 1906), deels in Scandinavische samenwerking tot stand gekomen; Danske Lov (1683) geldt nog in enkele artikelen", True, "nordisch"),
     ("FI", "Finland", "fi", "Geen burgerlijk wetboek: losse vermogensrechtelijke wetten in Scandinavische samenwerking (Oikeustoimilaki 1929, Kauppalaki 1987); het Zweedse Rijkswetboek van 1734 leeft voort in de procesrechtelijke 'kaari'", True, "nordisch"),
+    ("NO", "Noorwegen", "no", "Geen burgerlijk wetboek: losse vermogensrechtelijke wetten, grotendeels in Scandinavische samenwerking (Avtaleloven 1918); Christian V's Norske Lov (1687) geldt nog in enkele artikelen", True, "nordisch"),
     ("AT", "Oostenrijk", "de", "Allgemeines bürgerliches Gesetzbuch (1811): natuurrechtelijke codificatie, gemoderniseerd door de Teilnovellen (1914–1916) en latere hervormingen", True, "germaans"),
 ]
 
@@ -120,4 +142,5 @@ SYSTEMATIEK = {
     "AT": AT,
     "DK": DK,
     "FI": FI,
+    "NO": NO,
 }

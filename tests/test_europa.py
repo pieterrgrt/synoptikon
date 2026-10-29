@@ -114,3 +114,22 @@ def test_finse_verwijzingen():
     assert _herken("OikTL 36 §") == [("FI", "36", "OikTL")]
     assert _herken("RL 21:1") == [("FI", "21:1", "RL")]
     assert _herken("KSL 7 a:14 a") == [("FI", "7 a:14 a", "KSL")]
+
+
+def test_lovdata_tvl():
+    from synoptikon.importers import lovdata
+
+    g = lovdata.parse((FIX / "lovdata_tvl.xml").read_bytes(), "2005-06-17-90")
+    assert g.versie == "endret ved lov/2026-06-19-45 fra 2026-07-01"
+    per = {a.nummer: a for a in g.artikelen}
+    assert set(per) == {"1-1", "1-3", "4-1"}
+    assert per["1-1"].opschrift == "Lovens formål"
+    assert per["1-1"].pad.endswith("› Kapittel 1. Lovens formål og anvendelse")
+    assert "\n- partene få argumentere for sin sak og føre bevis," in per["1-1"].tekst
+    assert "Endret ved lov" not in per["1-3"].tekst
+    assert lovdata._bestand("1918-05-31-4") == "nl/nl-19180531-004.xml"
+
+
+def test_noorse_verwijzingen():
+    assert _herken("avtl. § 36") == [("NO", "36", "avtl.")]
+    assert _herken("tvl. § 1-1") == [("NO", "1-1", "tvl.")]

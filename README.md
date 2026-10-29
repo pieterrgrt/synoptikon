@@ -290,6 +290,7 @@ synoptikon seed                              # laadt o.a. de omzettingstabel
 | AT | RIS (BKA), geltende Fassung per wet | ABGB, B-VG, UGB, KSchG, ZPO, IPRG, StGB | ja |
 | DK | Retsinformation, LexDania-XML via ELI | grl., aftl., kbl., forbrugeraftalel., EAL, forældelsesl., selskabsl., rpl., strfl. | ja, per lovbekendtgørelse |
 | FI | Finlex open data (Akoma Ntoso) | PL, OikTL, KL, KSL, VahL, VanhL, OYL, OK, RL | ja |
+| NO | Lovdata, dataset Gjeldende lover (api.lovdata.no) | Grl., avtl., kjl., fkjl., skl., foreldelsesl., asl., tvl., strl. | ja |
 
 **Alle wetten van een bron** (`synoptikon/importers/bulk.py`), naast het register:
 

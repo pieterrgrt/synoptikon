@@ -14,6 +14,10 @@ Bronnen per stelsel en waarom:
 * FI: Finlex open data (opendata.finlex.fi, Oikeusministeriö), Akoma Ntoso, geconsolideerd (*ajantasa*);
   vrij herbruikbaar (CC BY 4.0). Ook Finland heeft geen burgerlijk wetboek. De oude *kaaret* uit het Zweedse
   Rijkswetboek van 1734 en de rikoslaki hebben een id met achtervoegsel ("1734/4-000", "1889/39-001").
+* NO: Lovdata, de gratis dataset "Gjeldende lover" (api.lovdata.no, NLOD 2.0): één tar.bz2 van ±6 MB met
+  alle geldende wetten als XHTML, bijgewerkt; geconsolideerd. De pagina's op lovdata.no zelf niet (daar is
+  automatisch ophalen niet de bedoeling). Geen burgerlijk wetboek; Christian V's Norske Lov (1687) geldt nog
+  in enkele artikelen en is niet opgenomen.
 """
 from __future__ import annotations
 
@@ -53,5 +57,17 @@ WETTEN: list[Wet] = [
         ("OYL", "2006/624", "Osakeyhtiölaki"),
         ("OK", "1734/4-000", "Oikeudenkäymiskaari"),
         ("RL", "1889/39-001", "Rikoslaki"),
+    ]],
+    # NO: de wetten die het vermogensrecht dragen (Lovdata, datumcode van de wet)
+    *[Wet("NO", afk, "lovdata", id, t, systematiek=True) for afk, id, t in [
+        ("Grl.", "1814-05-17-0", "Kongeriket Norges Grunnlov"),
+        ("avtl.", "1918-05-31-4", "Avtaleloven (lov om avslutning av avtaler, om fuldmagt og om ugyldige viljeserklæringer)"),
+        ("kjl.", "1988-05-13-27", "Kjøpsloven (lov om kjøp)"),
+        ("fkjl.", "2002-06-21-34", "Forbrukerkjøpsloven (lov om forbrukerkjøp)"),
+        ("skl.", "1969-06-13-26", "Skadeserstatningsloven (lov om skadeserstatning)"),
+        ("foreldelsesl.", "1979-05-18-18", "Foreldelsesloven (lov om foreldelse av fordringer)"),
+        ("asl.", "1997-06-13-44", "Aksjeloven (lov om aksjeselskaper)"),
+        ("tvl.", "2005-06-17-90", "Tvisteloven (lov om mekling og rettergang i sivile tvister)"),
+        ("strl.", "2005-05-20-28", "Straffeloven (lov om straff)"),
     ]],
 ]
