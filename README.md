@@ -293,6 +293,14 @@ synoptikon seed                              # laadt o.a. de omzettingstabel
 | BE | Staatsblad via etaamb.openjustice.be | nieuw BW Boek 1, 2 (titel 3), 3, 4, 5, 8 | **nee**: tekst zoals bekendgemaakt |
 | EN | legislation.gov.uk (CLML) | SGA 1979, SGSA 1982, CRA 2015, UCTA 1977, MA 1967, C(RTP)A 1999, LR(FC)A 1943, LA 1980, CPA 1987, OLA 1957, LPA 1925 | ja |
 | GR | lawspot.gr | ΑΚ, Σύνταγμα, ΠΚ, ΕμπΝ, ν. 2251/1994, 2190/1920, 3190/1955, 4548/2018, 4072/2012, 3869/2010, 4624/2019 | ja |
+| AT | RIS (BKA), geltende Fassung per wet | ABGB, B-VG, UGB, KSchG, ZPO, IPRG, StGB | ja |
+| DK | Retsinformation, LexDania-XML via ELI | grl., aftl., kbl., forbrugeraftalel., EAL, forældelsesl., selskabsl., rpl., strfl. | ja, per lovbekendtgørelse |
+| FI | Finlex open data (Akoma Ntoso) | PL, OikTL, KL, KSL, VahL, VanhL, OYL, OK, RL | ja |
+| NO | Lovdata, dataset Gjeldende lover (api.lovdata.no) | Grl., avtl., kjl., fkjl., skl., foreldelsesl., asl., tvl., strl. | ja |
+| SE | Riksdagens öppna data (SFS, stand SFST) | RF, AvtL, KöpL, KKL, SkL, PreskL, ABL, RB, BrB | ja |
+| PL | geen: de ELI-API van de Sejm geeft de geconsolideerde tekst alleen als PDF | — (alleen stelsel, systematiek KC, citeerregels) | — |
+| PT | PGDL (pgdlisboa.pt), versão actualizada | CC, CRP, CSC, LDC, CPC, CP | ja, maar geen officiële bron |
+| CZ, HU, RO | nog geen importer | — (alleen stelsel, systematiek, citeerregels) | — |
 
 **Alle wetten van een bron** (`synoptikon/importers/bulk.py`), naast het register:
 
