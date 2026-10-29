@@ -443,6 +443,7 @@ def sleutel(stelsel: str, nummer: str) -> tuple | None:
     return _natuurlijk(nummer)
 
 
+@lru_cache(maxsize=1 << 14)
 def parse_bereik(stelsel: str, bereik: str | None) -> tuple[tuple, tuple] | None:
     """`"art. 3:83–3:98"`, `"§§ 929–936"`, `"art. 1101–1231-7"`, `"ss 12–15"`, `"§§ 2-101–2-107"` → (laag, hoog)."""
     if not bereik:
@@ -697,6 +698,7 @@ class Plaatser:
     def __init__(self, stelsel: str, knopen: Iterable, wet: str | None = None) -> None:
         self.stelsel = stelsel
         self.wet = wet or None
+        self.alle = knopen = list(knopen)
         self.knopen = [k for k in knopen if (getattr(k, "wet", None) or None) == self.wet]
         self.ids = {k.id for k in self.knopen}
         self.kinderen: dict[int | None, list] = {}
@@ -776,11 +778,12 @@ def _afstand(l, h) -> int:
     return 0
 
 
-def plaatser(db, stelsel: str, wet: str | None = None) -> Plaatser:
+def plaatser(db, stelsel: str, wet: str | None = None, knopen: list | None = None) -> Plaatser:
+    """`knopen`: de al geladen knopen van het stelsel (`Plaatser.alle` van een andere wet), anders uit de database."""
     from sqlalchemy import select
 
     from ..models import Systematiek
 
-    return Plaatser(
-        stelsel, db.scalars(select(Systematiek).where(Systematiek.stelsel_code == stelsel).order_by(Systematiek.volgorde)).all(), wet
-    )
+    if knopen is None:
+        knopen = list(db.scalars(select(Systematiek).where(Systematiek.stelsel_code == stelsel).order_by(Systematiek.volgorde)).all())
+    return Plaatser(stelsel, knopen, wet)

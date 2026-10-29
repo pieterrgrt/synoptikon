@@ -54,7 +54,9 @@ class Context:
 
     def plaatser(self, stelsel: str, wet: str | None = None) -> Plaatser:
         if (stelsel, wet) not in self._plaatsers:
-            self._plaatsers[(stelsel, wet)] = plaatser(self.db, stelsel, wet)
+            # De knopen één keer per stelsel laden, ook als er plaatsers voor meer wetten van dat stelsel nodig zijn.
+            knopen = next((p.alle for (st, _w), p in self._plaatsers.items() if st == stelsel), None)
+            self._plaatsers[(stelsel, wet)] = plaatser(self.db, stelsel, wet, knopen)
         return self._plaatsers[(stelsel, wet)]
 
     def pad(self, ref: Ref) -> list:
