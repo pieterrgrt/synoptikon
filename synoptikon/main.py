@@ -86,9 +86,14 @@ def _warm() -> None:
 
     try:
         from .services import zoeken
-        from .services.artikelen import laad_wetnamen
+        from .services.artikelen import herken, laad_wetnamen
+        # De templates vertalen (een seconde of meer voor opzoeken.html op een drukke server) en de patronen van
+        # de wetnamen opbouwen, anders betaalt de eerste aanvraag daarvoor.
+        for t in sorted((HIER / "templates").glob("*.html")):
+            templates.env.get_template(t.name)
         with session_factory()() as db:
             laad_wetnamen(db)
+            herken("Art. 1 GG")
             zoeken.reeksen(db)  # welke artikelen bij welke wet horen, voor de eerste zoekopdracht
             for s in db.query(Stelsel).all():
                 wetboek.plaatsing(db, s.code)
