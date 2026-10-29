@@ -290,6 +290,7 @@ synoptikon seed                              # laadt o.a. de omzettingstabel
 | RU | geen (pravo.gov.ru onbereikbaar van buiten Rusland; ConsultantPlus/Garant niet) | alleen systematiek ГК РФ | — |
 | TR | mevzuat.gov.tr (Word-HTML) | TMK, TBK, Anayasa, TTK, TKHK, HMK, TCK, MÖHUK | ja |
 | AE | geen (uaelegislation.gov.ae en elaws.moj.gov.ae niet bereikbaar: Cloudflare-blokkade, time-out) | alleen systematiek قانون المعاملات المدنية 2025 | — |
+| ZA | geen (SAFLII en lawlibrary.org.za: Cloudflare-controle) | alleen systematiek Constitution 1996, CPA 2008 | — |
 
 **Alle wetten van een bron** (`synoptikon/importers/bulk.py`), naast het register:
 

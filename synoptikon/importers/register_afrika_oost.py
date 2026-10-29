@@ -1,23 +1,22 @@
-"""Register voor Oost-Europa, Turkije, het Midden-Oosten en Afrika.
+"""Register voor Oost-Europa, Turkije, het Midden-Oosten en Afrika (zelfde vorm als `register.py`).
 
 Bronnen per stelsel en waarom:
 
-* RU: geen tekst. pravo.gov.ru (het officiële portaal) weigert verbindingen van buiten Rusland;
-  ConsultantPlus en Garant zijn commercieel en worden niet gescrapet. Alleen stelsel, systematiek en citeerregels.
-* TR: mevzuat.gov.tr (Mevzuat Bilgi Sistemi van het presidentschap), geconsolideerd, Word-HTML per wet; robots.txt
-  beperkt alleen Googlebot.
-* AE: geen tekst. uaelegislation.gov.ae (officieel, open, met Engels) staat geautomatiseerde toegang toe in
-  robots.txt maar geeft een Cloudflare-blokkade (403); elaws.moj.gov.ae (ministerie van Justitie) gaf een time-out.
+* TR: mevzuat.gov.tr (Mevzuat Bilgi Sistemi van het presidentschap), geconsolideerd; de Word-HTML die de site in
+  een iframe toont (importer `mevzuat`). robots.txt beperkt alleen Googlebot.
+* RU: geen. pravo.gov.ru (en publication.pravo.gov.ru) weigert verbindingen van buiten Rusland; ConsultantPlus en
+  Garant zijn commercieel en worden niet gescrapet. Alleen stelsel, systematiek en citeerregels.
 """
 from __future__ import annotations
 
 from .register import Wet
 
-WETTEN = [
+WETTEN: list[Wet] = [
+    # TR: de TMK als hoofdcodificatie, de TBK (het OR) en de wetten eromheen
     Wet("TR", None, "mevzuat", "4721", "Türk Medeni Kanunu"),
-    *[Wet("TR", afk, "mevzuat", nr, titel, systematiek=True) for afk, nr, titel in [
+    *[Wet("TR", afk, "mevzuat", nr, t, systematiek=True) for afk, nr, t in [
         ("TBK", "6098", "Türk Borçlar Kanunu"),
-        ("Anayasa", "2709", "Türkiye Cumhuriyeti Anayasası"),
+        ("AY", "2709", "Türkiye Cumhuriyeti Anayasası"),
         ("TTK", "6102", "Türk Ticaret Kanunu"),
         ("TKHK", "6502", "Tüketicinin Korunması Hakkında Kanun"),
         ("HMK", "6100", "Hukuk Muhakemeleri Kanunu"),
