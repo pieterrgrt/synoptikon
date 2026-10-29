@@ -14,7 +14,7 @@
     {% if r.opschrift or (r.titel and r.titel != r.citeer) %}<span class="bron-titel">{{ r.opschrift or r.titel }}</span>{% endif %}</h3>
   {% if r.plaats %}<p class="pad klein">{{ r.plaats }}</p>{% endif %}
   {% if r.vindplaats and r.vindplaats != r.citeer %}<p class="klein mono">{{ r.vindplaats }}</p>{% endif %}
-  {% if groot and r.tekst %}<div class="origineel serif">{{ r.tekst | md }}</div>
+  {% if groot and r.tekst %}<div class="origineel serif" dir="auto">{{ r.tekst | md }}</div>
     {% if r.tekst_herkomst == 'web' %}<p class="hint">{{ _('Tekst van het web, niet geverifieerd.') }}</p>{% endif %}{% endif %}
   {% if r.toelichting %}<div class="toelichting">{{ r.toelichting | md }}</div>{% endif %}
   {% if r.zekerheid == 'laag' %}<p class="hint">{{ _('Claude is hier niet zeker van.') }}</p>{% endif %}

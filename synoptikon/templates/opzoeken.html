@@ -28,7 +28,7 @@
   </header>
   {% if g.plaats %}<p class="pad klein">{% if g.wettekst %}<a href="/stelsels/{{ g.stelsel }}/wet/{{ g.wettekst.id }}">{{ wet_titel(g.wettekst) }}</a> › {% endif %}{{ g.plaats | join(' › ') }}</p>{% endif %}
   {% if g.artikel %}
-  <div class="origineel" lang="{{ g.wettekst.taal or '' }}">{{ g.artikel.tekst | md }}</div>
+  <div class="origineel" dir="auto" lang="{{ g.wettekst.taal or '' }}">{{ g.artikel.tekst | md }}</div>
   <p class="acties klein"><a href="{{ g.url }}">{{ _('In de wet lezen') }} →</a> <a href="{{ g.ref.url }}">{{ _('Vergelijken met andere stelsels') }} →</a></p>
   {% else %}
   <p class="stil">{{ _('Dit artikel staat niet in de geïmporteerde tekst (vervallen, of de wet is niet ingelezen).') }}</p>

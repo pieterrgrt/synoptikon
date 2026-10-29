@@ -15,7 +15,7 @@
   {% if a.opmerking %}<p class="opmerking">{{ vt(a.opmerking) | md_inline }}</p>{% endif %}
   {{ pad(l.pad, a.stelsel_code) }}
   {% if toon_tekst and l.tekst %}
-  <details><summary>{{ _('tekst') }}{% if l.tekst.opschrift %} · {{ l.tekst.opschrift }}{% endif %}</summary><div class="origineel">{{ l.tekst.tekst | md }}</div></details>
+  <details><summary>{{ _('tekst') }}{% if l.tekst.opschrift %} · {{ l.tekst.opschrift }}{% endif %}</summary><div class="origineel" dir="auto">{{ l.tekst.tekst | md }}</div></details>
   {% endif %}
 </div>
 {%- endmacro %}

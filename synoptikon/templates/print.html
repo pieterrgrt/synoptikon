@@ -22,7 +22,7 @@
     {% set b = ab.bron %}
     <div class="bron soort-{{ b.soort }}">
       <h3>{{ b.citeertitel }}{% if b.titel and b.titel != b.citeertitel %} <span class="bron-titel">— {{ b.titel }}</span>{% endif %}{% if ab.rol %} <span class="rol">{{ vt(ab.rol) }}</span>{% endif %}</h3>
-      {% if b.tekst %}<div class="origineel" lang="{{ b.taal }}">{{ b.tekst | md }}</div>{% endif %}
+      {% if b.tekst %}<div class="origineel" dir="auto" lang="{{ b.taal }}">{{ b.tekst | md }}</div>{% endif %}
       {% set v = b.vertaling(vertaal_taal) if vertaal_taal and b.taal != vertaal_taal else None %}
       {% if v %}<div class="vertaling"><span class="label">{{ _('vertaling') }} · {{ _(v.herkomst) }}</span>{{ v.tekst | md }}</div>{% endif %}
       {% if ab.notitie %}<div class="annotatie">{{ vt(ab.notitie) | md }}</div>{% endif %}

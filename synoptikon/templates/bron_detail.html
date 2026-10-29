@@ -10,7 +10,7 @@
 </div>
 {% if bron.titel %}<p class="bron-titel groot" lang="{{ bron.taal }}">{{ bron.titel }}</p>{% endif %}
 <article class="bron detail soort-{{ bron.soort }}">
-  {% if bron.tekst %}<div class="origineel" lang="{{ bron.taal }}">{{ bron.tekst | md }}</div>{% else %}<p class="stil">{{ _('Geen tekst opgeslagen.') }}</p>{% endif %}
+  {% if bron.tekst %}<div class="origineel" dir="auto" lang="{{ bron.taal }}">{{ bron.tekst | md }}</div>{% else %}<p class="stil">{{ _('Geen tekst opgeslagen.') }}</p>{% endif %}
   {% for v in bron.vertalingen %}
   <div class="vertaling" lang="{{ v.taal }}"><span class="label">{{ _('vertaling') }} {{ v.taal }} · {{ _(v.herkomst) }}</span>{{ v.tekst | md }}</div>
   {% endfor %}
