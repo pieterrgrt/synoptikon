@@ -291,6 +291,7 @@ synoptikon seed                              # laadt o.a. de omzettingstabel
 | TR | mevzuat.gov.tr (Word-HTML) | TMK, TBK, Anayasa, TTK, TKHK, HMK, TCK, MÖHUK | ja |
 | AE | geen (uaelegislation.gov.ae en elaws.moj.gov.ae niet bereikbaar: Cloudflare-blokkade, time-out) | alleen systematiek قانون المعاملات المدنية 2025 | — |
 | ZA | geen (SAFLII en lawlibrary.org.za: Cloudflare-controle) | alleen systematiek Constitution 1996, CPA 2008 | — |
+| KZ | geen (adilet.zan.kz: tekst alleen via /api/, uitgesloten in robots.txt) | alleen systematiek ГК РК | — |
 
 **Alle wetten van een bron** (`synoptikon/importers/bulk.py`), naast het register:
 

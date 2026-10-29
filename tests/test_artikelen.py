@@ -304,3 +304,4 @@ def test_regio_afrika_oost_citeerwijze():
     assert herken("п. 1 ст. 10 ГК РФ") == [Ref("RU", "10")]
     assert herken("Article 246 of the Civil Transactions Law") == [Ref("AE", "246")]
     assert herken("s 48(1)(a) Consumer Protection Act 68 of 2008") == [Ref("ZA", "48", "CPA 2008", detail="(1)(a)")]
+    assert herken("п. 2 ст. 7-1 ГК РК") == [Ref("KZ", "7-1")]

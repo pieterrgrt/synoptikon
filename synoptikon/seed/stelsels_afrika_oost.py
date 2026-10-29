@@ -10,6 +10,7 @@ STELSELS = [
     ("TR", "Turkije", "tr", "Türk Medeni Kanunu (2001) en Türk Borçlar Kanunu (2011): de Zwitserse ZGB en het OR, sinds 1926 overgenomen en vertaald; tekst van mevzuat.gov.tr, geconsolideerd", True, "germaans"),
     ("AE", "Verenigde Arabische Emiraten", "ar", "قانون المعاملات المدنية (decreet-wet 25/2025, sinds 1 juni 2026; opvolger van de wet van 1985): naar de Majalla en het Jordaanse wetboek, met de islamitische fiqh als aanvullende bron; geen tekst (uaelegislation.gov.ae blokkeert geautomatiseerde toegang via Cloudflare)", True, "islamitisch"),
     ("ZA", "Zuid-Afrika", "en", "Geen codificatie: Romeins-Hollands gemeen recht met Engelse invloed, getoetst aan de Grondwet van 1996; geen tekst (SAFLII en lawlibrary.org.za staan achter een Cloudflare-controle)", True, "gemengd"),
+    ("KZ", "Kazachstan", "ru", "Гражданский кодекс РК (Algemeen Deel 1994, Bijzonder Deel 1999): naar het modelwetboek van het GOS, met Nederlandse adviseurs; geen tekst (adilet.zan.kz laadt de wettekst via een API die robots.txt uitsluit)", True, "post_sovjet"),
 ]
 
 GK_RF = [
@@ -144,10 +145,26 @@ TMK = [
     ], "TBK"),
 ]
 
+# Kazachstan: met de hand uit de inhoudsopgave van het ГК РК (Общая часть K940001000_, Особенная часть K990000409_).
+GK_RK = [
+    ("KZ-1", "Общая часть (1994)", "art. 1–405", [
+        ("KZ-I", "Раздел 1. Общие положения", "art. 1–187", []),
+        ("KZ-II", "Раздел 2. Право собственности и другие вещные права", "art. 188–267", []),
+        ("KZ-III", "Раздел 3. Обязательственное право. Общая часть", "art. 268–405", []),
+    ]),
+    ("KZ-2", "Особенная часть (1999)", "art. 406–1124", [
+        ("KZ-IV", "Раздел 4. Отдельные виды обязательств", "art. 406–960", []),
+        ("KZ-V", "Раздел 5. Право интеллектуальной собственности", "art. 961–1037", []),
+        ("KZ-VI", "Раздел 6. Наследственное право", "art. 1038–1083", []),
+        ("KZ-VII", "Раздел 7. Международное частное право", "art. 1084–1124", []),
+    ]),
+]
+
 SYSTEMATIEK = {
     "RU": GK_RF,
     "TR": TMK,
     "TR": TMK,
     "AE": CTL_AE,
     "ZA": ZA,
+    "KZ": GK_RK,
 }
