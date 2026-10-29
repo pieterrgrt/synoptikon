@@ -41,6 +41,11 @@ class Settings:
     # Koppeling met Wunderkammer (routes/wunderkammer.py): Bearer-token, minstens 24 tekens; leeg = uit.
     wk_token: str | None = field(default_factory=lambda: _env("SYNOPTIKON_WK_TOKEN"))
     wk_url: str = field(default_factory=lambda: _env("SYNOPTIKON_WK_URL", "https://kammer.regoort.me").rstrip("/"))
+    # Na een wijziging in de kaarten Wunderkammer meteen laten ophalen (services/wk.py), in plaats van op de cron te
+    # wachten. Standaard aan als het token er is; SYNOPTIKON_WK_PUSH=0 zet het uit. Het adres is alleen anders als de
+    # container Wunderkammer intern moet bereiken (bijv. http://172.17.0.1:8093).
+    wk_push: bool = field(default_factory=lambda: _env("SYNOPTIKON_WK_PUSH", "1") == "1")
+    wk_push_url: str | None = field(default_factory=lambda: _env("SYNOPTIKON_WK_PUSH_URL"))
 
     @property
     def wk_ingesteld(self) -> bool:

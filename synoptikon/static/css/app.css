@@ -543,6 +543,36 @@ label.vinkje input { width: auto; }
 .doelen { display: flex; flex-wrap: wrap; gap: .3rem 1rem; padding-left: 1.6rem; }
 .leren-ster { font-family: var(--sans); font-size: .78rem; margin-left: .4rem; white-space: nowrap; }
 .leren-ster.bewaard { color: var(--accent); }
+/* Stand in Wunderkammer: nieuw · leert · zit vast · beheerst */
+.wk-fase { font-family: var(--sans); font-size: .72rem; border-radius: 999px; padding: 0 .45rem; margin-left: .3rem; border: 1px solid var(--lijn); color: var(--inkt-2); white-space: nowrap; }
+a.wk-fase { text-decoration: none; }
+.leren-ster a.wk-fase { color: var(--inkt-2); }
+.wk-fase.fase-leert { border-color: var(--rel-deels); color: var(--rel-deels) !important; }
+.wk-fase.fase-vastzit { border-color: var(--fout); background: var(--accent-zacht); color: var(--fout) !important; font-weight: 600; }
+.wk-fase.fase-beheerst { border-color: var(--ok); color: var(--ok) !important; }
+.wk-fase.actief { outline: 2px solid currentColor; }
+.wk-balk { display: flex; width: 100%; height: 6px; border-radius: 3px; overflow: hidden; background: var(--papier-3); gap: 1px; }
+.wk-balk > span { display: block; height: 100%; background: var(--inkt-3); }
+.wk-balk > .fase-leert { background: var(--rel-deels); }
+.wk-balk > .fase-vastzit { background: var(--fout); }
+.wk-balk > .fase-beheerst { background: var(--ok); }
+.wk-telling { display: flex; flex-wrap: wrap; gap: .3rem; }
+.wk-telling .wk-fase { margin-left: 0; }
+.zwak-lijst { list-style: none; padding: 0; margin: .4rem 0 1.2rem; }
+.zwak-lijst li { padding: .35rem 0; border-bottom: 1px solid var(--lijn); display: flex; flex-wrap: wrap; gap: .2rem .6rem; align-items: baseline; }
+/* Voorstellen beoordelen: per kaart overnemen of afwijzen, vegen mag */
+.voorstel-groep { margin: 1.2rem 0 2rem; }
+.voorstel-groep > header { display: flex; flex-wrap: wrap; gap: .4rem .8rem; align-items: baseline; justify-content: space-between; position: sticky; top: 0; background: var(--papier); padding: .4rem 0; z-index: 1; }
+.voorstel-groep h2 { font-size: 1.05rem; margin: 0; }
+.voorstel { border: 1px solid var(--lijn); border-radius: calc(var(--radius) * 2); background: var(--papier-2); padding: .8rem 1rem; margin: .7rem 0; touch-action: pan-y; transition: transform .2s, opacity .2s; }
+.voorstel .flits-achter { margin-top: .6rem; padding-top: .6rem; font-size: .95rem; }
+.voorstel-knoppen { display: flex; gap: .6rem; margin-top: .8rem; }
+.voorstel-knoppen form { flex: 1; display: flex; }
+.voorstel-knoppen .knop { flex: 1; min-height: 2.8rem; }
+.voorstel.besloten { opacity: .55; padding: .4rem 1rem; }
+.voorstel.besloten .voorstel-inhoud, .voorstel.besloten .voorstel-knoppen { display: none; }
+.voorstel-uitslag { display: none; font-family: var(--sans); font-size: .85rem; }
+.voorstel.besloten .voorstel-uitslag { display: flex; justify-content: space-between; gap: .5rem; }
 
 /* Opzoeken: één veld, het gevondene meteen eronder, het logboek van vandaag onderaan */
 .verborgen { position: absolute; width: 1px; height: 1px; overflow: hidden; clip: rect(0 0 0 0); }

@@ -174,6 +174,14 @@ def lid_verwijderen(cid: int, aid: int, db: Session = Depends(get_session)):
 
 
 # Als laatste: het pad-patroon zou anders /artikelen/thema/… opslokken.
+@router.get("/lezen/{stelsel}/{nummer:path}")
+def lezen(stelsel: str, nummer: str, wet: str | None = None, db: Session = Depends(get_session)):
+    """Vaste ingang voor andere apps (Wunderkammer): het artikel in de leesweergave van zijn wet, anders de artikelpagina."""
+    ref = Ref(stelsel.upper(), nummer, wet or None)
+    plek = _in_wettekst(db, ref) if db.get(Stelsel, ref.stelsel) else None
+    return RedirectResponse(plek["url"] if plek else (ref.url or "/artikelen"), status_code=303)
+
+
 @router.get("/artikelen/{stelsel}/{nummer:path}")
 def artikel(request: Request, stelsel: str, nummer: str, wet: str | None = None, db: Session = Depends(get_session)):
     st = db.get(Stelsel, stelsel.upper())

@@ -53,7 +53,7 @@ def _uit_python() -> set[str]:
 
 
 def _uit_gegevens() -> set[str]:
-    from .models import EU_SOORTEN, EU_VARIANTEN, KAARTSOORTEN, OMZETTING_SOORTEN, RECHTSFAMILIES, RELATIE_TYPES, ROLLEN
+    from .models import EU_SOORTEN, EU_VARIANTEN, FASEN, KAARTSOORTEN, OMZETTING_SOORTEN, RECHTSFAMILIES, RELATIE_TYPES, ROLLEN
     from .routes.bronnen import SOORTEN
     from .services.eu_logica import HARMONISATIE, VARIANT, WERKING
 
@@ -61,7 +61,7 @@ def _uit_gegevens() -> set[str]:
     for naam, kenmerk in RECHTSFAMILIES.values():
         uit |= {naam, kenmerk}
     uit |= set(RELATIE_TYPES.values()) | set(EU_VARIANTEN.values()) | set(OMZETTING_SOORTEN.values()) | set(ROLLEN.values())
-    uit |= {t for paar in KAARTSOORTEN.values() for t in paar}
+    uit |= {t for paar in KAARTSOORTEN.values() for t in paar} | set(FASEN.values())
     uit |= {w for paar in EU_SOORTEN.values() for w in paar}
     uit |= set(SOORTEN.values()) | set(SOORTEN)  # ook de sleutels: de systematiek toont b.soort
     uit |= {"eigen", "officieel", "literatuur"}  # herkomst van een bronvertaling

@@ -258,6 +258,16 @@ def verwerk(db: Session, profiel_id: int = 1, maximum: int = 10, droog: bool = F
     return uit
 
 
+def besluit(k: Kaart, wat: str) -> None:
+    """Eén voorstel: `over` (actief, naar Wunderkammer), `af`, of `terug` naar voorstel (ongedaan maken)."""
+    if wat == "over":
+        k.status, k.actief = None, True
+    elif wat == "af":
+        k.status, k.actief = "afgewezen", False
+    elif wat == "terug":
+        k.status, k.actief = "voorstel", False
+
+
 def beoordeel(lijst: Leerlijst, over: set[int]) -> tuple[int, int]:
     """Voorstellen in de lijst: aangevinkte overnemen (actief, naar Wunderkammer), de rest afwijzen. → (over, af)."""
     n_over = n_af = 0

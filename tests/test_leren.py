@@ -128,3 +128,60 @@ def test_lijsten_zijn_persoonlijk(client, anoniem):
     assert r.status_code == 303
     with database.session() as s:
         assert s.query(Leerlijst).filter_by(naam="Eigen lijst").one().profiel_id == 3
+
+
+def test_stand_uit_wunderkammer_bij_artikel_en_lijst(anoniem, client, monkeypatch):
+    """Eén plek om te herhalen: met de koppeling aan toont Synoptikon de stand en verwijst het naar Wunderkammer."""
+    from synoptikon.services import wk
+
+    _wettekst()
+    client.post("/leren/nieuw", data={"lijst": "nieuw", "nieuwe_lijst": "Stand", "stelsel": "DE", "nummer": "931", "soort": "artikel"})
+    lid = _lijst_id("Stand")
+    monkeypatch.setattr(settings, "wk_token", TOKEN)
+    gemeld = []
+    monkeypatch.setattr(wk, "meld", lambda: gemeld.append(1))
+    client.post("/profiel/wunderkammer", data={"aan": "1"})
+    h = {"Authorization": f"Bearer {TOKEN}"}
+    k = next(k for k in anoniem.get("/api/wk/kaarten", headers=h).json()["kaarten"] if k["lijst"] == lid)
+    assert k["lees_url"] == "/lezen/DE/931" and isinstance(k["tegenhangers"], list)
+    gemeld.clear()
+    anoniem.post("/api/wk/kaarten/stand", headers=h, json={"stand": [
+        {"uid": k["uid"], "due": "2026-11-02T08:00:00+00:00", "stability": 2.0, "reps": 5, "lapses": 3, "last_rating": 1}]})
+    assert not gemeld, "de stand uit Wunderkammer seint niet terug"
+    html = client.get("/artikelen/DE/931").text
+    assert "wk-fase fase-vastzit" in html and "★" in html
+    html = client.get(f"/leren/{lid}").text
+    assert f"/review?synoptikon={lid}" in html and f"/leren/{lid}/oefenen" not in html
+    assert "Zit vast in Wunderkammer" in client.get("/leren").text
+    assert "fase-vastzit" in client.get(f"/leren/{lid}?fase=vastzit").text
+    # Een nieuwe kaart seint Wunderkammer (na de commit).
+    client.post("/leren/snel", data={"stelsel": "DE", "nummer": "929", "lijst": str(lid)})
+    assert gemeld
+    r = client.get("/lezen/DE/931", follow_redirects=False)
+    assert r.status_code == 303 and "931" in r.headers["location"]
+    # Uit: weer het eigen oefenen.
+    client.post("/profiel/wunderkammer", data={})
+    html = client.get(f"/leren/{lid}").text
+    assert f"/leren/{lid}/oefenen" in html and "review?synoptikon" not in html
+
+
+def test_sein_naar_wunderkammer(monkeypatch):
+    import httpx
+
+    from synoptikon.services import wk
+
+    monkeypatch.setattr(settings, "wk_token", TOKEN)
+    gezien = {}
+
+    def post(url, headers, json, timeout):
+        gezien.update(url=url, auth=headers["Authorization"])
+        return httpx.Response(202)
+
+    monkeypatch.setattr(httpx, "post", post)
+    assert wk.stuur() and gezien == {"url": settings.wk_url + "/api/synoptikon/push", "auth": f"Bearer {TOKEN}"}
+
+    def stuk(*a, **kw):
+        raise httpx.ConnectError("weg")
+
+    monkeypatch.setattr(httpx, "post", stuk)
+    assert wk.stuur() is False  # de cron haalt het later op

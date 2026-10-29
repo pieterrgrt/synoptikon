@@ -19,4 +19,5 @@ def render(request: Request, naam: str, status_code: int = 200, **context: Any) 
     context.setdefault("mag_bewerken", profiel is None or profiel.mag_bewerken)
     # Koppeling met Wunderkammer aan voor dit profiel: dan pas verwijzen de pagina's ernaar.
     context.setdefault("wk", settings.wk_ingesteld and (profiel is None or profiel.wunderkammer))
+    context.setdefault("wk_url", settings.wk_url)
     return templates.TemplateResponse(request, naam, context, status_code=status_code)

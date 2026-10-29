@@ -11,6 +11,7 @@ os.environ["SYNOPTIKON_DATA_DIR"] = str(_TMP)
 os.environ["SYNOPTIKON_AUTH_MODE"] = "password"
 os.environ["SYNOPTIKON_COOKIE_SECURE"] = "0"
 os.environ["SYNOPTIKON_SECRET_KEY"] = "test-sleutel"
+os.environ["SYNOPTIKON_WK_PUSH"] = "0"  # geen netwerk: tests die het melden aan Wunderkammer nodig hebben, vangen het af
 
 sys.path.insert(0, str(Path(__file__).resolve().parents[1]))
 

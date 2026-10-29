@@ -158,3 +158,23 @@ def test_droog_en_maximum(map_, nep):
     assert (u.notities, u.over, len(nep.verzoeken)) == (1, 1, 0)
     with database.session() as s:
         assert s.query(Kaart).join(Leerlijst).filter(Leerlijst.profiel_id == 2).count() == 0
+
+
+def test_voorstellen_per_notitie_en_per_kaart(map_, nep, client):
+    _wettekst()
+    with database.session() as s:
+        notities.verwerk(s, profiel_id=1)
+        lijst = next(l for l in s.query(Leerlijst).filter_by(profiel_id=1) if any(k.status == "voorstel" for k in l.kaarten))
+        ids = [k.id for k in lijst.kaarten if k.status == "voorstel"]
+        lid = lijst.id
+    html = client.get(f"/leren/voorstellen?lijst={lid}").text
+    assert "voorstellen.js" in html and f'data-kaart="{ids[0]}"' in html
+    assert "/leren/voorstellen" in client.get("/leren").text
+    r = client.post(f"/leren/kaart/{ids[0]}/beoordeel", data={"besluit": "over"}, headers={"X-Requested-With": "fetch"})
+    assert r.json() == {"ok": True, "status": "over"}
+    client.post(f"/leren/kaart/{ids[0]}/beoordeel", data={"besluit": "terug"}, headers={"X-Requested-With": "fetch"})
+    r = client.post("/leren/voorstellen", data={"kaart": [str(i) for i in ids], "besluit": "af", "terug": f"/leren/voorstellen?lijst={lid}"},
+                    follow_redirects=False)
+    assert r.status_code == 303 and f"afgewezen={len(ids)}" in r.headers["location"]
+    with database.session() as s:
+        assert all(s.get(Kaart, i).status == "afgewezen" for i in ids)

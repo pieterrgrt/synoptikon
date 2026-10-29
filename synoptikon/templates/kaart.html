@@ -10,6 +10,7 @@
   <div class="flits-achter">{{ achter | safe }}</div>
 </div>
 {% if z.url %}<p class="klein"><a href="{{ z.url }}">{{ _('In Synoptikon lezen') }}</a></p>{% endif %}
+{% if wk and fase %}<p class="klein"><span class="wk-fase fase-{{ fase }}">{{ _(fasen[fase]) }}</span> <a href="{{ wk_url }}/review?synoptikon={{ k.lijst_id }}">{{ _('Herhalen in Wunderkammer') }}</a></p>{% endif %}
 {% if wk and k.stand %}<p class="stil klein">{{ _('Wunderkammer') }}: {{ n_('{n} herhaling', '{n} herhalingen', k.stand.herhalingen) }}, {{ n_('{n} misser', '{n} missers', k.stand.missers) }}{% if k.stand.due %} · {{ _('volgende {datum}', datum=k.stand.due.strftime('%d-%m-%Y')) }}{% endif %}</p>{% endif %}
 
 <form method="post" action="/leren/kaart/{{ k.id }}" class="formulier">

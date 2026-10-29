@@ -22,9 +22,15 @@ Alleen voor profielen die de koppeling op /profiel aan hebben gezet; anders 403 
     GET  /api/wk/kaarten?profiel=pieter
                              {"format", "version": 2, "exported", "profiel", "lijsten": [{id, naam, vak, examen, omschrijving}],
                               "kaarten": [{uid, lijst, soort, soort_label, voor, achter, url, refs: [{stelsel, wet, nummer}],
-                              zaak, vindplaats, gewijzigd}]}
-                             Alleen actieve kaarten uit lijsten met "naar Wunderkammer"; voor/achter zijn HTML, url is een
-                             pad in Synoptikon. Een uid die niet meer meekomt is verwijderd of uitgezet.
+                              zaak, vindplaats, gewijzigd, lees_url, tegenhangers: [{stelsel, wet, nummer, citeer, url,
+                              thema, rol}]}]}
+                             Alleen actieve kaarten uit lijsten met "naar Wunderkammer"; voor/achter zijn HTML, url,
+                             lees_url (het artikel in zijn wet, `/lezen/…`) en de url's van de tegenhangers zijn paden in
+                             Synoptikon. Een uid die niet meer meekomt is verwijderd of uitgezet. lees_url en tegenhangers
+                             zijn later toegevoegd (nog steeds versie 2); een oudere Wunderkammer negeert ze.
+
+Na een wijziging seint Synoptikon `POST <Wunderkammer>/api/synoptikon/push` met hetzelfde token (services/wk.py), zodat
+Wunderkammer meteen ophaalt in plaats van bij de volgende cron.
     POST /api/wk/kaarten/stand {"stand": [{uid, due, stability, reps, lapses, last_review, last_rating}]} → {"bijgewerkt": n}
 """
 from __future__ import annotations
@@ -33,6 +39,7 @@ import hmac
 import json
 import re
 from datetime import datetime, timezone
+from urllib.parse import quote
 
 from fastapi import APIRouter, Body, Depends, HTTPException, Request
 from sqlalchemy import func, select
@@ -118,7 +125,8 @@ def kaarten(profiel: str = "", db: Session = Depends(get_session)):
             uit.append(dict(uid=k.uid, lijst=l.id, soort=k.soort, soort_label=k.soort_label, voor=voor, achter=achter, url=z.url,
                             refs=[dict(stelsel=ref.stelsel, wet=ref.wet, nummer=ref.nummer)] if ref else [],
                             zaak=k.zaak or (k.bron.citeertitel if k.bron else None), vindplaats=k.vindplaats,
-                            gewijzigd=k.gewijzigd.isoformat()))
+                            gewijzigd=k.gewijzigd.isoformat(), lees_url=lees_url(ref) if ref else None,
+                            tegenhangers=bouwer.tegenhangers(ref) if ref else []))
     return dict(format=FORMAT, version=2, exported=datetime.now(timezone.utc).replace(microsecond=0).isoformat(),
                 profiel=p.gebruikersnaam,
                 lijsten=[dict(id=l.id, naam=l.naam, vak=l.vak, examen=l.examen.isoformat() if l.examen else None,
@@ -131,4 +139,10 @@ def kaarten_stand(body: dict = Body(...), db: Session = Depends(get_session)):
     stand = body.get("stand")
     if not isinstance(stand, list) or len(stand) > 5000:
         raise HTTPException(422, "stand: lijst van hoogstens 5000")
+    db.info["wk_stil"] = True  # wat Wunderkammer terugmeldt, hoeft het niet opnieuw te horen
     return dict(bijgewerkt=leren.zet_stand(db, stand, alleen_gekoppeld=True))
+
+
+def lees_url(ref: Ref) -> str:
+    u = f"/lezen/{ref.stelsel}/{quote(ref.nummer, safe=':-')}"
+    return u + (f"?wet={quote(ref.wet)}" if ref.wet else "")
