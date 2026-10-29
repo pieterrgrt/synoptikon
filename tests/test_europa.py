@@ -133,3 +133,22 @@ def test_lovdata_tvl():
 def test_noorse_verwijzingen():
     assert _herken("avtl. § 36") == [("NO", "36", "avtl.")]
     assert _herken("tvl. § 1-1") == [("NO", "1-1", "tvl.")]
+
+
+def test_riksdagen_kkl():
+    from synoptikon.importers import riksdagen
+
+    g = riksdagen.parse((FIX / "riksdagen_kkl.json").read_bytes(), "sfs-2022-260")
+    assert g.titel == "Konsumentköplag (2022:260)"
+    assert g.versie == "t.o.m. SFS 2023:732"
+    per = {a.nummer: a for a in g.artikelen}
+    assert set(per) == {"1:1", "1:2", "1:3", "5:1"}  # nummering per hoofdstuk; overgangsbepalingen vallen weg
+    assert per["1:1"].opschrift == "Lagens innehåll"  # kop boven één paragraaf (in de fixture ook bij 1:3)
+    assert per["1:3"].pad == "1 kap. Grundläggande bestämmelser"
+    assert "\n\ndigitalt innehåll: data som" in per["1:2"].tekst
+    assert "<" not in per["1:2"].tekst
+
+
+def test_zweedse_verwijzingen():
+    assert _herken("36 § AvtL") == [("SE", "36", "AvtL")]
+    assert _herken("BrB 3:1") == [("SE", "3:1", "BrB")]

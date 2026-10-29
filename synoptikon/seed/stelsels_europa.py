@@ -130,11 +130,33 @@ NO = [
     ]),
 ]
 
+# SE: geen burgerlijk wetboek; zelfde opzet als DK, de hoofdstukken komen uit de import.
+SE = [
+    ("SE-FORMÖGENHET", "Förmögenhetsrätt (avtal, köp, skadestånd)", "", [
+        ("SE-AVTL", "Avtalslagen (1915:218)", "", [], "AvtL"),
+        ("SE-KÖPL", "Köplagen (1990:931)", "", [], "KöpL"),
+        ("SE-KKL", "Konsumentköplagen (2022:260)", "", [], "KKL"),
+        ("SE-SKL", "Skadeståndslagen (1972:207)", "", [], "SkL"),
+        ("SE-PRESKL", "Preskriptionslagen (1981:130)", "", [], "PreskL"),
+    ]),
+    ("SE-ASSOCIATION", "Associationsrätt", "", [
+        ("SE-ABL", "Aktiebolagslagen (2005:551)", "", [], "ABL"),
+    ]),
+    ("SE-PROCESS", "Processrätt", "", [
+        ("SE-RB", "Rättegångsbalken (1942:740)", "", [], "RB"),
+    ]),
+    ("SE-OFF", "Statsrätt och straffrätt", "", [
+        ("SE-RF", "Regeringsformen (1974:152)", "", [], "RF"),
+        ("SE-BRB", "Brottsbalken (1962:700)", "", [], "BrB"),
+    ]),
+]
+
 # code, naam, taal, toelichting, actief, rechtsfamilie (zelfde vorm als seed/stelsels.py)
 STELSELS = [
     ("DK", "Denemarken", "da", "Geen burgerlijk wetboek: losse vermogensrechtelijke wetten (Aftaleloven 1917, Købeloven 1906), deels in Scandinavische samenwerking tot stand gekomen; Danske Lov (1683) geldt nog in enkele artikelen", True, "nordisch"),
     ("FI", "Finland", "fi", "Geen burgerlijk wetboek: losse vermogensrechtelijke wetten in Scandinavische samenwerking (Oikeustoimilaki 1929, Kauppalaki 1987); het Zweedse Rijkswetboek van 1734 leeft voort in de procesrechtelijke 'kaari'", True, "nordisch"),
     ("NO", "Noorwegen", "no", "Geen burgerlijk wetboek: losse vermogensrechtelijke wetten, grotendeels in Scandinavische samenwerking (Avtaleloven 1918); Christian V's Norske Lov (1687) geldt nog in enkele artikelen", True, "nordisch"),
+    ("SE", "Zweden", "sv", "Geen burgerlijk wetboek: losse vermogensrechtelijke wetten in Scandinavische samenwerking (Avtalslagen 1915, Köplagen 1990); van het Rijkswetboek van 1734 leven de balkar voort", True, "nordisch"),
     ("AT", "Oostenrijk", "de", "Allgemeines bürgerliches Gesetzbuch (1811): natuurrechtelijke codificatie, gemoderniseerd door de Teilnovellen (1914–1916) en latere hervormingen", True, "germaans"),
 ]
 
@@ -143,4 +165,5 @@ SYSTEMATIEK = {
     "DK": DK,
     "FI": FI,
     "NO": NO,
+    "SE": SE,
 }

@@ -18,6 +18,9 @@ Bronnen per stelsel en waarom:
   alle geldende wetten als XHTML, bijgewerkt; geconsolideerd. De pagina's op lovdata.no zelf niet (daar is
   automatisch ophalen niet de bedoeling). Geen burgerlijk wetboek; Christian V's Norske Lov (1687) geldt nog
   in enkele artikelen en is niet opgenomen.
+* SE: Riksdagens öppna data (data.riksdagen.se), SFS in de geconsolideerde stand van Regeringskansliet
+  (SFST), als JSON met HTML; versie is de ondertitel "t.o.m. SFS …". Geen burgerlijk wetboek; de balkar
+  (rättegångsbalken, brottsbalken) zijn de resten van het Rijkswetboek van 1734 en zijn opvolgers.
 """
 from __future__ import annotations
 
@@ -69,5 +72,17 @@ WETTEN: list[Wet] = [
         ("asl.", "1997-06-13-44", "Aksjeloven (lov om aksjeselskaper)"),
         ("tvl.", "2005-06-17-90", "Tvisteloven (lov om mekling og rettergang i sivile tvister)"),
         ("strl.", "2005-05-20-28", "Straffeloven (lov om straff)"),
+    ]],
+    # SE: de wetten die het vermogensrecht dragen (Riksdagen, SFS-nummer)
+    *[Wet("SE", afk, "riksdagen", id, t, systematiek=True) for afk, id, t in [
+        ("RF", "1974:152", "Regeringsformen"),
+        ("AvtL", "1915:218", "Avtalslagen (lag om avtal och andra rättshandlingar på förmögenhetsrättens område)"),
+        ("KöpL", "1990:931", "Köplagen"),
+        ("KKL", "2022:260", "Konsumentköplagen"),
+        ("SkL", "1972:207", "Skadeståndslagen"),
+        ("PreskL", "1981:130", "Preskriptionslagen"),
+        ("ABL", "2005:551", "Aktiebolagslagen"),
+        ("RB", "1942:740", "Rättegångsbalken"),
+        ("BrB", "1962:700", "Brottsbalken"),
     ]],
 ]

@@ -7,6 +7,8 @@
   (`RL 21:1`, `KSL 7 a:14 a`, `OK 17:1`), de schrijfwijze van de Finse praktijk. "21 luku 1 §" wordt niet herkend.
 * **NO** (geen hoofdwet): `avtl. § 36`, `tvl. § 1-1` (nieuwere wetten nummeren per hoofdstuk met een streepje),
   `§ 38 a`.
+* **SE** (geen hoofdwet): `36 § AvtL`, `AvtL 36 §`; de balkar en andere wetten die per hoofdstuk nummeren als
+  hoofdstuk:paragraaf (`BrB 3:1`, `RB 17:3`). "3 kap. 1 § BrB" wordt niet herkend.
 """
 from __future__ import annotations
 
@@ -58,5 +60,17 @@ REGELS: dict[str, Regels] = {
                "strl.": "Straffeloven", "ekteskapsl.": "Ekteskapsloven", "arvel.": "Arveloven",
                "tingl.": "Tinglysingsloven", "markedsføringsl.": "Markedsføringsloven", "angrerettl.": "Angrerettloven",
                "finansavtalel.": "Finansavtaleloven", "asal.": "Allmennaksjeloven", "deknl.": "Dekningsloven", "konkursl.": "Konkursloven"},
+    ),
+    "SE": Regels(
+        None,
+        ("RF", "AvtL", "KöpL", "KKL", "SkL", "PreskL", "ABL", "RB", "BrB", "JB", "ÄB", "ÄktB", "FB", "HB", "KtjL", "KkrL", "MFL", "KonkL",
+         "SamboL", "HBL", "IPRL"),
+        stijl="§",
+        nummer=r"\d+(?:\s?[a-zåäö](?![\wåäö]))?(?::\d+(?:\s?[a-zåäö](?![\wåäö]))?)?",
+        namen={"RF": "Regeringsformen (1974:152)", "AvtL": "Avtalslagen", "KöpL": "Köplagen", "KKL": "Konsumentköplagen", "SkL": "Skadeståndslagen",
+               "PreskL": "Preskriptionslagen", "ABL": "Aktiebolagslagen", "RB": "Rättegångsbalken", "BrB": "Brottsbalken", "JB": "Jordabalken",
+               "ÄB": "Ärvdabalken", "ÄktB": "Äktenskapsbalken", "FB": "Föräldrabalken", "HB": "Handelsbalken (1734)", "KtjL": "Konsumenttjänstlagen",
+               "KkrL": "Konsumentkreditlagen", "MFL": "Marknadsföringslagen", "KonkL": "Konkurslagen", "SamboL": "Sambolagen",
+               "HBL": "Lagen om handelsbolag och enkla bolag"},
     ),
 }

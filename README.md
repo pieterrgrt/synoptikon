@@ -291,6 +291,7 @@ synoptikon seed                              # laadt o.a. de omzettingstabel
 | DK | Retsinformation, LexDania-XML via ELI | grl., aftl., kbl., forbrugeraftalel., EAL, forældelsesl., selskabsl., rpl., strfl. | ja, per lovbekendtgørelse |
 | FI | Finlex open data (Akoma Ntoso) | PL, OikTL, KL, KSL, VahL, VanhL, OYL, OK, RL | ja |
 | NO | Lovdata, dataset Gjeldende lover (api.lovdata.no) | Grl., avtl., kjl., fkjl., skl., foreldelsesl., asl., tvl., strl. | ja |
+| SE | Riksdagens öppna data (SFS, stand SFST) | RF, AvtL, KöpL, KKL, SkL, PreskL, ABL, RB, BrB | ja |
 
 **Alle wetten van een bron** (`synoptikon/importers/bulk.py`), naast het register:
 
