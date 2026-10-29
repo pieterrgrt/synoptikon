@@ -15,7 +15,7 @@ from __future__ import annotations
 from dataclasses import dataclass, field
 from functools import lru_cache
 
-from sqlalchemy import String, func, or_, select, text
+from sqlalchemy import String, and_, func, or_, select, text
 from sqlalchemy.orm import Session
 
 from ..i18n import taal
@@ -136,8 +136,11 @@ def zoek_wetten(db: Session, stelsel: str, q: str = "", pagina: int = 1, per_pag
     q = q.strip()
     if q:
         like = f"%{q}%"
-        voorwaarden = [Wettekst.titel.ilike(like), Wettekst.wet.ilike(like), Wettekst.wet_id.ilike(like)]
         m = fts_query(q)
+        # LIKE en niet ILIKE: SQLite vergelijkt al zonder hoofdletters (en lower() kent ook alleen ASCII), lower() om
+        # elke titel kost alleen tijd. De lange EU-titels vindt de FTS-index hieronder; die slaat de LIKE over.
+        titel = or_(Wettekst.titel.like(like), Wettekst.wet_id.like(like))
+        voorwaarden = [Wettekst.wet.like(like), and_(Wettekst.stelsel_code != "EU", titel) if met_eu and m else titel]
         if met_eu and m:
             # Titels en roepnamen van de 17.000 handelingen via hun FTS-index, niet met LIKE door alle titels.
             voorwaarden.append(Wettekst.wet_id.in_(text(
