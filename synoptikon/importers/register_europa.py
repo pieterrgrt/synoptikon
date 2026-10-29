@@ -21,6 +21,11 @@ Bronnen per stelsel en waarom:
 * SE: Riksdagens öppna data (data.riksdagen.se), SFS in de geconsolideerde stand van Regeringskansliet
   (SFST), als JSON met HTML; versie is de ondertitel "t.o.m. SFS …". Geen burgerlijk wetboek; de balkar
   (rättegångsbalken, brottsbalken) zijn de resten van het Rijkswetboek van 1734 en zijn opvolgers.
+* PL: geen importer. De ELI-API van de Sejm (api.sejm.gov.pl) geeft HTML alleen van de oorspronkelijke tekst;
+  de geconsolideerde teksten (tekst jednolity, ook ISAP) alleen als PDF, en een PDF-parser is geen afhankelijkheid.
+* PT: Procuradoria-Geral Distrital de Lisboa (pgdlisboa.pt), versão actualizada als HTML, 100 artikelen per
+  pagina; geconsolideerd, maar geen officiële bron. Het Diário da República heeft geconsolideerde wetgeving
+  alleen in een JavaScript-toepassing zonder open API. Het Código Civil is 24 pagina's (±12 MB verkeer).
 """
 from __future__ import annotations
 
@@ -84,5 +89,14 @@ WETTEN: list[Wet] = [
         ("ABL", "2005:551", "Aktiebolagslagen"),
         ("RB", "1942:740", "Rättegångsbalken"),
         ("BrB", "1962:700", "Brottsbalken"),
+    ]],
+    # PT: Código Civil en de wetten eromheen (PGDL, nid)
+    *[Wet("PT", afk, "pgdl", nid, t, systematiek=afk is None) for afk, nid, t in [
+        (None, "775", "Código Civil (Decreto-Lei n.º 47344/66)"),
+        ("CRP", "4", "Constituição da República Portuguesa"),
+        ("CSC", "524", "Código das Sociedades Comerciais"),
+        ("LDC", "726", "Lei de Defesa do Consumidor (Lei n.º 24/96)"),
+        ("CPC", "1959", "Código de Processo Civil (Lei n.º 41/2013)"),
+        ("CP", "109", "Código Penal"),
     ]],
 ]

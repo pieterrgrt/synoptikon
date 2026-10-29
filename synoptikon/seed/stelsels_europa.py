@@ -219,6 +219,28 @@ PL = [
     ]),
 ]
 
+# PT: Código Civil (1966), boeken en titels, met de hand uit de officiële indeling.
+PT = [
+    ("CC-PT-I", "Livro I · Parte geral", "art. 1–396", [
+        ("CC-PT-I-1", "Título I · Das leis, sua interpretação e aplicação", "art. 1–65", []),
+        ("CC-PT-I-2", "Título II · Das relações jurídicas", "art. 66–396", []),
+    ]),
+    ("CC-PT-II", "Livro II · Direito das obrigações", "art. 397–1250", [
+        ("CC-PT-II-1", "Título I · Das obrigações em geral", "art. 397–873", []),
+        ("CC-PT-II-2", "Título II · Dos contratos em especial", "art. 874–1250", []),
+    ]),
+    ("CC-PT-III", "Livro III · Direito das coisas", "art. 1251–1575", [
+        ("CC-PT-III-1", "Título I · Da posse", "art. 1251–1301", []),
+        ("CC-PT-III-2", "Título II · Do direito de propriedade", "art. 1302–1438", []),
+        ("CC-PT-III-3", "Título III · Do usufruto, uso e habitação", "art. 1439–1490", []),
+        ("CC-PT-III-4", "Título IV · Da enfiteuse (revogado)", "art. 1491–1523", []),
+        ("CC-PT-III-5", "Título V · Do direito de superfície", "art. 1524–1542", []),
+        ("CC-PT-III-6", "Título VI · Das servidões prediais", "art. 1543–1575", []),
+    ]),
+    ("CC-PT-IV", "Livro IV · Direito da família", "art. 1576–2023", []),
+    ("CC-PT-V", "Livro V · Direito das sucessões", "art. 2024–2334", []),
+]
+
 # code, naam, taal, toelichting, actief, rechtsfamilie (zelfde vorm als seed/stelsels.py)
 STELSELS = [
     ("DK", "Denemarken", "da", "Geen burgerlijk wetboek: losse vermogensrechtelijke wetten (Aftaleloven 1917, Købeloven 1906), deels in Scandinavische samenwerking tot stand gekomen; Danske Lov (1683) geldt nog in enkele artikelen", True, "nordisch"),
@@ -226,6 +248,7 @@ STELSELS = [
     ("NO", "Noorwegen", "no", "Geen burgerlijk wetboek: losse vermogensrechtelijke wetten, grotendeels in Scandinavische samenwerking (Avtaleloven 1918); Christian V's Norske Lov (1687) geldt nog in enkele artikelen", True, "nordisch"),
     ("SE", "Zweden", "sv", "Geen burgerlijk wetboek: losse vermogensrechtelijke wetten in Scandinavische samenwerking (Avtalslagen 1915, Köplagen 1990); van het Rijkswetboek van 1734 leven de balkar voort", True, "nordisch"),
     ("PL", "Polen", "pl", "Kodeks cywilny (1964): pandektensysteem met een algemeen deel, voortbouwend op het Kodeks zobowiązań (1933); nog geen wettekst, want de ELI-API van de Sejm geeft de geconsolideerde tekst alleen als PDF", True, "germaans"),
+    ("PT", "Portugal", "pt", "Código Civil (1966, Antunes Varela): pandektensysteem naar Duits voorbeeld binnen de Romaanse traditie, opvolger van het Código de Seabra (1867); tekst via de PGDL (geconsolideerd, geen officiële bron)", True, "romaans"),
     ("AT", "Oostenrijk", "de", "Allgemeines bürgerliches Gesetzbuch (1811): natuurrechtelijke codificatie, gemoderniseerd door de Teilnovellen (1914–1916) en latere hervormingen", True, "germaans"),
 ]
 
@@ -236,4 +259,5 @@ SYSTEMATIEK = {
     "NO": NO,
     "SE": SE,
     "PL": PL,
+    "PT": PT,
 }

@@ -158,3 +158,22 @@ def test_poolse_verwijzingen():
     assert _herken("art. 415 KC") == [("PL", "415", None)]
     assert _herken("art. 22¹ KC") == [("PL", "22¹", None)]
     assert _herken("art. 299 KSH") == [("PL", "299", "KSH")]
+
+
+def test_pgdl_cc():
+    from synoptikon.importers import pgdl
+
+    g = pgdl.parse((FIX / "pgdl_cc.html").read_bytes(), "775")
+    assert g.versie == "Lei n.º 29/2026, de 23/06"
+    per = {a.nummer: a for a in g.artikelen}
+    assert set(per) == {"1", "2", "3", "85"}
+    assert per["1"].opschrift == "Fontes imediatas"
+    assert per["85"].opschrift == "Domicílio legal dos menores e dos maiores acompanhados"  # opschrift zonder haakjes
+    assert per["1"].pad == "Livro I · Parte geral › Título I · Das leis, sua interpretação e aplicação › Capítulo I · Fontes do direito"
+    assert per["1"].tekst.startswith("1. São fontes imediatas do direito")
+    assert "\n2. Consideram-se leis" in per["1"].tekst
+
+
+def test_portugese_verwijzingen():
+    assert ("PT", "405", None) in _herken("art. 405.º CC")
+    assert _herken("art. 13.º CRP") == [("PT", "13", "CRP")]

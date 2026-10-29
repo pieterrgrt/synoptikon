@@ -1,0 +1,708 @@
+		 
+
+<!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML 4.0 Transitional//EN">
+<HTML>
+<HEAD>
+<TITLE>::: DL n.º 47344/66, de 25 de Novembro</TITLE>
+<META http-equiv=Content-Type content="text/html;">
+<META "" name=GENERATOR>
+<LINK href="https://www.pgdlisboa.pt/default.css" type=text/css rel=stylesheet>
+<SCRIPT SRC="https://www.pgdlisboa.pt/javascript.js"></SCRIPT>
+<BODY>
+<script language="javascript" type="text/javascript"
+	src="https://www.pgdlisboa.pt/jquery-1.2.1.min.js"></script>
+
+</HEAD>
+
+<script language="JavaScript">
+
+// val é o artigo_id em exibição
+
+function cria_anotacao(val) {
+      $("#texto_inserir_anotacao").hide();
+      $("#div_cria_anotacao_"+val).empty();
+
+	     var str =' <form name="form_cria_anotacao_'+val+'" id="form_cria_anotacao_'+val+'">';
+         str += '  <div style="margin-left:10px;margin-top:5px;font-family:tahoma;font-size:10px;font-weight:bold;color:#000000;">';
+         str += '   <span style="color:#000000">Insira a anotação:</span>';
+         str += '   </div>';
+
+         str += '   <div style="margin-left:50px;margin-top:3px;font-family:tahoma;font-size:11px;font-weight:bold;color:#234372;">';
+         str += '    Espécie ';
+         str += '  </div>';
+         str += '  <div style="margin-top:8px;margin-left:50px;">';
+         str += '  <textarea id="conteudo_'+val+'" name="conteudo_'+val+'" rows="14" cols= "95" style="font-size:11px;"></textarea>';
+	     str += '   </div>';
+
+
+         
+
+
+         str += '  <div style="margin-top:8px;text-align:right">';
+         str += ' <input type="hidden" name="nidlei" value="775"/>';
+         var valor ="'"+val+"'";;
+	     str+='   <input type="button" name="cancelar" value="Cancelar" onclick="return fecha_cria_anotacao('+valor+');"/>';
+         str += '   <input  type="button"  value="Gravar" name="enviar" onclick="return add_anotacao('+valor+');"/>&nbsp;';
+         str += '   </div>';
+	     str += '  </form>';
+
+         $(str).appendTo("#div_cria_anotacao_"+val);
+
+         $("#div_cria_anotacao_"+val).show();
+}
+
+// val é o artigo_id em exibição
+function fecha_cria_anotacao(val) {
+   document.getElementById('div_cria_anotacao_'+val).style.display="none";
+   document.getElementById('texto_inserir_anotacao').style.display="block";
+}
+
+// val é o artigo_id em exibição
+function add_anotacao(val) {
+  if(valida_anotacao(val) ){
+     var nidlei =  '775';
+     var artigo_id =  val;
+     var especie =document.getElementById('especie_'+val).value;
+     var anotacao =document.getElementById('conteudo_'+val).value;
+             var confirmada ="N";
+     
+
+     // Para não duplicar um parágrafo simples
+	 anotacao=anotacao.replace(/\n/g, '');
+
+
+     $.post("lei_add_anotacao.php",
+	 	 	 {nidlei: nidlei, especie:especie, conteudo:anotacao, artigo_id:artigo_id, confirmada:confirmada },
+		      function (mostra_anotacao){
+	             fecha_cria_anotacao(val);
+                 ver_anotacoes(val);
+		      }
+		   );
+     return true;
+  }else{
+      return false;
+  }
+
+}
+
+
+function ver_anotacoes(artigo_id) {
+
+     $("#lista_anotacoes_"+artigo_id).empty();
+
+
+      var nidlei=775
+      $.getJSON("lei_art_anotacoes.php",{artigo_id:artigo_id, nidlei:nidlei},
+       function(json){
+	     var i = 1;
+         var especie_exibida="";
+  	     for(var v in json.anotacoes){
+            var nidanotacoes = json.anotacoes[v].nidanotacoes;
+            var especie = json.anotacoes[v].especie;
+            var anotacao = json.anotacoes[v].conteudo;
+            var confirmada = json.anotacoes[v].confirmada;
+
+            var str ='<div id="div_mostra_anotacao_'+nidanotacoes+'"';
+			str +=" style='margin-top:15px;margin-left:30px;display:block;'>";
+
+                var valor_artigo_id ="'"+artigo_id+"'";
+                var valor_especie= "'"+especie+"'";
+                if(especie=="3"){
+                       var titulo_especie="Jurisprudência";
+                }else if(especie=="1"){
+                       var titulo_especie="Orientações do MP";
+                }else if(especie=="2"){
+                       var titulo_especie="Diversos";
+                }else if(especie=="4"){
+                       var titulo_especie="Jurisprudência obrigatória";
+
+                }
+                 // Se a anotação estiver confirmada, exibe logo para todos
+                if(confirmada=="S"){
+                   if(especie_exibida != especie){
+                       str+="<div style='margin-left:-10px;margin-bottom:5px;font-family:tahoma;font-size:11px;font-weight:bold;color:#35326B'>" + titulo_especie;
+                       especie_exibida=especie;
+                       i=1;
+                       str += "</div>";
+                   }
+                 // Se a anotação não estiver confirmada, só vê quem fez login
+                }else{
+                                    }
+
+		                     if(confirmada=="S"){
+			            str+=  '&nbsp;'+  i++ +'.&nbsp;';
+                 }
+		   		   anotacao=anotacao.replace(/\n/g, '<br>');
+		   // Se a anotação estiver confirmada, todos vêem
+		   if(confirmada=="S"){
+		         str+= '<span style="font-size:10px;font-family:trebuchet ms;color:#7E4F32;line-height:4mm">';
+ 		         str+=anotacao;
+            // Se a anotação não estiver confirmada, só a vêem os que fizeram login
+		   }else{
+                 		         
+		   }
+ 		   str+="</span>";
+ 		   str+='</div>';
+
+             str+='<DIV id ="div_edita_anotacoes_'+nidanotacoes+'" style="display:none;overflow:auto">';
+             str+=' </DIV>';
+
+           $(str).appendTo("#lista_anotacoes_"+artigo_id);
+
+            // Mostra o div da anotação que tenha sido escondido em edita_anotacao()
+           $("#div_mostra_anotacao_"+nidanotacoes).show();
+
+        } // for
+       }// function
+     );  //  $.getJSON
+}
+
+
+function valida_anotacao(val) {
+     var especie =document.getElementById('especie_'+val).value;
+     var conteudo =document.getElementById('conteudo_'+val).value;
+                var confirmada="N";
+     
+     if( especie=="0"){
+         alert (' Escolha a espécie de anotação!');
+         return false;
+     }
+
+     if( LTrim(conteudo)==""){
+         alert (' Introduza os dados!');
+         return false;
+     }
+     
+                  
+     
+
+     if (confirm("Confirma a gravação dos dados?")) {
+	     return true;
+	}else{
+         return false;
+	}
+}
+
+
+
+function edita_anotacao(nidanotacoes,artigo_id, especie) {
+
+      // Esconde o div da anotação que se quer editar para exibir a anotação apenas na form de edição
+     $("#div_mostra_anotacao_"+nidanotacoes).hide();
+
+     $("#texto_inserir_anotacao").hide();
+     $("#div_edita_anotacoes_"+nidanotacoes).empty();
+
+      $.getJSON("lei_mostra_anotacao.php",{nidanotacoes:nidanotacoes},
+         function(json){
+
+           var anotacao = json.anotacao;
+           var confirmada = json.confirmada;
+
+	         var str =' <form name="form_edita_anotacao_'+nidanotacoes+'" id="form_edita_anotacao_'+nidanotacoes+'">';
+             str += '  <div style="margin-left:10px;margin-top:5px;font-family:tahoma;font-size:10px;font-weight:bold;color:#000000;">';
+             str += '   <span style="color:#000000">Editar anotação:</span>';
+             str += '   </div>';
+             str += '   <div style="margin-left:50px;margin-top:3px;font-family:tahoma;font-size:11px;font-weight:bold;color:#234372;">';
+             str += '    Espécie ';
+             str += '  </div>';
+             str += '  <div style="margin-top:8px;margin-left:50px;">';
+			 anotacao=anotacao.replace(/<br><br><br>/g, '\n');
+			 anotacao=anotacao.replace(/<br><br>/g, '\n');
+			 anotacao=anotacao.replace(/<br>/g, '\n');
+             str += '  <textarea id="conteudo_'+nidanotacoes+'" name="conteudo_'+nidanotacoes+'"  style="font-size:11px" rows="18" cols= "95">'+anotacao+'</textarea>';
+	         str += '   </div>';
+
+         
+	         
+	         
+             str += '  <div style="margin-top:8px;text-align:right">';
+             str += ' <input type="hidden" name="nidlei" value="775"/>';
+             var valor_nidanotacoes ="'"+nidanotacoes+"'";
+             var valor_artigo_id ="'"+artigo_id+"'";
+	         str+='   <input type="button" name="cancelar" value="Cancelar" onclick="return fecha_edita_anotacao('+valor_nidanotacoes+')"></>';
+             str += '   <input  type="button"  value="Gravar" name="enviar" onclick="return grava_edita_anotacao('+valor_nidanotacoes+','+valor_artigo_id+');"/>&nbsp;';
+             str += '   </div>';
+	         str += '  </form>';
+
+             $(str).appendTo("#div_edita_anotacoes_"+nidanotacoes);
+             $("#div_edita_anotacoes_"+nidanotacoes).show();
+           }
+        )
+
+}
+
+
+function fecha_edita_anotacao(nidanotacoes) {
+     $("#div_mostra_anotacao_"+nidanotacoes).show();
+     $("#texto_inserir_anotacao").show();
+     $("#form_edita_anotacao_"+nidanotacoes).hide();
+}
+
+
+function grava_edita_anotacao(nidanotacoes,artigo_id) {
+     var especie =document.getElementById('especie_'+nidanotacoes).value;
+     var anotacao =document.getElementById('conteudo_'+nidanotacoes).value;
+             var confirmada ="N";
+    
+
+    // Para não duplicar um parágrafo simples
+
+     anotacao=anotacao.replace(/\n/g, '');
+
+       if (confirm("Confirma a gravação das alterações?")) {
+          $.post("lei_gravar_anotacao.php",
+	  			 	{nidanotacoes:nidanotacoes, especie:especie, conteudo:anotacao, confirmada:confirmada },
+		            function (mostra_anotacao){
+              		   fecha_edita_anotacao(nidanotacoes);
+                       ver_anotacoes(artigo_id);
+		            }
+                 );
+             return true;
+		 }else{
+             return false;
+	  	}
+}
+
+
+
+
+function elimina_anotacao(nidanotacoes, artigo_id) {
+   if(confirm("Confirma a eliminação da anotação?")) {
+      $.getJSON("lei_eliminar_anotacao.php",{nidanotacoes:nidanotacoes},
+		      function (mostra_anotacao){
+                 ver_anotacoes(artigo_id);
+		      }
+      );
+   }
+}
+
+function espera() {
+}
+
+
+function confirma() {
+   if(confirm("Confirma a eliminação do  diploma ?"))
+   {
+      return true;
+   }
+   else
+   {
+      return false;
+   }
+}
+
+function goartigo(val) {
+  var art_id=val;
+  var nidlei= "775";
+  var tabela ="leis";
+  var pagina="1";
+  var ficha="1";
+  var nversao="";
+  var URL = "lei_mostra_articulado.php?artigo_id="+art_id+"&nid="+nidlei+"&tabela="+tabela+"&pagina="+pagina+"&ficha="+ficha+"&so_miolo=&nversao="+nversao+"#artigo";
+  document.location.href = URL;
+  return true;
+}
+</script>
+
+    
+				 
+         	<BODY onload="desactivabusca_leis();">
+				
+
+
+
+
+
+<HTML><HEAD><META http-equiv="Content-Type" content="text/html; charset=ISO-8859-1">
+
+ <META http-equiv="Pragma" content="no-cache">
+ <META http-equiv="expires" content="0">
+<META name="keywords" content="Minist&eacute;rio P&uacute;blico, procuradoria-geral distrital, lisboa, procuradoria da rep&uacute;blica, c&oacute;digos, legisla&ccedil;&atilde;o penal,  legisla&ccedil;&atilde;o,  jurisprud&ecirc;ncia,  rela&ccedil;&atilde;o de Lisboa, f&oacute;rum jur&iacute;dico, portugal, portugu&ecirc;s, portugueses, supremo tribunal de justi&ccedil;a, tribunal constitucional ">
+<TITLE>Procuradoria-Geral Distrital de Lisboa</TITLE>
+<LINK href="https://www.pgdlisboa.pt/default.css" type="text/css" rel="stylesheet">
+<link href="https://www.pgdlisboa.pt/rc_styles.css" type="text/css" rel="stylesheet">
+
+<SCRIPT src="https://www.pgdlisboa.pt/javascript.js"></SCRIPT>
+
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Roboto:wght@300;400;500;700&display=swap" rel="stylesheet">
+<link href="https://fonts.googleapis.com/css2?family=Roboto+Slab:wght@400;700&display=swap" rel="stylesheet">
+
+</HEAD><BODY>
+
+
+
+<FORM name="busca_tudo" action="https://www.pgdlisboa.pt/buscatudo.php" method="GET">
+
+
+
+
+
+
+
+<header id="header">
+    <div class="center">
+        <div class="region region-header">
+            <div id="block-javali-theme-imagemdemarcadositio" class="block block-system block-system-branding-block">
+                <a aria-label="Página Pessoal" href="/" rel="home" class="site-logo">
+                    <img width="355" height="96" src="/images-mp/mplogo_desktop.png" alt="Início" fetchpriority="high" loading="lazy">
+                </a>
+            </div>
+            <a href="/pgd_login.php?modulo=LEI" class="login">Área reservada</a>
+            <a href="https://simp.pgr.pt/" class="simp">SIMP</a>
+        </div>
+    </div>
+</header>
+
+<div class="micro-header">
+    <div class="region region-post-header">
+        <div id="block-microsite-micrositeheader" class="block block-mp block-microsite-header">
+            <div class="micro-header">
+                <img src="/images-mp/lisboa-157-c.jpg" width="1960" height="180" alt="PGR Lisboa" loading="lazy" class="image-style-microheader">
+                <div class="center">
+                    <h1><a href="/"><p>Procuradoria-Geral Regional</p> <i>de</i> <b>Lisboa</b></a></h1>
+                </div>
+            </div>
+            <div class="micro-header-space"></div>
+        </div>
+    </div>
+</div>
+
+<div class="main-menu">
+    <div class="center">
+        <button aria-controls="region-menu" aria-expanded="false" class="menu-toggler mobile-only" data-once="micromenu">
+            <span class="menu-title">PGR Lisboa</span>
+        </button>
+        <div class="region region-menu" data-once="micromenu_items">
+            <nav aria-labelledby="block-microsite-pgdlisboamain-menu" id="block-microsite-pgdlisboamain" class="block block-menu navigation menu--micro-main-pgd-lisboa">            
+                <ul class="menu">
+                    <li class="">
+                        <a href="https://pgreg-lisboa.ministeriopublico.pt" tabindex="0">PGRL</a>
+                    </li>
+                    <li class="">
+                        <a href="/leis/lei_main.php" tabindex="0">Legislação</a>
+                    </li>
+                    <li class="">
+                        <a href="/jurel/jurisprudencia_main.php" tabindex="0">Jurisprudência</a>
+                    </li>
+                </ul>
+            </nav>
+            <nav aria-labelledby="block-microsite-pgdlisboaapoio-menu" id="block-microsite-pgdlisboaapoio" class="block block-menu navigation menu--micro-apoio-pgd-lisboa">   
+                <ul class="apoio-menu menu">
+                    <li class="">
+                        <a href="https://pgreg-lisboa.ministeriopublico.pt/contactos" tabindex="0">Contactos</a>
+                    </li>
+                </ul>
+            </nav>
+        </div>
+    </div>
+</div>
+
+
+
+<DIV class="center" style="margin-top:25px;font-family:tahoma;font-size:9px;font-weight:bold">
+ 
+
+
+<TABLE id="content-wrapper" border="0" cellspacing="0" cellpadding="0" width="945">
+<TBODY><TR>
+
+<TD valign="top" colspan="3">
+
+<div id="divheader1" class="visually-hidden">
+ 	<div id="divheaderlogo"><a href="https://www.pgdlisboa.pt/"><img src="https://www.pgdlisboa.pt/imagens/logo_pgdl.png" width="169" height="145" border="0"></a></div>
+    <div id="divheader_right">
+ <div id="divferramentastop"> <a href="https://www.pgdlisboa.pt/">Início</a>  //  <a href="https://www.pgdlisboa.pt/indice.php">Índice</a>
+ //  <a href="https://www.pgdlisboa.pt/contactos.php">Contactos</a>
+  //  <a href="https://www.pgdlisboa.pt/links.php">Links</a>
+  
+ 
+    |  <a href="https://www.pgdlisboa.pt/pgd_login.php?modulo=LEI">
+    <img src="https://www.pgdlisboa.pt/imagens/seta.jpg" width="6" height="6" border="0"> Login</a> </div>
+
+ 
+  <div id="divmenu"><a href="https://www.pgdlisboa.pt/novidades/nov_main.php?comarcas=S">Actualidade</a> |
+  <a href="https://www.pgdlisboa.pt/jurel/jurisprudencia_main.php">Jurisprudência</a> |
+   <a href="https://www.pgdlisboa.pt/leis/lei_main.php">Legislação</a> 
+    
+    <span class="pesquisa"> <strong>pesquisa:</strong>
+      <INPUT style="font-family:tahoma; font-size:10.5px;height:18px;" maxlength="150" size="20" name="buscahome" value="">
+  <SELECT name="bases" style="font-family:tahoma; font-weight:normal;font-size:10px;height:18px;">
+					 								        <OPTION value="1">Jurisp. Relação Lisboa</OPTION>
+					  								      <OPTION value="2">Interv. do MP</OPTION>
+			      								      <OPTION value="3">Legislação</OPTION>
+			      								      <OPTION value="4">Peças processuais</OPTION>
+			      							       	<OPTION value="5">Docs. da  PGD</OPTION>
+			      								      <OPTION value="6">Textos</OPTION>
+			      								      <OPTION value="7">Comarcas</OPTION>
+			      								      <OPTION value="8">Actualidade</OPTION>
+			      								      <OPTION value="9">Destaques</OPTION>
+		      </SELECT> <INPUT style="font-family:tahoma; font-size:10px;height:18px;" type="submit" value=" OK " border="0" onClick="return validabusca_tudo();"></SPAN></div>
+  </div>
+
+  </form>
+
+
+
+
+
+
+  </TD></TR>
+
+
+<TR>
+<TD valign="top" width="185">
+ <div id="divmenu_lateral">
+ <br />
+
+
+                            <div class="seccao"><A href="https://www.pgdlisboa.pt/home.php"> CIDADÃO</A></div>
+                            <ul>
+                            <li><A href="https://www.pgdlisboa.pt/home_cd_dir_fm.php"> Menores e Família</A></li>
+                            <li><A href="https://www.pgdlisboa.pt/home_cd_dir_tr.php"> Trabalho e cível</A></li>
+                            <li><A href="https://www.pgdlisboa.pt/home_cd_dir_df.php"> Incapacidades</A></li>
+</br>
+                            <li><A href="https://www.pgdlisboa.pt/home_cd_agi_st.php"> Em situação de crime</A></li>
+                            <li><A href="https://www.pgdlisboa.pt/home_cd_agi_sm.php"> Em situação de morte</A></li>
+                            <li><A href="https://www.pgdlisboa.pt/home_cd_agi_dc.php"> Em defesa da comunidade</A></li>
+	
+
+
+
+                            </ul>
+<br />
+                            <div class="seccao"><A href="https://www.pgdlisboa.pt/leis/lei_main.php">INFORMAÇÃO JURÍDICA</A></div>
+                            <ul>
+                            <li><A href="https://www.pgdlisboa.pt/leis/lei_main.php"> Legislação</A></li>
+                            <li><A href="https://www.pgdlisboa.pt/jurel/jurisprudencia_main.php"> Jurisprudência</A></li>
+                        
+                           </ul>
+<br />
+                            <div class="seccao"><A href="https://www.pgdlisboa.pt/interv/pec_main.php">ACTIVIDADE</A></div>
+                            <ul>
+                            <li><A href="https://www.pgdlisboa.pt/docpgd/doc_main.php"> Docs. da PGDL</A></li>
+      <li><A href="https://www.pgdlisboa.pt/docpgd/doc_busca.php?buscajur=&nid_especie=3&nid_subespecie=21&pagina=1&ficha=1"> Cláusulas contratuais nulas</A></li>
+                           
+<br />
+   
+
+
+                      
+
+
+
+
+</div>
+
+</TD>
+				  <td valign=top><br>    
+<div style="margin-left: 10px; margin-top: 3px; font-size: 9px; font-family: tahoma; font-weight: bold;">
+<a style="color: #2968b4" href="https://www.pgdlisboa.pt/"><u>Início</u></a>&nbsp;<img
+	src="https://www.pgdlisboa.pt/imagens/seta_menu.gif" height=7 border=0> <a
+	style="color: #2968b4" href="https://www.pgdlisboa.pt/leis/lei_main.php"><u>legislação</u></a>&nbsp;<img
+	src="https://www.pgdlisboa.pt/imagens/seta_menu.gif" height=7 border=0> <span
+	style="color: #999999">Exibe diploma</span></div>
+<BR>
+<div style = "height:23px;font-family:verdana;font-size:12px;font-weight:bold;background-color:#ffffff;color:#26397d;" width=62%>&nbsp; <img src="https://www.pgdlisboa.pt/imagens/lista.gif" border=0 width=18 height=17 align=bottom>&nbsp; Legislação     </div>
+
+<table class="articulado"  border="0" cellspacing="1" cellpadding="0" bgcolor=#e1e1e1	width=100%>
+	<tr>
+	<td bgcolor=#ffffff>
+	
+        
+    
+    
+    
+    
+	<table>
+	<tr>
+	<td class="descricaomodulos">
+	<div style="margin-top:10px;color:#fc7714;font-weight:bold;font-family:tahoma;font-size:11px;">&nbsp;&nbsp;DL n.º 47344/66, de 25 de Novembro</div><div style="margin-top:10px;color:#0554e7;font-weight:bold;font-family:tahoma">&nbsp;&nbsp;CÓDIGO CIVIL<span style="font-weight:normal;margin-left:5px;color:#0554e7;">(versão actualizada)</div></td>
+	</div>
+		<tr>
+	<td bgcolor=#ffffff colspan=2><br>
+	</td>
+	</tr>
+	</table>
+	<table border=0 width=100% cellpadding=2>
+	<td valign=top class=txt_base_n_l width=40%><font color="#387070">&nbsp;&nbsp;&nbsp;
+	
+		          Contém as seguintes alterações: </td>
+		<td valign=top class=txt_base_n_l width=60%><font color="#387070">&nbsp;&nbsp;&nbsp;
+		 
+		       Ver versões do diploma:</font>
+		</td>
+		</tr>
+		<tr>
+		<td colspan=2 valign=top>
+		<table border=0 width=100%>
+		<tr>
+		<td valign=top class=txt_base_n_l width=40%>&nbsp;&nbsp;  - <a  href= "lei_mostra_articulado.php?nid=4031&tabela=leis&ficha=1&pagina=1&so_miolo=">Lei n.º 29/2026, de 23/06</a><br>&nbsp;&nbsp;  - <a  href= "lei_mostra_articulado.php?nid=3894&tabela=leis&ficha=1&pagina=1&so_miolo=">Lei n.º 39/2025, de 01/04</a><br>&nbsp;&nbsp;  - <a  href= "lei_mostra_articulado.php?nid=3813&tabela=leis&ficha=1&pagina=1&so_miolo=">DL n.º 48/2024, de 25/07</a><br>&nbsp;&nbsp;  - <a  href= "lei_mostra_articulado.php?nid=3737&tabela=leis&ficha=1&pagina=1&so_miolo=">DL n.º 10/2024, de 08/01</a><br>&nbsp;&nbsp;  - <a  href= "lei_mostra_articulado.php?nid=3736&tabela=leis&ficha=1&pagina=1&so_miolo=">Lei n.º 82/2023, de 29/12</a><br>&nbsp;&nbsp;  - <a  href= "lei_mostra_articulado.php?nid=3683&tabela=leis&ficha=1&pagina=1&so_miolo=">Lei n.º 46/2023, de 17/08</a><br>&nbsp;&nbsp;  - <a  href= "lei_mostra_articulado.php?nid=3679&tabela=leis&ficha=1&pagina=1&so_miolo=">Lei n.º 35/2023, de 21/07</a><br>&nbsp;&nbsp;  - <a  href= "lei_mostra_articulado.php?nid=3611&tabela=leis&ficha=1&pagina=1&so_miolo=">Lei n.º 3/2023, de 16/01</a><br>&nbsp;&nbsp;  - <a  href= "lei_mostra_articulado.php?nid=3598&tabela=leis&ficha=1&pagina=1&so_miolo=">Lei n.º 24-D/2022, de 30/12</a><br>&nbsp;&nbsp;  - <a  href= "lei_mostra_articulado.php?nid=3507&tabela=leis&ficha=1&pagina=1&so_miolo=">Lei n.º 8/2022, de 10/01</a><br>&nbsp;&nbsp;  - <a  href= "lei_mostra_articulado.php?nid=3469&tabela=leis&ficha=1&pagina=1&so_miolo=">Lei n.º 72/2021, de 12/11</a><br>&nbsp;&nbsp;  - <a  href= "lei_mostra_articulado.php?nid=3358&tabela=leis&ficha=1&pagina=1&so_miolo=">Lei n.º 65/2020, de 04/11</a><br>&nbsp;&nbsp;  - <a  href= "lei_mostra_articulado.php?nid=3166&tabela=leis&ficha=1&pagina=1&so_miolo=">Lei n.º 85/2019, de 03/09</a><br>&nbsp;&nbsp;  - <a  href= "lei_mostra_articulado.php?nid=3010&tabela=leis&ficha=1&pagina=1&so_miolo=">Lei n.º 13/2019, de 12/02</a><br>&nbsp;&nbsp;  - <a  href= "lei_mostra_articulado.php?nid=2949&tabela=leis&ficha=1&pagina=1&so_miolo=">Lei n.º 64/2018, de 29/10</a><br>&nbsp;&nbsp;  - <a  href= "lei_mostra_articulado.php?nid=2925&tabela=leis&ficha=1&pagina=1&so_miolo=">Lei n.º 49/2018, de 14/08</a><br>&nbsp;&nbsp;  - <a  href= "lei_mostra_articulado.php?nid=2923&tabela=leis&ficha=1&pagina=1&so_miolo=">Lei n.º 48/2018, de 14/08</a><br>&nbsp;&nbsp;  - <a  href= "lei_mostra_articulado.php?nid=2695&tabela=leis&ficha=1&pagina=1&so_miolo=">Lei n.º 43/2017, de 14/06</a><br>&nbsp;&nbsp;  - <a  href= "lei_mostra_articulado.php?nid=2680&tabela=leis&ficha=1&pagina=1&so_miolo=">Lei n.º 24/2017, de 24/05</a><br>&nbsp;&nbsp;  - <a  href= "lei_mostra_articulado.php?nid=2655&tabela=leis&ficha=1&pagina=1&so_miolo=">Lei n.º 8/2017, de 03/03</a><br>&nbsp;&nbsp;  - <a  href= "lei_mostra_articulado.php?nid=2654&tabela=leis&ficha=1&pagina=1&so_miolo=">Lei n.º 5/2017, de 02/03</a><br>&nbsp;&nbsp;  - <a  href= "lei_mostra_articulado.php?nid=2424&tabela=leis&ficha=1&pagina=1&so_miolo=">Lei n.º 150/2015, de 10/09</a><br>&nbsp;&nbsp;  - <a  href= "lei_mostra_articulado.php?nid=2423&tabela=leis&ficha=1&pagina=1&so_miolo=">Lei n.º 143/2015, de 08/09</a><br>&nbsp;&nbsp;  - <a  href= "lei_mostra_articulado.php?nid=2422&tabela=leis&ficha=1&pagina=1&so_miolo=">Lei n.º 137/2015, de 07/09</a><br>&nbsp;&nbsp;  - <a  href= "lei_mostra_articulado.php?nid=2421&tabela=leis&ficha=1&pagina=1&so_miolo=">Lei n.º 122/2015, de 01/09</a><br>&nbsp;&nbsp;  - <a  href= "lei_mostra_articulado.php?nid=2420&tabela=leis&ficha=1&pagina=1&so_miolo=">Lei n.º 111/2015, de 27/08</a><br>&nbsp;&nbsp;  - <a  href= "lei_mostra_articulado.php?nid=2246&tabela=leis&ficha=1&pagina=1&so_miolo=">Lei n.º 82/2014, de 30/12</a><br>&nbsp;&nbsp;  - <a  href= "lei_mostra_articulado.php?nid=2238&tabela=leis&ficha=1&pagina=1&so_miolo=">Lei n.º 79/2014, de 19/12</a><br>&nbsp;&nbsp;  - <a  href= "lei_mostra_articulado.php?nid=1895&tabela=leis&ficha=1&pagina=1&so_miolo=">Lei n.º 23/2013, de 05/03</a><br>&nbsp;&nbsp;  - <a  href= "lei_mostra_articulado.php?nid=1780&tabela=leis&ficha=1&pagina=1&so_miolo=">Lei n.º 32/2012, de 14/08</a><br>&nbsp;&nbsp;  - <a  href= "lei_mostra_articulado.php?nid=1779&tabela=leis&ficha=1&pagina=1&so_miolo=">Lei n.º 31/2012, de 14/08</a><br>&nbsp;&nbsp;  - <a  href= "lei_mostra_articulado.php?nid=1758&tabela=leis&ficha=1&pagina=1&so_miolo=">Lei n.º 24/2012, de 09/07</a><br>&nbsp;&nbsp;  - <a  href= "lei_mostra_articulado.php?nid=1262&tabela=leis&ficha=1&pagina=1&so_miolo=">Lei n.º 23/2010, de 30/08</a><br>&nbsp;&nbsp;  - <a  href= "lei_mostra_articulado.php?nid=1249&tabela=leis&ficha=1&pagina=1&so_miolo=">Lei n.º 9/2010, de 31/05</a><br>&nbsp;&nbsp;  - <a  href= "lei_mostra_articulado.php?nid=1128&tabela=leis&ficha=1&pagina=1&so_miolo=">Lei n.º 103/2009, de 11/09</a><br>&nbsp;&nbsp;  - <a  href= "lei_mostra_articulado.php?nid=1111&tabela=leis&ficha=1&pagina=1&so_miolo=">Lei n.º 29/2009, de 29/06</a><br>&nbsp;&nbsp;  - <a  href= "lei_mostra_articulado.php?nid=1100&tabela=leis&ficha=1&pagina=1&so_miolo=">DL n.º 100/2009, de 11/05</a><br>&nbsp;&nbsp;  - <a  href= "lei_mostra_articulado.php?nid=1072&tabela=leis&ficha=1&pagina=1&so_miolo=">Lei n.º 14/2009, de 01/04</a><br>&nbsp;&nbsp;  - <a  href= "lei_mostra_articulado.php?nid=1028&tabela=leis&ficha=1&pagina=1&so_miolo=">Lei n.º 61/2008, de 31/10</a><br>&nbsp;&nbsp;  - <a  href= "lei_mostra_articulado.php?nid=997&tabela=leis&ficha=1&pagina=1&so_miolo=">DL n.º 116/2008, de 04/07</a><br>&nbsp;&nbsp;  - <a  href= "lei_mostra_articulado.php?nid=962&tabela=leis&ficha=1&pagina=1&so_miolo=">DL n.º 324/2007, de 28/09</a><br>&nbsp;&nbsp;  - <a  href= "lei_mostra_articulado.php?nid=961&tabela=leis&ficha=1&pagina=1&so_miolo=">Lei n.º 40/2007, de 24/08</a><br>&nbsp;&nbsp;  - <a  href= "lei_mostra_articulado.php?nid=922&tabela=leis&ficha=1&pagina=1&so_miolo=">DL n.º 263-A/2007, de 23/07</a><br>&nbsp;&nbsp;  - <a  href= "lei_mostra_articulado.php?nid=736&tabela=leis&ficha=1&pagina=1&so_miolo=">Rect. n.º 24/2006, de 17/04</a><br>&nbsp;&nbsp;  - <a  href= "lei_mostra_articulado.php?nid=691&tabela=leis&ficha=1&pagina=1&so_miolo=">Lei n.º 6/2006, de 27/02</a><br>&nbsp;&nbsp;  - <a  href= "lei_mostra_articulado.php?nid=807&tabela=leis&ficha=1&pagina=1&so_miolo=">DL n.º 59/2004, de 19/03</a><br>&nbsp;&nbsp;  - <a  href= "lei_mostra_articulado.php?nid=585&tabela=leis&ficha=1&pagina=1&so_miolo=">DL n.º 199/2003, de 10/09</a><br>&nbsp;&nbsp;  - <a  href= "lei_mostra_articulado.php?nid=546&tabela=leis&ficha=1&pagina=1&so_miolo=">Lei n.º 31/2003, de 22/08</a><br>&nbsp;&nbsp;  - <a  href= "lei_mostra_articulado.php?nid=65&tabela=leis&ficha=1&pagina=1&so_miolo=">DL n.º 38/2003, de 08/03</a><br>&nbsp;&nbsp;  - <a  href= "lei_mostra_articulado.php?nid=60&tabela=leis&ficha=1&pagina=1&so_miolo=">DL n.º 323/2001, de 17/12</a><br>&nbsp;&nbsp;  - <a  href= "lei_mostra_articulado.php?nid=478&tabela=leis&ficha=1&pagina=1&so_miolo=">Rect. n.º 20-AS/2001, de 30/11</a><br>&nbsp;&nbsp;  - <a  href= "lei_mostra_articulado.php?nid=470&tabela=leis&ficha=1&pagina=1&so_miolo=">DL n.º 273/2001, de 13/10</a><br>&nbsp;&nbsp;  - <a  href= "lei_mostra_articulado.php?nid=581&tabela=leis&ficha=1&pagina=1&so_miolo=">DL n.º 272/2001, de 13/10</a><br>&nbsp;&nbsp;  - <a  href= "lei_mostra_articulado.php?nid=806&tabela=leis&ficha=1&pagina=1&so_miolo=">Lei n.º 16/2001, de 22/06</a><br>&nbsp;&nbsp;  - <a  href= "lei_mostra_articulado.php?nid=805&tabela=leis&ficha=1&pagina=1&so_miolo=">Lei n.º 59/99, de 30/06</a><br>&nbsp;&nbsp;  - <a  href= "lei_mostra_articulado.php?nid=535&tabela=leis&ficha=1&pagina=1&so_miolo=">DL n.º 343/98, de 06/11</a><br>&nbsp;&nbsp;  - <a  href= "lei_mostra_articulado.php?nid=804&tabela=leis&ficha=1&pagina=1&so_miolo=">Lei n.º 47/98, de 10/08</a><br>&nbsp;&nbsp;  - <a  href= "lei_mostra_articulado.php?nid=558&tabela=leis&ficha=1&pagina=1&so_miolo=">Rect. n.º 11-C/98, de 30/06</a><br>&nbsp;&nbsp;  - <a  href= "lei_mostra_articulado.php?nid=803&tabela=leis&ficha=1&pagina=1&so_miolo=">Lei n.º 21/98, de 12/05</a><br>&nbsp;&nbsp;  - <a  href= "lei_mostra_articulado.php?nid=557&tabela=leis&ficha=1&pagina=1&so_miolo=">DL n.º 120/98, de 08/05</a><br>&nbsp;&nbsp;  - <a  href= "lei_mostra_articulado.php?nid=802&tabela=leis&ficha=1&pagina=1&so_miolo=">DL n.º 35/97, de 31/01</a><br>&nbsp;&nbsp;  - <a  href= "lei_mostra_articulado.php?nid=801&tabela=leis&ficha=1&pagina=1&so_miolo=">DL n.º 68/96, de 31/05</a><br>&nbsp;&nbsp;  - <a  href= "lei_mostra_articulado.php?nid=800&tabela=leis&ficha=1&pagina=1&so_miolo=">DL n.º 14/96, de 06/03</a><br>&nbsp;&nbsp;  - <a  href= "lei_mostra_articulado.php?nid=570&tabela=leis&ficha=1&pagina=1&so_miolo=">DL n.º 329-A/95, de 12/12</a><br>&nbsp;&nbsp;  - <a  href= "lei_mostra_articulado.php?nid=799&tabela=leis&ficha=1&pagina=1&so_miolo=">Lei n.º 84/95, de 31/08</a><br>&nbsp;&nbsp;  - <a  href= "lei_mostra_articulado.php?nid=798&tabela=leis&ficha=1&pagina=1&so_miolo=">DL n.º 163/95, de 13/07</a><br>&nbsp;&nbsp;  - <a  href= "lei_mostra_articulado.php?nid=498&tabela=leis&ficha=1&pagina=1&so_miolo=">DL n.º 267/94, de 25/10</a><br>&nbsp;&nbsp;  - <a  href= "lei_mostra_articulado.php?nid=497&tabela=leis&ficha=1&pagina=1&so_miolo=">DL n.º 227/94, de 08/09</a><br>&nbsp;&nbsp;  - <a  href= "lei_mostra_articulado.php?nid=553&tabela=leis&ficha=1&pagina=1&so_miolo=">DL n.º 185/93, de 22/05</a><br>&nbsp;&nbsp;  - <a  href= "lei_mostra_articulado.php?nid=205&tabela=leis&ficha=1&pagina=1&so_miolo=">DL n.º 423/91, de 30/10</a><br>&nbsp;&nbsp;  - <a  href= "lei_mostra_articulado.php?nid=797&tabela=leis&ficha=1&pagina=1&so_miolo=">DL n.º 257/91, de 18/07</a><br>&nbsp;&nbsp;  - <a  href= "lei_mostra_articulado.php?nid=796&tabela=leis&ficha=1&pagina=1&so_miolo=">DL n.º 321-B/90, de 15/10</a><br>&nbsp;&nbsp;  - <a  href= "lei_mostra_articulado.php?nid=795&tabela=leis&ficha=1&pagina=1&so_miolo=">Lei n.º 24/89, de 01/08</a><br>&nbsp;&nbsp;  - <a  href= "lei_mostra_articulado.php?nid=794&tabela=leis&ficha=1&pagina=1&so_miolo=">Declaração de 31/12 de 1986</a><br>&nbsp;&nbsp;  - <a  href= "lei_mostra_articulado.php?nid=793&tabela=leis&ficha=1&pagina=1&so_miolo=">DL n.º 379/86, de 11/11</a><br>&nbsp;&nbsp;  - <a  href= "lei_mostra_articulado.php?nid=790&tabela=leis&ficha=1&pagina=1&so_miolo=">Lei n.º 46/85, de 20/09</a><br>&nbsp;&nbsp;  - <a  href= "lei_mostra_articulado.php?nid=789&tabela=leis&ficha=1&pagina=1&so_miolo=">DL n.º 190/85, de 24/06</a><br>&nbsp;&nbsp;  - <a  href= "lei_mostra_articulado.php?nid=788&tabela=leis&ficha=1&pagina=1&so_miolo=">DL n.º 225/84, de 06/07</a><br>&nbsp;&nbsp;  - <a  href= "lei_mostra_articulado.php?nid=787&tabela=leis&ficha=1&pagina=1&so_miolo=">DL n.º 262/83, de 16/06</a><br>&nbsp;&nbsp;  - <a  href= "lei_mostra_articulado.php?nid=786&tabela=leis&ficha=1&pagina=1&so_miolo=">DL n.º 328/81, de 04/12</a><br>&nbsp;&nbsp;  - <a  href= "lei_mostra_articulado.php?nid=785&tabela=leis&ficha=1&pagina=1&so_miolo=">Declaração de 12/08 de 1980</a><br>&nbsp;&nbsp;  - <a  href= "lei_mostra_articulado.php?nid=784&tabela=leis&ficha=1&pagina=1&so_miolo=">DL n.º 236/80, de 18/07</a><br>&nbsp;&nbsp;  - <a  href= "lei_mostra_articulado.php?nid=783&tabela=leis&ficha=1&pagina=1&so_miolo=">DL n.º 200-C/80, de 24/06</a><br>&nbsp;&nbsp;  - <a  href= "lei_mostra_articulado.php?nid=781&tabela=leis&ficha=1&pagina=1&so_miolo=">DL n.º 496/77, de 25/11</a><br>&nbsp;&nbsp;  - <a  href= "lei_mostra_articulado.php?nid=780&tabela=leis&ficha=1&pagina=1&so_miolo=">DL n.º 293/77, de 20/07</a><br>&nbsp;&nbsp;  - <a  href= "lei_mostra_articulado.php?nid=779&tabela=leis&ficha=1&pagina=1&so_miolo=">DL n.º 605/76, de 24/07</a><br>&nbsp;&nbsp;  - <a  href= "lei_mostra_articulado.php?nid=778&tabela=leis&ficha=1&pagina=1&so_miolo=">DL n.º 561/76, de 17/07</a><br>&nbsp;&nbsp;  - <a  href= "lei_mostra_articulado.php?nid=777&tabela=leis&ficha=1&pagina=1&so_miolo=">DL n.º 261/75, de 27/05</a><br>&nbsp;&nbsp;  - <a  href= "lei_mostra_articulado.php?nid=776&tabela=leis&ficha=1&pagina=1&so_miolo=">DL n.º 67/75, de 19/02</a><br></td><td valign=top class=txt_base_n_l width=60%><span style="margin-left:14px;font-size:10.5px;font-weight:bold;font-family:tahoma;color:#0259db"><a  style="color:#0259db" href= "lei_mostra_articulado.php?nid=775&tabela=leis&so_miolo=">- 90ª versão - a mais recente </a></span><span style="color:#696969"> (Lei n.º 29/2026, de 23/06)</span><br>&nbsp;&nbsp;&nbsp;&nbsp; <a href= "lei_mostra_articulado.php?nid=775&tabela=lei_velhas&nversao=89&so_miolo=">- 89ª versão </a>(Lei n.º 39/2025, de 01/04)<br>&nbsp;&nbsp;&nbsp;&nbsp; <a href= "lei_mostra_articulado.php?nid=775&tabela=lei_velhas&nversao=88&so_miolo=">- 88ª versão </a>(DL n.º 48/2024, de 25/07)<br>&nbsp;&nbsp;&nbsp;&nbsp; <a href= "lei_mostra_articulado.php?nid=775&tabela=lei_velhas&nversao=87&so_miolo=">- 87ª versão </a>(DL n.º 10/2024, de 08/01)<br>&nbsp;&nbsp;&nbsp;&nbsp; <a href= "lei_mostra_articulado.php?nid=775&tabela=lei_velhas&nversao=86&so_miolo=">- 86ª versão </a>(Lei n.º 82/2023, de 29/12)<br>&nbsp;&nbsp;&nbsp;&nbsp; <a href= "lei_mostra_articulado.php?nid=775&tabela=lei_velhas&nversao=85&so_miolo=">- 85ª versão </a>(Lei n.º 46/2023, de 17/08)<br>&nbsp;&nbsp;&nbsp;&nbsp; <a href= "lei_mostra_articulado.php?nid=775&tabela=lei_velhas&nversao=84&so_miolo=">- 84ª versão </a>(Lei n.º 35/2023, de 21/07)<br>&nbsp;&nbsp;&nbsp;&nbsp; <a href= "lei_mostra_articulado.php?nid=775&tabela=lei_velhas&nversao=83&so_miolo=">- 83ª versão </a>(Lei n.º 3/2023, de 16/01)<br>&nbsp;&nbsp;&nbsp;&nbsp; <a href= "lei_mostra_articulado.php?nid=775&tabela=lei_velhas&nversao=82&so_miolo=">- 82ª versão </a>(Lei n.º 24-D/2022, de 30/12)<br>&nbsp;&nbsp;&nbsp;&nbsp; <a href= "lei_mostra_articulado.php?nid=775&tabela=lei_velhas&nversao=81&so_miolo=">- 81ª versão </a>(Lei n.º 8/2022, de 10/01)<br>&nbsp;&nbsp;&nbsp;&nbsp; <a href= "lei_mostra_articulado.php?nid=775&tabela=lei_velhas&nversao=80&so_miolo=">- 80ª versão </a>(Lei n.º 72/2021, de 12/11)<br>&nbsp;&nbsp;&nbsp;&nbsp; <a href= "lei_mostra_articulado.php?nid=775&tabela=lei_velhas&nversao=79&so_miolo=">- 79ª versão </a>(Lei n.º 65/2020, de 04/11)<br>&nbsp;&nbsp;&nbsp;&nbsp; <a href= "lei_mostra_articulado.php?nid=775&tabela=lei_velhas&nversao=78&so_miolo=">- 78ª versão </a>(Lei n.º 85/2019, de 03/09)<br>&nbsp;&nbsp;&nbsp;&nbsp; <a href= "lei_mostra_articulado.php?nid=775&tabela=lei_velhas&nversao=77&so_miolo=">- 77ª versão </a>(Lei n.º 13/2019, de 12/02)<br>&nbsp;&nbsp;&nbsp;&nbsp; <a href= "lei_mostra_articulado.php?nid=775&tabela=lei_velhas&nversao=76&so_miolo=">- 76ª versão </a>(Lei n.º 64/2018, de 29/10)<br>&nbsp;&nbsp;&nbsp;&nbsp; <a href= "lei_mostra_articulado.php?nid=775&tabela=lei_velhas&nversao=75&so_miolo=">- 75ª versão </a>(Lei n.º 49/2018, de 14/08)<br>&nbsp;&nbsp;&nbsp;&nbsp; <a href= "lei_mostra_articulado.php?nid=775&tabela=lei_velhas&nversao=74&so_miolo=">- 74ª versão </a>(Lei n.º 48/2018, de 14/08)<br>&nbsp;&nbsp;&nbsp;&nbsp; <a href= "lei_mostra_articulado.php?nid=775&tabela=lei_velhas&nversao=73&so_miolo=">- 73ª versão </a>(Lei n.º 43/2017, de 14/06)<br>&nbsp;&nbsp;&nbsp;&nbsp; <a href= "lei_mostra_articulado.php?nid=775&tabela=lei_velhas&nversao=72&so_miolo=">- 72ª versão </a>(Lei n.º 24/2017, de 24/05)<br>&nbsp;&nbsp;&nbsp;&nbsp; <a href= "lei_mostra_articulado.php?nid=775&tabela=lei_velhas&nversao=71&so_miolo=">- 71ª versão </a>(Lei n.º 8/2017, de 03/03)<br>&nbsp;&nbsp;&nbsp;&nbsp; <a href= "lei_mostra_articulado.php?nid=775&tabela=lei_velhas&nversao=70&so_miolo=">- 70ª versão </a>(Lei n.º 5/2017, de 02/03)<br>&nbsp;&nbsp;&nbsp;&nbsp; <a href= "lei_mostra_articulado.php?nid=775&tabela=lei_velhas&nversao=69&so_miolo=">- 69ª versão </a>(Lei n.º 150/2015, de 10/09)<br>&nbsp;&nbsp;&nbsp;&nbsp; <a href= "lei_mostra_articulado.php?nid=775&tabela=lei_velhas&nversao=68&so_miolo=">- 68ª versão </a>(Lei n.º 143/2015, de 08/09)<br>&nbsp;&nbsp;&nbsp;&nbsp; <a href= "lei_mostra_articulado.php?nid=775&tabela=lei_velhas&nversao=67&so_miolo=">- 67ª versão </a>(Lei n.º 137/2015, de 07/09)<br>&nbsp;&nbsp;&nbsp;&nbsp; <a href= "lei_mostra_articulado.php?nid=775&tabela=lei_velhas&nversao=66&so_miolo=">- 66ª versão </a>(Lei n.º 122/2015, de 01/09)<br>&nbsp;&nbsp;&nbsp;&nbsp; <a href= "lei_mostra_articulado.php?nid=775&tabela=lei_velhas&nversao=65&so_miolo=">- 65ª versão </a>(Lei n.º 111/2015, de 27/08)<br>&nbsp;&nbsp;&nbsp;&nbsp; <a href= "lei_mostra_articulado.php?nid=775&tabela=lei_velhas&nversao=64&so_miolo=">- 64ª versão </a>(Lei n.º 82/2014, de 30/12)<br>&nbsp;&nbsp;&nbsp;&nbsp; <a href= "lei_mostra_articulado.php?nid=775&tabela=lei_velhas&nversao=63&so_miolo=">- 63ª versão </a>(Lei n.º 79/2014, de 19/12)<br>&nbsp;&nbsp;&nbsp;&nbsp; <a href= "lei_mostra_articulado.php?nid=775&tabela=lei_velhas&nversao=62&so_miolo=">- 62ª versão </a>(Lei n.º 23/2013, de 05/03)<br>&nbsp;&nbsp;&nbsp;&nbsp; <a href= "lei_mostra_articulado.php?nid=775&tabela=lei_velhas&nversao=61&so_miolo=">- 61ª versão </a>(Lei n.º 32/2012, de 14/08)<br>&nbsp;&nbsp;&nbsp;&nbsp; <a href= "lei_mostra_articulado.php?nid=775&tabela=lei_velhas&nversao=60&so_miolo=">- 60ª versão </a>(Lei n.º 31/2012, de 14/08)<br>&nbsp;&nbsp;&nbsp;&nbsp; <a href= "lei_mostra_articulado.php?nid=775&tabela=lei_velhas&nversao=59&so_miolo=">- 59ª versão </a>(Lei n.º 24/2012, de 09/07)<br>&nbsp;&nbsp;&nbsp;&nbsp; <a href= "lei_mostra_articulado.php?nid=775&tabela=lei_velhas&nversao=58&so_miolo=">- 58ª versão </a>(Lei n.º 23/2010, de 30/08)<br>&nbsp;&nbsp;&nbsp;&nbsp; <a href= "lei_mostra_articulado.php?nid=775&tabela=lei_velhas&nversao=57&so_miolo=">- 57ª versão </a>(Lei n.º 9/2010, de 31/05)<br>&nbsp;&nbsp;&nbsp;&nbsp; <a href= "lei_mostra_articulado.php?nid=775&tabela=lei_velhas&nversao=56&so_miolo=">- 56ª versão </a>(Lei n.º 103/2009, de 11/09)<br>&nbsp;&nbsp;&nbsp;&nbsp; <a href= "lei_mostra_articulado.php?nid=775&tabela=lei_velhas&nversao=55&so_miolo=">- 55ª versão </a>(Lei n.º 29/2009, de 29/06)<br>&nbsp;&nbsp;&nbsp;&nbsp; <a href= "lei_mostra_articulado.php?nid=775&tabela=lei_velhas&nversao=54&so_miolo=">- 54ª versão </a>(DL n.º 100/2009, de 11/05)<br>&nbsp;&nbsp;&nbsp;&nbsp; <a href= "lei_mostra_articulado.php?nid=775&tabela=lei_velhas&nversao=53&so_miolo=">- 53ª versão </a>(Lei n.º 14/2009, de 01/04)<br>&nbsp;&nbsp;&nbsp;&nbsp; <a href= "lei_mostra_articulado.php?nid=775&tabela=lei_velhas&nversao=52&so_miolo=">- 52ª versão </a>(Lei n.º 61/2008, de 31/10)<br>&nbsp;&nbsp;&nbsp;&nbsp; <a href= "lei_mostra_articulado.php?nid=775&tabela=lei_velhas&nversao=51&so_miolo=">- 51ª versão </a>(DL n.º 116/2008, de 04/07)<br>&nbsp;&nbsp;&nbsp;&nbsp; <a href= "lei_mostra_articulado.php?nid=775&tabela=lei_velhas&nversao=50&so_miolo=">- 50ª versão </a>(DL n.º 324/2007, de 28/09)<br>&nbsp;&nbsp;&nbsp;&nbsp; <a href= "lei_mostra_articulado.php?nid=775&tabela=lei_velhas&nversao=49&so_miolo=">- 49ª versão </a>(Lei n.º 40/2007, de 24/08)<br>&nbsp;&nbsp;&nbsp;&nbsp; <a href= "lei_mostra_articulado.php?nid=775&tabela=lei_velhas&nversao=48&so_miolo=">- 48ª versão </a>(DL n.º 263-A/2007, de 23/07)<br>&nbsp;&nbsp;&nbsp;&nbsp; <a href= "lei_mostra_articulado.php?nid=775&tabela=lei_velhas&nversao=47&so_miolo=">- 47ª versão </a>(Rect. n.º 24/2006, de 17/04)<br>&nbsp;&nbsp;&nbsp;&nbsp; <a href= "lei_mostra_articulado.php?nid=775&tabela=lei_velhas&nversao=46&so_miolo=">- 46ª versão </a>(Lei n.º 6/2006, de 27/02)<br>&nbsp;&nbsp;&nbsp;&nbsp; <a href= "lei_mostra_articulado.php?nid=775&tabela=lei_velhas&nversao=45&so_miolo=">- 45ª versão </a>(DL n.º 59/2004, de 19/03)<br>&nbsp;&nbsp;&nbsp;&nbsp; <a href= "lei_mostra_articulado.php?nid=775&tabela=lei_velhas&nversao=44&so_miolo=">- 44ª versão </a>(DL n.º 199/2003, de 10/09)<br>&nbsp;&nbsp;&nbsp;&nbsp; <a href= "lei_mostra_articulado.php?nid=775&tabela=lei_velhas&nversao=43&so_miolo=">- 43ª versão </a>(Lei n.º 31/2003, de 22/08)<br>&nbsp;&nbsp;&nbsp;&nbsp; <a href= "lei_mostra_articulado.php?nid=775&tabela=lei_velhas&nversao=42&so_miolo=">- 42ª versão </a>(DL n.º 38/2003, de 08/03)<br>&nbsp;&nbsp;&nbsp;&nbsp; <a href= "lei_mostra_articulado.php?nid=775&tabela=lei_velhas&nversao=41&so_miolo=">- 41ª versão </a>(DL n.º 323/2001, de 17/12)<br>&nbsp;&nbsp;&nbsp;&nbsp; <a href= "lei_mostra_articulado.php?nid=775&tabela=lei_velhas&nversao=40&so_miolo=">- 40ª versão </a>(Rect. n.º 20-AS/2001, de 30/11)<br>&nbsp;&nbsp;&nbsp;&nbsp; <a href= "lei_mostra_articulado.php?nid=775&tabela=lei_velhas&nversao=39&so_miolo=">- 39ª versão </a>(DL n.º 273/2001, de 13/10)<br>&nbsp;&nbsp;&nbsp;&nbsp; <a href= "lei_mostra_articulado.php?nid=775&tabela=lei_velhas&nversao=38&so_miolo=">- 38ª versão </a>(DL n.º 272/2001, de 13/10)<br>&nbsp;&nbsp;&nbsp;&nbsp; <a href= "lei_mostra_articulado.php?nid=775&tabela=lei_velhas&nversao=37&so_miolo=">- 37ª versão </a>(Lei n.º 16/2001, de 22/06)<br>&nbsp;&nbsp;&nbsp;&nbsp; <a href= "lei_mostra_articulado.php?nid=775&tabela=lei_velhas&nversao=36&so_miolo=">- 36ª versão </a>(Lei n.º 59/99, de 30/06)<br>&nbsp;&nbsp;&nbsp;&nbsp; <a href= "lei_mostra_articulado.php?nid=775&tabela=lei_velhas&nversao=35&so_miolo=">- 35ª versão </a>(DL n.º 343/98, de 06/11)<br>&nbsp;&nbsp;&nbsp;&nbsp; <a href= "lei_mostra_articulado.php?nid=775&tabela=lei_velhas&nversao=34&so_miolo=">- 34ª versão </a>(Lei n.º 47/98, de 10/08)<br>&nbsp;&nbsp;&nbsp;&nbsp; <a href= "lei_mostra_articulado.php?nid=775&tabela=lei_velhas&nversao=33&so_miolo=">- 33ª versão </a>(Lei n.º 21/98, de 12/05)<br>&nbsp;&nbsp;&nbsp;&nbsp; <a href= "lei_mostra_articulado.php?nid=775&tabela=lei_velhas&nversao=32&so_miolo=">- 32ª versão </a>(Rect. n.º 11-C/98, de 30/06)<br>&nbsp;&nbsp;&nbsp;&nbsp; <a href= "lei_mostra_articulado.php?nid=775&tabela=lei_velhas&nversao=31&so_miolo=">- 31ª versão </a>(DL n.º 120/98, de 08/05)<br>&nbsp;&nbsp;&nbsp;&nbsp; <a href= "lei_mostra_articulado.php?nid=775&tabela=lei_velhas&nversao=30&so_miolo=">- 30ª versão </a>(DL n.º 35/97, de 31/01)<br>&nbsp;&nbsp;&nbsp;&nbsp; <a href= "lei_mostra_articulado.php?nid=775&tabela=lei_velhas&nversao=29&so_miolo=">- 29ª versão </a>(DL n.º 68/96, de 31/05)<br>&nbsp;&nbsp;&nbsp;&nbsp; <a href= "lei_mostra_articulado.php?nid=775&tabela=lei_velhas&nversao=28&so_miolo=">- 28ª versão </a>(DL n.º 14/96, de 06/03)<br>&nbsp;&nbsp;&nbsp;&nbsp; <a href= "lei_mostra_articulado.php?nid=775&tabela=lei_velhas&nversao=27&so_miolo=">- 27ª versão </a>(DL n.º 329-A/95, de 12/12)<br>&nbsp;&nbsp;&nbsp;&nbsp; <a href= "lei_mostra_articulado.php?nid=775&tabela=lei_velhas&nversao=26&so_miolo=">- 26ª versão </a>(Lei n.º 84/95, de 31/08)<br>&nbsp;&nbsp;&nbsp;&nbsp; <a href= "lei_mostra_articulado.php?nid=775&tabela=lei_velhas&nversao=25&so_miolo=">- 25ª versão </a>(DL n.º 163/95, de 13/07)<br>&nbsp;&nbsp;&nbsp;&nbsp; <a href= "lei_mostra_articulado.php?nid=775&tabela=lei_velhas&nversao=24&so_miolo=">- 24ª versão </a>(DL n.º 267/94, de 25/10)<br>&nbsp;&nbsp;&nbsp;&nbsp; <a href= "lei_mostra_articulado.php?nid=775&tabela=lei_velhas&nversao=23&so_miolo=">- 23ª versão </a>(DL n.º 227/94, de 08/09)<br>&nbsp;&nbsp;&nbsp;&nbsp; <a href= "lei_mostra_articulado.php?nid=775&tabela=lei_velhas&nversao=22&so_miolo=">- 22ª versão </a>(DL n.º 185/93, de 22/05)<br>&nbsp;&nbsp;&nbsp;&nbsp; <a href= "lei_mostra_articulado.php?nid=775&tabela=lei_velhas&nversao=21&so_miolo=">- 21ª versão </a>(DL n.º 423/91, de 30/10)<br>&nbsp;&nbsp;&nbsp;&nbsp; <a href= "lei_mostra_articulado.php?nid=775&tabela=lei_velhas&nversao=20&so_miolo=">- 20ª versão </a>(DL n.º 257/91, de 18/07)<br>&nbsp;&nbsp;&nbsp;&nbsp; <a href= "lei_mostra_articulado.php?nid=775&tabela=lei_velhas&nversao=19&so_miolo=">- 19ª versão </a>(DL n.º 321-B/90, de 15/10)<br>&nbsp;&nbsp;&nbsp;&nbsp; <a href= "lei_mostra_articulado.php?nid=775&tabela=lei_velhas&nversao=18&so_miolo=">- 18ª versão </a>(Lei n.º 24/89, de 01/08)<br>&nbsp;&nbsp;&nbsp;&nbsp; <a href= "lei_mostra_articulado.php?nid=775&tabela=lei_velhas&nversao=17&so_miolo=">- 17ª versão </a>(Declaração de 31/12 de 1986)<br>&nbsp;&nbsp;&nbsp;&nbsp; <a href= "lei_mostra_articulado.php?nid=775&tabela=lei_velhas&nversao=16&so_miolo=">- 16ª versão </a>(DL n.º 379/86, de 11/11)<br>&nbsp;&nbsp;&nbsp;&nbsp; <a href= "lei_mostra_articulado.php?nid=775&tabela=lei_velhas&nversao=15&so_miolo=">- 15ª versão </a>(Lei n.º 46/85, de 20/09)<br>&nbsp;&nbsp;&nbsp;&nbsp; <a href= "lei_mostra_articulado.php?nid=775&tabela=lei_velhas&nversao=14&so_miolo=">- 14ª versão </a>(DL n.º 190/85, de 24/06)<br>&nbsp;&nbsp;&nbsp;&nbsp; <a href= "lei_mostra_articulado.php?nid=775&tabela=lei_velhas&nversao=13&so_miolo=">- 13ª versão </a>(DL n.º 225/84, de 06/07)<br>&nbsp;&nbsp;&nbsp;&nbsp; <a href= "lei_mostra_articulado.php?nid=775&tabela=lei_velhas&nversao=12&so_miolo=">- 12ª versão </a>(DL n.º 262/83, de 16/06)<br>&nbsp;&nbsp;&nbsp;&nbsp; <a href= "lei_mostra_articulado.php?nid=775&tabela=lei_velhas&nversao=11&so_miolo=">- 11ª versão </a>(DL n.º 328/81, de 04/12)<br>&nbsp;&nbsp;&nbsp;&nbsp; <a href= "lei_mostra_articulado.php?nid=775&tabela=lei_velhas&nversao=10&so_miolo=">- 10ª versão </a>(Declaração de 12/08 de 1980)<br>&nbsp;&nbsp;&nbsp;&nbsp; <a href= "lei_mostra_articulado.php?nid=775&tabela=lei_velhas&nversao=9&so_miolo=">- 9ª versão </a>(DL n.º 236/80, de 18/07)<br>&nbsp;&nbsp;&nbsp;&nbsp; <a href= "lei_mostra_articulado.php?nid=775&tabela=lei_velhas&nversao=8&so_miolo=">- 8ª versão </a>(DL n.º 200-C/80, de 24/06)<br>&nbsp;&nbsp;&nbsp;&nbsp; <a href= "lei_mostra_articulado.php?nid=775&tabela=lei_velhas&nversao=7&so_miolo=">- 7ª versão </a>(DL n.º 496/77, de 25/11)<br>&nbsp;&nbsp;&nbsp;&nbsp; <a href= "lei_mostra_articulado.php?nid=775&tabela=lei_velhas&nversao=6&so_miolo=">- 6ª versão </a>(DL n.º 293/77, de 20/07)<br>&nbsp;&nbsp;&nbsp;&nbsp; <a href= "lei_mostra_articulado.php?nid=775&tabela=lei_velhas&nversao=5&so_miolo=">- 5ª versão </a>(DL n.º 605/76, de 24/07)<br>&nbsp;&nbsp;&nbsp;&nbsp; <a href= "lei_mostra_articulado.php?nid=775&tabela=lei_velhas&nversao=4&so_miolo=">- 4ª versão </a>(DL n.º 561/76, de 17/07)<br>&nbsp;&nbsp;&nbsp;&nbsp; <a href= "lei_mostra_articulado.php?nid=775&tabela=lei_velhas&nversao=3&so_miolo=">- 3ª versão </a>(DL n.º 261/75, de 27/05)<br>&nbsp;&nbsp;&nbsp;&nbsp; <a href= "lei_mostra_articulado.php?nid=775&tabela=lei_velhas&nversao=2&so_miolo=">- 2ª versão </a>(DL n.º 67/75, de 19/02)<br>&nbsp;&nbsp;&nbsp;&nbsp; <a href= "lei_mostra_articulado.php?nid=775&tabela=lei_velhas&nversao=1&so_miolo=">- 1ª versão </a>(DL n.º 47344/66, de 25/11)</td></table>        </td>
+	<tr>
+	<td bgcolor="#ffffff" colspan=2>
+	<div style="margin-top: 0px; margin-left: 6px; font-size: 9px; font-family: tahoma">
+	
+	
+	<form name="busca" action="lei_busca_assunto_diploma.php" method="GET"><b><font color=#993333>
+	Procurar no presente diploma:</b></font><br>
+	<input maxLength=250 size=35 name="buscajur"  onkeydown="return limpartigo();"
+	value=""></> 	<input type="checkbox" name="exacta"><font color=#993333><b>A expressão exacta </b></>
+	 <input type="submit" value="Procurar"	onclick="return validabusca_articulado();"></>
+	  
+	<br>
+	<br>
+	<b><font color=#993333>Ir para o art.: </b></font><br>
+	
+	 	 <input name="pagina" value="1" type=hidden>
+	 <input name="ficha" value="1" type=hidden>
+	  <input name="nid"	value="775" type=hidden> 
+	  <input name="tabela" value="leis" type=hidden> 
+	  
+	<input name="tipodiploma" value="" type=hidden> 
+	<input name="numerodiploma" value="" type=hidden>
+	 <input	name="anodiploma" value="" type=hidden>
+	  <input	name="diplomaprincipal" value="" type=hidden>
+	   <input	name="buscacodigo" value="" type=hidden> 
+	   <input	name="codigoprincipal" value="" type=hidden> 
+	   <input	name="diplomas" value="" type=hidden>
+	    <input name="artigos"	value="" type=hidden> 
+	 <input name="so_miolo" value="" type=hidden>	    	    
+	 </font>
+	
+	</form>
+	</div>
+	
+	
+	</table>
+		
+	<table border="0" cellspacing="1" cellpadding="1" bgcolor=#e1e1e1 width=100%>
+	<td valign=bottom bgcolor=#f2f2f2>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
+	<span style="font-family: trebuchet ms; font-size: 12.5px; font-weight: bolder; color: #fe2607">
+	Nº de artigos :&nbsp;<i> 2382</i>&nbsp;</span>
+    
+    </td>
+	<td class=txt_7_n_r bgcolor=#f1f1f1>Páginas: 	&nbsp;&nbsp;&nbsp;&nbsp;
+	</font><font size=2><font color=#990000>&nbsp;<b>1</b></font></font>&nbsp;<a href='lei_mostra_articulado.php?ficha=101&artigo_id=&nid=775&pagina=2&tabela=leis&nversao=&so_miolo=' class=txt_base_b_l><font color=#0099cc>2</font></a> &nbsp;<a href='lei_mostra_articulado.php?ficha=201&artigo_id=&nid=775&pagina=3&tabela=leis&nversao=&so_miolo=' class=txt_base_b_l><font color=#0099cc>3</font></a> &nbsp;<a href='lei_mostra_articulado.php?ficha=301&artigo_id=&nid=775&pagina=4&tabela=leis&nversao=&so_miolo=' class=txt_base_b_l><font color=#0099cc>4</font></a> &nbsp;<a href='lei_mostra_articulado.php?ficha=401&artigo_id=&nid=775&pagina=5&tabela=leis&nversao=&so_miolo=' class=txt_base_b_l><font color=#0099cc>5</font></a> &nbsp;<a href='lei_mostra_articulado.php?ficha=501&artigo_id=&nid=775&pagina=6&tabela=leis&nversao=&so_miolo=' class=txt_base_b_l><font color=#0099cc>6</font></a> &nbsp;<a href='lei_mostra_articulado.php?ficha=601&artigo_id=&nid=775&pagina=7&tabela=leis&nversao=&so_miolo=' class=txt_base_b_l><font color=#0099cc>7</font></a> &nbsp;<a href='lei_mostra_articulado.php?ficha=701&artigo_id=&nid=775&pagina=8&tabela=leis&nversao=&so_miolo=' class=txt_base_b_l><font color=#0099cc>8</font></a> &nbsp;<a href='lei_mostra_articulado.php?ficha=801&artigo_id=&nid=775&pagina=9&tabela=leis&nversao=&so_miolo=' class=txt_base_b_l><font color=#0099cc>9</font></a> &nbsp;<a href='lei_mostra_articulado.php?ficha=901&artigo_id=&nid=775&pagina=10&tabela=leis&nversao=&so_miolo=' class=txt_base_b_l><font color=#0099cc>10</font></a> &nbsp;<a href='lei_mostra_articulado.php?ficha=1001&artigo_id=&nid=775&pagina=11&tabela=leis&nversao=&so_miolo=' class=txt_base_b_l><font color=#0099cc>11</font></a> &nbsp;<a href='lei_mostra_articulado.php?ficha=1101&artigo_id=&nid=775&pagina=12&tabela=leis&nversao=&so_miolo=' class=txt_base_b_l><font color=#0099cc>12</font></a> &nbsp;<a href='lei_mostra_articulado.php?ficha=1201&artigo_id=&nid=775&pagina=13&tabela=leis&nversao=&so_miolo=' class=txt_base_b_l><font color=#0099cc>13</font></a> &nbsp;<a href='lei_mostra_articulado.php?ficha=1301&artigo_id=&nid=775&pagina=14&tabela=leis&nversao=&so_miolo=' class=txt_base_b_l><font color=#0099cc>14</font></a> &nbsp;<a href='lei_mostra_articulado.php?ficha=1401&artigo_id=&nid=775&pagina=15&tabela=leis&nversao=&so_miolo=' class=txt_base_b_l><font color=#0099cc>15</font></a> &nbsp;<a href='lei_mostra_articulado.php?ficha=1501&artigo_id=&nid=775&pagina=16&tabela=leis&nversao=&so_miolo=' class=txt_base_b_l><font color=#0099cc>16</font></a> &nbsp;<a href='lei_mostra_articulado.php?ficha=1601&artigo_id=&nid=775&pagina=17&tabela=leis&nversao=&so_miolo=' class=txt_base_b_l><font color=#0099cc>17</font></a> &nbsp;<a href='lei_mostra_articulado.php?ficha=1701&artigo_id=&nid=775&pagina=18&tabela=leis&nversao=&so_miolo=' class=txt_base_b_l><font color=#0099cc>18</font></a> &nbsp;<a href='lei_mostra_articulado.php?ficha=1801&artigo_id=&nid=775&pagina=19&tabela=leis&nversao=&so_miolo=' class=txt_base_b_l><font color=#0099cc>19</font></a> &nbsp;<a href='lei_mostra_articulado.php?ficha=1901&artigo_id=&nid=775&pagina=20&tabela=leis&nversao=&so_miolo=' class=txt_base_b_l><font color=#0099cc>20</font></a> 		&nbsp;&nbsp;...
+		        &nbsp;&nbsp;&nbsp;&nbsp;
+	        <a href='lei_mostra_articulado.php?nid=775&artigo_id=&tabela=leis&ficha=101&pagina=&nversao=&so_miolo='
+		class=txt_base_b_l><font color=#0099cc>&nbsp;Seguinte&nbsp;&gt;</a>
+		</font>
+		</td>
+	</table>
+		<table class="artigo" border=0 bgcolor=#f1f1f1 cellpadding=1 cellspacing=1	width=100%>
+		<td bgcolor=#ffffff>
+		<table border=0 width="100%" cellpadding="0">
+					<td align=right bgcolor=#ffffff valign=top>
+			<table width=100%>
+			<td align=center><br>
+			<br>
+			<a style="color: #0066cc; font-size: 8pt; font-family: Trebuchet MS; font-weight: bold"
+				href="lei_mostra_estrutura.php?tabela=leis&artigo_id=&nid=775&nversao=&tabela=leis&so_miolo=">
+				<img src="https://www.pgdlisboa.pt/imagens/organica.png" alt="" border=0>&nbsp;<u>Ver
+				índice sistemático do diploma</u></a>
+				 <a style="margin-left: 50px; color: #0066cc; font-size: 8pt; font-family: Trebuchet MS; font-weight: bold"
+					href="javascript:janela_imprime('lei_print_articulado.php?tabela=leis&artigo_id=&nid=775&nversao=&tabela=leis  ','imprime',720,480,'yes')">
+				<img src="https://www.pgdlisboa.pt/imagens/imprimir.gif"
+					alt="Abre  janela autónoma para impressão mais amigável "
+					border=0>&nbsp;<u>Imprimir todo o diploma</u></a></td>
+			</table>
+			<table width=100%><td colspan=3><span style="font-size:13px;font-family:tahoma;color:#000000;"><b>SUMÁRIO</b></span><div style="margin-top:8px;margin-left:12px;font-size:12.5px;font-family:trebuchet ms;color:#000000;"><b>Aprova o Código Civil e regula a sua aplicação - Revoga, a partir da data da entrada em vigor do novo Código Civil, toda a legislação civil relativa às matérias que o mesmo abrange</b></div>_____________________</td></tr></table></td>
+		<tr>
+		<td class=txt_base_n_l colspan=3><br>    <BR> Usando da faculdade conferida pela 1.ª parte do n.º 2.º do artigo 109.º da Constituição, o Governo decreta e eu promulgo, para valer como lei, o seguinte:  <BR> ARTIGO 1.º <BR> (Aprovação do Código Civil) <BR> É aprovado o Código Civil que faz parte do presente decreto-lei. <BR> ARTIGO 2.º <BR> (Começo de vigência) <BR> 1. O Código Civil entra em vigor no continente e ilhas adjacentes no dia 1 de Junho de 1967, à excepção do disposto nos artigos 1841.º a 1850.º, que começará a vigorar somente em 1 de Janeiro de 1968.  <BR> 2. O código não é, porém, aplicável às acções que estejam pendentes nos tribunais no dia da sua entrada em vigor, salvo o disposto nos artigos 17.º e 21.º do presente decreto-lei.  <BR> ARTIGO 3.º <BR> (Revogação do direito anterior) <BR> Desde que principie a vigorar o novo Código Civil, fica revogada toda a legislação civil relativa às matérias que esse diploma abrange, com ressalva da legislação especial a que se faça expressa referência.  <BR> ARTIGO 4.º <BR> (Remissões para o Código de 1867) <BR> Todas as remissões feitas em diplomas legislativos para o Código Civil de 1867 consideram-se feitas para as disposições correspondentes do novo código.  <BR> ARTIGO 5.º <BR> (Aplicação no tempo) <BR> A aplicação das disposições do novo código a factos passados fica subordinada às regras do artigo 12.º do mesmo diploma, com as modificações e os esclarecimentos constantes dos artigos seguintes.  <BR> ARTIGO 6.º <BR> (Pessoas colectivas) <BR> As disposições dos artigos 157.º a 194.º do novo Código Civil não prejudicam as normas de direito público contidas em leis administrativas.  <BR> ARTIGO 7.º <BR> (Interdições) <BR> Os dementes, surdos-mudos ou pródigos que tenham sido total ou parcialmente interditos do exercício de direitos, ou venham a sê-lo em acções pendentes, mantêm o grau de incapacidade que lhes tiver sido ou vier a ser fixado na sentença ou que resultar da lei anterior.  <BR> ARTIGO 8.º <BR> (Privilégios creditórios e hipotecas legais) <BR> 1. Não são reconhecidos para o futuro, salvo em acções pendentes, os privilégios e hipotecas legais que não sejam concedidos no novo Código Civil, mesmo quando conferidos em legislação especial.  <BR> 2. Exceptuam-se os privilégios e hipotecas legais concedidos ao Estado ou a outras pessoas colectivas públicas, quando se não destinem à garantia de débitos fiscais.  <BR> ARTIGO 9.º <BR> (Sociedades universais e familiares) <BR> Às sociedades universais e familiares constituídas até 31 de Maio de 1967 serão aplicáveis, até à sua extinção, respectivamente, as disposições dos artigos 1243.º a 1248.º e 1281.º a 1297.º do Código Civil de 1867.  <BR> ARTIGO 10.º <BR> (Arrendamentos em Lisboa e Porto) <BR> Enquanto não for revista a situação criada em Lisboa e Porto pela suspensão das avaliações fiscais para o efeito da actualização de rendas dos prédios destinados a habitação, mantém-se o regime excepcional da Lei n.º 2030, de 22 de Junho de 1948, quanto a esses arrendamentos.  <BR> ARTIGO 11.º <BR> (Parceria agrícola) <BR> Ao contrato de parceria agrícola são aplicáveis, para o futuro, as disposições que regulam o arrendamento rural.  <BR> ARTIGO 12.º <BR> (Foros do Estado) <BR> Na determinação do quantitativo do laudémio nos foros do Estado, para efeitos do disposto no artigo 1517.º do novo Código Civil, atender-se-á ao valor dos respectivos prédios que resulte da matriz.  <BR> ARTIGO 13.º <BR> (Anulação do casamento) <BR> 1. Os casamentos civis celebrados até 31 de Maio de 1967 não podem ser declarados nulos ou anulados, se para tal não houver fundamento reconhecido tanto pela lei antiga como pela nova lei civil, a não ser que já esteja pendente, naquela data, a respectiva acção.  <BR> 2. O disposto nos artigos 1639.º a 1646.º do novo código é aplicável às acções que forem intentadas depois de 31 de Maio de 1967, sem prejuízo do que, relativamente aos prazos, prescreve o artigo 297.º do mesmo diploma.  <BR> ARTIGO 14.º <BR> (Efeitos do casamento) <BR> O disposto nos artigos 1671.º a 1697.º do novo código é aplicável aos casamentos celebrados até 31 de Maio de 1967, mas em caso algum serão anulados os actos praticados pelos cônjuges na vigência da lei antiga, se em face desta não estiverem viciados.  <BR> ARTIGO 15.º <BR> (Regime de bens) <BR> O preceituado nos artigos 1717.º a 1752.º só é aplicável aos casamentos celebrados até 31 de Maio de 1967 na medida em que for considerado como interpretativo do direito vigente, salvo pelo que respeita ao n.º 2 do artigo 1739.º  <BR> ARTIGO 16.º <BR> (Doações para casamento e entre casados. Separação e divórcio) <BR> 1. Sem prejuízo da regra estabelecida no n.º 2 do artigo 2.º deste decreto-lei, são aplicáveis aos casamentos celebrados até 31 de Maio de 1967 as disposições do novo Código Civil relativas à caducidade das doações para casamento, às doações entre casados, à separação dos cônjuges ou dos seus bens e ao divórcio.  <BR> 2. Não pode, no entanto, ser decretada a separação judicial de pessoas e bens ou o divórcio de cônjuges casados até 31 de Maio de 1967 com fundamento em facto que não seja relevante segundo a lei vigente à data da sua verificação.  <BR> ARTIGO 17.º <BR> (Conversão da separação em divórcio) <BR> O disposto no artigo 1793.º é aplicável nas acções pendentes e nos processos findos à data da entrada em vigor do novo Código Civil.  <BR> ARTIGO 18.º <BR> (Impugnação da legitimidade) <BR> 1. Até 31 de Outubro de 1967 pode o marido da mãe intentar acção de impugnação da paternidade, com fundamento em qualquer dos factos referidos nas alíneas c) e d) do artigo 1817.º do novo Código Civil, relativamente ao filho nascido antes da entrada em vigor deste diploma, com prejuízo do disposto no artigo 1818.º  <BR> 2. Dentro do mesmo prazo serão recebidos nos tribunais de menores os requerimentos a que se refere o artigo 1820.º, seguindo-se os demais termos da impugnação oficiosa, desde que o filho tenha menos de catorze anos de idade à data da apresentação do requerimento.  <BR> ARTIGO 19.º <BR> (Acções de investigação de maternidade ou paternidade ilegítima) <BR> O facto de se ter esgotado o período a que se refere o n.º 1.º do artigo 1854.º não impede que as acções de investigação de maternidade ou paternidade ilegítima sejam propostas até 31 de Maio de 1968, desde que não tenha caducado antes, em face da legislação anterior, o direito de as propor.  <BR> ARTIGO 20.º <BR> (Filhos adulterinos) <BR> Os assentos secretos de perfilhação de filhos adulterinos, validamente lavrados ao abrigo da legislação vigente, tornar-se-ão públicos mediante averbamento oficioso, sempre que sejam passadas certidões do respectivo registo de nascimento.  <BR> ARTIGO 21.º <BR> (Tutela e curatela) <BR> As disposições do novo Código Civil relativas à tutela e à curatela são aplicáveis às tutelas e curatelas instauradas até 31 de Maio de 1967; porém, os tutores e os curadores já nomeados manter-se-ão nos seus cargos enquanto deles não se escusarem ou enquanto não forem removidos ou exonerados.  <BR> ARTIGO 22.º <BR> (Declaração de nulidade ou anulação de testamento ou de disposições testamentárias)  <BR> Os testamentos anteriores a 31 de Maio de 1967 e as disposições testamentárias neles contidas só podem ser declarados nulos ou anulados, por vício substancial ou de forma, se o respectivo fundamento for também reconhecido pelo novo Código Civil, salvo se a acção já estiver pendente naquela data.  <BR> ARTIGO 23.º <BR> (Testamentaria) <BR> As atribuições do testamenteiro são as que lhe forem fixadas pela lei vigente à data da feitura do testamento.  <BR>  <BR> Publique-se e cumpra-se como nele se contém. <BR> Paços do Governo da República, 25 de Novembro de 1966. - AMÉRICO DEUS RODRIGUES THOMAZ - António de Oliveira Salazar - António Jorge Martins da Mota Veiga - Manuel Gomes de Araújo - Alfredo Rodrigues dos Santos Júnior - João de Matos Antunes Varela - Ulisses Cruz de Aguiar Cortês - Joaquim da Luz Cunha - Fernando Quintanilha Mendonça Dias - Alberto Marciano Gorjão Franco Nogueira - Eduardo de Arantes e Oliveira - Joaquim Moreira da Silva Cunha - Inocêncio Galvão Teles - José Gonçalo da Cunha Sottomayor Correia de Oliveira - Carlos Gomes da Silva Ribeiro - José João Gonçalves de Proença - Francisco Pereira Neto de Carvalho.  <BR>  <BR> Para ser presente à Assembleia Nacional. <BR>  <BR> <b>CÓDIGO CIVIL</b></td></tr><tr><td class=txt_11_b_l colspan=3>LIVRO I<br>PARTE GERAL<br>TÍTULO I<br>Das leis, sua interpretação e aplicação<br>CAPÍTULO I<br>Fontes do direito<br></td></tr><tr><td class=txt_base_b_l><font style ="font-family:tahoma;font-weight:bold;color:#d74600; font-size:11px">&nbsp;&nbsp;Artigo 1.º<br> (Fontes imediatas)</td>		</tr>
+		</table>
+		<table bgcolor="#FFFFFF" border=0 width="100%">
+		<tr>
+		<td valign=top colspan=4 class=txt_base_n_l>1. São fontes imediatas do direito as leis e as normas corporativas. <BR> 2. Consideram-se leis todas as disposições genéricas provindas dos órgãos estaduais competentes; são normas corporativas as regras ditadas pelos organismos representativos das diferentes categorias morais, culturais, económicas ou profissionais, no domínio das suas atribuições, bem como os respectivos estatutos e regulamentos internos.  <BR> 3. As normas corporativas não podem contrariar as disposições legais de carácter imperativo.		</td>
+		<tr>
+
+	
+
+	<td valign=top bgcolor=#ffffff class=txt_base_n_l><font
+	color=#387070> </td>
+		<td valign=top bgcolor="#ffffff" class=txt_base_n_l><font
+			color="#387070"> </td>
+			</tr>
+			<td bgcolor="#ffffff" valign="top"
+			style="font-size: 10px; font-family: trebuchet ms; color: #404040"
+			colspan=2>			<DIV id="div_cria_anotacao_775A0001" style="display: none; height: 300px; overflow: auto"></DIV>
+			<DIV id="lista_anotacoes_775A0001" style="margin-top:10px;text-align:left;display:block;overflow:auto;"></DIV> <br>
+			</div>
+			</td>
+			<tr>
+			<td colspan=2 valign=top></td>
+		</table>
+		</TD>
+		</TABLE>
+		<table class="artigo" border=0 bgcolor=#f1f1f1 cellpadding=1 cellspacing=1	width=100%>
+		<td bgcolor=#ffffff>
+		<table border=0 width="100%" cellpadding="0">
+		</td>
+		<tr>
+		<td class=txt_base_b_l><font style ="font-family:tahoma;font-weight:bold;color:#d74600; font-size:11px">&nbsp;&nbsp;Artigo 2.º<br> (Assentos)</td>		</tr>
+		</table>
+		<table bgcolor="#FFFFFF" border=0 width="100%">
+		<tr>
+		<td valign=top colspan=4 class=txt_base_n_l>(Revogado pelo Decreto-Lei n.º 329-A/95, de 12 de Dezembro).		</td>
+		<tr>
+
+	
+
+	<td valign=top bgcolor=#ffffff class=txt_base_n_l><font
+	color=#387070> <span style='color:#0554e7'><i>&nbsp;&nbsp;Contém as alterações dos seguintes diplomas:</i><br></span>&nbsp;&nbsp;&nbsp;-&nbsp;<a href=lei_mostra_articulado.php?nid=570&tabela=leis&ficha=1&pagina=1&so_miolo=>DL n.º 329-A/95, de 12/12</a><br></td>
+		<td valign=top bgcolor="#ffffff" class=txt_base_n_l><font
+			color="#387070"> <span style='color:#0554e7'><i>&nbsp;&nbsp;Consultar versões anteriores deste artigo:</i></span><br>&nbsp;&nbsp;&nbsp;-<a href=lei_busca_art_velho.php?nid=775&artigonum=775A0002&n_versao=1&so_miolo=>1ª versão:&nbsp;DL n.º 47344/66, de 25/11</a><br></td>
+			</tr>
+			<td bgcolor="#ffffff" valign="top"
+			style="font-size: 10px; font-family: trebuchet ms; color: #404040"
+			colspan=2>			<DIV id="div_cria_anotacao_775A0002" style="display: none; height: 300px; overflow: auto"></DIV>
+			<DIV id="lista_anotacoes_775A0002" style="margin-top:10px;text-align:left;display:block;overflow:auto;"></DIV> <br>
+			</div>
+			</td>
+			<tr>
+			<td colspan=2 valign=top></td>
+		</table>
+		</TD>
+		</TABLE>
+		<table class="artigo" border=0 bgcolor=#f1f1f1 cellpadding=1 cellspacing=1	width=100%>
+		<td bgcolor=#ffffff>
+		<table border=0 width="100%" cellpadding="0">
+		</td>
+		<tr>
+		<td class=txt_base_b_l><font style ="font-family:tahoma;font-weight:bold;color:#d74600; font-size:11px">&nbsp;&nbsp;Artigo 3.º<br> (Valor jurídico dos usos)</td>		</tr>
+		</table>
+		<table bgcolor="#FFFFFF" border=0 width="100%">
+		<tr>
+		<td valign=top colspan=4 class=txt_base_n_l>1. Os usos que não forem contrários aos princípios da boa fé são juridicamente atendíveis quando a lei o determine.  <BR> 2. As normas corporativas prevalecem sobre os usos.		</td>
+		<tr>
+
+	
+
+	<td valign=top bgcolor=#ffffff class=txt_base_n_l><font
+	color=#387070> </td>
+		<td valign=top bgcolor="#ffffff" class=txt_base_n_l><font
+			color="#387070"> </td>
+			</tr>
+			<td bgcolor="#ffffff" valign="top"
+			style="font-size: 10px; font-family: trebuchet ms; color: #404040"
+			colspan=2>			<DIV id="div_cria_anotacao_775A0003" style="display: none; height: 300px; overflow: auto"></DIV>
+			<DIV id="lista_anotacoes_775A0003" style="margin-top:10px;text-align:left;display:block;overflow:auto;"></DIV> <br>
+			</div>
+			</td>
+			<tr>
+			<td colspan=2 valign=top></td>
+		</table>
+		</TD>
+		</TABLE>
+		<table class="artigo" border=0 bgcolor=#f1f1f1 cellpadding=1 cellspacing=1	width=100%>
+		<td bgcolor=#ffffff>
+		<table border=0 width="100%" cellpadding="0">
+		</td>
+		<tr>
+		<td class=txt_base_b_l><font style ="font-family:tahoma;font-weight:bold;color:#d74600; font-size:11px">&nbsp;&nbsp;Artigo 85.º<br> 
+Domicílio legal dos menores e dos maiores acompanhados</td>		</tr>
+		</table>
+		<table bgcolor="#FFFFFF" border=0 width="100%">
+		<tr>
+		<td valign=top colspan=4 class=txt_base_n_l>1. O menor tem domicílio no lugar da residência da família; se ela não existir, tem por domicílio o do progenitor a cuja guarda estiver.  <BR> 2. O domicílio do menor que em virtude de decisão judicial foi confiado a terceira pessoa ou a estabelecimento de educação ou assistência é o do progenitor que exerce o poder paternal.  <BR> 3 - O domicílio do menor sujeito a tutela é o do seu tutor. <BR> 4 - O domicílio do maior acompanhado é o determinado nos artigos anteriores, salvo se a sentença que decretou o acompanhamento dispuser de outro modo. <BR> 5 - Quando tenha sido instituído o regime de administração de bens, o domicílio do menor ou do maior acompanhado é o do administrador, nas relações a que essa administração se refere. <BR> 6 - Não são aplicáveis as regras dos números anteriores se delas resultar que o menor ou o maior acompanhado não tem domicílio em território nacional.		</td></table></body></html>

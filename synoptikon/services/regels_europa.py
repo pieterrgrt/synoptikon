@@ -11,6 +11,8 @@
   hoofdstuk:paragraaf (`BrB 3:1`, `RB 17:3`). "3 kap. 1 § BrB" wordt niet herkend.
 * **PL** (KC): `art. 415 KC`, `art. 22¹ KC` (of `22^1`), andere kodeksy met hun hoofdletterafkorting (`art. 299 KSH`,
   `art. 148 KK`); de gangbare kleine letters (`k.c.`) zijn niet opgenomen, omdat ze als eigen wet zouden tellen.
+* **PT** (CC): `art. 405.º CC`, `artigo 483.º do Código Civil`; letters met een streepje (`1305-A`; "1305.º-A" verliest
+  de letter). "CC" deelt PT met ES.
 """
 from __future__ import annotations
 
@@ -83,5 +85,14 @@ REGELS: dict[str, Regels] = {
                "KPK": "Kodeks postępowania karnego", "KRO": "Kodeks rodzinny i opiekuńczy", "KP": "Kodeks pracy", "KW": "Kodeks wykroczeń",
                "Konstytucja RP": "Konstytucja Rzeczypospolitej Polskiej (1997)", "UPK": "Ustawa o prawach konsumenta (2014)",
                "PPM": "Prawo prywatne międzynarodowe (2011)", "UOKiK": "Ustawa o ochronie konkurencji i konsumentów"},
+    ),
+    "PT": Regels(
+        "CC",
+        ("CRP", "CSC", "LDC", "CPC", "CP", "CCom", "RJCCG", "CT", "CIRE"),
+        nummer=r"\d+(?:-[A-Z])?",
+        namen={"CC": "Código Civil (1966)", "CRP": "Constituição da República Portuguesa (1976)", "CSC": "Código das Sociedades Comerciais",
+               "LDC": "Lei de Defesa do Consumidor", "CPC": "Código de Processo Civil", "CP": "Código Penal",
+               "RJCCG": "Regime jurídico das cláusulas contratuais gerais (DL 446/85)", "CT": "Código do Trabalho",
+               "CIRE": "Código da Insolvência e da Recuperação de Empresas"},
     ),
 }
