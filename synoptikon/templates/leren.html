@@ -5,20 +5,42 @@
 {% if wk %}<p class="hint">{{ _('Bewaar artikelen en arresten in leerlijsten, bijvoorbeeld per examen. Bij elk artikel en elke uitspraak staat ☆ Leren. Oefenen kan hier; de herhaling op lange termijn plant Wunderkammer, dat de kaarten van lijsten met “naar Wunderkammer” ophaalt en per vak in je dagpad zet.') }}</p>
 {% else %}<p class="hint">{{ _('Bewaar artikelen en arresten in leerlijsten, bijvoorbeeld per examen. Bij elk artikel en elke uitspraak staat ☆ Leren. Herhalen met spaced repetition kan in Wunderkammer: zet de koppeling aan op je profiel.') }}</p>{% endif %}
 
+{% if voorstellen %}<p class="melding"><a href="/leren/voorstellen">{{ n_('{n} voorstel uit je notities', '{n} voorstellen uit je notities', voorstellen) }} · {{ _('beoordelen') }} ›</a></p>{% endif %}
+
+{% if wk and zwak %}
+<h2>{{ _('Zit vast in Wunderkammer') }}</h2>
+<ul class="zwak-lijst">
+{% for k, z in zwak %}
+  <li><span class="wk-fase fase-vastzit">{{ n_('{n} misser', '{n} missers', k.stand.missers) }}</span>
+    <a href="/leren/kaart/{{ k.id }}">{{ (z.voor | striptags | truncate(80)) if not k.nummer else k.soort_label }}</a>
+    {% if z.url %}<a class="klein" href="{{ z.url }}">{{ _('In Synoptikon lezen') }}</a>{% endif %}
+    <span class="stil klein">{{ k.lijst.naam }}</span></li>
+{% endfor %}
+</ul>
+{% endif %}
+
 {% if lijsten %}
 <ul class="leerlijsten">
 {% for l in lijsten %}
   {% set actief = l.kaarten | selectattr('actief') | list %}
   {% set gekend = actief | selectattr('gekend') | list | length %}
-  {% set wk = actief | selectattr('stand') | list %}
   <li class="leerlijst-kaart">
     <a class="leerlijst-naam" href="/leren/{{ l.id }}">{{ l.naam }}</a>
     <span class="stil klein">{{ n_('{n} kaart', '{n} kaarten', actief | length) }}{% if l.vak %} · {{ l.vak }}{% endif %}{% if l.examen %} · {{ _('examen {datum}', datum=l.examen.strftime('%d-%m-%Y')) }}{% set dagen = (l.examen - vandaag).days %}{% if dagen >= 0 %} ({{ n_('nog {n} dag', 'nog {n} dagen', dagen) }}){% endif %}{% endif %}</span>
+    {% set st = standen[l.id] %}
+    {% if wk and l.naar_wk and st.totaal %}
+    {# Eén plek om te herhalen: Wunderkammer. Hier alleen de stand, en een link naar precies deze lijst daar. #}
+    <span class="wk-balk" role="img" aria-label="{{ _('Stand in Wunderkammer') }}">{% for f, n in st.fasen.items() if n %}<span class="fase-{{ f }}" style="flex: {{ n }}"></span>{% endfor %}</span>
+    <span class="wk-telling klein">{% for f, n in st.fasen.items() if n %}<a class="wk-fase fase-{{ f }}" href="/leren/{{ l.id }}?fase={{ f }}">{{ n }} {{ _(fasen[f]) }}</a>{% endfor %}</span>
+    <span class="stil klein">{% if st.nu %}{{ n_('{n} kaart nu aan de beurt', '{n} kaarten nu aan de beurt', st.nu) }}{% elif st.due %}{{ _('volgende {datum}', datum=st.due.strftime('%d-%m')) }}{% endif %}</span>
+    {% else %}
     {% if actief %}<span class="voortgang" aria-label="{{ _('{a} van {b} gekend', a=gekend, b=actief | length) }}"><span style="width: {{ (100 * gekend / actief | length) | round | int }}%"></span></span>{% endif %}
-    <span class="stil klein">{{ _('{a} van {b} gekend', a=gekend, b=actief | length) }}{% if wk and l.naar_wk %} · {{ _('Wunderkammer') }}{% if wk %}: {{ n_('{n} kaart in herhaling', '{n} kaarten in herhaling', wk | length) }}{% endif %}{% endif %}</span>
+    <span class="stil klein">{{ _('{a} van {b} gekend', a=gekend, b=actief | length) }}</span>
+    {% endif %}
     {% set voorstel = l.kaarten | selectattr('status', 'equalto', 'voorstel') | list %}
-    {% if voorstel %}<a class="klein" href="/leren/{{ l.id }}#voorstellen">{{ n_('{n} voorstel uit je notities', '{n} voorstellen uit je notities', voorstel | length) }}</a>{% endif %}
-    {% if actief %}<a class="knop klein primair" href="/leren/{{ l.id }}/oefenen">{{ _('Oefenen') }}</a>{% endif %}
+    {% if voorstel %}<a class="klein" href="/leren/voorstellen?lijst={{ l.id }}">{{ n_('{n} voorstel uit je notities', '{n} voorstellen uit je notities', voorstel | length) }}</a>{% endif %}
+    {% if wk and l.naar_wk and st.totaal %}<a class="knop klein primair" href="{{ wk_url }}/review?synoptikon={{ l.id }}">{{ _('Herhalen in Wunderkammer') }}</a>
+    {% elif actief %}<a class="knop klein primair" href="/leren/{{ l.id }}/oefenen">{{ _('Oefenen') }}</a>{% endif %}
   </li>
 {% endfor %}
 </ul>

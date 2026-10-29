@@ -1,0 +1,43 @@
+{% extends "base.html" %}
+{% block titel %}{{ _('Voorstellen uit je notities') }} · {{ _('Leren') }} · Synoptikon{% endblock %}
+{% block inhoud %}
+<p class="kruimel"><a href="/leren">{{ _('Leren') }}</a>{% if lijst %} › <a href="/leren/{{ lijst.id }}">{{ lijst.naam }}</a>{% endif %}</p>
+<h1>{{ _('Voorstellen uit je notities') }}</h1>
+{% if request.query_params.get('overgenomen') %}<p class="melding ok" role="status">{{ _('{a} overgenomen, {b} afgewezen.', a=request.query_params.get('overgenomen'), b='0') }}</p>
+{% elif request.query_params.get('afgewezen') %}<p class="melding ok" role="status">{{ _('{a} overgenomen, {b} afgewezen.', a='0', b=request.query_params.get('afgewezen')) }}</p>{% endif %}
+{% if not aantal %}
+<p class="stil">{{ _('Geen voorstellen meer.') }} <a href="/leren">{{ _('Terug naar Leren') }}</a></p>
+{% else %}
+<p class="hint">{{ _('Per kaart overnemen of afwijzen; op de telefoon kan ook vegen (rechts = overnemen, links = afwijzen). Of een hele notitie in één keer.') }}{% if wk %} {{ _('Wat je overneemt staat binnen enkele seconden in Wunderkammer.') }}{% endif %}</p>
+{% set terug = request.url.path ~ ('?' ~ request.url.query if request.url.query else '') %}
+{% for (lijstnaam, pad), kaarten in groepen.items() %}
+<section class="voorstel-groep" data-groep>
+  <header>
+    <h2>{{ (pad.split('/')[-1] | replace('.md', '')) if pad else _('(zonder notitie)') }} <span class="stil klein">{{ lijstnaam }} · <span data-teller>{{ kaarten | length }}</span></span></h2>
+    <div class="acties">
+      <form method="post" action="/leren/voorstellen" class="inline">{% for k, z in kaarten %}<input type="hidden" name="kaart" value="{{ k.id }}">{% endfor %}<input type="hidden" name="besluit" value="over"><input type="hidden" name="terug" value="{{ terug }}"><button class="knop klein primair">{{ _('Alles overnemen ({n})', n=kaarten | length) }}</button></form>
+      <form method="post" action="/leren/voorstellen" class="inline" data-bevestig="{{ _('Alle voorstellen uit deze notitie afwijzen?') }}">{% for k, z in kaarten %}<input type="hidden" name="kaart" value="{{ k.id }}">{% endfor %}<input type="hidden" name="besluit" value="af"><input type="hidden" name="terug" value="{{ terug }}"><button class="knop klein">{{ _('Alles afwijzen') }}</button></form>
+    </div>
+  </header>
+  {% if pad %}<p class="stil klein">{{ pad }}</p>{% endif %}
+  {% for k, z in kaarten %}
+  <article class="voorstel" id="groep-{{ k.id }}" data-kaart="{{ k.id }}">
+    <div class="voorstel-inhoud">
+      <div class="flits-soort stil klein">{{ k.soort_label }} · <a href="/leren/kaart/{{ k.id }}">{{ _('bewerken') }}</a></div>
+      <div class="flits-voor">{{ z.voor | md }}</div>
+      {% if k.soort in ('artikel', 'kern') %}<details class="flits-achter"><summary class="stil klein">{{ _('tekst') }}</summary>{{ z.achter | md }}</details>
+      {% else %}<div class="flits-achter">{{ z.achter | md }}</div>{% endif %}
+    </div>
+    <div class="voorstel-knoppen">
+      <form method="post" action="/leren/kaart/{{ k.id }}/beoordeel"><input type="hidden" name="besluit" value="af"><input type="hidden" name="terug" value="{{ terug }}"><button class="knop">✕ {{ _('Afwijzen') }}</button></form>
+      <form method="post" action="/leren/kaart/{{ k.id }}/beoordeel"><input type="hidden" name="besluit" value="over"><input type="hidden" name="terug" value="{{ terug }}"><button class="knop primair">✓ {{ _('Overnemen') }}</button></form>
+    </div>
+    <div class="voorstel-uitslag"><span data-uitslag></span><button type="button" class="knop-tekst" data-terug>{{ _('ongedaan maken') }}</button></div>
+  </article>
+  {% endfor %}
+</section>
+{% endfor %}
+<script type="application/json" id="voorstel-i18n">{{ {'over': _('Overgenomen'), 'af': _('Afgewezen')} | tojson }}</script>
+<script src="/static/js/voorstellen.js?v={{ sv }}"></script>
+{% endif %}
+{% endblock %}

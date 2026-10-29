@@ -819,6 +819,23 @@ class KaartStand(Base):
     laatste_score: Mapped[int | None] = mapped_column(Integer)  # 1 opnieuw … 4 makkelijk
     bijgewerkt: Mapped[datetime] = mapped_column(DateTime, default=now, onupdate=now)
 
+    @property
+    def fase(self) -> str:
+        """nieuw · leert · vastzit · beheerst (sleutel uit FASEN)."""
+        if not self.herhalingen:
+            return "nieuw"
+        if (self.stabiliteit or 0) >= BEHEERST_DAGEN:
+            return "beheerst"
+        if self.missers >= 2 or (self.missers and self.laatste_score == 1):
+            return "vastzit"
+        return "leert"
+
+
+# Stand van een kaart in Wunderkammer, van zwak naar sterk. Vast zit: twee keer vergeten, of vergeten en de laatste keer
+# weer fout. Beheerst: Wunderkammer verwacht dat je haar over drie weken nog weet (stabiliteit in dagen, FSRS).
+FASEN: dict[str, str] = {"vastzit": "zit vast", "nieuw": "nieuw", "leert": "leert", "beheerst": "beheerst"}
+BEHEERST_DAGEN = 21
+
 
 class NotitieBestand(Base):
     """Een notitie uit de vault die kaartvoorstellen heeft opgeleverd; de hash bepaalt of ze opnieuw aan de beurt is."""

@@ -15,7 +15,7 @@ from sqlalchemy.orm import Session
 from ..auth import huidig_profiel
 from ..db import get_session
 from ..i18n import _
-from ..models import ARRESTSOORTEN, ARTIKELSOORTEN, KAARTSOORTEN, ZICHTBAAR, Bron, Kaart, Leerlijst
+from ..models import ARRESTSOORTEN, ARTIKELSOORTEN, FASEN, KAARTSOORTEN, ZICHTBAAR, Bron, Kaart, Leerlijst
 from ..services import leren, notities
 from ..services.artikelen import Ref, herken
 from ..services.correspondentie import thema_s_voor, wettekst_artikel
@@ -64,8 +64,13 @@ def _vakken(lijsten: list[Leerlijst]) -> list[str]:
 
 @router.get("/leren")
 def overzicht(request: Request, db: Session = Depends(get_session)):
-    lijsten = leren.lijsten_van(db, _pid(request))
-    return render(request, "leren.html", lijsten=lijsten, vakken=_vakken(lijsten), vandaag=date.today())
+    pid = _pid(request)
+    lijsten = leren.lijsten_van(db, pid)
+    bouwer = leren.Bouwer(db)
+    zwak = [(k, bouwer.zijden(k)) for k in leren.zwakke_kaarten(db, pid, limiet=8)]
+    voorstellen = sum(1 for l in lijsten for k in l.kaarten if k.status == "voorstel")
+    return render(request, "leren.html", lijsten=lijsten, vakken=_vakken(lijsten), vandaag=date.today(),
+                  standen={l.id: leren.lijst_stand(l) for l in lijsten}, zwak=zwak, voorstellen=voorstellen, fasen=FASEN)
 
 
 @router.post("/leren")
@@ -146,12 +151,60 @@ async def nieuw_opslaan(request: Request, db: Session = Depends(get_session)):
     return RedirectResponse(f"{terug}{teken}bewaard={len(nieuw)}", status_code=303)
 
 
+@router.get("/leren/voorstellen")
+def voorstellen(request: Request, lijst: int | None = None, db: Session = Depends(get_session)):
+    """Voorstellen uit notities beoordelen, gegroepeerd per notitie: per kaart overnemen of afwijzen (ook vegen), of
+    een hele notitie in één keer."""
+    lijsten = [l for l in leren.lijsten_van(db, _pid(request)) if lijst is None or l.id == lijst]
+    if lijst is not None and not lijsten:
+        raise HTTPException(404)
+    bouwer = leren.Bouwer(db)
+    groepen: dict[tuple[str, str], list] = {}
+    for l in lijsten:
+        for k in l.kaarten:
+            if k.status == "voorstel":
+                groepen.setdefault((l.naam, k.herkomst or ""), []).append((k, bouwer.zijden(k)))
+    return render(request, "voorstellen.html", groepen=groepen, lijst=lijsten[0] if lijst is not None else None,
+                  aantal=sum(len(g) for g in groepen.values()))
+
+
+@router.post("/leren/voorstellen")
+async def voorstellen_notitie(request: Request, db: Session = Depends(get_session)):
+    """Een hele notitie: de meegestuurde kaarten (`kaart`) overnemen of afwijzen (`besluit`)."""
+    form = await request.form()
+    besluit = str(form.get("besluit") or "")
+    if besluit not in ("over", "af"):
+        raise HTTPException(400)
+    n = 0
+    for x in form.getlist("kaart"):
+        if str(x).isdigit():
+            k = _kaart(request, db, int(x))
+            if k.status == "voorstel":
+                notities.besluit(k, besluit)
+                n += 1
+    terug = _veilig(str(form.get("terug") or ""), "/leren/voorstellen")
+    teken = "&" if "?" in terug else "?"
+    return RedirectResponse(f"{terug}{teken}{'overgenomen' if besluit == 'over' else 'afgewezen'}={n}", status_code=303)
+
+
+@router.post("/leren/kaart/{kid}/beoordeel")
+def kaart_beoordeel(request: Request, kid: int, besluit: str = Form(...), terug: str = Form(""), db: Session = Depends(get_session)):
+    """Eén voorstel overnemen (`over`), afwijzen (`af`) of dat ongedaan maken (`terug`). Vanuit JavaScript: JSON."""
+    k = _kaart(request, db, kid)
+    if besluit not in ("over", "af", "terug") or not (k.status or k.herkomst):  # alleen voorstellen uit notities
+        raise HTTPException(400)
+    notities.besluit(k, besluit)
+    if request.headers.get("x-requested-with") == "fetch":
+        return JSONResponse({"ok": True, "status": k.status or "over"})
+    return RedirectResponse(_veilig(terug, "/leren/voorstellen") + f"#groep-{kid}", status_code=303)
+
+
 @router.get("/leren/kaart/{kid}")
 def kaart(request: Request, kid: int, db: Session = Depends(get_session)):
     k = _kaart(request, db, kid)
     voor, achter, z = leren.Bouwer(db).html(k)
-    return render(request, "kaart.html", k=k, voor=voor, achter=achter, z=z, ref=leren.ref_van(k),
-                  lijsten=leren.lijsten_van(db, _pid(request)), stelsels=actieve_stelsels(db))
+    return render(request, "kaart.html", k=k, voor=voor, achter=achter, z=z, ref=leren.ref_van(k), fase=leren.fase(k),
+                  fasen=FASEN, lijsten=leren.lijsten_van(db, _pid(request)), stelsels=actieve_stelsels(db))
 
 
 @router.post("/leren/kaart/{kid}")
@@ -191,8 +244,15 @@ def lijst(request: Request, lid: int, db: Session = Depends(get_session)):
     kaarten = [(k, bouwer.zijden(k)) for k in lijst.kaarten if k.status is None]
     voorstellen = [(k, bouwer.zijden(k)) for k in lijst.kaarten if k.status == "voorstel"]
     lijsten = leren.lijsten_van(db, _pid(request))
+    welke = request.query_params.get("fase", "")
+    if welke in FASEN:
+        kaarten = [(k, z) for k, z in kaarten if leren.fase(k) == welke]
+    per_notitie: dict[str, int] = {}
+    for k, _z in voorstellen:
+        per_notitie[k.herkomst or ""] = per_notitie.get(k.herkomst or "", 0) + 1
     return render(request, "leerlijst.html", lijst=lijst, kaarten=kaarten, voorstellen=voorstellen, vakken=_vakken(lijsten),
-                  vandaag=date.today(), ZICHTBAAR=ZICHTBAAR)
+                  vandaag=date.today(), stand=leren.lijst_stand(lijst), fasen=FASEN, fase=leren.fase, welke=welke,
+                  per_notitie=per_notitie, ZICHTBAAR=ZICHTBAAR)
 
 
 @router.post("/leren/{lid}/voorstellen")

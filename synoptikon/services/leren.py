@@ -15,8 +15,9 @@ from sqlalchemy.orm import Session, selectinload
 
 from .. import md
 from ..i18n import _
-from ..models import ARRESTSOORTEN, ARTIKELSOORTEN, Bron, Kaart, KaartStand, Leerlijst, Profiel, Stelsel, now
+from ..models import ARRESTSOORTEN, ARTIKELSOORTEN, FASEN, Bron, Kaart, KaartStand, Leerlijst, Profiel, Stelsel, now
 from . import correspondentie as corr
+from . import wk  # noqa: F401  (seint Wunderkammer na een wijziging in de kaarten)
 from .artikelen import Ref
 
 
@@ -40,11 +41,89 @@ def ref_van(k: Kaart) -> Ref | None:
     return Ref(k.stelsel_code, k.nummer, k.wet or None) if k.stelsel_code and k.nummer else None
 
 
-def bewaarde_refs(db: Session, profiel_id: int) -> set[tuple[str, str | None, str]]:
-    """(stelsel, wet, nummer) van alle artikelen in de lijsten van dit profiel: voor de ster bij een artikel."""
-    rijen = db.execute(select(Kaart.stelsel_code, Kaart.wet, Kaart.nummer).join(Leerlijst).where(
-        Leerlijst.profiel_id == profiel_id, Kaart.nummer.is_not(None), Kaart.status.is_(None))).all()
-    return {(s, w or None, n) for s, w, n in rijen}
+def fase(k: Kaart) -> str | None:
+    """Stand in Wunderkammer (sleutel uit FASEN); None als de kaart niet naar Wunderkammer gaat."""
+    if not k.actief or k.status or not k.lijst.naar_wk:
+        return None
+    return k.stand.fase if k.stand else "nieuw"
+
+
+@dataclass
+class Bewaard:
+    """Wat er al van een artikel in de leerlijsten staat: de zwakste kaart telt (vastzit gaat voor nieuw)."""
+    kaart_id: int
+    aantal: int = 0
+    fase: str | None = None
+    due: datetime | None = None
+    missers: int = 0
+
+
+def bewaarde_refs(db: Session, profiel_id: int) -> dict[tuple[str, str | None, str], Bewaard]:
+    """(stelsel, wet, nummer) → Bewaard voor alle artikelen in de lijsten van dit profiel: voor de ster bij een artikel.
+    Een dict, zodat `ref in bewaarde_refs` blijft werken."""
+    kaarten = db.scalars(select(Kaart).join(Leerlijst).where(
+        Leerlijst.profiel_id == profiel_id, Kaart.nummer.is_not(None), Kaart.status.is_(None)).options(
+        selectinload(Kaart.stand), selectinload(Kaart.lijst))).all()
+    from ..config import settings
+
+    p = db.get(Profiel, profiel_id)
+    wk_aan = settings.wk_ingesteld and p is not None and p.wunderkammer
+    volgorde = list(FASEN)
+    uit: dict[tuple[str, str | None, str], Bewaard] = {}
+    for k in kaarten:
+        b = uit.setdefault((k.stelsel_code, k.wet or None, k.nummer), Bewaard(k.id))
+        b.aantal += 1
+        f = fase(k) if wk_aan else None
+        if f and (b.fase is None or volgorde.index(f) < volgorde.index(b.fase)):
+            b.fase, b.kaart_id = f, k.id
+        if k.stand:
+            b.missers = max(b.missers, k.stand.missers)
+            if k.stand.due and (b.due is None or k.stand.due < b.due):
+                b.due = k.stand.due
+    return uit
+
+
+@dataclass
+class LijstStand:
+    fasen: dict[str, int]  # per fase het aantal kaarten (alleen de lijsten die naar Wunderkammer gaan)
+    due: datetime | None  # eerstvolgende herhaling
+    nu: int  # nu aan de beurt (of nieuw)
+
+    @property
+    def totaal(self) -> int:
+        return sum(self.fasen.values())
+
+
+def lijst_stand(lijst: Leerlijst) -> LijstStand:
+    fasen = dict.fromkeys(FASEN, 0)
+    due, nu, tijd = None, 0, datetime.now(timezone.utc).replace(tzinfo=None)
+    for k in lijst.kaarten:
+        f = fase(k)
+        if f is None:
+            continue
+        fasen[f] += 1
+        d = k.stand.due if k.stand else None
+        if d is not None and d.tzinfo is not None:
+            d = d.astimezone(timezone.utc).replace(tzinfo=None)
+        if d is None or d <= tijd:
+            nu += 1
+        elif due is None or d < due:
+            due = d
+    return LijstStand(fasen, due, nu)
+
+
+def zwakke_kaarten(db: Session, profiel_id: int, refs: list[Ref] | None = None, limiet: int = 50) -> list[Kaart]:
+    """Kaarten die in Wunderkammer vastzitten, zwakste eerst; met `refs` alleen die over deze artikelen."""
+    q = (select(Kaart).join(Leerlijst).join(KaartStand).where(Leerlijst.profiel_id == profiel_id, Kaart.status.is_(None),
+                                                             Kaart.actief.is_(True), KaartStand.missers > 0)
+         .options(selectinload(Kaart.stand), selectinload(Kaart.lijst)).order_by(KaartStand.missers.desc(), Kaart.id))
+    if refs is not None:
+        sleutels = {(r.stelsel, r.wet or None, r.nummer) for r in refs}
+        if not sleutels:
+            return []
+        q = q.where(Kaart.nummer.in_({n for _s, _w, n in sleutels}))
+        return [k for k in db.scalars(q).all() if fase(k) == "vastzit" and (k.stelsel_code, k.wet or None, k.nummer) in sleutels][:limiet]
+    return [k for k in db.scalars(q.limit(limiet * 3)).all() if fase(k) == "vastzit"][:limiet]
 
 
 def bewaarde_bronnen(db: Session, profiel_id: int) -> set[int]:
@@ -172,6 +251,21 @@ class Bouwer:
                     delen.append(f"**{a.ref.citeer}**" + (f" ({wa.opschrift})" if wa and wa.opschrift else ""))
             regels.append(f"- *{c.titel}*: " + "; ".join(delen))
         return "\n".join(regels) if regels else _("Geen tegenhanger in de correspondentietabel.")
+
+    def tegenhangers(self, ref: Ref) -> list[dict]:
+        """De artikelen in andere stelsels die volgens de correspondentietabel dezelfde vraag beantwoorden."""
+        sleutel = (ref.stelsel, ref.wet, ref.nummer)
+        if sleutel not in self._thema_s:
+            self._thema_s[sleutel] = corr.thema_s_voor(self.db, ref.stelsel, ref.nummer, ref.wet)
+        uit, gezien = [], set()
+        for c, _eigen in self._thema_s[sleutel]:
+            for a in c.artikelen:
+                if a.stelsel_code == ref.stelsel or a.nummer is None or (a.stelsel_code, a.wet, a.nummer, a.tot) in gezien:
+                    continue
+                gezien.add((a.stelsel_code, a.wet, a.nummer, a.tot))
+                uit.append(dict(stelsel=a.stelsel_code, wet=a.wet, nummer=a.nummer, citeer=a.ref.citeer, url=a.ref.url,
+                                thema=c.titel, rol=a.rol))
+        return uit
 
     def html(self, k: Kaart) -> tuple[str, str, Zijden]:
         z = self.zijden(k)

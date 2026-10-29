@@ -143,6 +143,10 @@ def profiel_gegevens(request: Request, naam: str = Form(...), taal: str = Form(.
 def profiel_wunderkammer(request: Request, aan: str = Form(""), db: Session = Depends(get_session)):
     p = _mijn(request, db)
     p.wunderkammer = aan == "1"
+    if p.wunderkammer:
+        from ..services import wk
+
+        wk.meld()  # Wunderkammer meteen laten ophalen
     return RedirectResponse("/profiel?klaar=wunderkammer#wunderkammer", status_code=303)
 
 
