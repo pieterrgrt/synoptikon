@@ -4,7 +4,6 @@ import pytest
 from synoptikon import db as database
 from synoptikon.config import settings
 from synoptikon.models import Kaart, Leerlijst, LijstReactie, Profiel
-from tests.test_leren import _wettekst
 
 CODE = "hu-zr-2026"
 
@@ -24,7 +23,7 @@ def student(anoniem, monkeypatch):
 
 
 def _lijst(client) -> tuple[int, str]:
-    _wettekst()
+    # Zonder _wettekst(): die moet in test_leren de nieuwste BGB-tekst blijven.
     client.post("/leren/nieuw", data={"lijst": "nieuw", "nieuwe_lijst": "Gedeeld ZR", "vak": "ZR Ia", "stelsel": "DE", "nummer": "931",
                                       "soort": ["artikel", "kern"]})
     with database.session() as s:
