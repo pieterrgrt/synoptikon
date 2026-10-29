@@ -301,6 +301,10 @@ synoptikon seed                              # laadt o.a. de omzettingstabel
 | PL | geen: de ELI-API van de Sejm geeft de geconsolideerde tekst alleen als PDF | — (alleen stelsel, systematiek KC, citeerregels) | — |
 | PT | PGDL (pgdlisboa.pt), versão actualizada | CC, CRP, CSC, LDC, CPC, CP | ja, maar geen officiële bron |
 | CZ, HU, RO | nog geen importer | — (alleen stelsel, systematiek, citeerregels) | — |
+| CA | Justice Laws Website (XML, Open Government Licence – Canada; Constitution Acts als HTML) | CA 1867, CA 1982, Criminal Code, Divorce Act, BIA, CBCA, Interest Act | ja |
+| QC | Données Québec (XML-zip van LégisQuébec, CC BY-NC-ND 4.0) | C.c.Q., C.p.c., L.p.c., Charte québécoise | ja |
+| CL | Ley Chile (BCN, XML per norm) | CC, CPR, C. de C., CPC, LPDC (Ley 19.496), CP | ja |
+| BR | Normas.leg.br (API, compilação monovigente van de Câmara, CC BY 4.0) | CC, CF (zonder ADCT), CDC, CPC, LINDB, CP | ja |
 
 **Alle wetten van een bron** (`synoptikon/importers/bulk.py`), naast het register:
 

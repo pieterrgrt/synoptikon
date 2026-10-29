@@ -186,7 +186,7 @@ def test_nummering_van_de_nieuwe_stelsels():
     assert een("La. C.C. art. 2315")[4] == "La. C.C. art. 2315"  # niet het Italiaanse c.c.
     assert een("s 18 ACL")[:3] == ("AU", "18", "ACL")
     assert een("DCFR VIII.–2:101")[:3] == ("EU", "VIII.-2:101", "DCFR")
-    assert {r.stelsel for r in herken("art. 1902 CC")} == {"ES", "FR"}  # "CC" is dubbelzinnig
+    assert {r.stelsel for r in herken("art. 1902 CC")} >= {"ES", "FR"}  # "CC" is dubbelzinnig (ook CL en andere regio-stelsels)
     assert lees("ES", "artículo 94 bis").nummer == "94 bis" and lees("BE", "art. 2262 bis oud BW").nummer == "2262bis"
     assert sleutel("IT", "1469-bis") < sleutel("IT", "1469-ter") < sleutel("IT", "1470")
     assert sleutel("CH", "40") < sleutel("CH", "40a") < sleutel("CH", "41")
@@ -212,8 +212,9 @@ def test_stelsels_per_rechtsfamilie():
 
     with database.session() as s:
         families = per_familie(actieve_stelsels(s))
-        assert [f.sleutel for f in families] == ["romaans", "germaans", "common_law", "supranationaal"]
-        assert [x.code for x in families[2].stelsels] == ["EN", "US", "AU"]
+        sleutels = [f.sleutel for f in families]  # stelsels uit seed/stelsels_<regio>.py kunnen families toevoegen
+        assert [f for f in sleutels if f in ("romaans", "germaans", "common_law", "supranationaal")] == ["romaans", "germaans", "common_law", "supranationaal"]
+        assert [x.code for x in families[sleutels.index("common_law")].stelsels][:3] == ["EN", "US", "AU"]
 
 
 def test_volledige_wetsnamen_en_kale_nummers():
