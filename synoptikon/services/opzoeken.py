@@ -55,10 +55,16 @@ def _plaats(ctx: Context, r: Ref, wa: WettekstArtikel | None) -> list[str]:
     return [k.label for k in ctx.pad(r)]
 
 
-def artikelen(db: Session, q: str, stelsel: str = "") -> list[Gevonden]:
+def _binnen(stelsel: str | None, stelsels: list[str] | None) -> bool:
+    """Valt een treffer binnen de gekozen stelsels (None of leeg = alle)?"""
+    return not stelsels or stelsel in stelsels
+
+
+def artikelen(db: Session, q: str, stelsel: str = "", stelsels: list[str] | None = None) -> list[Gevonden]:
     ctx = Context(db)
     uit = []
-    for r, wa in zoek_artikel(db, q, stelsel or None)[:6]:
+    gevonden = zoek_artikel(db, q, stelsel or None, stelsels=stelsels)
+    for r, wa in [(r, wa) for r, wa in gevonden if _binnen(r.stelsel, stelsels)][:6]:
         uit.append(Gevonden("artikel", r.citeer, wetboek.lees_url(db, r, wa), r.stelsel, r, wa, _plaats(ctx, r, wa),
                             wa.wettekst if wa else None))
     return uit
@@ -68,25 +74,24 @@ def _woorden(s: str) -> set[str]:
     return set(re.findall(r"\w+", s.casefold()))
 
 
-def wetten(db: Session, q: str, stelsel: str = "", n: int = 6) -> list[Gevonden]:
-    """Wetten waarvan de afkorting de invoer is, of waarvan de titel alle woorden bevat."""
+def wetten(db: Session, q: str, stelsel: str = "", n: int = 6, stelsels: list[str] | None = None) -> list[Gevonden]:
+    """Wetten waarvan de afkorting de invoer is, of waarvan de titel alle woorden bevat (in alle stelsels in één query)."""
     q = q.strip()
     if len(q) < 2 or len(q) > 120:
         return []
-    codes = [stelsel] if stelsel else [c for (c,) in db.execute(select(Wettekst.stelsel_code).distinct())]
+    codes = [stelsel] if stelsel else list(stelsels or [])
     gezocht = _woorden(q)
     kandidaten: list[tuple[tuple, Wettekst]] = []
-    for c in codes:
-        ws, _n = wetboek.zoek_wetten(db, c, q, per_pagina=8)
-        for w in ws:
-            afk = (wetboek.toon_afkorting(w) or w.wet or "").casefold()
-            titel = wetboek.toon_titel(w)
-            exact = afk == q.casefold() or (w.wet or "").casefold() == q.casefold()
-            if not exact and not gezocht <= _woorden(titel) | _woorden(afk) and not titel.casefold().startswith(q.casefold()):
-                continue
-            kandidaten.append(((not exact, not w.kern, len(titel)), w))
+    ws, _n = wetboek.zoek_wetten(db, "", q, per_pagina=40, stelsels=codes, tel=False)
+    for w in ws:
+        afk = (wetboek.toon_afkorting(w) or w.wet or "").casefold()
+        titel = wetboek.toon_titel(w)
+        exact = afk == q.casefold() or (w.wet or "").casefold() == q.casefold()
+        if not exact and not gezocht <= _woorden(titel) | _woorden(afk) and not titel.casefold().startswith(q.casefold()):
+            continue
+        kandidaten.append(((not exact, not w.kern, len(titel)), w))
     # EU-wetten onder elke naam en in elke taal: DSGVO, RGPD, GDPR, AVG, Rom I-VO, Richtlinie 93/13 …
-    if not stelsel or stelsel == "EU":
+    if not codes or "EU" in codes:
         sleutel, rest = eunamen.herken_wet(q)
         if sleutel and not rest.strip():
             ws = wetboek._kies_taal(list(db.scalars(select(Wettekst).where(Wettekst.stelsel_code == "EU", Wettekst.wet == sleutel)).all()))
@@ -99,9 +104,11 @@ def wetten(db: Session, q: str, stelsel: str = "", n: int = 6) -> list[Gevonden]
             for _s, w in kandidaten[:n]]
 
 
-def uitspraken(db: Session, q: str, n: int = 6) -> list[Gevonden]:
+def uitspraken(db: Session, q: str, n: int = 6, stelsels: list[str] | None = None) -> list[Gevonden]:
     """Rechtspraak onder de eigen bronnen: op ECLI of vindplaats, anders full-text."""
     stmt = select(Bron).where(Bron.soort == "rechtspraak")
+    if stelsels:
+        stmt = stmt.where(Bron.stelsel_code.in_(stelsels))
     exact = db.scalars(stmt.where(or_(Bron.vindplaats.ilike(q.strip()), Bron.citeertitel.ilike(f"%{q.strip()}%"))).limit(n)).all()
     ids = {b.id for b in exact}
     gevonden = list(exact)
@@ -109,7 +116,7 @@ def uitspraken(db: Session, q: str, n: int = 6) -> list[Gevonden]:
     if m and len(gevonden) < n:
         for (rowid,) in db.execute(text("SELECT rowid FROM bron_fts WHERE bron_fts MATCH :m ORDER BY rank LIMIT 20"), {"m": m}):
             b = db.get(Bron, rowid)
-            if b and b.soort == "rechtspraak" and b.id not in ids:
+            if b and b.soort == "rechtspraak" and b.id not in ids and _binnen(b.stelsel_code, stelsels):
                 gevonden.append(b)
                 ids.add(b.id)
             if len(gevonden) >= n:
@@ -119,7 +126,7 @@ def uitspraken(db: Session, q: str, n: int = 6) -> list[Gevonden]:
 
 def eu_handelingen(db: Session, q: str, n: int = 4) -> list[Gevonden]:
     try:
-        hs, _t = eu.zoek(db, q, per_pagina=n)
+        hs, _t = eu.zoek(db, q, per_pagina=n, tel=False)
     except Exception:  # FTS-syntax bij vreemde invoer
         return []
     teksten = dict(db.execute(select(Wettekst.wet_id, Wettekst.id).where(Wettekst.wet_id.in_([h.celex for h in hs]))).all())
@@ -141,17 +148,20 @@ class Uitkomst:
         return any(g.artikel for g in self.artikelen) or bool(self.wetten) or bool(self.uitspraken)
 
 
-def lokaal(db: Session, q: str, stelsel: str = "") -> Uitkomst:
-    arts = artikelen(db, q, stelsel)
+def lokaal(db: Session, q: str, stelsel: str = "", stelsels: list[str] | None = None) -> Uitkomst:
+    """Alles wat precies past. `stelsels` beperkt tot die stelsels (None of leeg = alle; `stelsel` gaat voor)."""
+    if stelsel:
+        stelsels = [stelsel]
+    arts = artikelen(db, q, stelsel, stelsels)
     met_tekst = any(g.artikel for g in arts)
     u = Uitkomst(
         q,
         arts,
-        [] if met_tekst else wetten(db, q, stelsel),
-        [] if met_tekst else uitspraken(db, q),
+        [] if met_tekst else wetten(db, q, stelsel, stelsels=stelsels),
+        [] if met_tekst else uitspraken(db, q, stelsels=stelsels),
         [],
     )
-    if not met_tekst and not u.wetten and not (stelsel and stelsel != "EU"):
+    if not met_tekst and not u.wetten and _binnen("EU", stelsels):
         u.eu = eu_handelingen(db, q)
     return u
 

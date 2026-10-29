@@ -32,7 +32,15 @@ def engine():
             cur.execute("PRAGMA foreign_keys=ON")
             cur.execute("PRAGMA journal_mode=WAL")
             cur.execute("PRAGMA synchronous=NORMAL")
+            # Lezen via mmap (gedeelde, terug te winnen paginacache van het OS, geen eigen geheugen per verbinding)
+            # en een iets grotere eigen cache: 8 MB per verbinding in plaats van 2 MB.
+            cur.execute("PRAGMA mmap_size=268435456")
+            cur.execute("PRAGMA cache_size=-8000")
+            cur.execute("PRAGMA temp_store=MEMORY")
             cur.close()
+            from .services.zoeken import wet_van
+
+            dbapi_conn.create_function("wet_van", 1, wet_van, deterministic=True)
 
         _SessionLocal = sessionmaker(bind=_engine, expire_on_commit=False, future=True)
     return _engine
@@ -202,6 +210,15 @@ END;
 """
 
 
+# Indexen voor de zoekpaden die op elke pagina langskomen (opzoeken, wetten per stelsel). `create_all` maakt ze
+# niet aan op bestaande tabellen, daarom hier; ze zijn klein (de tabel wettekst heeft één rij per wet). ix_wettekst_zoek
+# dekt het zoeken op titel en afkorting (wetboek.zoek_wetten) zonder de tabel zelf te lezen.
+_INDEXEN = """
+CREATE INDEX IF NOT EXISTS ix_wettekst_zoek ON wettekst (stelsel_code, wet, kern, stijl, wet_id, titel);
+CREATE INDEX IF NOT EXISTS ix_bron_soort ON bron (soort, stelsel_code);
+"""
+
+
 # Kolommen die later zijn bijgekomen: (tabel, kolom, type). `create_all` voegt
 # geen kolommen toe aan bestaande tabellen, dus dat doet `_migreer`.
 _NIEUWE_KOLOMMEN = [
@@ -248,7 +265,7 @@ def init_db() -> None:
     Base.metadata.create_all(eng)
     with eng.begin() as conn:
         _migreer(conn)
-        for stmt in _splits_ddl(_FTS_DDL):
+        for stmt in _splits_ddl(_FTS_DDL + _INDEXEN):
             conn.execute(text(stmt))
     _profielen()
 

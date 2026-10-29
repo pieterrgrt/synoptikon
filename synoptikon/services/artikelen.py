@@ -33,6 +33,7 @@ from __future__ import annotations
 import re
 import time
 from dataclasses import dataclass, field
+from functools import lru_cache
 from typing import Iterable
 from urllib.parse import quote
 
@@ -413,8 +414,13 @@ def _natuurlijk(nummer: str) -> tuple | None:
     return tuple(uit)
 
 
+@lru_cache(maxsize=1 << 17)
 def sleutel(stelsel: str, nummer: str) -> tuple | None:
-    """Sorteersleutel binnen één stelsel. None als het nummer niet te lezen is."""
+    """Sorteersleutel binnen één stelsel. None als het nummer niet te lezen is.
+
+    Onthouden: het plaatsen van alle artikelen in de systematiek (wetboek.plaatsing) vraagt dezelfde nummers
+    tienduizenden keren op, en de regels per stelsel liggen vast zodra de module geladen is.
+    """
     nummer = nummer.strip()
     if stelsel == "NL":
         m = re.fullmatch(r"(\d+[A-Za-z]?):(\d+)([a-z]{0,3})", nummer)
@@ -437,6 +443,7 @@ def sleutel(stelsel: str, nummer: str) -> tuple | None:
     return _natuurlijk(nummer)
 
 
+@lru_cache(maxsize=1 << 14)
 def parse_bereik(stelsel: str, bereik: str | None) -> tuple[tuple, tuple] | None:
     """`"art. 3:83–3:98"`, `"§§ 929–936"`, `"art. 1101–1231-7"`, `"ss 12–15"`, `"§§ 2-101–2-107"` → (laag, hoog)."""
     if not bereik:
@@ -461,7 +468,10 @@ def formatteer_bereik(stelsel: str, nummers: Iterable[str]) -> str:
 
 
 def bevat(stelsel: str, bereik: tuple[tuple, tuple], nummer: str) -> bool:
-    k = sleutel(stelsel, nummer)
+    return _in_bereik(stelsel, bereik, sleutel(stelsel, nummer))
+
+
+def _in_bereik(stelsel: str, bereik: tuple[tuple, tuple], k: tuple | None) -> bool:
     if k is None:
         return False
     lo, hi = bereik
@@ -688,11 +698,16 @@ class Plaatser:
     def __init__(self, stelsel: str, knopen: Iterable, wet: str | None = None) -> None:
         self.stelsel = stelsel
         self.wet = wet or None
+        self.alle = knopen = list(knopen)
         self.knopen = [k for k in knopen if (getattr(k, "wet", None) or None) == self.wet]
         self.ids = {k.id for k in self.knopen}
         self.kinderen: dict[int | None, list] = {}
         for k in self.knopen:
             self.kinderen.setdefault(k.parent_id if k.parent_id in self.ids else None, []).append(k)
+        self._wortels = {k.id for k in self.kinderen.get(None, [])}
+        # NL-boekknopen (`BW-3`): het boek, eens per knoop in plaats van per artikel
+        self._boek = {k.id: m.group(1) for k in self.knopen
+                      if stelsel == "NL" and self.wet is None and (m := _NL_BOEKCODE.match(getattr(k, "code", None) or ""))}
         self.bereik: dict[int, tuple[tuple, tuple] | None] = {}
         for k in self.knopen:
             self._bereik(k)
@@ -712,30 +727,28 @@ class Plaatser:
         self.bereik[k.id] = b
         return b
 
-    def _bevat(self, k, nummer: str) -> bool:
-        if self.stelsel == "NL" and self.wet is None:
-            m = _NL_BOEKCODE.match(k.code or "")
-            if m:
-                s = sleutel("NL", nummer)
-                return s is not None and s[0] == m.group(1)
+    def _bevat(self, k, s: tuple) -> bool:
+        """Valt het artikel met sleutel `s` onder knoop `k`?"""
+        if (boek := self._boek.get(k.id)) is not None:
+            return s[0] == boek
         b = self.bereik.get(k.id)
-        if b is None and self.wet is not None and k in self.kinderen.get(None, []):
+        if b is None and self.wet is not None and k.id in self._wortels:
             return True
-        return b is not None and bevat(self.stelsel, b, nummer)
+        return b is not None and _in_bereik(self.stelsel, b, s)
 
     def pad(self, nummer: str) -> list:
         """Pad van wortel tot de diepste knoop die het artikel bevat (leeg als onbekend)."""
-        if sleutel(self.stelsel, nummer) is None:
+        s = sleutel(self.stelsel, nummer)
+        if s is None:
             return []
         pad: list = []
         ouder = None
         while True:
-            kandidaten = [k for k in self.kinderen.get(ouder, []) if self._bevat(k, nummer)]
+            kandidaten = [k for k in self.kinderen.get(ouder, []) if self._bevat(k, s)]
             if not kandidaten:
                 break
             # Bij overlap (zeldzaam) wint het smalste bereik.
-            kandidaten.sort(key=lambda k: self._breedte(k))
-            knoop = kandidaten[0]
+            knoop = min(kandidaten, key=self._breedte) if len(kandidaten) > 1 else kandidaten[0]
             pad.append(knoop)
             ouder = knoop.id
         if pad:
@@ -765,11 +778,12 @@ def _afstand(l, h) -> int:
     return 0
 
 
-def plaatser(db, stelsel: str, wet: str | None = None) -> Plaatser:
+def plaatser(db, stelsel: str, wet: str | None = None, knopen: list | None = None) -> Plaatser:
+    """`knopen`: de al geladen knopen van het stelsel (`Plaatser.alle` van een andere wet), anders uit de database."""
     from sqlalchemy import select
 
     from ..models import Systematiek
 
-    return Plaatser(
-        stelsel, db.scalars(select(Systematiek).where(Systematiek.stelsel_code == stelsel).order_by(Systematiek.volgorde)).all(), wet
-    )
+    if knopen is None:
+        knopen = list(db.scalars(select(Systematiek).where(Systematiek.stelsel_code == stelsel).order_by(Systematiek.volgorde)).all())
+    return Plaatser(stelsel, knopen, wet)

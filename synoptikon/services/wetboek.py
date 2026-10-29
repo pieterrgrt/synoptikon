@@ -15,7 +15,7 @@ from __future__ import annotations
 from dataclasses import dataclass, field
 from functools import lru_cache
 
-from sqlalchemy import func, or_, select
+from sqlalchemy import String, and_, func, or_, select, text
 from sqlalchemy.orm import Session
 
 from ..i18n import taal
@@ -115,24 +115,44 @@ def aantal_wetten(db: Session, stelsel: str) -> int:
     return db.scalar(q) or 0
 
 
-def zoek_wetten(db: Session, stelsel: str, q: str = "", pagina: int = 1, per_pagina: int = 100) -> tuple[list[Wettekst], int]:
-    """Alle wetten van een stelsel, gezocht op titel of afkorting (EU ook op de titel in de taal van de interface)."""
-    stmt = select(Wettekst).where(Wettekst.stelsel_code == stelsel)
-    if stelsel == "EU":
-        stmt = stmt.where(~Wettekst.wet_id.like("%.%"))  # één regel per handeling; de taalversie kiest `toon_titel`/lezen
+def zoek_wetten(db: Session, stelsel: str, q: str = "", pagina: int = 1, per_pagina: int = 100,
+                stelsels: list[str] | None = None, tel: bool = True) -> tuple[list[Wettekst], int]:
+    """Alle wetten van een stelsel, gezocht op titel of afkorting (EU ook op de titel in de taal van de interface).
+
+    Zonder `stelsel` in de stelsels van `stelsels` (None of leeg = alle), in één query. `tel=False`: geen totaal (0).
+    """
+    from .zoeken import fts_query
+
+    codes = [stelsel] if stelsel else list(stelsels or [])
+    # Alleen kolommen uit de index ix_wettekst_zoek (db.py): de rijen van de tabel liggen verspreid over het hele
+    # databasebestand (tussen de artikelen), de index ligt bij elkaar. Daarna pas de wetten van deze ene pagina.
+    stmt = select(Wettekst.id)
+    if codes:
+        stmt = stmt.where(Wettekst.stelsel_code.in_(codes)) if len(codes) > 1 else stmt.where(Wettekst.stelsel_code == codes[0])
+    met_eu = not codes or "EU" in codes
+    if met_eu:
+        # één regel per handeling; de taalversie kiest `toon_titel`/lezen
+        stmt = stmt.where(~Wettekst.wet_id.like("%.%") if codes == ["EU"] else or_(Wettekst.stelsel_code != "EU", ~Wettekst.wet_id.like("%.%")))
     q = q.strip()
     if q:
         like = f"%{q}%"
-        voorwaarden = [Wettekst.titel.ilike(like), Wettekst.wet.ilike(like), Wettekst.wet_id.ilike(like)]
-        if stelsel == "EU":
-            t = taal()
-            voorwaarden.append(Wettekst.wet_id.in_(select(EuTitel.celex).where(EuTitel.taal == t, EuTitel.titel.ilike(like))))
-            voorwaarden.append(Wettekst.wet_id.in_(select(EuHandeling.celex).where(or_(EuHandeling.titel.ilike(like), EuHandeling.roepnaam.ilike(like)))))
+        m = fts_query(q)
+        # LIKE en niet ILIKE: SQLite vergelijkt al zonder hoofdletters (en lower() kent ook alleen ASCII), lower() om
+        # elke titel kost alleen tijd. De lange EU-titels vindt de FTS-index hieronder; die slaat de LIKE over.
+        titel = or_(Wettekst.titel.like(like), Wettekst.wet_id.like(like))
+        voorwaarden = [Wettekst.wet.like(like), and_(Wettekst.stelsel_code != "EU", titel) if met_eu and m else titel]
+        if met_eu and m:
+            # Titels en roepnamen van de 17.000 handelingen via hun FTS-index, niet met LIKE door alle titels.
+            voorwaarden.append(Wettekst.wet_id.in_(text(
+                "SELECT t.celex FROM eu_titel t JOIN eu_titel_fts f ON f.rowid = t.rowid WHERE eu_titel_fts MATCH :m AND t.taal = :taal "
+                "UNION SELECT celex FROM eu_handeling WHERE rowid IN (SELECT rowid FROM eu_handeling_fts WHERE eu_handeling_fts MATCH :m)"
+            ).bindparams(m=m, taal=taal()).columns(celex=String)))
+        if met_eu:
             sleutels = {w for w, per_taal in eunamen.KORT.items() if any(q.lower() in n.lower() for n in per_taal.values())}
             if sleutels:
                 voorwaarden.append(Wettekst.wet.in_(sleutels))
         stmt = stmt.where(or_(*voorwaarden))
-    totaal = db.scalar(select(func.count()).select_from(stmt.subquery())) or 0
+    totaal = (db.scalar(select(func.count()).select_from(stmt.subquery())) or 0) if tel else 0
     # Wat men zoekt bovenaan: precies de afkorting ("PatG"), dan titels die ermee beginnen ("Patentgesetz"), dan de
     # kern, dan korte titels (de wet zelf vóór de verordeningen erbij).
     if q:
@@ -140,8 +160,9 @@ def zoek_wetten(db: Session, stelsel: str, q: str = "", pagina: int = 1, per_pag
                     Wettekst.kern.desc(), func.length(Wettekst.titel), Wettekst.titel]
     else:
         volgorde = [Wettekst.kern.desc(), Wettekst.titel]
-    rijen = db.scalars(stmt.order_by(*volgorde).offset((pagina - 1) * per_pagina).limit(per_pagina)).all()
-    return list(rijen), totaal
+    ids = list(db.scalars(stmt.order_by(*volgorde).offset((pagina - 1) * per_pagina).limit(per_pagina)).all())
+    per_id = {w.id: w for w in db.scalars(select(Wettekst).where(Wettekst.id.in_(ids)))} if ids else {}
+    return [per_id[i] for i in ids if i in per_id], totaal
 
 
 def toon_titels(db: Session, ws: list[Wettekst]) -> dict[int, str]:
