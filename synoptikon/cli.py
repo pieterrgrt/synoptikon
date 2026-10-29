@@ -192,12 +192,47 @@ def cmd_import_bulk(args) -> int:
     database.init_db()
     fabriek = database.session_factory()
     meld = lambda t: print(t, flush=True)  # noqa: E731
-    if args.bron == "de":
+    if args.bron in ("nl", "fr"):
+        from .importers import bijwerken
+
+        # NL en FR gaan via dezelfde vergelijking als `bijwerken` (de bron geeft per wet al een versie), zonder verdeling.
+        r = bijwerken.Ronde(fabriek, bronnen=[args.bron], limiet=args.limiet, melder=meld)
+        r.draai()
+        tel = {k: sum(getattr(t, k) for t in r.tellingen) for k in ("gecontroleerd", "gewijzigd", "nieuw", "fouten")}
+    elif args.bron == "de":
         tel = bulk.duitsland(fabriek, parallel=args.parallel, limiet=args.limiet, opnieuw=args.opnieuw, melder=meld)
     else:
         tel = bulk.europa(fabriek, parallel=args.parallel, limiet=args.limiet, opnieuw=args.opnieuw,
                           alleen_verdragen=args.verdragen, melder=meld)
     print(f"klaar: {tel}", flush=True)
+    return 0
+
+
+def cmd_bijwerken(args) -> int:
+    """Alle bronnen aflopen en alleen opslaan wat echt veranderd is (importers/bijwerken.py)."""
+    from .importers import bijwerken
+
+    database.init_db()
+    ronde = bijwerken.Ronde(database.session_factory(), bronnen=args.bron, stelsels=args.stelsel, deel=bijwerken.lees_deel(args.deel),
+                            droog=args.droog, max_minuten=args.max_minuten, limiet=args.limiet, melder=lambda t: print(t, flush=True))
+    tellingen = ronde.draai()
+    tot = {k: sum(getattr(t, k) for t in tellingen) for k in ("gecontroleerd", "gewijzigd", "nieuw", "fouten")}
+    print(f"{'droog: ' if args.droog else ''}klaar: {tot}" + (f" · gestopt: {ronde.gestopt}" if ronde.gestopt else ""), flush=True)
+    return 1 if tot["fouten"] else 0
+
+
+def cmd_legi(args) -> int:
+    """LEGI-dump ophalen (eenmalig, ±1,1 GB gestreamd) en bijwerken met de dagelijkse aanvullingen."""
+    from .config import settings
+    from .importers import legi_dump
+
+    doel = Path(args.map) if args.map else settings.legi_dir
+    codes = set(args.codes) if args.codes else None
+    try:
+        print(legi_dump.haal_globaal(doel, met_alles=args.alle, codes=codes, melder=lambda t: print(t, flush=True)))
+    except ImportOvergeslagen as e:
+        print(e, file=sys.stderr)
+        return 1
     return 0
 
 
@@ -332,13 +367,27 @@ def main(argv: list[str] | None = None) -> int:
     s.add_argument("--legi", help="map met de uitgepakte LEGI-dump (scripts/legi_ophalen.sh), nodig voor FR")
     s.add_argument("--systematiek", action="store_true", help="systematiekboom aanvullen waar het register dat aangeeft")
     s.set_defaults(fn=cmd_import_alles)
-    s = sub.add_parser("import-bulk", help="alle wetten van een bron: de (gesetze-im-internet.de) of eu (geldende EU-handelingen, Duits; verdragen in zes talen)")
-    s.add_argument("bron", choices=["de", "eu"])
+    s = sub.add_parser("import-bulk", help="alle wetten van een bron: de (gesetze-im-internet.de), eu (geldende EU-handelingen, Duits; verdragen in zes talen), "
+                       "nl (alle geldende wetten en AMvB's uit het BWB), fr (alle codes uit de LEGI-dump, na `synoptikon legi --alle`)")
+    s.add_argument("bron", choices=["de", "eu", "nl", "fr"])
     s.add_argument("--parallel", type=int, default=4, help="downloads tegelijk")
     s.add_argument("--limiet", type=int, help="hoogstens zoveel wetten (proef)")
     s.add_argument("--opnieuw", action="store_true", help="ook wat er al is opnieuw ophalen")
     s.add_argument("--verdragen", action="store_true", help="EU: alleen VEU, VWEU en Handvest")
     s.set_defaults(fn=cmd_import_bulk)
+    s = sub.add_parser("bijwerken", help="alle wetteksten met de bron vergelijken en alleen wat veranderde opslaan (wekelijks, in delen)")
+    s.add_argument("--bron", nargs="*", choices=["register", "fr", "de", "nl", "eu-catalogus", "eu"], help="alleen deze bronnen")
+    s.add_argument("--stelsel", nargs="*", help="alleen deze stelsels, bijv. --stelsel nl de")
+    s.add_argument("--deel", help="k/n: alleen het k-de van n vaste delen van elke bron, bijv. 3/7 (elke dag een zevende)")
+    s.add_argument("--droog", action="store_true", help="alleen tonen wat aan de beurt is; niets ophalen of opslaan")
+    s.add_argument("--max-minuten", type=float, help="netjes stoppen na zoveel minuten")
+    s.add_argument("--limiet", type=int, help="hoogstens zoveel wetten ophalen per bron (proef)")
+    s.set_defaults(fn=cmd_bijwerken)
+    s = sub.add_parser("legi", help="FR: LEGI-dump van de DILA ophalen (eenmalig ±1,1 GB gestreamd) en bijwerken")
+    s.add_argument("codes", nargs="*", help="LEGITEXT-codes (standaard die uit het register)")
+    s.add_argument("--map", help="doelmap (standaard SYNOPTIKON_LEGI_DIR of <datamap>/legi)")
+    s.add_argument("--alle", action="store_true", help="alle geldende codes in plaats van alleen die uit het register")
+    s.set_defaults(fn=cmd_legi)
     s = sub.add_parser("eu-catalogus", help="geldende verordeningen en richtlijnen, repertorium en nationale uitvoeringsmaatregelen ophalen uit Cellar")
     s.add_argument("--zonder-nims", action="store_true", help="nationale uitvoeringsmaatregelen overslaan")
     s.set_defaults(fn=cmd_eu_catalogus)

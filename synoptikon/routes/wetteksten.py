@@ -5,7 +5,7 @@ from sqlalchemy import func, select
 from sqlalchemy.orm import Session
 
 from ..db import get_session
-from ..models import Wettekst, WettekstArtikel
+from ..models import Bijwerking, Wettekst, WettekstArtikel
 from ..services.helpers import actieve_stelsels
 from . import render
 
@@ -22,7 +22,36 @@ def lijst(request: Request, db: Session = Depends(get_session)):
                                 .group_by(WettekstArtikel.wettekst_id)).all())
     bulk = db.execute(select(Wettekst.stelsel_code, func.count(), func.max(Wettekst.opgehaald)).where(Wettekst.kern.is_(False))
                       .group_by(Wettekst.stelsel_code)).all()
-    return render(request, "wetteksten.html", wetten=wetten, aantallen=aantallen, bulk=bulk, stelsels=actieve_stelsels(db))
+    profiel = getattr(request.state, "profiel", None)
+    bijhouden = _bijhouden(db) if profiel is None or profiel.is_beheerder else None
+    return render(request, "wetteksten.html", wetten=wetten, aantallen=aantallen, bulk=bulk, stelsels=actieve_stelsels(db),
+                  bijhouden=bijhouden)
+
+
+def _bijhouden(db: Session) -> list[dict]:
+    """Per stelsel: wetten, artikelen, tekst in MB, laatst gecontroleerd en gewijzigd, en de laatste ronde van
+    `synoptikon bijwerken` met haar fouten. Uit de kolommen aantal/grootte; alleen rijen van vóór die kolommen worden
+    geteld (eenmalig, tot de eerste bijwerkronde ze invult)."""
+    per = {code: {"code": code, "wetten": n, "artikelen": art or 0, "mb": (gr or 0) / 1e6, "gecontroleerd": gec, "gewijzigd": gew,
+                  "ronde": None, "fouten": []}
+           for code, n, art, gr, gec, gew in db.execute(
+               select(Wettekst.stelsel_code, func.count(), func.sum(Wettekst.aantal), func.sum(Wettekst.grootte),
+                      func.max(Wettekst.gecontroleerd), func.max(Wettekst.opgehaald)).group_by(Wettekst.stelsel_code))}
+    for code, art, gr in db.execute(select(Wettekst.stelsel_code, func.count(), func.sum(func.length(WettekstArtikel.tekst)))
+                                    .join(WettekstArtikel, WettekstArtikel.wettekst_id == Wettekst.id)
+                                    .where(Wettekst.aantal.is_(None)).group_by(Wettekst.stelsel_code)):
+        per[code]["artikelen"] += art
+        per[code]["mb"] += (gr or 0) / 1e6
+    # De laatste 200 logregels zijn genoeg voor een week rondes over alle bronnen.
+    for b in db.scalars(select(Bijwerking).order_by(Bijwerking.begin.desc(), Bijwerking.id.desc()).limit(200)):
+        rij = per.get(b.stelsel or "")
+        if rij is None:
+            continue
+        if rij["ronde"] is None:
+            rij["ronde"] = b
+        if b.fouten and b.melding and len(rij["fouten"]) < 3:
+            rij["fouten"].append((b.begin, b.melding.splitlines()[0]))
+    return sorted(per.values(), key=lambda r: r["code"])
 
 
 @router.get("/wetteksten/{wettekst_id}")
