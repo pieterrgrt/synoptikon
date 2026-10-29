@@ -1,0 +1,77 @@
+"""Importers, citeerregels en seed van de Europese uitbreiding (register_europa, stelsels_europa, regels_europa)."""
+from pathlib import Path
+
+FIX = Path(__file__).parent / "fixtures"
+
+
+def _herken(t: str) -> list[tuple]:
+    from synoptikon.services.artikelen import herken
+
+    return [(r.stelsel, r.nummer, r.wet) for r in herken(t)]
+
+
+def test_ris_kschg():
+    from synoptikon.importers import ris
+
+    g = ris.parse((FIX / "ris_kschg.html").read_text(encoding="utf-8"), "10002462")
+    assert g.versie == "BGBl. I Nr. 60/2026"
+    assert g.titel.endswith("(Konsumentenschutzgesetz – KSchG)")
+    per = {a.nummer: a for a in g.artikelen}
+    assert {"1", "2", "3"} <= set(per)
+    assert "32" not in per  # "Art. 32" (overgangsrecht van een wijzigingswet) valt buiten de §-reeks
+    a3 = per["3"]
+    assert a3.opschrift == "Rücktrittsrecht"
+    assert a3.pad.endswith("› Abschnitt II Allgemeine Regeln")
+    assert a3.tekst.startswith("(1) Hat der Verbraucher seine Vertragserklärung")
+    assert "Absatz eins" not in a3.tekst  # voorleestekst weg
+    assert "\n1. einerseits jemand" in per["1"].tekst
+
+
+def test_ris_kopniveaus():
+    from synoptikon.importers import ris
+
+    assert ris._niveau("Zweyter Theil") == 1
+    assert ris._niveau("Erste Abtheilung des Sachenrechtes.") == 2
+    assert ris._niveau("Vier u. zwanzigstes Hauptstück. Von dem Kaufvertrage.") == 3
+    assert ris._niveau("Zweiter Abschnitt Abstammung des Kindes") == 4
+    assert ris._niveau("des") is None
+
+
+def test_oostenrijkse_verwijzingen():
+    assert _herken("§ 1295 ABGB") == [("AT", "1295", None)]
+    assert _herken("§ 6 Abs. 1 KSchG") == [("AT", "6", "KSchG")]
+    assert _herken("§ 879 Allgemeines bürgerliches Gesetzbuch") == [("AT", "879", None)]
+    assert _herken("§ 929 BGB") == [("DE", "929", None)]
+
+
+def test_seed_europa_vorm():
+    from synoptikon.models import RECHTSFAMILIES
+    from synoptikon.services.artikelen import parse_bereik
+    from synoptikon.seed import stelsels_europa as s
+
+    codes = [st[0] for st in s.STELSELS]
+    assert len(codes) == len(set(codes))
+    families = RECHTSFAMILIES if isinstance(RECHTSFAMILIES, (list, tuple, set)) else list(RECHTSFAMILIES)
+    for code, naam, taal, toelichting, actief, familie in s.STELSELS:
+        assert familie in families, (code, familie)
+        assert (Path(__file__).parent.parent / "synoptikon" / "static" / "vlaggen" / f"{code.lower()}.svg").exists(), code
+
+    def loop(stelsel, knopen):
+        for k in knopen:
+            assert k[2] == "" or parse_bereik(stelsel, k[2]) is not None, (stelsel, k[0], k[2])
+            loop(stelsel, k[3])
+
+    for code, boom in s.SYSTEMATIEK.items():
+        assert code in codes
+        loop(code, boom)
+
+
+def test_vertalingen_stelsels_europa():
+    import json
+
+    from synoptikon.seed import stelsels_europa as s
+
+    for taal in ("de", "en", "fr", "it", "es"):
+        d = json.loads((Path(__file__).parent.parent / "synoptikon" / "seed" / "vertalingen" / f"{taal}.json").read_text(encoding="utf-8"))
+        for code, naam, _, toelichting, *_ in s.STELSELS:
+            assert naam in d and toelichting in d, (taal, code)
