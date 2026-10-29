@@ -44,7 +44,7 @@ def splits(stelsels, codes, gekozen=()) -> tuple[list, list]:
     van nu, een aangevinkt vakje) blijft bij de eigen stelsels, zodat het niet in de uitklap verdwijnt."""
     if codes is None:
         return list(stelsels), []
-    if isinstance(gekozen, str):
+    if gekozen is None or isinstance(gekozen, str):
         gekozen = [gekozen]
     zet = set(codes) | {g for g in gekozen if g}
     eigen = [s for s in stelsels if s.code in zet]
