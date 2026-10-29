@@ -181,11 +181,24 @@ REGELS: dict[str, Regels] = {
 
 
 
+_VOORBEWERKING: list = []  # functies tekst → tekst vóór de herkenning, bijv. "民法第709条" → "民法 art. 709"
+_NAMEN_EXTRA: list = []  # (volledige naam, afkorting), naast `_NAMEN_HAND`
+
+
 def _uitbreidingen() -> None:
-    """Citeerregels uit `services/regels_<regio>.py` (elk met een dict `REGELS`, zelfde vorm als hier)."""
+    """Citeerregels uit `services/regels_<regio>.py` (elk met een dict `REGELS`, zelfde vorm als hier, en
+    eventueel `VOORBEWERKING` en `NAMEN`)."""
     from ..plugins import modules
     for m in modules(__package__, "regels_"):
         REGELS.update(m.REGELS)
+        _VOORBEWERKING.extend(getattr(m, "VOORBEWERKING", ()))
+        _NAMEN_EXTRA.extend(getattr(m, "NAMEN", ()))
+
+
+def _voorbewerk(tekst: str) -> str:
+    for f in _VOORBEWERKING:
+        tekst = f(tekst)
+    return tekst
 
 
 _uitbreidingen()
@@ -210,7 +223,7 @@ _NAMEN_HAND = [
 
 
 def _namen() -> list[tuple[re.Pattern, str]]:
-    paren = [*_NAMEN_HAND]
+    paren = [*_NAMEN_HAND, *_NAMEN_EXTRA]
     for r in REGELS.values():
         for afk, naam in r.namen.items():
             naam = re.sub(r"\s*\([^()]*\)$", "", naam).strip()
@@ -545,7 +558,7 @@ def lees(stelsel: str, tekst: str) -> Ref | None:
     """Leest een verwijzing binnen een bekend stelsel: "6:162", "§ 823 Abs. 1", "art. 1242 al. 5",
     "§ 1 ProdHaftG", "art. L217-3 C. consom.", "art. 1132–1136", "§§ 203–213", "art. 5.69 BW",
     "Art. 41 Abs. 1 OR", "art. 1469-bis c.c.", "s 2(1) SGA 1979", "UCC § 2-207(2)"."""
-    tekst = tekst.strip()
+    tekst = _voorbewerk(tekst.strip())
     if tekst in ("", "—", "-"):
         return Ref(stelsel, None)
     wet, rest = _wet_uit(stelsel, tekst)
@@ -618,7 +631,7 @@ def herken(tekst: str, stelsel: str | None = None) -> list[Ref]:
     "1196 C. civ." of "1112-1" → FR; "Art. 41 OR" → CH; "s 17 SGA 1979" → EN; "UCC § 2-401" → US.
     Een kaal nummer ("929") is dubbelzinnig: DE én FR; "art. 1902 CC" kan ES of FR zijn.
     """
-    t = vervang_namen(tekst.strip())
+    t = vervang_namen(_voorbewerk(tekst.strip()))
     if not t or len(t) > 80 or not re.search(r"\d", t):
         return []
     if stelsel:
@@ -654,7 +667,7 @@ def herken(tekst: str, stelsel: str | None = None) -> list[Ref]:
 
 def noemt_wet(tekst: str) -> bool:
     """Of de invoer een wet noemt ("BGB", "c. cons.", "Code de commerce"), of alleen een nummer is."""
-    return bool(_wet_treffers(vervang_namen(tekst)))
+    return bool(_wet_treffers(vervang_namen(_voorbewerk(tekst))))
 
 
 def kale_nummers(tekst: str) -> set[str]:

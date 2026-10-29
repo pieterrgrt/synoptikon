@@ -305,6 +305,12 @@ synoptikon seed                              # laadt o.a. de omzettingstabel
 | QC | Données Québec (XML-zip van LégisQuébec, CC BY-NC-ND 4.0) | C.c.Q., C.p.c., L.p.c., Charte québécoise | ja |
 | CL | Ley Chile (BCN, XML per norm) | CC, CPR, C. de C., CPC, LPDC (Ley 19.496), CP | ja |
 | BR | Normas.leg.br (API, compilação monovigente van de Câmara, CC BY 4.0) | CC, CF (zonder ADCT), CDC, CPC, LINDB, CP | ja |
+| JP | e-Gov 法令検索, API v2 (XML) | 民法, 日本国憲法, 商法, 会社法, 消費者契約法, 民事訴訟法, 刑法, 法の適用に関する通則法 | ja, geldende stand |
+| TW | 全國法規資料庫, law.moj.gov.tw (HTML, LawAll.aspx) | 民法, 中華民國憲法, 公司法, 消費者保護法, 民事訴訟法, 中華民國刑法, 涉外民事法律適用法 | ja, geldende stand |
+| CN | geen: flk.npc.gov.cn verbiedt geautomatiseerd ophalen (robots.txt), npc.gov.cn vraagt JavaScript | alleen systematiek en citeerwijze | — |
+| HK | DoJ e-Legislation, open data op data.gov.hk (HKLM-XML, één bestand uit de zip via Range) | Basic Law, Cap. 26, 71, 284, 457, 623, 347, 622, 200 | ja, current version |
+| ID | geen: peraturan.go.id en JDIH geven pdf's, het KUHPerdata niet geconsolideerd | alleen systematiek en citeerwijze | — |
+| NZ | geen: legislation.govt.nz weigert geautomatiseerde verzoeken, de API vraagt een sleutel | alleen systematiek en citeerwijze | — |
 
 **Alle wetten van een bron** (`synoptikon/importers/bulk.py`), naast het register:
 
