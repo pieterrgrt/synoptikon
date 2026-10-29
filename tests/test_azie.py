@@ -55,3 +55,35 @@ def test_japanse_verwijzingen():
     assert _refs("消費者契約法10条") == [("JP", "消契法", "10")]
     assert lees("JP", "第709条の2").nummer == "709の2"
     assert sleutel("JP", "709") < sleutel("JP", "709の2") < sleutel("JP", "710")
+
+
+def test_hkel_parse():
+    """HK: Part › crossHeading als pad, heading als opschrift, definities met de Chinese term, (a) ingesprongen."""
+    from synoptikon.importers import hkel
+
+    g = hkel.parse((FIX / "hkel_cap26.xml").read_bytes(), "cap26")
+    assert (g.titel, g.versie, g.stijl) == ("Sale of Goods Ordinance", "2018-09-20", None)
+    assert [a.nummer for a in g.artikelen][:3] == ["1", "2", "3"]
+    s14 = next(a for a in g.artikelen if a.nummer == "14")
+    assert (s14.opschrift, s14.pad) == ("Implied undertaking as to title etc.", "Part I Formation of the Contract › Conditions and warranties")
+    assert s14.tekst.startswith("(1) In every contract of sale") and "\n    (a) an implied condition" in s14.tekst
+    assert "\n    buyer (買方) means a person" in g.artikelen[1].tekst
+    assert "Amended" not in "".join(a.tekst for a in g.artikelen)  # sourceNotes weg
+
+
+def test_hkel_basic_law():
+    from synoptikon.importers import hkel
+
+    g = hkel.parse((FIX / "hkel_basic_law.xml").read_bytes(), "A101")
+    assert g.titel.startswith("The Basic Law of the Hong Kong") and "Adopted" not in g.titel
+    assert (g.versie, g.stijl) == ("1997-07-01", "Art")
+    assert [(a.nummer, a.pad) for a in g.artikelen] == [
+        ("1", "Chapter I General Principles"), ("43", "Chapter IV Political Structure › Section 1 The Chief Executive")]
+    assert g.artikelen[1].tekst.count("\n\n") == 1
+
+
+def test_hongkongse_verwijzingen():
+    assert _refs("s 14 Cap 26") == [("HK", "Cap. 26", "14")]
+    assert _refs("section 3 Misrepresentation Ordinance") == [("HK", "Cap. 284", "3")]
+    assert _refs("Article 8 Basic Law") == [("HK", "BL", "8")]
+    assert _refs("s 14 SGA 1979") == [("EN", "SGA 1979", "14")]

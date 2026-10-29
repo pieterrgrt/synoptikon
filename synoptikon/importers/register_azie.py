@@ -9,6 +9,10 @@ Bronnen per stelsel en waarom:
 * TW: 全國法規資料庫 (law.moj.gov.tw), de pagina LawAll.aspx per wet (HTML; robots.txt staat alleen die toe, de
   open-databestanden onder /api/ zijn één grote zip van alle wetten), geconsolideerd, versie = 修正日期. De Engelse
   vertalingen (/ENG/) vallen onder `Disallow` en zijn niet opgenomen.
+* HK: Hong Kong e-Legislation, de open data van het DoJ op data.gov.hk (HKLM-XML, current version, Engels; de
+  Chinese tekst staat in eigen zips). Per wet alleen het ene bestand uit de grote zip, met Range-verzoeken.
+  elegislation.gov.hk zelf sluit robots.txt af. Geen wetboek: de ordinances rond contract en koop, de
+  Companies Ordinance, de Crimes Ordinance en de Basic Law, met het chapter als afkorting ("Cap. 26").
 """
 from __future__ import annotations
 
@@ -35,5 +39,17 @@ WETTEN: list[Wet] = [
         ("民訴法", "B0010001", "民事訴訟法"),
         ("刑法", "C0000001", "中華民國刑法"),
         ("涉民法", "B0000007", "涉外民事法律適用法"),
+    ]],
+    # HK: common law; de ordinances rond contract en koop en de Basic Law (DoJ open data)
+    *[Wet("HK", afk, "hkel", i, t, systematiek=True) for afk, i, t in [
+        ("BL", "A101", "Basic Law of the Hong Kong Special Administrative Region"),
+        ("Cap. 26", "cap26", "Sale of Goods Ordinance"),
+        ("Cap. 71", "cap71", "Control of Exemption Clauses Ordinance"),
+        ("Cap. 284", "cap284", "Misrepresentation Ordinance"),
+        ("Cap. 457", "cap457", "Supply of Services (Implied Terms) Ordinance"),
+        ("Cap. 623", "cap623", "Contracts (Rights of Third Parties) Ordinance"),
+        ("Cap. 347", "cap347", "Limitation Ordinance"),
+        ("Cap. 622", "cap622", "Companies Ordinance"),
+        ("Cap. 200", "cap200", "Crimes Ordinance"),
     ]],
 ]

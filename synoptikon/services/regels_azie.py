@@ -2,6 +2,8 @@
 
 * **JP**: 民法709条, 第709条の2, 会社法第429条第1項. Nummers met の voor ingevoegde artikelen (`709の2`).
 * **TW**: 民法第184條第1項, 第7條之1 (ingevoegd artikel, bij de bron `7-1`), 消保法 voor 消費者保護法.
+* **HK**: common law zonder wetboek, ordinances naar hun chapter: "s 14 Cap. 26", "section 3 of the Misrepresentation
+  Ordinance", "art. 8 BL" (Basic Law).
 
 Dezelfde wetsnaam in twee stelsels ("民法第709条": JP of TW) geeft, zoals "art. 1902 CC" (ES of FR), beide.
 
@@ -30,11 +32,19 @@ REGELS: dict[str, Regels] = {
         namen={"民法": "民法 (1929/1930)", "憲法": "中華民國憲法", "公司法": "公司法 (1929)", "消保法": "消費者保護法",
                "民訴法": "民事訴訟法", "刑法": "中華民國刑法", "涉民法": "涉外民事法律適用法"},
     ),
+    "HK": Regels(
+        None,
+        ("BL", "Cap. 26", "Cap. 71", "Cap. 284", "Cap. 457", "Cap. 623", "Cap. 347", "Cap. 622", "Cap. 200"),
+        stijl="s",
+        nummer=r"\d+[A-Z]{0,3}",
+        namen={"BL": "Basic Law of the Hong Kong Special Administrative Region", "Cap. 26": "Sale of Goods Ordinance", "Cap. 71": "Control of Exemption Clauses Ordinance", "Cap. 284": "Misrepresentation Ordinance", "Cap. 457": "Supply of Services (Implied Terms) Ordinance", "Cap. 623": "Contracts (Rights of Third Parties) Ordinance", "Cap. 347": "Limitation Ordinance", "Cap. 622": "Companies Ordinance", "Cap. 200": "Crimes Ordinance"},
+    ),
 }
 
 NAMEN = [
     ("日本国憲法", "憲法"), ("消費者契約法", "消契法"), ("民事訴訟法", "民訴法"), ("法の適用に関する通則法", "通則法"),
     ("中華民國憲法", "憲法"), ("消費者保護法", "消保法"), ("中華民國刑法", "刑法"), ("涉外民事法律適用法", "涉民法"),
+    ("Basic Law", "BL"), *[(f"Cap {n}", f"Cap. {n}") for n in (26, 71, 284, 457, 623, 347, 622, 200)],
 ]
 
 

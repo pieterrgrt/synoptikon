@@ -4,6 +4,9 @@ JP: gegenereerd uit de geldende tekst van het 民法 bij e-Gov (stand 24-6-2026)
 hoogste artikelnummer (geschrapte bereiken zoals 第三十八条から第八十四条まで meegeteld).
 
 TW: gegenereerd uit de geldende tekst van het 民法 bij law.moj.gov.tw (stand 17-8-2026): 編 › 章, in het 債編 ook 節.
+
+HK: geen codificatie; zoals bij EN een eigen indeling in rubrieken met de ordinances eronder, Parts en Chapters uit
+de open data van het DoJ (Cap. 26 stand 20-9-2018, Basic Law 1-7-1997). De rest vult de import aan.
 """
 
 JP = [
@@ -133,5 +136,43 @@ TW = [
         ('TW-5-1', '第一章 · 遺產繼承人', 'art. 1138–1146', []),
         ('TW-5-2', '第二章 · 遺產之繼承', 'art. 1147–1185', []),
         ('TW-5-3', '第三章 · 遺囑', 'art. 1186–1225', []),
+    ]),
+]
+
+
+HK = [
+    ('HK-GRONDWET', 'Grondwet', '', [
+        ('HK-BL', 'Basic Law', 'art. 1–160', [
+            ('HK-BL-I', 'Chapter I · General Principles', 'art. 1–11', []),
+            ('HK-BL-II', 'Chapter II · Relationship between the Central Authorities and the HKSAR', 'art. 12–23', []),
+            ('HK-BL-III', 'Chapter III · Fundamental Rights and Duties of the Residents', 'art. 24–42', []),
+            ('HK-BL-IV', 'Chapter IV · Political Structure', 'art. 43–104', []),
+            ('HK-BL-V', 'Chapter V · Economy', 'art. 105–135', []),
+            ('HK-BL-VI', 'Chapter VI · Education, Science, Culture, Sports, Religion, Labour and Social Services', 'art. 136–149', []),
+            ('HK-BL-VII', 'Chapter VII · External Affairs', 'art. 150–157', []),
+            ('HK-BL-VIII', 'Chapter VIII · Interpretation and Amendment of the Basic Law', 'art. 158–159', []),
+            ('HK-BL-IX', 'Chapter IX · Supplementary Provisions', 'art. 160', []),
+        ], 'BL'),
+    ]),
+    ('HK-CONTRACT', 'Contract en koop', '', [
+        ('HK-CAP26', 'Sale of Goods Ordinance (Cap. 26)', 'ss 1–62', [
+            ('HK-CAP26-I', 'Part I · Formation of the Contract', 'ss 3–17', []),
+            ('HK-CAP26-II', 'Part II · Effects of the Contract', 'ss 18–28', []),
+            ('HK-CAP26-III', 'Part III · Performance of the Contract', 'ss 29–39', []),
+            ('HK-CAP26-IV', 'Part IV · Rights of Unpaid Seller against the Goods', 'ss 40–50', []),
+            ('HK-CAP26-V', 'Part V · Actions for Breach of the Contract', 'ss 51–56', []),
+            ('HK-CAP26-VI', 'Part VI · Supplementary', 'ss 57–62', []),
+        ], 'Cap. 26'),
+        ('HK-CAP71', 'Control of Exemption Clauses Ordinance (Cap. 71)', '', [], 'Cap. 71'),
+        ('HK-CAP284', 'Misrepresentation Ordinance (Cap. 284)', '', [], 'Cap. 284'),
+        ('HK-CAP457', 'Supply of Services (Implied Terms) Ordinance (Cap. 457)', '', [], 'Cap. 457'),
+        ('HK-CAP623', 'Contracts (Rights of Third Parties) Ordinance (Cap. 623)', '', [], 'Cap. 623'),
+        ('HK-CAP347', 'Limitation Ordinance (Cap. 347)', '', [], 'Cap. 347'),
+    ]),
+    ('HK-VENNOOTSCHAP', 'Vennootschappen', '', [
+        ('HK-CAP622', 'Companies Ordinance (Cap. 622)', '', [], 'Cap. 622'),
+    ]),
+    ('HK-STRAF', 'Strafrecht', '', [
+        ('HK-CAP200', 'Crimes Ordinance (Cap. 200)', '', [], 'Cap. 200'),
     ]),
 ]
