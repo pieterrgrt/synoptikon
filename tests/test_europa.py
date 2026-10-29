@@ -152,3 +152,9 @@ def test_riksdagen_kkl():
 def test_zweedse_verwijzingen():
     assert _herken("36 § AvtL") == [("SE", "36", "AvtL")]
     assert _herken("BrB 3:1") == [("SE", "3:1", "BrB")]
+
+
+def test_poolse_verwijzingen():
+    assert _herken("art. 415 KC") == [("PL", "415", None)]
+    assert _herken("art. 22¹ KC") == [("PL", "22¹", None)]
+    assert _herken("art. 299 KSH") == [("PL", "299", "KSH")]

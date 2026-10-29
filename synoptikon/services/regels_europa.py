@@ -9,6 +9,8 @@
   `§ 38 a`.
 * **SE** (geen hoofdwet): `36 § AvtL`, `AvtL 36 §`; de balkar en andere wetten die per hoofdstuk nummeren als
   hoofdstuk:paragraaf (`BrB 3:1`, `RB 17:3`). "3 kap. 1 § BrB" wordt niet herkend.
+* **PL** (KC): `art. 415 KC`, `art. 22¹ KC` (of `22^1`), andere kodeksy met hun hoofdletterafkorting (`art. 299 KSH`,
+  `art. 148 KK`); de gangbare kleine letters (`k.c.`) zijn niet opgenomen, omdat ze als eigen wet zouden tellen.
 """
 from __future__ import annotations
 
@@ -72,5 +74,14 @@ REGELS: dict[str, Regels] = {
                "ÄB": "Ärvdabalken", "ÄktB": "Äktenskapsbalken", "FB": "Föräldrabalken", "HB": "Handelsbalken (1734)", "KtjL": "Konsumenttjänstlagen",
                "KkrL": "Konsumentkreditlagen", "MFL": "Marknadsföringslagen", "KonkL": "Konkurslagen", "SamboL": "Sambolagen",
                "HBL": "Lagen om handelsbolag och enkla bolag"},
+    ),
+    "PL": Regels(
+        "KC",
+        ("KSH", "KPC", "KK", "KPK", "KRO", "KP", "KW", "Konstytucja RP", "UPK", "PPM", "UOKiK"),
+        nummer=r"\d+(?:[¹²³⁴⁵⁶⁷⁸⁹⁰]+|\^\d+)?",
+        namen={"KC": "Kodeks cywilny (1964)", "KSH": "Kodeks spółek handlowych", "KPC": "Kodeks postępowania cywilnego", "KK": "Kodeks karny",
+               "KPK": "Kodeks postępowania karnego", "KRO": "Kodeks rodzinny i opiekuńczy", "KP": "Kodeks pracy", "KW": "Kodeks wykroczeń",
+               "Konstytucja RP": "Konstytucja Rzeczypospolitej Polskiej (1997)", "UPK": "Ustawa o prawach konsumenta (2014)",
+               "PPM": "Prawo prywatne międzynarodowe (2011)", "UOKiK": "Ustawa o ochronie konkurencji i konsumentów"},
     ),
 }

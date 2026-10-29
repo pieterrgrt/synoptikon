@@ -151,12 +151,81 @@ SE = [
     ]),
 ]
 
+# PL: Kodeks cywilny (1964), boeken en titels. Gegenereerd uit de oorspronkelijke tekst (ELI-API van de Sejm,
+# DU/1964/93/text.html), met de huidige stand van de titels: later ingevoegde titels met een superscript
+# (XVIII¹ Leasing, XXXVI¹ Papiery wartościowe …) vallen binnen de bereiken van hun buren.
+PL = [
+    ("KC-I", "Księga pierwsza · Część ogólna", "art. 1–125", [
+        ("KC-I-1", "Tytuł I · Przepisy wstępne", "art. 1–7", []),
+        ("KC-I-2", "Tytuł II · Osoby", "art. 8–43", []),
+        ("KC-I-3", "Tytuł III · Mienie", "art. 44–55", []),
+        ("KC-I-4", "Tytuł IV · Czynności prawne", "art. 56–109", []),
+        ("KC-I-5", "Tytuł V · Terminy", "art. 110–116", []),
+        ("KC-I-6", "Tytuł VI · Przedawnienie roszczeń", "art. 117–125", []),
+    ]),
+    ("KC-II", "Księga druga · Własność i inne prawa rzeczowe", "art. 140–352", [
+        ("KC-II-1", "Tytuł I · Własność", "art. 140–231", []),
+        ("KC-II-2", "Tytuł II · Użytkowanie wieczyste", "art. 232–243", []),
+        ("KC-II-3", "Tytuł III · Prawa rzeczowe ograniczone", "art. 244–335", []),
+        ("KC-II-4", "Tytuł IV · Posiadanie", "art. 336–352", []),
+    ]),
+    ("KC-III", "Księga trzecia · Zobowiązania", "art. 353–921", [
+        ("KC-III-1", "Tytuł I · Przepisy ogólne", "art. 353–365", []),
+        ("KC-III-2", "Tytuł II · Wielość dłużników albo wierzycieli", "art. 366–383", []),
+        ("KC-III-3", "Tytuł III · Ogólne przepisy o zobowiązaniach umownych", "art. 384–396", []),
+        ("KC-III-5", "Tytuł V · Bezpodstawne wzbogacenie", "art. 405–414", []),
+        ("KC-III-6", "Tytuł VI · Czyny niedozwolone", "art. 415–449", []),
+        ("KC-III-7", "Tytuł VII · Wykonanie zobowiązań i skutki ich niewykonania", "art. 450–497", []),
+        ("KC-III-8", "Tytuł VIII · Potrącenie, odnowienie, zwolnienie z długu", "art. 498–508", []),
+        ("KC-III-9", "Tytuł IX · Zmiana wierzyciela lub dłużnika", "art. 509–526", []),
+        ("KC-III-10", "Tytuł X · Ochrona wierzyciela w razie niewypłacalności dłużnika", "art. 527–534", []),
+        ("KC-III-11", "Tytuł XI · Sprzedaż", "art. 535–602", []),
+        ("KC-III-12", "Tytuł XII · Zamiana", "art. 603–604", []),
+        ("KC-III-13", "Tytuł XIII · Dostawa", "art. 605–612", []),
+        ("KC-III-14", "Tytuł XIV · Kontraktacja", "art. 613–626", []),
+        ("KC-III-15", "Tytuł XV · Umowa o dzieło", "art. 627–646", []),
+        ("KC-III-16", "Tytuł XVI · Umowa o roboty budowlane", "art. 647–658", []),
+        ("KC-III-17", "Tytuł XVII · Najem i dzierżawa (met XVIII¹ Leasing)", "art. 659–709", []),
+        ("KC-III-18", "Tytuł XVIII · Użyczenie", "art. 710–719", []),
+        ("KC-III-19", "Tytuł XIX · Pożyczka", "art. 720–724", []),
+        ("KC-III-20", "Tytuł XX · Umowa rachunku bankowego", "art. 725–733", []),
+        ("KC-III-21", "Tytuł XXI · Zlecenie", "art. 734–751", []),
+        ("KC-III-22", "Tytuł XXII · Prowadzenie cudzych spraw bez zlecenia", "art. 752–757", []),
+        ("KC-III-23", "Tytuł XXIII · Umowa agencyjna", "art. 758–764", []),
+        ("KC-III-24", "Tytuł XXIV · Umowa komisu", "art. 765–773", []),
+        ("KC-III-25", "Tytuł XXV · Umowa przewozu", "art. 774–793", []),
+        ("KC-III-26", "Tytuł XXVI · Umowa spedycji", "art. 794–804", []),
+        ("KC-III-27", "Tytuł XXVII · Umowa ubezpieczenia", "art. 805–834", []),
+        ("KC-III-28", "Tytuł XXVIII · Przechowanie", "art. 835–845", []),
+        ("KC-III-29", "Tytuł XXIX · Odpowiedzialność utrzymujących hotele i podobne zakłady", "art. 846–852", []),
+        ("KC-III-30", "Tytuł XXX · Umowa składu", "art. 853–859", []),
+        ("KC-III-31", "Tytuł XXXI · Spółka", "art. 860–875", []),
+        ("KC-III-32", "Tytuł XXXII · Poręczenie", "art. 876–887", []),
+        ("KC-III-33", "Tytuł XXXIII · Darowizna", "art. 888–902", []),
+        ("KC-III-34", "Tytuł XXXIV · Renta i dożywocie", "art. 903–916", []),
+        ("KC-III-35", "Tytuł XXXV · Ugoda", "art. 917–918", []),
+        ("KC-III-36", "Tytuł XXXVI · Przyrzeczenie publiczne (met XXXVI¹ Papiery wartościowe)", "art. 919–921", []),
+    ]),
+    ("KC-IV", "Księga czwarta · Spadki", "art. 922–1088", [
+        ("KC-IV-1", "Tytuł I · Przepisy ogólne", "art. 922–930", []),
+        ("KC-IV-2", "Tytuł II · Dziedziczenie ustawowe", "art. 931–940", []),
+        ("KC-IV-3", "Tytuł III · Rozrządzenia na wypadek śmierci", "art. 941–990", []),
+        ("KC-IV-4", "Tytuł IV · Zachowek", "art. 991–1011", []),
+        ("KC-IV-5", "Tytuł V · Przyjęcie i odrzucenie spadku", "art. 1012–1024", []),
+        ("KC-IV-6", "Tytuł VI · Stwierdzenie nabycia spadku i ochrona spadkobiercy", "art. 1025–1029", []),
+        ("KC-IV-7", "Tytuł VII · Odpowiedzialność za długi spadkowe", "art. 1030–1034", []),
+        ("KC-IV-8", "Tytuł VIII · Wspólność majątku spadkowego i dział spadku", "art. 1035–1046", []),
+        ("KC-IV-9", "Tytuł IX · Umowy dotyczące spadku", "art. 1047–1088", []),
+    ]),
+]
+
 # code, naam, taal, toelichting, actief, rechtsfamilie (zelfde vorm als seed/stelsels.py)
 STELSELS = [
     ("DK", "Denemarken", "da", "Geen burgerlijk wetboek: losse vermogensrechtelijke wetten (Aftaleloven 1917, Købeloven 1906), deels in Scandinavische samenwerking tot stand gekomen; Danske Lov (1683) geldt nog in enkele artikelen", True, "nordisch"),
     ("FI", "Finland", "fi", "Geen burgerlijk wetboek: losse vermogensrechtelijke wetten in Scandinavische samenwerking (Oikeustoimilaki 1929, Kauppalaki 1987); het Zweedse Rijkswetboek van 1734 leeft voort in de procesrechtelijke 'kaari'", True, "nordisch"),
     ("NO", "Noorwegen", "no", "Geen burgerlijk wetboek: losse vermogensrechtelijke wetten, grotendeels in Scandinavische samenwerking (Avtaleloven 1918); Christian V's Norske Lov (1687) geldt nog in enkele artikelen", True, "nordisch"),
     ("SE", "Zweden", "sv", "Geen burgerlijk wetboek: losse vermogensrechtelijke wetten in Scandinavische samenwerking (Avtalslagen 1915, Köplagen 1990); van het Rijkswetboek van 1734 leven de balkar voort", True, "nordisch"),
+    ("PL", "Polen", "pl", "Kodeks cywilny (1964): pandektensysteem met een algemeen deel, voortbouwend op het Kodeks zobowiązań (1933); nog geen wettekst, want de ELI-API van de Sejm geeft de geconsolideerde tekst alleen als PDF", True, "germaans"),
     ("AT", "Oostenrijk", "de", "Allgemeines bürgerliches Gesetzbuch (1811): natuurrechtelijke codificatie, gemoderniseerd door de Teilnovellen (1914–1916) en latere hervormingen", True, "germaans"),
 ]
 
@@ -166,4 +235,5 @@ SYSTEMATIEK = {
     "FI": FI,
     "NO": NO,
     "SE": SE,
+    "PL": PL,
 }
