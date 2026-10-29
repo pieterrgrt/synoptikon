@@ -161,7 +161,8 @@ def laad_omzettingen(db: Session) -> int:
 
 
 def zoek(db: Session, q: str = "", soort: str = "", variant: str = "", rubriek: str = "", omgezet: bool = False,
-         pagina: int = 1, per_pagina: int = 50) -> tuple[list[EuHandeling], int]:
+         pagina: int = 1, per_pagina: int = 50, tel: bool = True) -> tuple[list[EuHandeling], int]:
+    """Handelingen op CELEX, nummer of woorden in titel en roepnaam; `tel=False` slaat het (dure) totaal over (dan 0)."""
     from .zoeken import fts_query
 
     stmt = select(EuHandeling)
@@ -186,7 +187,7 @@ def zoek(db: Session, q: str = "", soort: str = "", variant: str = "", rubriek: 
         stmt = stmt.where((EuHandeling.repertorium == rubriek) | EuHandeling.repertorium.like(f"{rubriek}%") | EuHandeling.repertorium.like(f"%,{rubriek}%"))
     if omgezet:
         stmt = stmt.where(EuHandeling.celex.in_(select(Omzetting.celex)))
-    totaal = db.scalar(select(func.count()).select_from(stmt.subquery())) or 0
+    totaal = (db.scalar(select(func.count()).select_from(stmt.subquery())) or 0) if tel else 0
     # Basishandelingen met roepnaam eerst, dan nieuwste eerst.
     stmt = stmt.order_by(EuHandeling.roepnaam.is_(None), EuHandeling.variant != "basis", EuHandeling.datum.desc().nulls_last())
     return met_titels(db, list(db.scalars(stmt.offset((pagina - 1) * per_pagina).limit(per_pagina)).all())), totaal

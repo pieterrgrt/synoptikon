@@ -85,9 +85,11 @@ def _warm() -> None:
     from .models import Stelsel
 
     try:
+        from .services import zoeken
         from .services.artikelen import laad_wetnamen
         with session_factory()() as db:
             laad_wetnamen(db)
+            zoeken.reeksen(db)  # welke artikelen bij welke wet horen, voor de eerste zoekopdracht
             for s in db.query(Stelsel).all():
                 wetboek.plaatsing(db, s.code)
     except Exception:  # alleen een versnelling; de pagina's rekenen het anders zelf uit

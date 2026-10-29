@@ -108,15 +108,15 @@ def wettekst_artikel(db: Session, ref: Ref) -> WettekstArtikel | None:
     return db.scalars(q.order_by(Wettekst.opgehaald.desc(), Wettekst.id.desc())).first()
 
 
-def zoek_artikel(db: Session, q: str, stelsel: str | None = None) -> list[tuple[Ref, WettekstArtikel | None]]:
+def zoek_artikel(db: Session, q: str, stelsel: str | None = None, stelsels: list[str] | None = None) -> list[tuple[Ref, WettekstArtikel | None]]:
     """Artikelen die bij de invoer passen, met hun tekst als die geïmporteerd is.
 
     Noemt de invoer geen wet ("929", "art. 1101", "L217-3"), dan tellen ook alle
     geïmporteerde wetten mee waarin dat nummer bestaat. Zijn er meer kandidaten,
     dan vallen de verwijzingen af naar een wet waarvan de tekst er wel is maar
-    het artikel niet (§ 1337 BGB is vervallen).
+    het artikel niet (§ 1337 BGB is vervallen). `stelsels` beperkt tot die stelsels (None of leeg = alle).
     """
-    uit = [(r, wettekst_artikel(db, r)) for r in herken(q, stelsel)]
+    uit = [(r, wettekst_artikel(db, r)) for r in herken(q, stelsel) if not stelsels or r.stelsel in stelsels]
     if not noemt_wet(q) and (nummers := kale_nummers(q)):
         # "art. 1469 bis" is niet art. 1469 C. civ.
         uit = [(r, wa) for r, wa in uit if r.nummer in nummers]
@@ -127,6 +127,8 @@ def zoek_artikel(db: Session, q: str, stelsel: str | None = None) -> list[tuple[
         stmt = select(WettekstArtikel).join(Wettekst).where(WettekstArtikel.nummer.in_(nummers), Wettekst.kern.is_(True)).options(selectinload(WettekstArtikel.wettekst))
         if stelsel:
             stmt = stmt.where(Wettekst.stelsel_code == stelsel)
+        elif stelsels:
+            stmt = stmt.where(Wettekst.stelsel_code.in_(stelsels))
         extra = []
         for wa in db.scalars(stmt.order_by(Wettekst.opgehaald.desc())).all():
             w = wa.wettekst
@@ -140,8 +142,11 @@ def zoek_artikel(db: Session, q: str, stelsel: str | None = None) -> list[tuple[
         extra.sort(key=lambda p: (orde.index(p[0].stelsel) if p[0].stelsel in orde else 99, p[0].wet is not None, p[0].wet or ""))
         uit += extra
     if len(uit) > 1 and any(wa for _, wa in uit):
-        met_tekst = set(db.execute(select(Wettekst.stelsel_code, Wettekst.wet).distinct()).tuples().all())
-        uit = [(r, wa) for r, wa in uit if wa or (r.stelsel, r.wet) not in met_tekst]
+        def met_tekst(r: Ref) -> bool:
+            wet = Wettekst.wet == r.wet if r.wet else Wettekst.wet.is_(None)
+            return db.scalar(select(Wettekst.id).where(Wettekst.stelsel_code == r.stelsel, wet).limit(1)) is not None
+
+        uit = [(r, wa) for r, wa in uit if wa or not met_tekst(r)]
     return uit
 
 
