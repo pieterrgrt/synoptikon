@@ -30,7 +30,7 @@ WEB = "https://www.mevzuat.gov.tr/mevzuat?MevzuatNo={nr}&MevzuatTur={tur}&Mevzua
 _BLOK = {"p", "h1", "h2", "h3", "h4", "h5", "h6", "td", "li", "div"}
 _STRUCTUUR = re.compile(r"^(?:[A-ZÇĞİÖŞÜ]+\s+){1,2}(KİTAP|KISIM|BÖLÜM|AYIRIM|KESİM)\b\s*(.*)$")
 _NIVEAU = {"KİTAP": 1, "KISIM": 2, "BÖLÜM": 3, "AYIRIM": 4, "KESİM": 5}
-_MADDE = re.compile(r"^(GEÇİCİ\s+|EK\s+)?MADDE\s+(\d+(?:/[A-Z])?)\s*[-–—]\s*(.*)$", re.S)
+_MADDE = re.compile(r"^(GEÇİCİ\s+|Geçici\s+|EK\s+|Ek\s+)?(?:MADDE|Madde)\s+(\d+(?:/[A-Z])?)\s*[-–—]\s*(.*)$", re.S)
 _EINDE = re.compile(r"SAYILI\s+(?:KANUNA|KANUN\s+HÜKMÜNDE).*(?:EK\s+VE\s+DEĞİŞİKLİK|İŞLENEMEYEN)")
 _NOOT = re.compile(r"\((?:Değişik|Ek|Mülga|İptal|Yeniden düzenleme)[^:()]*:\s*(\d{1,2})/(\d{1,2})/(\d{4})")
 _DATUM = re.compile(r"\b(\d{1,2})/(\d{1,2})/(\d{4})\b")
@@ -155,7 +155,7 @@ def parse(data: bytes, wet_id: str, bron_url: str | None = None, titel: str | No
                 kant = [x for x in kant if x[0] < n] + [(n, k)]
             opschrift = koppen[-1] if koppen else None
             boven = [x[1] for x in kant if not opschrift or x[1] != opschrift]
-            soort = {"GEÇİCİ": "Geçici ", "EK": "Ek "}.get((m.group(1) or "").strip(), "")
+            soort = {"G": "Geçici ", "E": "Ek "}.get((m.group(1) or " ")[0], "")
             huidig = {"nummer": soort + m.group(2), "opschrift": opschrift, "alineas": [m.group(3).strip()] if m.group(3).strip() else [],
                       "pad": " › ".join([s[1] for s in structuur] + boven) or None}
             wachtend, na_leeg = [], False
@@ -184,7 +184,7 @@ def parse(data: bytes, wet_id: str, bron_url: str | None = None, titel: str | No
             gezien.add(a.nummer)
             uniek.append(a)
     tur, nr, tertip = _id(wet_id)
-    return Geparseerd(wet_id=wet_id, titel=titel or eerste.title() or wet_id, versie=_versie(blokken, einde) or "onbekend",
+    return Geparseerd(wet_id=wet_id, titel=titel or eerste or wet_id, versie=_versie(blokken, einde) or "onbekend",
                       bron_url=bron_url or WEB.format(nr=nr, tur=tur, tertip=tertip), artikelen=uniek, ruw=data, ruw_extensie="html")
 
 

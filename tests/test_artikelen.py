@@ -6,7 +6,7 @@ from synoptikon import db as database
 from synoptikon.importers import bwb, store
 from synoptikon.models import Correspondentie, Systematiek
 from synoptikon.seed import seed
-from synoptikon.services.artikelen import Plaatser, herken, lees, parse_bereik, plaatser, sleutel
+from synoptikon.services.artikelen import Plaatser, Ref, herken, lees, parse_bereik, plaatser, sleutel
 from synoptikon.services.systematiek import bouw_uit_wettekst
 
 FIX = Path(__file__).parent / "fixtures"
@@ -294,3 +294,11 @@ def test_duitse_wetten_met_artikelen():
 
     assert Ref("DE", "1", "GG").citeer == "Art. 1 GG"
     assert Ref("DE", "1", "PatG").citeer == "§ 1 PatG"
+
+
+def test_regio_afrika_oost_citeerwijze():
+    assert herken("TMK m. 2") == [Ref("TR", "2")]
+    assert herken("md. 49 TBK") == [Ref("TR", "49", "TBK")]
+    assert herken("madde 49 Türk Borçlar Kanunu") == [Ref("TR", "49", "TBK")]
+    assert herken("TTK m. 11/A") == [Ref("TR", "11/A", "TTK")]
+    assert herken("п. 1 ст. 10 ГК РФ") == [Ref("RU", "10")]

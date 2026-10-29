@@ -7,6 +7,7 @@ artikelbereiken: met de hand uit de officiële inhoudsopgave waar geen open bron
 # code, naam, taal, toelichting, actief, rechtsfamilie
 STELSELS = [
     ("RU", "Rusland", "ru", "Гражданский кодекс РФ (1994–2006, vier delen): naar Nederlands en Duits model, hervormd in 2013–2015; geen open bron bereikbaar (pravo.gov.ru weigert verbindingen van buiten Rusland)", True, "post_sovjet"),
+    ("TR", "Turkije", "tr", "Türk Medeni Kanunu (2001) en Türk Borçlar Kanunu (2011): de Zwitserse ZGB en het OR, sinds 1926 overgenomen en vertaald; tekst van mevzuat.gov.tr, geconsolideerd", True, "germaans"),
 ]
 
 GK_RF = [
@@ -36,6 +37,34 @@ GK_RF = [
     ]),
 ]
 
+# Uit de import van mevzuat.gov.tr (TMK stand 2027-06-30, TBK stand 2026-07-31); het TBK draagt wet "TBK".
+TMK = [
+    ("TR-0", "Başlangıç", "art. 1–7", []),
+    ("TR-1", "Birinci Kitap · Kişiler Hukuku", "art. 8–117", [
+        ("TR-1-1", "Birinci Kısım · Gerçek Kişiler", "art. 8–46", []),
+        ("TR-1-2", "İkinci Kısım · Tüzel Kişiler", "art. 47–117", []),
+    ]),
+    ("TR-2", "İkinci Kitap · Aile Hukuku", "art. 118–494", [
+        ("TR-2-1", "Birinci Kısım · Evlilik Hukuku", "art. 118–281", []),
+        ("TR-2-2", "İkinci Kısım · Hısımlık", "art. 282–395", []),
+        ("TR-2-3", "Üçüncü Kısım · Vesayet", "art. 396–494", []),
+    ]),
+    ("TR-3", "Üçüncü Kitap · Miras Hukuku", "art. 495–682", [
+        ("TR-3-1", "Birinci Kısım · Mirasçılar", "art. 495–574", []),
+        ("TR-3-2", "İkinci Kısım · Mirasın Geçmesi", "art. 575–682", []),
+    ]),
+    ("TR-4", "Dördüncü Kitap · Eşya Hukuku", "art. 683–1030", [
+        ("TR-4-1", "Birinci Kısım · Mülkiyet", "art. 683–778", []),
+        ("TR-4-2", "İkinci Kısım · Sınırlı Aynî Haklar", "art. 779–972", []),
+        ("TR-4-3", "Üçüncü Kısım · Zilyetlik ve Tapu Sicili", "art. 973–1030", []),
+    ]),
+    ("TR-TBK", "Türk Borçlar Kanunu (TBK, 6098)", "art. 1–649", [
+        ("TBK-1", "Birinci Kısım · Genel Hükümler", "art. 1–206", []),
+        ("TBK-2", "İkinci Kısım · Özel Borç İlişkileri", "art. 207–649", []),
+    ], "TBK"),
+]
+
 SYSTEMATIEK = {
     "RU": GK_RF,
+    "TR": TMK,
 }

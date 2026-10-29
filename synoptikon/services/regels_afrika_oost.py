@@ -23,4 +23,13 @@ REGELS = {
                "Закон об АО": "Федеральный закон «Об акционерных обществах» (1995)",
                "Закон об ООО": "Федеральный закон «Об обществах с ограниченной ответственностью» (1998)"},
     ),
+    "TR": Regels(
+        "TMK",
+        ("TBK", "TTK", "HMK", "TCK", "TKHK", "MÖHUK", "Anayasa", "İİK"),
+        nummer=r"\d+(?:/[A-Z])?",
+        namen={"TMK": "Türk Medeni Kanunu (4721)", "TBK": "Türk Borçlar Kanunu (6098)", "TTK": "Türk Ticaret Kanunu (6102)",
+               "HMK": "Hukuk Muhakemeleri Kanunu (6100)", "TCK": "Türk Ceza Kanunu (5237)",
+               "TKHK": "Tüketicinin Korunması Hakkında Kanun (6502)", "MÖHUK": "Milletlerarası Özel Hukuk ve Usul Hukuku Hakkında Kanun (5718)",
+               "Anayasa": "Türkiye Cumhuriyeti Anayasası (1982)", "İİK": "İcra ve İflas Kanunu (2004)"},
+    ),
 }

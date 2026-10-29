@@ -272,3 +272,19 @@ def test_griekse_verwijzingen():
     assert [(r.stelsel, r.nummer, r.wet) for r in herken("άρθρο 914 ΑΚ")] == [("GR", "914", None)]
     assert [(r.stelsel, r.nummer, r.wet) for r in herken("Art. 1033 AK")] == [("GR", "1033", None)]
     assert [(r.stelsel, r.nummer, r.wet) for r in herken("άρθρο 5 Συντ.")] == [("GR", "5", "Συντ.")]
+
+
+def test_mevzuat_kantkoppen_en_structuur():
+    from synoptikon.importers import mevzuat
+
+    g = mevzuat.parse((FIX / "mevzuat_tmk.html").read_bytes(), "4721")
+    assert g.titel == "TÜRK MEDENİ KANUNU"
+    assert g.versie == "2026-01-01"  # laatste inwerkingtreding uit de tabel, niet de ophaaldatum
+    a1, a2, a8, g1 = g.artikelen
+    assert (a1.nummer, a1.opschrift, a1.pad) == ("1", "A. Hukukun uygulanması ve kaynakları", None)
+    assert (a2.opschrift, a2.pad) == ("I. Dürüst davranma", "B. Hukukî ilişkilerin kapsamı")
+    assert a2.tekst.endswith("hukuk düzeni korumaz.")
+    assert a8.pad == "BİRİNCİ KİTAP · KİŞİLER HUKUKU › BİRİNCİ KISIM · GERÇEK KİŞİLER"
+    assert "(Değişik: 13/2/2011" in a8.tekst
+    assert g1.nummer == "Geçici 1"
+    assert "TABLO" not in g1.tekst
