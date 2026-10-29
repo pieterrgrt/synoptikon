@@ -289,6 +289,7 @@ synoptikon seed                              # laadt o.a. de omzettingstabel
 | GR | lawspot.gr | ΑΚ, Σύνταγμα, ΠΚ, ΕμπΝ, ν. 2251/1994, 2190/1920, 3190/1955, 4548/2018, 4072/2012, 3869/2010, 4624/2019 | ja |
 | RU | geen (pravo.gov.ru onbereikbaar van buiten Rusland; ConsultantPlus/Garant niet) | alleen systematiek ГК РФ | — |
 | TR | mevzuat.gov.tr (Word-HTML) | TMK, TBK, Anayasa, TTK, TKHK, HMK, TCK, MÖHUK | ja |
+| AE | geen (uaelegislation.gov.ae en elaws.moj.gov.ae niet bereikbaar: Cloudflare-blokkade, time-out) | alleen systematiek قانون المعاملات المدنية 2025 | — |
 
 **Alle wetten van een bron** (`synoptikon/importers/bulk.py`), naast het register:
 

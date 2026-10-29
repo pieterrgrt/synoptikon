@@ -8,6 +8,7 @@ artikelbereiken: met de hand uit de officiële inhoudsopgave waar geen open bron
 STELSELS = [
     ("RU", "Rusland", "ru", "Гражданский кодекс РФ (1994–2006, vier delen): naar Nederlands en Duits model, hervormd in 2013–2015; geen open bron bereikbaar (pravo.gov.ru weigert verbindingen van buiten Rusland)", True, "post_sovjet"),
     ("TR", "Turkije", "tr", "Türk Medeni Kanunu (2001) en Türk Borçlar Kanunu (2011): de Zwitserse ZGB en het OR, sinds 1926 overgenomen en vertaald; tekst van mevzuat.gov.tr, geconsolideerd", True, "germaans"),
+    ("AE", "Verenigde Arabische Emiraten", "ar", "قانون المعاملات المدنية (decreet-wet 25/2025, sinds 1 juni 2026; opvolger van de wet van 1985): naar de Majalla en het Jordaanse wetboek, met de islamitische fiqh als aanvullende bron; geen tekst (uaelegislation.gov.ae blokkeert geautomatiseerde toegang via Cloudflare)", True, "islamitisch"),
 ]
 
 GK_RF = [
@@ -64,7 +65,18 @@ TMK = [
     ], "TBK"),
 ]
 
+# Hoofdindeling van de nieuwe wet (decreet-wet 25/2025), volgens een overzicht van lylawyers.com; de officiële
+# inhoudsopgave was niet bereikbaar. Aanvullen zodra er een tekstbron is.
+CTL_AE = [
+    ("AE-0", "الباب التمهيدي · Inleidende bepalingen", "art. 1–98", []),
+    ("AE-1", "الكتاب الأول · الالتزامات (verbintenissen)", "art. 99–444", []),
+    ("AE-2", "الكتاب الثاني · العقود المسماة (benoemde contracten)", "art. 445–1035", []),
+    ("AE-3", "الكتاب الثالث · الحقوق العينية (zakelijke rechten)", "art. 1036–1295", []),
+    ("AE-4", "الكتاب الرابع · التأمينات العينية (zakelijke zekerheden)", "art. 1296–1422", []),
+]
+
 SYSTEMATIEK = {
     "RU": GK_RF,
     "TR": TMK,
+    "AE": CTL_AE,
 }

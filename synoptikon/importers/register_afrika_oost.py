@@ -6,6 +6,8 @@ Bronnen per stelsel en waarom:
   ConsultantPlus en Garant zijn commercieel en worden niet gescrapet. Alleen stelsel, systematiek en citeerregels.
 * TR: mevzuat.gov.tr (Mevzuat Bilgi Sistemi van het presidentschap), geconsolideerd, Word-HTML per wet; robots.txt
   beperkt alleen Googlebot.
+* AE: geen tekst. uaelegislation.gov.ae (officieel, open, met Engels) staat geautomatiseerde toegang toe in
+  robots.txt maar geeft een Cloudflare-blokkade (403); elaws.moj.gov.ae (ministerie van Justitie) gaf een time-out.
 """
 from __future__ import annotations
 

@@ -302,3 +302,4 @@ def test_regio_afrika_oost_citeerwijze():
     assert herken("madde 49 Türk Borçlar Kanunu") == [Ref("TR", "49", "TBK")]
     assert herken("TTK m. 11/A") == [Ref("TR", "11/A", "TTK")]
     assert herken("п. 1 ст. 10 ГК РФ") == [Ref("RU", "10")]
+    assert herken("Article 246 of the Civil Transactions Law") == [Ref("AE", "246")]

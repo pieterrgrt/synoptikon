@@ -32,4 +32,11 @@ REGELS = {
                "TKHK": "Tüketicinin Korunması Hakkında Kanun (6502)", "MÖHUK": "Milletlerarası Özel Hukuk ve Usul Hukuku Hakkında Kanun (5718)",
                "Anayasa": "Türkiye Cumhuriyeti Anayasası (1982)", "İİK": "İcra ve İflas Kanunu (2004)"},
     ),
+    "AE": Regels(
+        "CTL",
+        ("CommTL", "CPL", "Penal Code", "CPrL", "Companies Law"),
+        namen={"CTL": "Civil Transactions Law (decreet-wet 25/2025)", "CommTL": "Commercial Transactions Law (decreet-wet 50/2022)",
+               "CPL": "Consumer Protection Law (federale wet 15/2020)", "Penal Code": "Federal Penal Code (decreet-wet 31/2021)",
+               "CPrL": "Civil Procedure Law (decreet-wet 42/2022)", "Companies Law": "Commercial Companies Law (decreet-wet 32/2021)"},
+    ),
 }
