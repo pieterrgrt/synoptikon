@@ -289,6 +289,7 @@ synoptikon seed                              # laadt o.a. de omzettingstabel
 | GR | lawspot.gr | ΑΚ, Σύνταγμα, ΠΚ, ΕμπΝ, ν. 2251/1994, 2190/1920, 3190/1955, 4548/2018, 4072/2012, 3869/2010, 4624/2019 | ja |
 | CA | Justice Laws Website (XML, Open Government Licence – Canada; Constitution Acts als HTML) | CA 1867, CA 1982, Criminal Code, Divorce Act, BIA, CBCA, Interest Act | ja |
 | QC | Données Québec (XML-zip van LégisQuébec, CC BY-NC-ND 4.0) | C.c.Q., C.p.c., L.p.c., Charte québécoise | ja |
+| CL | Ley Chile (BCN, XML per norm) | CC, CPR, C. de C., CPC, LPDC (Ley 19.496), CP | ja |
 
 **Alle wetten van een bron** (`synoptikon/importers/bulk.py`), naast het register:
 

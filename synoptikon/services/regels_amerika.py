@@ -5,10 +5,12 @@
   de Constitution Act, 1867 ook met een letter (`90S.1`).
 * **QC** (Code civil du Québec): `art. 1457 C.c.Q.`, ingevoegde artikelen met een punt (`521.1`); de andere wetten
   zoals de Québecse doctrine ze citeert (`C.p.c.`, `L.p.c.`).
+* **CL** (Código Civil van Bello, 1855): `art. 1545 CC`, `art. 19 CPR` (Constitución Política de la República),
+  `art. 3 bis LPDC` (Ley 19.496); ingevoegde artikelen met bis/ter, enkele met een streepje (`225-2`).
 """
 from __future__ import annotations
 
-from .artikelen import Regels
+from .artikelen import _LAT, Regels
 
 REGELS = {
     "CA": Regels(
@@ -26,5 +28,12 @@ REGELS = {
         nummer=r"\d+(?:\.\d+)*",
         namen={"C.c.Q.": "Code civil du Québec", "C.p.c.": "Code de procédure civile du Québec",
                "L.p.c.": "Loi sur la protection du consommateur", "Charte québécoise": "Charte des droits et libertés de la personne"},
+    ),
+    "CL": Regels(
+        "CC",
+        ("CPR", "C. de C.", "CP", "CPC", "LPDC"),
+        nummer=rf"\d+(?:-\d+)?(?:\s?(?:{_LAT}))?",
+        namen={"CC": "Código Civil de Chile", "CPR": "Constitución Política de la República de Chile", "C. de C.": "Código de Comercio de Chile",
+               "CP": "Código Penal de Chile", "CPC": "Código de Procedimiento Civil", "LPDC": "Ley 19.496 sobre Protección de los Derechos de los Consumidores"},
     ),
 }

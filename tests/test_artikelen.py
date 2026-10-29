@@ -186,7 +186,7 @@ def test_nummering_van_de_nieuwe_stelsels():
     assert een("La. C.C. art. 2315")[4] == "La. C.C. art. 2315"  # niet het Italiaanse c.c.
     assert een("s 18 ACL")[:3] == ("AU", "18", "ACL")
     assert een("DCFR VIII.–2:101")[:3] == ("EU", "VIII.-2:101", "DCFR")
-    assert {r.stelsel for r in herken("art. 1902 CC")} == {"ES", "FR"}  # "CC" is dubbelzinnig
+    assert {r.stelsel for r in herken("art. 1902 CC")} >= {"ES", "FR"}  # "CC" is dubbelzinnig (ook CL en andere regio-stelsels)
     assert lees("ES", "artículo 94 bis").nummer == "94 bis" and lees("BE", "art. 2262 bis oud BW").nummer == "2262bis"
     assert sleutel("IT", "1469-bis") < sleutel("IT", "1469-ter") < sleutel("IT", "1470")
     assert sleutel("CH", "40") < sleutel("CH", "40a") < sleutel("CH", "41")
