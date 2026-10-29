@@ -187,7 +187,8 @@ def geldende(c=None, peildatum: date | None = None, soorten: tuple[str, ...] = S
         for soort in soorten:
             start: int | None = 1
             while start:
-                r = c.get(SRU, params={"operation": "searchRetrieve", "version": "2.0", "x-connection": "BWB", "startRecord": start,
+                # Zonder Accept-kop antwoordt de SRU-dienst met 406 (wel met de XML erbij).
+                r = c.get(SRU, headers={"Accept": "application/xml"}, params={"operation": "searchRetrieve", "version": "2.0", "x-connection": "BWB", "startRecord": start,
                                        "maximumRecords": per_pagina, "query": f"overheidbwb.geldigheidsdatum=={peil} and dcterms.type=={soort}"})
                 # De zoekdienst antwoordt met status 406 en toch een volledige, geldige respons (2026); daarom op de inhoud.
                 if r.status_code != 406 or b"searchRetrieveResponse" not in r.content[:2000]:
