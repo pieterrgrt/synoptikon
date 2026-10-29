@@ -1,0 +1,14 @@
+[Unit]
+Description=Synoptikon: archief en back-ups naar de Storage Box
+After=network-online.target
+
+[Service]
+Type=oneshot
+Environment=PATH=%h/.local/bin:/usr/local/bin:/usr/bin:/bin
+WorkingDirectory=%h/synoptikon
+# Zonder rclone-remote `storagebox:` meldt het script dat en stopt het met 0.
+ExecStart=%h/synoptikon/scripts/storagebox.sh
+Nice=19
+IOSchedulingClass=idle
+MemoryMax=512M
+TimeoutStartSec=6h

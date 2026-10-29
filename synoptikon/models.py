@@ -62,6 +62,7 @@ from datetime import date, datetime, timezone
 from sqlalchemy import (
     Date,
     DateTime,
+    Float,
     ForeignKey,
     JSON,
     Integer,
@@ -418,6 +419,12 @@ class Wettekst(Base):
     taal: Mapped[str | None] = mapped_column(String(5))  # taal van de tekst als het stelsel er meer heeft (EU); None = de taal van het stelsel
     kern: Mapped[bool] = mapped_column(default=True)  # uit het register (systematiek, overzicht); False = bulkimport (alle wetten)
     stijl: Mapped[str | None] = mapped_column(String(8))  # citeerwijze als die afwijkt van het stelsel: "Art" (GG, EGBGB)
+    # Voor `synoptikon bijwerken`: sha256 over de artikelen (store.inhoud_hash), wanneer laatst met de bron vergeleken,
+    # en aantal artikelen en tekens (zodat /wetteksten de opslag per stelsel toont zonder alle teksten te tellen).
+    hash: Mapped[str | None] = mapped_column(String(64))
+    gecontroleerd: Mapped[datetime | None] = mapped_column(DateTime)
+    aantal: Mapped[int | None] = mapped_column(Integer)
+    grootte: Mapped[int | None] = mapped_column(Integer)
 
     artikelen: Mapped[list["WettekstArtikel"]] = relationship(
         back_populates="wettekst", cascade="all, delete-orphan", order_by="WettekstArtikel.volgorde"
@@ -437,6 +444,23 @@ class WettekstArtikel(Base):
     volgorde: Mapped[int] = mapped_column(Integer, default=0)
 
     wettekst: Mapped[Wettekst] = relationship(back_populates="artikelen")
+
+
+class Bijwerking(Base):
+    """Logboek van `synoptikon bijwerken`: één regel per bron (en stelsel) per ronde."""
+
+    __tablename__ = "bijwerking"
+
+    id: Mapped[int] = mapped_column(primary_key=True)
+    begin: Mapped[datetime] = mapped_column(DateTime, default=now, index=True)
+    bron: Mapped[str] = mapped_column(String(20))  # register · de · nl · fr · eu · eu-catalogus
+    stelsel: Mapped[str | None] = mapped_column(String(8))
+    gecontroleerd: Mapped[int] = mapped_column(Integer, default=0)
+    gewijzigd: Mapped[int] = mapped_column(Integer, default=0)
+    nieuw: Mapped[int] = mapped_column(Integer, default=0)
+    fouten: Mapped[int] = mapped_column(Integer, default=0)
+    duur: Mapped[float] = mapped_column(Float, default=0.0)  # seconden
+    melding: Mapped[str | None] = mapped_column(Text)  # waarom gestopt, en de eerste fouten
 
 
 # --- Unierecht -----------------------------------------------------------------

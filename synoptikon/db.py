@@ -220,6 +220,10 @@ _NIEUWE_KOLOMMEN = [
     ("leerlijst", "deelcode", "VARCHAR(16)"),
     ("leerlijst", "gedeeld_op", "DATETIME"),
     ("leerlijst", "overgenomen_van", "INTEGER REFERENCES leerlijst(id) ON DELETE SET NULL"),
+    ("wettekst", "hash", "VARCHAR(64)"),
+    ("wettekst", "gecontroleerd", "DATETIME"),
+    ("wettekst", "aantal", "INTEGER"),
+    ("wettekst", "grootte", "INTEGER"),
 ]
 
 # Eenmalig na het toevoegen van een kolom.

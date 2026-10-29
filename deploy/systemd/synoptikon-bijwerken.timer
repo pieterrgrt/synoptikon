@@ -1,0 +1,10 @@
+[Unit]
+Description=Synoptikon: wetteksten bijwerken (timer)
+
+[Timer]
+OnCalendar=*-*-* 01:30 Europe/Berlin
+RandomizedDelaySec=10min
+Persistent=true
+
+[Install]
+WantedBy=timers.target

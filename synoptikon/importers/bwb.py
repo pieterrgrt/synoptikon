@@ -18,6 +18,7 @@ from __future__ import annotations
 
 import re
 import xml.etree.ElementTree as ET
+from dataclasses import dataclass
 from datetime import date
 
 from . import Artikel, Geparseerd
@@ -131,3 +132,106 @@ def haal_op(wet_id: str) -> Geparseerd:
         if not r.content.lstrip().startswith(b"<?xml"):
             raise ValueError(f"wetten.overheid.nl gaf geen XML voor {wet_id} ({r.headers.get('content-type')})")
     return parse(r.content, wet_id, f"{BASIS}{pad}")
+
+
+# --- alle geldende regelingen (bulk en bijwerken) ---------------------------------------------
+#
+# De lijst komt uit de SRU-zoekdienst van het BWB (zoekservice.overheid.nl, open, geen sleutel): per regeling de
+# geldende toestand met haar begindatum en de URL van de XML in de repository van officiële overheidspublicaties. Die
+# toestand-XML is hetzelfde formaat als de export van wetten.overheid.nl, maar statisch (één verzoek, ETag), en de
+# begindatum = de versie die `parse` uit de wortel leest. Een wet waarvan de datum niet veranderde, hoeft dus niet
+# opnieuw te worden opgehaald. De citeerafkorting (Awb, Wft) staat bovenaan het WTI-bestand; dat kan tientallen MB
+# zijn, dus alleen de eerste kilobytes.
+
+SRU = "https://zoekservice.overheid.nl/sru/Search"
+REPOSITORY = "https://repository.officiele-overheidspublicaties.nl/bwb"
+SOORTEN = ("wet", "rijkswet", "AMvB", "rijksAMvB")
+_SRU_NS = {"sru": "http://docs.oasis-open.org/ns/search-ws/sruResponse", "dcterms": "http://purl.org/dc/terms/",
+           "overheidbwb": "http://standaarden.overheid.nl/bwb/terms/"}
+
+
+@dataclass(frozen=True)
+class Regeling:
+    id: str
+    titel: str
+    soort: str
+    versie: str  # begindatum van de geldende toestand
+    url: str  # toestand-XML in de repository
+
+
+def parse_sru(xml_bytes: bytes) -> tuple[list[Regeling], int | None]:
+    """Eén pagina van de SRU-respons: de regelingen en de volgende startpositie (None = klaar)."""
+    root = ET.fromstring(xml_bytes)
+    uit = []
+    for rec in root.iterfind(".//sru:record", _SRU_NS):
+        def veld(pad: str) -> str:
+            el = rec.find(pad, _SRU_NS)
+            return (el.text or "").strip() if el is not None else ""
+        bwb_id = veld(".//dcterms:identifier")
+        url = veld(".//overheidbwb:locatie_toestand")
+        if bwb_id and url:
+            uit.append(Regeling(bwb_id, veld(".//dcterms:title"), veld(".//dcterms:type"),
+                                veld(".//overheidbwb:geldigheidsperiode_startdatum")[:10], url))
+    volgende = root.find("sru:nextRecordPosition", _SRU_NS)
+    tekst = (volgende.text or "").strip() if volgende is not None else ""
+    return uit, int(tekst) if tekst.isdigit() else None
+
+
+def geldende(c=None, peildatum: date | None = None, soorten: tuple[str, ...] = SOORTEN, per_pagina: int = 500) -> list[Regeling]:
+    """Alle regelingen van deze soorten die op de peildatum gelden (±4.400 voor wet, rijkswet, AMvB, rijksAMvB)."""
+    eigen = c is None
+    c = c or client(timeout=120.0)
+    peil = (peildatum or date.today()).isoformat()
+    gezien: dict[str, Regeling] = {}
+    try:
+        for soort in soorten:
+            start: int | None = 1
+            while start:
+                r = c.get(SRU, params={"operation": "searchRetrieve", "version": "2.0", "x-connection": "BWB", "startRecord": start,
+                                       "maximumRecords": per_pagina, "query": f"overheidbwb.geldigheidsdatum=={peil} and dcterms.type=={soort}"})
+                # De zoekdienst antwoordt met status 406 en toch een volledige, geldige respons (2026); daarom op de inhoud.
+                if r.status_code != 406 or b"searchRetrieveResponse" not in r.content[:2000]:
+                    r.raise_for_status()
+                pagina, start = parse_sru(r.content)
+                for reg in pagina:
+                    gezien.setdefault(reg.id, reg)
+                if not pagina:
+                    break
+    finally:
+        if eigen:
+            c.close()
+    return sorted(gezien.values(), key=lambda x: x.id)
+
+
+def haal_toestand(url: str, wet_id: str, c=None) -> Geparseerd:
+    eigen = c is None
+    c = c or client(timeout=120.0)
+    try:
+        r = c.get(url)
+        r.raise_for_status()
+    finally:
+        if eigen:
+            c.close()
+    return parse(r.content, wet_id, f"{BASIS}/{wet_id}/")
+
+
+def afkorting(wet_id: str, c=None) -> str | None:
+    """Officiële afkorting uit de kop van het WTI-bestand, of None."""
+    eigen = c is None
+    c = c or client(timeout=60.0)
+    kop = b""
+    try:
+        with c.stream("GET", f"{REPOSITORY}/{wet_id}/{wet_id}.WTI") as r:
+            if r.status_code != 200:
+                return None
+            for stuk in r.iter_bytes():
+                kop += stuk
+                if b"</afkortingen>" in kop or b"<citeertitel" in kop or len(kop) > 16384:
+                    break
+    except Exception:  # alleen een gemak; de wet zelf komt er ook zonder
+        return None
+    finally:
+        if eigen:
+            c.close()
+    m = re.search(rb"<afkorting>([^<]{1,60})</afkorting>", kop)
+    return m.group(1).decode("utf-8", "replace").strip() if m else None

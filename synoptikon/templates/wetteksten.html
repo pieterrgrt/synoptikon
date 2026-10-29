@@ -17,4 +17,21 @@
 <p class="hint" lang="nl"><code>synoptikon import-bulk de</code> (gesetze-im-internet.de) · <code>synoptikon import-bulk eu</code> (alle geldende EU-handelingen, Duits; verdragen in zes talen).</p>
 <ul class="lijst">{% for code, n, wanneer in bulk %}<li>{{ sc(code) }} <a href="/stelsels/{{ code }}/wetten">{{ n_('{n} wet', '{n} wetten', n) }}</a> <span class="stil">{{ _('bijgewerkt {datum}', datum=wanneer.strftime('%Y-%m-%d')) }}</span></li>{% endfor %}</ul>
 {% endif %}
+{% if bijhouden %}
+<h2 id="bijhouden">{{ _('Bijhouden') }}</h2>
+<p class="hint" lang="nl">Elke nacht een zevende van elke bron: <code>synoptikon bijwerken --deel 3/7</code> (systemd-timer, zie <code>deploy/systemd/</code>). Opgeslagen wordt alleen wat echt veranderde.</p>
+<div class="tabel-schuif"><table class="tabel">
+  <thead><tr><th>{{ _('Stelsel') }}</th><th>{{ _('Wetten') }}</th><th>{{ _('Artikelen') }}</th><th>{{ _('Tekst (MB)') }}</th><th>{{ _('Gecontroleerd') }}</th><th>{{ _('Gewijzigd') }}</th><th>{{ _('Laatste ronde') }}</th></tr></thead>
+  <tbody>
+  {% for r in bijhouden %}
+  <tr><td>{{ sc(r.code) }}</td><td>{{ r.wetten }}</td><td>{{ r.artikelen }}</td><td>{{ '%.1f'|format(r.mb) }}</td>
+    <td class="stil">{{ r.gecontroleerd.strftime('%Y-%m-%d') if r.gecontroleerd else _('nog nooit') }}</td>
+    <td class="stil">{{ r.gewijzigd.strftime('%Y-%m-%d') if r.gewijzigd else '—' }}</td>
+    <td class="stil">{% if r.ronde %}{{ r.ronde.begin.strftime('%m-%d') }} {{ r.ronde.bron }}: {{ r.ronde.gecontroleerd }}/{{ r.ronde.gewijzigd }}/{{ r.ronde.nieuw }}{% if r.ronde.fouten %} · <strong>{{ n_('{n} fout', '{n} fouten', r.ronde.fouten) }}</strong>{% endif %}{% else %}—{% endif %}</td></tr>
+  {% for wanneer, tekst in r.fouten %}<tr><td></td><td colspan="6" class="stil"><small>{{ wanneer.strftime('%m-%d') }} {{ tekst }}</small></td></tr>{% endfor %}
+  {% endfor %}
+  </tbody>
+</table></div>
+<p class="hint">{{ _('Laatste ronde: gecontroleerd/gewijzigd/nieuw.') }}</p>
+{% endif %}
 {% endblock %}

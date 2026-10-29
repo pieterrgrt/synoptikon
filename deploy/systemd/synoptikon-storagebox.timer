@@ -1,0 +1,10 @@
+[Unit]
+Description=Synoptikon: archief en back-ups naar de Storage Box (timer)
+
+[Timer]
+OnCalendar=Sun *-*-* 04:00 Europe/Berlin
+RandomizedDelaySec=20min
+Persistent=true
+
+[Install]
+WantedBy=timers.target
