@@ -1,0 +1,185 @@
+<?xml version='1.0' encoding='utf-8'?>
+<Dokument id="idd497eb93-28a7-4a46-af37-b0cb45cb1c70" SchemaLocation="http://www.retsinformation.dk/offentlig/xml/schemas/2015/06/22/LBKH.Retsinfo.LexDania_2.1.xsd">
+  <Meta id="id7d43524c-79c4-4983-b41f-fa58d4d12f31">
+    <DocumentType>LBK H#LOKDOK03</DocumentType>
+    <Rank>A</Rank>
+    <AccessionNumber>A20160019329</AccessionNumber>
+    <DocumentId>AA009459</DocumentId>
+    <UniqueDocumentId>177079</UniqueDocumentId>
+    <DocumentTitle>Bekendtgørelse af lov om aftaler og andre retshandler på formuerettens område</DocumentTitle>
+    <Year>2016</Year>
+    <DiesSigni>2016-03-02</DiesSigni>
+    <DateOfSubmit id="submit_1" />
+    <StartDate REFid="submit_1">2016-03-05</StartDate>
+    <EndDate REFid="submit_1">2021-11-28</EndDate>
+    <Status>Valid</Status>
+    <Number>193</Number>
+    <PopularTitle>Aftaleloven</PopularTitle>
+    <AnnouncedIn>Lovtidende A</AnnouncedIn>
+    <DiesEdicti>2016-03-05</DiesEdicti>
+    <Republished>Nej</Republished>
+    <Sign id="sign" />
+    <Signature REFid="sign">Søren Pind</Signature>
+    <Sub-Sign id="subsign" />
+    <Signature REFid="subsign">Mette Johansen</Signature>
+    <PlaceOfSignature>Justitsministeriet</PlaceOfSignature>
+    <JournalNumber>Justitsmin., j.nr. 2016-7002-0091</JournalNumber>
+    <Ministry>Justitsministeriet</Ministry>
+  </Meta>
+  <TitelGruppe id="ide026905c-6e0b-4471-a002-ed6ebe921099">
+    <Titel id="id99a5fc0e-8e6c-4beb-a512-1cfb780363a1">
+      <Linea>
+        <Char>Bekendtgørelse af lov om aftaler og andre retshandler på formuerettens område</Char>
+      </Linea>
+    </Titel>
+  </TitelGruppe>
+  <DokumentIndhold id="id483ccfb6-bb7b-4a55-8eb1-b36fdb32898e">
+    <Indledning id="ida0c5947d-5d57-4d54-b6dc-e37026223f3c">
+      <Exitus>
+        <Linea>
+          <Char>Herved bekendtgøres lov om aftaler og andre retshandler på formuerettens område, jf. lovbekendtgørelse nr. 781 af 26. august 1996, med de ændringer, der følger af § 2 i lov nr. 1376 af 28. december 2011 og § 15 i lov nr. 1565 af 15. december 2015.</Char>
+        </Linea>
+      </Exitus>
+    </Indledning>
+    <Bog id="iddeb8b4cd-f2eb-4315-9383-da285a4e6dd0">
+      <Afsnit id="idc293cf24-fcb4-4772-8456-bd231417a24f" localId="1">
+        <Explicatus>I. Om afslutning af aftaler</Explicatus>
+        <Kapitel id="ida9678a30-8c5c-476c-8799-bb93d72d4fed" localId="1">
+          <ParagrafGruppe>
+            <Paragraf id="idd52888d2-07a3-4f83-a892-0d5065f3c32d" localId="1">
+              <Explicatus>§ 1.</Explicatus>
+              <Stk id="id1077d15b-a7a1-4f60-b8e8-94393c867ea8">
+                <Exitus>
+                  <Linea>
+                    <Char>Tilbud og svar på tilbud er bindende for afgiveren.</Char>
+                  </Linea>
+                  <Linea>
+                    <Char>Reglerne i §§ 2-9 kommer til anvendelse, for så vidt ikke andet følger af tilbudet eller svaret eller af handelsbrug eller anden sædvane.</Char>
+                  </Linea>
+                </Exitus>
+              </Stk>
+            </Paragraf>
+            <Paragraf id="id612e2909-e129-4f9e-aaae-a11c99d77d10" localId="9a">
+              <Explicatus>§ 9 a.</Explicatus>
+              <Stk id="id9efe9a31-daab-464e-b7ef-e0849d989acb">
+                <Exitus>
+                  <Linea>
+                    <Char>§§ 1-9 finder ikke anvendelse på afslutning af aftaler om løsørekøb, der er omfattet af den internationale købelov.</Char>
+                  </Linea>
+                </Exitus>
+              </Stk>
+            </Paragraf>
+          </ParagrafGruppe>
+        </Kapitel>
+      </Afsnit>
+      <Afsnit id="idccc81311-e02c-41f4-a3da-8ad6ab802ae6" localId="3">
+        <Explicatus>III. Om ugyldige viljeserklæringer</Explicatus>
+        <Kapitel id="id85210de3-9eb5-4079-b38d-a73f0f1057b2" localId="3">
+          <ParagrafGruppe>
+            <Paragraf id="id45471350-b4dd-469b-a459-5613102ae3b7" localId="36">
+              <Explicatus>§ 36.</Explicatus>
+              <Stk id="id50d73d29-62f8-4c63-b61c-e6000787a8ac">
+                <Exitus>
+                  <Linea>
+                    <Char>En aftale kan ændres eller tilsidesættes helt eller delvis, hvis det vil være urimeligt eller i strid med redelig handlemåde at gøre den gældende.</Char>
+                  </Linea>
+                  <Linea>
+                    <Char>Det samme gælder andre retshandler.</Char>
+                  </Linea>
+                </Exitus>
+              </Stk>
+              <Stk id="idfbde4cae-f470-4ab5-99db-272bfa551355">
+                <Explicatus>Stk. 2.</Explicatus>
+                <Exitus>
+                  <Linea>
+                    <Char>Ved afgørelsen efter stk. 1 tages hensyn til forholdene ved aftalens indgåelse, aftalens indhold og senere indtrufne omstændigheder.</Char>
+                  </Linea>
+                </Exitus>
+              </Stk>
+            </Paragraf>
+            </ParagrafGruppe>
+        </Kapitel>
+      </Afsnit>
+      </Bog>
+    <Ikraft id="id0704fff6-4e5a-456f-87b4-2b9d5f878696">
+      <Exitus>
+        <Linea>
+          <Char>Lov nr. 1376 af 28. december 2011 (Gennemførelse i dansk ret af del II om aftalens indgåelse i FN-konventionen om aftaler om internationale køb)</Char>
+        </Linea>
+        <Nota id="id52e833db-ceb4-4015-a7b8-ec73469d0cc6">
+          <Explicatus>1)</Explicatus>
+          <Exitus>
+            <Linea>
+              <Char>Lovændringen vedrører § 9 a.</Char>
+            </Linea>
+          </Exitus>
+        </Nota>
+        <Linea>
+          <Char>indeholder følgende ikrafttrædelses- og overgangsbestemmelser:</Char>
+        </Linea>
+      </Exitus>
+      <IkraftCentreretParagraf id="id537b5319-c2d5-4af4-a1f0-eb33f3c0ad8e">
+        <Explicatus>§ 3</Explicatus>
+        <Stk id="ida14df64b-ca00-4ee4-bcd9-5e73e22fcd10">
+          <Explicatus>Stk. 1.</Explicatus>
+          <Exitus>
+            <Linea>
+              <Char>Justitsministeren fastsætter tidspunktet for lovens ikrafttræden.</Char>
+            </Linea>
+            <Nota id="ide9da53a5-05c9-48a1-aaf0-eb9d7e321a20">
+              <Explicatus>2)</Explicatus>
+              <Exitus>
+                <Linea>
+                  <Char>Ved bekendtgørelse nr. 973 af 24. september 2012 er det bestemt, at loven træder i kraft den 1. februar 2013.</Char>
+                </Linea>
+              </Exitus>
+            </Nota>
+          </Exitus>
+        </Stk>
+        <Stk id="iddc5bc9da-771e-4a3c-9e17-4b75a9f17bb9">
+          <Explicatus>Stk. 2.</Explicatus>
+          <Exitus>
+            <Linea>
+              <Char>For aftaler, der er indgået før lovens ikrafttræden, finder de hidtil gældende regler anvendelse.</Char>
+            </Linea>
+            <Linea>
+              <Char>Det samme gælder for aftaler, hvor forslaget om at indgå aftalen er stillet før lovens ikrafttræden.</Char>
+            </Linea>
+          </Exitus>
+        </Stk>
+      </IkraftCentreretParagraf>
+      <IkraftCentreretParagraf id="id1eedd0ac-3b83-4da6-9228-26d89a05b401">
+        <Explicatus>§ 4</Explicatus>
+        <Stk id="idf54d96c4-4271-4dea-b28d-19ccead6fa9a">
+          <Exitus>
+            <Linea>
+              <Char>Loven gælder ikke for Færøerne og Grønland, men kan ved kongelig anordning sættes i kraft for Grønland med de ændringer, som de grønlandske forhold tilsiger.</Char>
+            </Linea>
+          </Exitus>
+        </Stk>
+      </IkraftCentreretParagraf>
+    </Ikraft>
+    <Ikraft id="idd60a7380-c3fc-48f5-8319-ccb9ed53905c">
+      <Exitus>
+        <Linea>
+          <Char>Lov nr. 1565 af 15. december 2015 om ansættelsesklausuler</Char>
+        </Linea>
+        <Nota id="iddddf4a9f-2a8c-459e-81a7-85a096714c7b">
+          <Explicatus>3)</Explicatus>
+          <Exitus>
+            <Linea>
+              <Char>Lovændringen vedrører § 38.</Char>
+            </Linea>
+          </Exitus>
+        </Nota>
+        <Linea>
+          <Char>indeholder følgende ikrafttrædelses- og overgangsbestemmelser:</Char>
+        </Linea>
+      </Exitus>
+      </Ikraft>
+  </DokumentIndhold>
+  <UnderskriftGruppe id="id1f136c4d-7256-4e52-a199-aae8159adf16">
+    <UnderskriftStedDato id="id1f136c4d-7256-4e52-a199-aae8159adf16" />
+    <Underskriver id="id1f136c4d-7256-4e52-a199-aae8159adf16" />
+  </UnderskriftGruppe>
+</Dokument>

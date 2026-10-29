@@ -66,11 +66,35 @@ AT = [
     ]),
 ]
 
+# DK: geen burgerlijk wetboek; de vermogensrechtelijke wetten per rubriek (eigen indeling), de hoofdstukken komen
+# uit de import (`systematiek=True` in het register).
+DK = [
+    ("DK-FORMUE", "Formueret (aftaler, køb, erstatning)", "", [
+        ("DK-AFTL", "Aftaleloven (LBK nr 193 af 2016)", "", [], "aftl."),
+        ("DK-KBL", "Købeloven (LBK nr 1853 af 2021)", "", [], "kbl."),
+        ("DK-FAL", "Forbrugeraftaleloven (LBK nr 1184 af 2025)", "", [], "forbrugeraftalel."),
+        ("DK-EAL", "Erstatningsansvarsloven (LBK nr 1080 af 2025)", "", [], "EAL"),
+        ("DK-FORLDL", "Forældelsesloven (LBK nr 1238 af 2015)", "", [], "forældelsesl."),
+    ]),
+    ("DK-SELSKAB", "Selskabsret", "", [
+        ("DK-SL", "Selskabsloven (LBK nr 331 af 2025)", "", [], "selskabsl."),
+    ]),
+    ("DK-PROCES", "Retspleje", "", [
+        ("DK-RPL", "Retsplejeloven (LBK nr 1298 af 2025)", "", [], "rpl."),
+    ]),
+    ("DK-OFF", "Forfatning og strafferet", "", [
+        ("DK-GRL", "Danmarks Riges Grundlov (1953)", "§§ 1–89", [], "grl."),
+        ("DK-STRFL", "Straffeloven (LBK nr 1294 af 2025)", "", [], "strfl."),
+    ]),
+]
+
 # code, naam, taal, toelichting, actief, rechtsfamilie (zelfde vorm als seed/stelsels.py)
 STELSELS = [
+    ("DK", "Denemarken", "da", "Geen burgerlijk wetboek: losse vermogensrechtelijke wetten (Aftaleloven 1917, Købeloven 1906), deels in Scandinavische samenwerking tot stand gekomen; Danske Lov (1683) geldt nog in enkele artikelen", True, "nordisch"),
     ("AT", "Oostenrijk", "de", "Allgemeines bürgerliches Gesetzbuch (1811): natuurrechtelijke codificatie, gemoderniseerd door de Teilnovellen (1914–1916) en latere hervormingen", True, "germaans"),
 ]
 
 SYSTEMATIEK = {
     "AT": AT,
+    "DK": DK,
 }

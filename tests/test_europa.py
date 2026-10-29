@@ -75,3 +75,21 @@ def test_vertalingen_stelsels_europa():
         d = json.loads((Path(__file__).parent.parent / "synoptikon" / "seed" / "vertalingen" / f"{taal}.json").read_text(encoding="utf-8"))
         for code, naam, _, toelichting, *_ in s.STELSELS:
             assert naam in d and toelichting in d, (taal, code)
+
+
+def test_retsinformation_aftl():
+    from synoptikon.importers import retsinformation
+
+    g = retsinformation.parse((FIX / "retsinformation_aftl.xml").read_bytes(), "lta/2016/193")
+    assert g.versie == "LBK nr 193 af 2016-03-02"
+    per = {a.nummer: a for a in g.artikelen}
+    assert set(per) == {"1", "9 a", "36"}
+    assert per["36"].pad == "III. Om ugyldige viljeserklæringer"
+    assert per["36"].tekst.startswith("En aftale kan ændres eller tilsidesættes")
+    assert "Stk. 2." in per["36"].tekst
+
+
+def test_deense_verwijzingen():
+    assert _herken("§ 36 aftl.") == [("DK", "36", "aftl.")]
+    assert _herken("§ 4 a kbl.") == [("DK", "4 a", "kbl.")]
+    assert _herken("§ 76, stk. 1, kbl.") == [("DK", "76", "kbl.")]

@@ -288,6 +288,7 @@ synoptikon seed                              # laadt o.a. de omzettingstabel
 | EN | legislation.gov.uk (CLML) | SGA 1979, SGSA 1982, CRA 2015, UCTA 1977, MA 1967, C(RTP)A 1999, LR(FC)A 1943, LA 1980, CPA 1987, OLA 1957, LPA 1925 | ja |
 | GR | lawspot.gr | ΑΚ, Σύνταγμα, ΠΚ, ΕμπΝ, ν. 2251/1994, 2190/1920, 3190/1955, 4548/2018, 4072/2012, 3869/2010, 4624/2019 | ja |
 | AT | RIS (BKA), geltende Fassung per wet | ABGB, B-VG, UGB, KSchG, ZPO, IPRG, StGB | ja |
+| DK | Retsinformation, LexDania-XML via ELI | grl., aftl., kbl., forbrugeraftalel., EAL, forældelsesl., selskabsl., rpl., strfl. | ja, per lovbekendtgørelse |
 
 **Alle wetten van een bron** (`synoptikon/importers/bulk.py`), naast het register:
 
