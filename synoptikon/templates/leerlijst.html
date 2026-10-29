@@ -52,6 +52,21 @@
 </ul>
 {% endif %}
 
+{% if request.query_params.get('overgenomen_lijst') %}<p class="melding ok" role="status">{{ _('Overgenomen in je eigen leerlijsten. Wijzigingen van de eigenaar komen niet vanzelf mee.') }}</p>{% endif %}
+
+<details class="blok" id="delen" {% if lijst.zichtbaar != 'prive' %}open{% endif %}>
+  <summary>{{ _('Delen') }}{% if lijst.zichtbaar != 'prive' %} · {{ _(ZICHTBAAR[lijst.zichtbaar]) }}{% endif %}</summary>
+  <form method="post" action="/leren/{{ lijst.id }}/delen" class="formulier compact">
+    <fieldset class="keuze">
+      <legend>{{ _('Wie mag deze lijst zien?') }}</legend>
+      {% for k, v in ZICHTBAAR.items() %}<label class="vinkje"><input type="radio" name="zichtbaar" value="{{ k }}" {% if lijst.zichtbaar == k %}checked{% endif %}> {{ _(v) }}</label>{% endfor %}
+    </fieldset>
+    <p class="hint">{{ _('Anderen zien de kaarten in deze lijst (geen voorstellen), kunnen liken, reageren en de lijst overnemen in hun eigen leerlijsten.') }}</p>
+    <div class="acties"><button class="knop primair">{{ _('Opslaan') }}</button></div>
+  </form>
+  {% if lijst.deelcode and lijst.zichtbaar != 'prive' %}<p class="klein">{{ _('Link') }}: <a href="/gedeeld/{{ lijst.deelcode }}"><code>{{ request.base_url }}gedeeld/{{ lijst.deelcode }}</code></a></p>{% endif %}
+</details>
+
 <details class="blok">
   <summary>{{ _('Lijst instellen') }}</summary>
   <form method="post" action="/leren/{{ lijst.id }}" class="formulier compact">

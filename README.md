@@ -204,6 +204,12 @@ Uitgebreider gemotiveerd in de docstring van `synoptikon/models.py`.
    naar Wunderkammer; afgewezen kaarten worden niet opnieuw voorgesteld. Cron:
    `30 2 * * * ~/synoptikon/scripts/notities.sh >> ~/synoptikon/data/notities.log 2>&1`
    (hoogstens 10 notities per nacht; `--droog` toont wat aan de beurt is).
+   **Delen onder studenten** (`/gedeeld`, `services/delen.py`): per leerlijst
+   kies je *alleen ik*, *iedereen met de link* of *alle studenten*. Anderen zien
+   de echte kaarten (geen voorstellen), liken (♥), reageren (markdown) en nemen
+   de lijst over: een eigen kopie, die via de koppeling in Wunderkammer komt.
+   Medestudenten maken zelf een account met `SYNOPTIKON_AANMELDCODE` op
+   `/aanmelden` (rol lezer, geen limiet van vijf).
 10. **Onderzoek door Claude** (bij een vraag, of meteen bij "Nieuwe vraag"): kies de
    stelsels; Claude leest de wetteksten via de lokale import (tools
    `artikel_lezen`, `wetteksten_doorzoeken`, `wet_zoeken`,

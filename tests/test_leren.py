@@ -94,7 +94,9 @@ def test_api_kaarten_en_stand(anoniem, client):
         data = anoniem.get("/api/wk/kaarten", headers=h).json()
         assert data["version"] == 2 and data["kaarten"]
         k = next(k for k in data["kaarten"] if k["refs"] and k["refs"][0]["nummer"] == "930")
-        assert "§ 930 BGB" in k["achter"] and "Opschrift 930" in k["achter"] and k["url"].startswith("/artikelen/DE/")
+        # De achterkant krijgt de wettekst; welke BGB-versie dat is (deze of de fixture uit test_importers) hangt van de volgorde af.
+        assert "§ 930 BGB" in k["achter"] and ("Opschrift 930" in k["achter"] or "Besitzkonstitut" in k["achter"])
+        assert k["url"].startswith("/artikelen/DE/")
         r = anoniem.post("/api/wk/kaarten/stand", headers=h, json={"stand": [
             {"uid": k["uid"], "due": "2026-11-02T08:00:00+00:00", "stability": 4.2, "reps": 3, "lapses": 1, "last_rating": 3},
             {"uid": "bestaat-niet"}]})

@@ -15,7 +15,7 @@ from sqlalchemy.orm import Session
 from ..auth import huidig_profiel
 from ..db import get_session
 from ..i18n import _
-from ..models import ARRESTSOORTEN, ARTIKELSOORTEN, KAARTSOORTEN, Bron, Kaart, Leerlijst
+from ..models import ARRESTSOORTEN, ARTIKELSOORTEN, KAARTSOORTEN, ZICHTBAAR, Bron, Kaart, Leerlijst
 from ..services import leren, notities
 from ..services.artikelen import Ref, herken
 from ..services.correspondentie import thema_s_voor, wettekst_artikel
@@ -192,7 +192,7 @@ def lijst(request: Request, lid: int, db: Session = Depends(get_session)):
     voorstellen = [(k, bouwer.zijden(k)) for k in lijst.kaarten if k.status == "voorstel"]
     lijsten = leren.lijsten_van(db, _pid(request))
     return render(request, "leerlijst.html", lijst=lijst, kaarten=kaarten, voorstellen=voorstellen, vakken=_vakken(lijsten),
-                  vandaag=date.today())
+                  vandaag=date.today(), ZICHTBAAR=ZICHTBAAR)
 
 
 @router.post("/leren/{lid}/voorstellen")

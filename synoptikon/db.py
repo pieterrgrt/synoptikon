@@ -215,11 +215,17 @@ _NIEUWE_KOLOMMEN = [
     ("kaart", "herkomst", "VARCHAR(300)"),
     ("profiel", "wunderkammer", "BOOLEAN NOT NULL DEFAULT 0"),
     ("profiel", "wk_gezien", "DATETIME"),
+    ("profiel", "zelf_aangemeld", "BOOLEAN NOT NULL DEFAULT 0"),
+    ("leerlijst", "zichtbaar", "VARCHAR(10) NOT NULL DEFAULT 'prive'"),
+    ("leerlijst", "deelcode", "VARCHAR(16)"),
+    ("leerlijst", "gedeeld_op", "DATETIME"),
+    ("leerlijst", "overgenomen_van", "INTEGER REFERENCES leerlijst(id) ON DELETE SET NULL"),
 ]
 
 # Eenmalig na het toevoegen van een kolom.
 _NA_KOLOM = {
     ("profiel", "wunderkammer"): "UPDATE profiel SET wunderkammer = 1 WHERE id IN (SELECT profiel_id FROM leerlijst WHERE naar_wk = 1)",
+    ("leerlijst", "deelcode"): "CREATE UNIQUE INDEX IF NOT EXISTS ix_leerlijst_deelcode ON leerlijst(deelcode)",
 }
 
 

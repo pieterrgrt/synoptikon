@@ -1,0 +1,29 @@
+<!doctype html>
+<html lang="{{ huidige_taal() }}" data-theme="auto">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<meta name="color-scheme" content="light dark">
+<title>{{ _('Account maken') }} · Synoptikon</title>
+<link rel="stylesheet" href="/static/css/app.css?v={{ sv }}">
+{% include "_iconen.html" %}
+<script src="/static/js/thema.js?v={{ sv }}"></script>
+</head>
+<body class="login-body">
+<main class="login">
+  <h1><span class="merk-teken" aria-hidden="true">Σ</span> Synoptikon</h1>
+  <p class="stil">{{ _('Account maken met de uitnodigingscode die je van een medestudent kreeg.') }}</p>
+  {% if fout %}<p class="melding fout" role="alert">{{ fout }}</p>{% endif %}
+  <form method="post" action="/aanmelden">
+    <label>{{ _('Uitnodigingscode') }} <input name="code" required autocomplete="off" autocapitalize="none" spellcheck="false" autofocus></label>
+    <label>{{ _('Gebruikersnaam') }} <input name="gebruikersnaam" value="{{ velden.gebruikersnaam or '' }}" required maxlength="40" autocomplete="username" autocapitalize="none" autocorrect="off" spellcheck="false"></label>
+    <label>{{ _('Naam') }} <input name="naam" value="{{ velden.naam or '' }}" required maxlength="80" autocomplete="name"></label>
+    <label>{{ _('Wachtwoord') }} <span class="hint">{{ _('minstens {n} tekens', n=min_lengte) }}</span> <input type="password" name="wachtwoord" required minlength="{{ min_lengte }}" autocomplete="new-password"></label>
+    <label>{{ _('Nogmaals') }} <input type="password" name="nogmaals" required minlength="{{ min_lengte }}" autocomplete="new-password"></label>
+    <button type="submit" class="knop primair">{{ _('Account maken') }}</button>
+  </form>
+  <p class="stil klein"><a href="/login">{{ _('Al een account? Inloggen') }}</a></p>
+</main>
+<script src="/static/js/app.js?v={{ sv }}"></script>
+</body>
+</html>

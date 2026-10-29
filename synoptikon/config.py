@@ -38,6 +38,10 @@ class Settings:
     legifrance_client_secret: str | None = field(default_factory=lambda: _env("LEGIFRANCE_CLIENT_SECRET"))
     legifrance_sandbox: bool = field(default_factory=lambda: _env("LEGIFRANCE_SANDBOX", "0") == "1")
 
+    # Aanmelden (/aanmelden): wie deze code heeft, maakt zelf een account (rol lezer: lezen, leerlijsten, delen,
+    # reageren). Leeg = aanmelden staat uit.
+    aanmeldcode: str | None = field(default_factory=lambda: _env("SYNOPTIKON_AANMELDCODE"))
+
     # Koppeling met Wunderkammer (routes/wunderkammer.py): Bearer-token, minstens 24 tekens; leeg = uit.
     wk_token: str | None = field(default_factory=lambda: _env("SYNOPTIKON_WK_TOKEN"))
     wk_url: str = field(default_factory=lambda: _env("SYNOPTIKON_WK_URL", "https://kammer.regoort.me").rstrip("/"))

@@ -1,0 +1,41 @@
+{% extends "base.html" %}
+{% block titel %}{{ lijst.naam }} · {{ _('Gedeeld') }} · Synoptikon{% endblock %}
+{% block inhoud %}
+<p class="kruimel"><a href="/gedeeld">{{ _('Gedeeld') }}</a></p>
+<div class="paginakop">
+  <h1>{{ lijst.naam }}</h1>
+  <div class="acties">
+    <form method="post" action="/gedeeld/{{ lijst.deelcode }}/like" class="inline"><button class="knop{% if geliket %} primair{% endif %}" aria-pressed="{{ 'true' if geliket else 'false' }}">♥ {{ lijst.likes | length }}</button></form>
+    {% if eigen %}<a class="knop" href="/leren/{{ lijst.id }}">{{ _('Bewerken') }}</a>
+    {% else %}<form method="post" action="/gedeeld/{{ lijst.deelcode }}/overnemen" class="inline"{% if al_overgenomen %} data-bevestig="{{ _('Je hebt deze lijst al overgenomen. Nog een kopie maken?') }}"{% endif %}><button class="knop primair">{{ _('Overnemen') }}</button></form>{% endif %}
+  </div>
+</div>
+<p class="stil klein">{{ _('Van {naam}', naam=lijst.profiel.naam) }} · {{ n_('{n} kaart', '{n} kaarten', kaarten | length) }}{% if lijst.vak %} · {{ lijst.vak }}{% endif %}{% if lijst.examen %} · {{ _('examen {datum}', datum=lijst.examen.strftime('%d-%m-%Y')) }}{% endif %}{% if al_overgenomen %} · <a href="/leren/{{ al_overgenomen }}">{{ _('jouw kopie') }}</a>{% endif %}</p>
+{% if lijst.omschrijving %}<div class="hint">{{ lijst.omschrijving | md }}</div>{% endif %}
+
+{% if kaarten %}
+<ul class="kaartenlijst">
+{% for k, z in kaarten %}
+  <li class="kaart-rij">
+    <div class="kaart-kop"><span class="label">{{ k.soort_label }}</span></div>
+    <details class="kaart-voorbeeld"><summary>{{ z.voor | md }}</summary><div class="kaart-achter">{{ z.achter | md }}</div></details>
+  </li>
+{% endfor %}
+</ul>
+{% else %}<p class="stil">{{ _('Deze lijst heeft nog geen kaarten.') }}</p>{% endif %}
+
+<section class="blok" id="reacties">
+  <h2>{{ n_('{n} reactie', '{n} reacties', lijst.reacties | length) }}</h2>
+  {% for r in lijst.reacties %}
+  <article class="reactie" id="r{{ r.id }}">
+    <p class="stil klein"><b>{{ r.profiel.naam }}</b> · {{ r.aangemaakt.strftime('%d-%m-%Y %H:%M') }}
+      {% if mag_wissen(r) %}<form method="post" action="/gedeeld/{{ lijst.deelcode }}/reactie/{{ r.id }}/verwijder" class="inline" data-bevestig="{{ _('Deze reactie verwijderen?') }}"><button class="knop-tekst klein">{{ _('verwijderen') }}</button></form>{% endif %}</p>
+    <div>{{ r.tekst | md }}</div>
+  </article>
+  {% endfor %}
+  <form method="post" action="/gedeeld/{{ lijst.deelcode }}/reactie" class="formulier compact">
+    <label>{{ _('Reageren') }} <textarea name="tekst" rows="3" maxlength="2000" required></textarea></label>
+    <div class="acties"><button class="knop primair">{{ _('Plaatsen') }}</button></div>
+  </form>
+</section>
+{% endblock %}

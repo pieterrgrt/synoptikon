@@ -22,6 +22,7 @@
     <a href="/artikelen" {% if huidig_pad.startswith('/artikelen') or huidig_pad.startswith('/concordantie') %}aria-current="page"{% endif %}>{{ _('Vergelijken') }}</a>
     <a href="/begrippen" {% if huidig_pad.startswith('/begrippen') %}aria-current="page"{% endif %}>{{ _('Begrippen') }}</a>
     <a href="/leren" {% if huidig_pad.startswith('/leren') %}aria-current="page"{% endif %}>{{ _('Leren') }}</a>
+    <a href="/gedeeld" {% if huidig_pad.startswith('/gedeeld') %}aria-current="page"{% endif %}>{{ _('Gedeeld') }}</a>
   </nav>
   {% if not huidig_pad.startswith('/opzoeken') %}
   <form class="zoekveld" action="/opzoeken" method="get" role="search">

@@ -60,7 +60,8 @@ async def login(request: Request, gebruikersnaam: str = Form(...), wachtwoord: s
         path="/",
     )
     resp.set_cookie("taal", p.taal, max_age=365 * 86400, secure=settings.cookie_secure, samesite="lax", path="/")
-    sso.zet(resp, p.gebruikersnaam, settings.sso_geheim, settings.sso_domein, settings.cookie_secure)
+    if not p.zelf_aangemeld:
+        sso.zet(resp, p.gebruikersnaam, settings.sso_geheim, settings.sso_domein, settings.cookie_secure)
     return resp
 
 

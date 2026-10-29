@@ -130,7 +130,7 @@ def profiel_uit_sso(request: Request) -> Profiel | None:
         return None
     with session_factory()() as s:
         p = s.scalars(select(Profiel).where(func.lower(Profiel.gebruikersnaam) == naam)).first()
-        if p is None or not p.actief:
+        if p is None or not p.actief or p.zelf_aangemeld:
             return None
         s.expunge(p)
     request.state.profiel = p

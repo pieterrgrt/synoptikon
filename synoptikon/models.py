@@ -648,6 +648,9 @@ class Profiel(Base):
     # Koppeling met Wunderkammer (routes/wunderkammer.py), per profiel aan te zetten op /profiel.
     wunderkammer: Mapped[bool] = mapped_column(default=False)
     wk_gezien: Mapped[datetime | None] = mapped_column(DateTime)  # laatst dat Wunderkammer de kaarten ophaalde
+    # Zelf aangemeld met de uitnodigingscode (/aanmelden): geen domeincookie (sso.py) in of uit, anders kon wie een
+    # gebruikersnaam van een ander Wunderkammer-account kiest, dat account overnemen.
+    zelf_aangemeld: Mapped[bool] = mapped_column(default=False)
 
     @property
     def rol_label(self) -> str:
@@ -692,8 +695,16 @@ class Leerlijst(Base):
     examen: Mapped[date | None] = mapped_column(Date)
     naar_wk: Mapped[bool] = mapped_column(default=True)  # door Wunderkammer laten herhalen
     aangemaakt: Mapped[datetime] = mapped_column(DateTime, default=now)
+    # Delen (routes/gedeeld.py): privé, alleen wie de link /gedeeld/<deelcode> heeft, of iedereen op /gedeeld.
+    zichtbaar: Mapped[str] = mapped_column(String(10), default="prive")  # prive | link | iedereen
+    deelcode: Mapped[str | None] = mapped_column(String(16), unique=True)
+    gedeeld_op: Mapped[datetime | None] = mapped_column(DateTime)
+    overgenomen_van: Mapped[int | None] = mapped_column(ForeignKey("leerlijst.id", ondelete="SET NULL"))
 
+    profiel: Mapped["Profiel"] = relationship()
     kaarten: Mapped[list["Kaart"]] = relationship(back_populates="lijst", cascade="all, delete-orphan", order_by="Kaart.id")
+    likes: Mapped[list["LijstLike"]] = relationship(cascade="all, delete-orphan")
+    reacties: Mapped[list["LijstReactie"]] = relationship(cascade="all, delete-orphan", order_by="LijstReactie.aangemaakt")
 
 
 class Kaart(Base):
@@ -734,6 +745,33 @@ class Kaart(Base):
     @property
     def soort_label(self) -> str:
         return _(KAARTSOORTEN.get(self.soort, (self.soort, ""))[0])
+
+
+ZICHTBAAR: dict[str, str] = {
+    "prive": "alleen ik",
+    "link": "iedereen met de link",
+    "iedereen": "alle studenten (op Gedeeld)",
+}
+
+
+class LijstLike(Base):
+    __tablename__ = "lijst_like"
+
+    lijst_id: Mapped[int] = mapped_column(ForeignKey("leerlijst.id", ondelete="CASCADE"), primary_key=True)
+    profiel_id: Mapped[int] = mapped_column(ForeignKey("profiel.id", ondelete="CASCADE"), primary_key=True)
+    aangemaakt: Mapped[datetime] = mapped_column(DateTime, default=now)
+
+
+class LijstReactie(Base):
+    __tablename__ = "lijst_reactie"
+
+    id: Mapped[int] = mapped_column(primary_key=True)
+    lijst_id: Mapped[int] = mapped_column(ForeignKey("leerlijst.id", ondelete="CASCADE"), index=True)
+    profiel_id: Mapped[int] = mapped_column(ForeignKey("profiel.id", ondelete="CASCADE"))
+    tekst: Mapped[str] = mapped_column(Text)
+    aangemaakt: Mapped[datetime] = mapped_column(DateTime, default=now)
+
+    profiel: Mapped["Profiel"] = relationship()
 
 
 class KaartStand(Base):

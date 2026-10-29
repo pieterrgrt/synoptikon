@@ -20,6 +20,7 @@
     <label>{{ _('Wachtwoord') }} <input type="password" name="wachtwoord" autocomplete="current-password" required {% if gebruikersnaam %}autofocus{% endif %}></label>
     <button type="submit" class="knop primair">{{ _('Inloggen') }}</button>
   </form>
+  {% if aanmelden %}<p class="stil klein"><a href="/aanmelden">{{ _('Nieuw? Maak een account met je uitnodigingscode.') }}</a></p>{% endif %}
   <form method="post" action="/taal" class="taalkeuze login-taal">
     <input type="hidden" name="terug" value="/login?volgende={{ volgende | urlencode }}">
     <label>{{ _('Taal') }}

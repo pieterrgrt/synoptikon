@@ -1,0 +1,36 @@
+{% extends "base.html" %}
+{% block titel %}{{ _('Gedeeld') }} · Synoptikon{% endblock %}
+{% block inhoud %}
+<h1>{{ _('Gedeeld') }}</h1>
+<p class="hint">{{ _('Leerlijsten die studenten met elkaar delen. Like wat goed is, reageer, of neem een lijst over in je eigen leerlijsten.') }}{% if wk %} {{ _('Overgenomen lijsten herhaal je in Wunderkammer.') }}{% endif %}</p>
+
+<p class="acties">
+  <a class="knop klein{% if volgorde != 'nieuw' %} primair{% endif %}" href="/gedeeld">{{ _('Populair') }}</a>
+  <a class="knop klein{% if volgorde == 'nieuw' %} primair{% endif %}" href="/gedeeld?volgorde=nieuw">{{ _('Nieuw') }}</a>
+</p>
+
+{% if lijsten %}
+<ul class="leerlijsten">
+{% for l, likes, reacties in lijsten %}
+  {% set n = l.kaarten | selectattr('actief') | selectattr('status', 'none') | list | length %}
+  <li class="leerlijst-kaart">
+    <a class="leerlijst-naam" href="/gedeeld/{{ l.deelcode }}">{{ l.naam }}</a>
+    <span class="stil klein">{{ l.profiel.naam }} · {{ n_('{n} kaart', '{n} kaarten', n) }}{% if l.vak %} · {{ l.vak }}{% endif %}</span>
+    <span class="stil klein">♥ {{ likes }} · {{ n_('{n} reactie', '{n} reacties', reacties) }}</span>
+  </li>
+{% endfor %}
+</ul>
+{% else %}
+<p class="stil">{{ _('Nog niets gedeeld. Deel een lijst via Leren › lijst › Delen.') }}</p>
+{% endif %}
+
+{% if mijn %}
+<h2>{{ _('Door jou gedeeld') }}</h2>
+<ul class="leerlijsten">
+{% for l in mijn %}
+  <li class="leerlijst-kaart"><a class="leerlijst-naam" href="/gedeeld/{{ l.deelcode }}">{{ l.naam }}</a>
+    <span class="stil klein">{{ _(ZICHTBAAR[l.zichtbaar]) }} · <a href="/leren/{{ l.id }}#delen">{{ _('instellen') }}</a></span></li>
+{% endfor %}
+</ul>
+{% endif %}
+{% endblock %}

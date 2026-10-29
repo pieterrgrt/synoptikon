@@ -45,6 +45,16 @@ def _wachtwoord_fout(nieuw: str, nogmaals: str) -> str | None:
     return None
 
 
+def gebruikersnaam_fout(db: Session, gebruikersnaam: str, pid: int | None = None) -> str | None:
+    """Geldig en nog vrij (`pid`: het profiel zelf telt niet mee)."""
+    if not gebruikersnaam or not gebruikersnaam.replace("-", "").replace(".", "").replace("_", "").isalnum():
+        return _("Een gebruikersnaam bestaat uit letters, cijfers, punt, streepje of liggend streepje.")
+    if db.scalar(select(func.count()).select_from(Profiel).where(
+            func.lower(Profiel.gebruikersnaam) == gebruikersnaam, Profiel.id != (pid or 0))):
+        return _("Die gebruikersnaam is al in gebruik.")
+    return None
+
+
 def _cookie(resp, p: Profiel) -> None:
     resp.set_cookie(auth.COOKIE, auth.maak_sessie_token(p), max_age=settings.session_days * 86400,
                     httponly=True, secure=settings.cookie_secure, samesite="lax", path="/")
@@ -141,12 +151,9 @@ def beheer_opslaan(request: Request, pid: int, gebruikersnaam: str = Form(...), 
         raise HTTPException(404)
     ik = auth.huidig_profiel(request).id
     gebruikersnaam = gebruikersnaam.strip().lower()
-    fout = None
-    if not gebruikersnaam.replace("-", "").replace(".", "").replace("_", "").isalnum():
-        fout = _("Een gebruikersnaam bestaat uit letters, cijfers, punt, streepje of liggend streepje.")
-    elif db.scalar(select(func.count()).select_from(Profiel).where(
-            func.lower(Profiel.gebruikersnaam) == gebruikersnaam, Profiel.id != pid)):
-        fout = _("Die gebruikersnaam is al in gebruik.")
+    fout = gebruikersnaam_fout(db, gebruikersnaam, pid)
+    if fout:
+        pass
     elif rol not in ROLLEN or taal not in TALEN:
         fout = _("Onbekende rol of taal.")
     elif pid == ik and (rol != "beheerder" or not actief):

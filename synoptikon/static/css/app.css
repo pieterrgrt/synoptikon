@@ -593,3 +593,7 @@ label.vinkje input { width: auto; }
 .stelsel-sprong { display: flex; flex-wrap: wrap; gap: .35rem; margin: .5rem 0 1rem; }
 .stelsel-sprong a { font-size: .8rem; font-weight: 600; letter-spacing: .05em; padding: .15rem .5rem; border: 1px solid var(--lijn); border-radius: 1rem; color: var(--inkt-2); }
 .stelsel-kaart { scroll-margin-top: 7rem; }
+
+/* Gedeelde lijsten: reacties */
+.reactie { border-top: 1px solid var(--lijn); padding: .6rem 0; }
+.reactie p { margin: 0 0 .25rem; }
