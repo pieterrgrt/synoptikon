@@ -311,6 +311,11 @@ synoptikon seed                              # laadt o.a. de omzettingstabel
 | HK | DoJ e-Legislation, open data op data.gov.hk (HKLM-XML, één bestand uit de zip via Range) | Basic Law, Cap. 26, 71, 284, 457, 623, 347, 622, 200 | ja, current version |
 | ID | geen: peraturan.go.id en JDIH geven pdf's, het KUHPerdata niet geconsolideerd | alleen systematiek en citeerwijze | — |
 | NZ | geen: legislation.govt.nz weigert geautomatiseerde verzoeken, de API vraagt een sleutel | alleen systematiek en citeerwijze | — |
+| RU | geen (pravo.gov.ru onbereikbaar van buiten Rusland; ConsultantPlus/Garant niet) | alleen systematiek ГК РФ | — |
+| TR | mevzuat.gov.tr (Word-HTML) | TMK, TBK, Anayasa, TTK, TKHK, HMK, TCK, MÖHUK | ja |
+| AE | geen (uaelegislation.gov.ae en elaws.moj.gov.ae niet bereikbaar: Cloudflare-blokkade, time-out) | alleen systematiek قانون المعاملات المدنية 2025 | — |
+| ZA | geen (SAFLII en lawlibrary.org.za: Cloudflare-controle) | alleen systematiek Constitution 1996, CPA 2008 | — |
+| KZ | geen (adilet.zan.kz: tekst alleen via /api/, uitgesloten in robots.txt) | alleen systematiek ГК РК | — |
 
 **Alle wetten van een bron** (`synoptikon/importers/bulk.py`), naast het register:
 

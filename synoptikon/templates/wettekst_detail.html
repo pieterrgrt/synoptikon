@@ -9,7 +9,7 @@
 <article class="bron soort-wet" id="{{ a.nummer }}">
   <header class="bron-kop"><span class="citeertitel">{{ a.nummer }}</span>{% if a.opschrift %} <span class="bron-titel">{{ a.opschrift }}</span>{% endif %}</header>
   {% if a.pad %}<p class="stil klein">{{ a.pad }}</p>{% endif %}
-  <div class="origineel" lang="{{ {'CH': 'de', 'BE': 'nl', 'EN': 'en', 'EU': 'nl', 'AU': 'en', 'US': 'en'}.get(w.stelsel_code, w.stelsel_code | lower) }}">{{ a.tekst | md }}</div>
+  <div class="origineel" dir="auto" lang="{{ {'CH': 'de', 'BE': 'nl', 'EN': 'en', 'EU': 'nl', 'AU': 'en', 'US': 'en'}.get(w.stelsel_code, w.stelsel_code | lower) }}">{{ a.tekst | md }}</div>
 </article>
 {% endfor %}
 </div>

@@ -59,7 +59,7 @@
   {% set r = ref(a.nummer) %}
   <article class="bron soort-wet wet-artikel" id="art-{{ a.nummer }}">
     <header class="bron-kop"><a class="citeertitel" href="{{ r.url }}" title="{{ _('Plaats in de systematiek en corresponderende artikelen in andere stelsels') }}">{{ r.citeer }}</a>{% if a.opschrift %} <span class="bron-titel">{{ a.opschrift }}</span>{% endif %}{{ l.ster(r, bewaarde_refs, request.url.path ~ '?deel=' ~ (d.sleutel | urlencode) ~ '#art-' ~ a.nummer) }}</header>
-    <div class="origineel" lang="{{ stelsel.taal }}">{{ a.tekst | md }}</div>
+    <div class="origineel" dir="auto" lang="{{ stelsel.taal }}">{{ a.tekst | md }}</div>
   </article>
 {% endfor %}
 </div>

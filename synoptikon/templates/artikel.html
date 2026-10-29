@@ -13,7 +13,7 @@
 
 {% if tekst %}
 <article class="bron detail soort-wet">
-  <div class="origineel" lang="{{ stelsel.taal }}">{{ tekst.tekst | md }}</div>
+  <div class="origineel" dir="auto" lang="{{ stelsel.taal }}">{{ tekst.tekst | md }}</div>
   <footer class="bron-voet">
     <a href="{{ tekst.url }}">{{ _('bron in Synoptikon') if tekst.herkomst == 'bron' else _('geïmporteerde wettekst') }}</a>
     {% if lezen %}<a href="{{ lezen.url }}">{{ _('in de wettekst lezen') }}{% if lezen.knoop %} · {{ lezen.knoop.label | truncate(60) }}{% elif lezen.deel %} · {{ lezen.deel.label | truncate(60) }}{% endif %}</a>{% endif %}
