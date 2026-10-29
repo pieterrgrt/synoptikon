@@ -41,7 +41,7 @@ def test_lawmoj_parse():
 
 def test_taiwanese_verwijzingen():
     assert _refs("消費者保護法第7條之1") == [("TW", "消保法", "7-1")]
-    assert _refs("公司法第8條") == [("TW", "公司法", "8")]
+    assert _refs("公司法第8條") == [("TW", "公司法", "8"), ("CN", "公司法", "8")]  # 公司法 ook in CN
     assert _refs("涉外民事法律適用法第20條") == [("TW", "涉民法", "20")]
     assert _refs("民法第一百八十四條第一項") == [("JP", None, "184"), ("TW", None, "184")]  # zelfde naam: beide
     assert sleutel("TW", "7") < sleutel("TW", "7-1") < sleutel("TW", "7-2") < sleutel("TW", "10")
@@ -94,3 +94,10 @@ def test_nieuw_zeeland_zonder_tekst():
 
     assert _refs("s 6 Consumer Guarantees Act 1993") == [("NZ", "CGA 1993", "6")]
     assert SYSTEMATIEK["NZ"][0][3][0][4] == "CCLA 2017"
+
+
+def test_chinese_en_indonesische_verwijzingen():
+    assert _refs("中华人民共和国民法典第一千一百六十五条") == [("CN", None, "1165")]
+    assert _refs("中华人民共和国消费者权益保护法第二十四条") == [("CN", "消法", "24")]
+    assert ("CN", "刑法", "120-1") in _refs("刑法第一百二十条之一")
+    assert _refs("Pasal 1365 KUHPerdata") == [("ID", None, "1365")]

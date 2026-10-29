@@ -8,6 +8,11 @@ TW: gegenereerd uit de geldende tekst van het 民法 bij law.moj.gov.tw (stand 1
 HK: geen codificatie; zoals bij EN een eigen indeling in rubrieken met de ordinances eronder, Parts en Chapters uit
 de open data van het DoJ (Cap. 26 stand 20-9-2018, Basic Law 1-7-1997). De rest vult de import aan.
 
+CN: met de hand uit de officiële tekst van het 民法典 (2020; 7 编, 1260 条): 编 › 分编 of 章 (alleen in het 总则).
+
+ID: de vier boeken van het KUHPerdata (het Burgerlijk Wetboek voor Indonesië van 1847, met de nummering van het
+oude Nederlandse BW van 1838), met de hand.
+
 NZ: met de hand, zonder bereiken: legislation.govt.nz weigert geautomatiseerde verzoeken (een JavaScript-uitdaging),
 de API vraagt een sleutel en NZLII zit achter Cloudflare; de Parts van de CCLA 2017 uit de officiële inhoudsopgave.
 """
@@ -207,4 +212,45 @@ NZ = [
     ('NZ-STRAF', 'Strafrecht', '', [
         ('NZ-CRIMES1961', 'Crimes Act 1961', '', [], 'Crimes Act 1961'),
     ]),
+]
+
+
+CN = [
+    ('CN-1', '第一编 · 总则', 'art. 1–204', [
+        ('CN-1-1', '第一章 · 基本规定', 'art. 1–12', []),
+        ('CN-1-2', '第二章 · 自然人', 'art. 13–56', []),
+        ('CN-1-3', '第三章 · 法人', 'art. 57–101', []),
+        ('CN-1-4', '第四章 · 非法人组织', 'art. 102–108', []),
+        ('CN-1-5', '第五章 · 民事权利', 'art. 109–132', []),
+        ('CN-1-6', '第六章 · 民事法律行为', 'art. 133–160', []),
+        ('CN-1-7', '第七章 · 代理', 'art. 161–175', []),
+        ('CN-1-8', '第八章 · 民事责任', 'art. 176–187', []),
+        ('CN-1-9', '第九章 · 诉讼时效', 'art. 188–199', []),
+        ('CN-1-10', '第十章 · 期间计算', 'art. 200–204', []),
+    ]),
+    ('CN-2', '第二编 · 物权', 'art. 205–462', [
+        ('CN-2-1', '第一分编 · 通则', 'art. 205–239', []),
+        ('CN-2-2', '第二分编 · 所有权', 'art. 240–322', []),
+        ('CN-2-3', '第三分编 · 用益物权', 'art. 323–385', []),
+        ('CN-2-4', '第四分编 · 担保物权', 'art. 386–457', []),
+        ('CN-2-5', '第五分编 · 占有', 'art. 458–462', []),
+    ]),
+    ('CN-3', '第三编 · 合同', 'art. 463–988', [
+        ('CN-3-1', '第一分编 · 通则', 'art. 463–594', []),
+        ('CN-3-2', '第二分编 · 典型合同', 'art. 595–978', []),
+        ('CN-3-3', '第三分编 · 准合同', 'art. 979–988', []),
+    ]),
+    ('CN-4', '第四编 · 人格权', 'art. 989–1039', []),
+    ('CN-5', '第五编 · 婚姻家庭', 'art. 1040–1118', []),
+    ('CN-6', '第六编 · 继承', 'art. 1119–1163', []),
+    ('CN-7', '第七编 · 侵权责任', 'art. 1164–1258', []),
+    ('CN-8', '附则', 'art. 1259–1260', []),
+]
+
+
+ID = [
+    ('ID-1', 'Buku I · Tentang Orang', 'art. 1–498', []),
+    ('ID-2', 'Buku II · Tentang Kebendaan', 'art. 499–1232', []),
+    ('ID-3', 'Buku III · Tentang Perikatan', 'art. 1233–1864', []),
+    ('ID-4', 'Buku IV · Tentang Pembuktian dan Daluwarsa', 'art. 1865–1993', []),
 ]

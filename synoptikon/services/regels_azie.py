@@ -4,6 +4,8 @@
 * **TW**: 民法第184條第1項, 第7條之1 (ingevoegd artikel, bij de bron `7-1`), 消保法 voor 消費者保護法.
 * **HK**: common law zonder wetboek, ordinances naar hun chapter: "s 14 Cap. 26", "section 3 of the Misrepresentation
   Ordinance", "art. 8 BL" (Basic Law).
+* **CN**: 民法典第一千一百六十五条, 刑法第一百二十条之一 (→ `120-1`); "中华人民共和国" vóór de wetsnaam valt weg.
+* **ID**: "Pasal 1365 KUHPerdata", "Pasal 8 UUPK"; `pasal` wordt "art." vóór de herkenning.
 * **NZ**: common law, Acts met jaartal: "s 35 CCLA 2017", "s 6 CGA 1993" (zonder tekst, alleen systematiek).
 
 Dezelfde wetsnaam in twee stelsels ("民法第709条": JP of TW) geeft, zoals "art. 1902 CC" (ES of FR), beide.
@@ -47,11 +49,29 @@ REGELS: dict[str, Regels] = {
         nummer=r"\d+[A-Z]{0,3}",
         namen={"CCLA 2017": "Contract and Commercial Law Act 2017", "CGA 1993": "Consumer Guarantees Act 1993", "FTA 1986": "Fair Trading Act 1986", "PLA 2007": "Property Law Act 2007", "LA 2010": "Limitation Act 2010", "NZBORA": "New Zealand Bill of Rights Act 1990"},
     ),
+    "CN": Regels(
+        "民法典",
+        ("宪法", "公司法", "消法", "民诉法", "刑法", "法律适用法"),
+        nummer=r"\d+(?:-\d+)?",
+        namen={"民法典": "中华人民共和国民法典 (2020)", "宪法": "中华人民共和国宪法", "公司法": "中华人民共和国公司法 (2023)",
+               "消法": "消费者权益保护法", "民诉法": "中华人民共和国民事诉讼法", "刑法": "中华人民共和国刑法",
+               "法律适用法": "涉外民事关系法律适用法"},
+    ),
+    "ID": Regels(
+        "KUHPerdata",
+        ("UUD 1945", "KUHD", "KUHP", "UUPK", "UUPT"),
+        nummer=r"\d+[A-Za-z]?",
+        namen={"KUHPerdata": "Kitab Undang-Undang Hukum Perdata (Burgerlijk Wetboek voor Indonesië, 1847)",
+               "UUD 1945": "Undang-Undang Dasar 1945", "KUHD": "Kitab Undang-Undang Hukum Dagang", "KUHP": "Kitab Undang-Undang Hukum Pidana",
+               "UUPK": "Undang-Undang Perlindungan Konsumen (UU 8/1999)", "UUPT": "Undang-Undang Perseroan Terbatas (UU 40/2007)"},
+    ),
 }
 
 NAMEN = [
     ("日本国憲法", "憲法"), ("消費者契約法", "消契法"), ("民事訴訟法", "民訴法"), ("法の適用に関する通則法", "通則法"),
     ("中華民國憲法", "憲法"), ("消費者保護法", "消保法"), ("中華民國刑法", "刑法"), ("涉外民事法律適用法", "涉民法"),
+    ("消费者权益保护法", "消法"), ("民事诉讼法", "民诉法"), ("涉外民事关系法律适用法", "法律适用法"),
+    ("KUH Perdata", "KUHPerdata"), ("BW voor Indonesië", "KUHPerdata"),
     ("Basic Law", "BL"), *[(f"Cap {n}", f"Cap. {n}") for n in (26, 71, 284, 457, 623, 347, 622, 200)],
 ]
 
@@ -96,4 +116,14 @@ def cjk(tekst: str) -> str:
     return _CJK_ART.sub(vervang, tekst)
 
 
-VOORBEWERKING = [cjk]
+def zonder_prc(tekst: str) -> str:
+    """"中华人民共和国民法典" → "民法典": de officiële titel begint met de staatsnaam, die men bij het citeren weglaat."""
+    return tekst.replace("中华人民共和国", "")
+
+
+def pasal(tekst: str) -> str:
+    """"Pasal 1365 KUHPerdata" → "art. 1365 KUHPerdata"."""
+    return re.sub(r"(?<!\w)pasal(?!\w)", "art.", tekst, flags=re.I)
+
+
+VOORBEWERKING = [zonder_prc, cjk, pasal]
