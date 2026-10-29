@@ -7,6 +7,8 @@
   zoals de Québecse doctrine ze citeert (`C.p.c.`, `L.p.c.`).
 * **CL** (Código Civil van Bello, 1855): `art. 1545 CC`, `art. 19 CPR` (Constitución Política de la República),
   `art. 3 bis LPDC` (Ley 19.496); ingevoegde artikelen met bis/ter, enkele met een streepje (`225-2`).
+* **BR** (Código Civil 2002): `art. 186 CC`, `art. 5º CF` (Constituição Federal), `art. 54-A CDC`; ingevoegde
+  artikelen met een hoofdletter (`1.142-A` wordt `1142-A`, zonder duizendtalpunt).
 """
 from __future__ import annotations
 
@@ -35,5 +37,13 @@ REGELS = {
         nummer=rf"\d+(?:-\d+)?(?:\s?(?:{_LAT}))?",
         namen={"CC": "Código Civil de Chile", "CPR": "Constitución Política de la República de Chile", "C. de C.": "Código de Comercio de Chile",
                "CP": "Código Penal de Chile", "CPC": "Código de Procedimiento Civil", "LPDC": "Ley 19.496 sobre Protección de los Derechos de los Consumidores"},
+    ),
+    "BR": Regels(
+        "CC",
+        ("CF", "CDC", "CPC", "CP", "LINDB"),
+        nummer=r"\d+(?:-[A-Z]{1,2})?",
+        namen={"CC": "Código Civil brasileiro (Lei 10.406/2002)", "CF": "Constituição da República Federativa do Brasil",
+               "CDC": "Código de Defesa do Consumidor", "CPC": "Código de Processo Civil", "CP": "Código Penal brasileiro",
+               "LINDB": "Lei de Introdução às normas do Direito Brasileiro"},
     ),
 }

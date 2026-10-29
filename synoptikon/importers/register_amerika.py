@@ -6,6 +6,8 @@
   BY-NC-ND 4.0), geconsolideerd; LégisQuébec zelf weigert geautomatiseerde verzoeken.
 * CL: Ley Chile van de Biblioteca del Congreso Nacional (XML per idNorma, open data), geconsolideerd. Het Código
   Civil is artikel 2 van DFL 1 (2000).
+* BR: Normas.leg.br (Congresso Nacional, open API, CC BY 4.0), de "Compilação Monovigente" van de Câmara dos
+  Deputados, geconsolideerd. Planalto verbreekt de verbinding van buiten Brazilië.
 """
 from __future__ import annotations
 
@@ -37,5 +39,14 @@ WETTEN: list[Wet] = [
         ("CPC", "22740", "Código de Procedimiento Civil"),
         ("LPDC", "61438", "Ley 19.496 sobre Protección de los Derechos de los Consumidores"),
         ("CP", "1984", "Código Penal"),
+    ]],
+    # BR: het Código Civil van 2002 en de kern eromheen (id = LexML-URN)
+    Wet("BR", None, "normasleg", "urn:lex:br:federal:lei:2002-01-10;10406", "Código Civil"),
+    *[Wet("BR", afk, "normasleg", i, t, systematiek=True) for afk, i, t in [
+        ("CF", "urn:lex:br:federal:constituicao:1988-10-05;1988", "Constituição da República Federativa do Brasil"),
+        ("CDC", "urn:lex:br:federal:lei:1990-09-11;8078", "Código de Defesa do Consumidor"),
+        ("CPC", "urn:lex:br:federal:lei:2015-03-16;13105", "Código de Processo Civil"),
+        ("LINDB", "urn:lex:br:federal:decreto.lei:1942-09-04;4657", "Lei de Introdução às normas do Direito Brasileiro"),
+        ("CP", "urn:lex:br:federal:decreto.lei:1940-12-07;2848", "Código Penal"),
     ]],
 ]
