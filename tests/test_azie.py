@@ -87,3 +87,10 @@ def test_hongkongse_verwijzingen():
     assert _refs("section 3 Misrepresentation Ordinance") == [("HK", "Cap. 284", "3")]
     assert _refs("Article 8 Basic Law") == [("HK", "BL", "8")]
     assert _refs("s 14 SGA 1979") == [("EN", "SGA 1979", "14")]
+
+
+def test_nieuw_zeeland_zonder_tekst():
+    from synoptikon.seed.stelsels_azie import SYSTEMATIEK
+
+    assert _refs("s 6 Consumer Guarantees Act 1993") == [("NZ", "CGA 1993", "6")]
+    assert SYSTEMATIEK["NZ"][0][3][0][4] == "CCLA 2017"

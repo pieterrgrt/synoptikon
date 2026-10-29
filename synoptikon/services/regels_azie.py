@@ -4,6 +4,7 @@
 * **TW**: 民法第184條第1項, 第7條之1 (ingevoegd artikel, bij de bron `7-1`), 消保法 voor 消費者保護法.
 * **HK**: common law zonder wetboek, ordinances naar hun chapter: "s 14 Cap. 26", "section 3 of the Misrepresentation
   Ordinance", "art. 8 BL" (Basic Law).
+* **NZ**: common law, Acts met jaartal: "s 35 CCLA 2017", "s 6 CGA 1993" (zonder tekst, alleen systematiek).
 
 Dezelfde wetsnaam in twee stelsels ("民法第709条": JP of TW) geeft, zoals "art. 1902 CC" (ES of FR), beide.
 
@@ -38,6 +39,13 @@ REGELS: dict[str, Regels] = {
         stijl="s",
         nummer=r"\d+[A-Z]{0,3}",
         namen={"BL": "Basic Law of the Hong Kong Special Administrative Region", "Cap. 26": "Sale of Goods Ordinance", "Cap. 71": "Control of Exemption Clauses Ordinance", "Cap. 284": "Misrepresentation Ordinance", "Cap. 457": "Supply of Services (Implied Terms) Ordinance", "Cap. 623": "Contracts (Rights of Third Parties) Ordinance", "Cap. 347": "Limitation Ordinance", "Cap. 622": "Companies Ordinance", "Cap. 200": "Crimes Ordinance"},
+    ),
+    "NZ": Regels(
+        None,
+        ("CCLA 2017", "CGA 1993", "FTA 1986", "PLA 2007", "Companies Act 1993", "LA 2010", "Crimes Act 1961", "Constitution Act 1986", "NZBORA"),
+        stijl="s",
+        nummer=r"\d+[A-Z]{0,3}",
+        namen={"CCLA 2017": "Contract and Commercial Law Act 2017", "CGA 1993": "Consumer Guarantees Act 1993", "FTA 1986": "Fair Trading Act 1986", "PLA 2007": "Property Law Act 2007", "LA 2010": "Limitation Act 2010", "NZBORA": "New Zealand Bill of Rights Act 1990"},
     ),
 }
 

@@ -7,6 +7,9 @@ TW: gegenereerd uit de geldende tekst van het 民法 bij law.moj.gov.tw (stand 1
 
 HK: geen codificatie; zoals bij EN een eigen indeling in rubrieken met de ordinances eronder, Parts en Chapters uit
 de open data van het DoJ (Cap. 26 stand 20-9-2018, Basic Law 1-7-1997). De rest vult de import aan.
+
+NZ: met de hand, zonder bereiken: legislation.govt.nz weigert geautomatiseerde verzoeken (een JavaScript-uitdaging),
+de API vraagt een sleutel en NZLII zit achter Cloudflare; de Parts van de CCLA 2017 uit de officiële inhoudsopgave.
 """
 
 JP = [
@@ -174,5 +177,34 @@ HK = [
     ]),
     ('HK-STRAF', 'Strafrecht', '', [
         ('HK-CAP200', 'Crimes Ordinance (Cap. 200)', '', [], 'Cap. 200'),
+    ]),
+]
+
+
+NZ = [
+    ('NZ-CONTRACT', 'Contract en koop', '', [
+        ('NZ-CCLA2017', 'Contract and Commercial Law Act 2017', '', [
+            ('NZ-CCLA2017-1', 'Part 1 · Preliminary provisions', '', []),
+            ('NZ-CCLA2017-2', 'Part 2 · Contracts', '', []),
+            ('NZ-CCLA2017-3', 'Part 3 · Sale of goods', '', []),
+            ('NZ-CCLA2017-4', 'Part 4 · Electronic transactions', '', []),
+            ('NZ-CCLA2017-5', 'Part 5 · Carriage of goods', '', []),
+        ], 'CCLA 2017'),
+        ('NZ-CGA1993', 'Consumer Guarantees Act 1993', '', [], 'CGA 1993'),
+        ('NZ-FTA1986', 'Fair Trading Act 1986', '', [], 'FTA 1986'),
+        ('NZ-LA2010', 'Limitation Act 2010', '', [], 'LA 2010'),
+    ]),
+    ('NZ-GOED', 'Goederenrecht', '', [
+        ('NZ-PLA2007', 'Property Law Act 2007', '', [], 'PLA 2007'),
+    ]),
+    ('NZ-VENNOOTSCHAP', 'Vennootschappen', '', [
+        ('NZ-CA1993', 'Companies Act 1993', '', [], 'Companies Act 1993'),
+    ]),
+    ('NZ-STAAT', 'Staatsrecht', '', [
+        ('NZ-CONST1986', 'Constitution Act 1986', '', [], 'Constitution Act 1986'),
+        ('NZ-NZBORA', 'New Zealand Bill of Rights Act 1990', '', [], 'NZBORA'),
+    ]),
+    ('NZ-STRAF', 'Strafrecht', '', [
+        ('NZ-CRIMES1961', 'Crimes Act 1961', '', [], 'Crimes Act 1961'),
     ]),
 ]
