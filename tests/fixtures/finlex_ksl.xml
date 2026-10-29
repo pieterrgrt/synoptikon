@@ -1,0 +1,1216 @@
+<AknXmlList><Results>
+<akomaNtoso xmlns="http://docs.oasis-open.org/legaldocml/ns/akn/3.0" xmlns:finlex="http://data.finlex.fi/schema/finlex">
+    <act contains="multipleVersions" name="main">
+        <meta>
+            <identification source="#organization_fi.finlex">
+                <FRBRWork>
+                    <FRBRthis value="/akn/fi/act/statute-consolidated/1978/38/!main" />
+                    <FRBRuri value="/akn/fi/act/statute-consolidated/1978/38" />
+                    <FRBRalias name="eli" value="http://data.finlex.fi/eli/sd/1978/38/ajantasa" />
+                    <FRBRdate date="1978-01-20" name="dateIssued" />
+                    <FRBRauthor as="#role_author" href="#organization_fi.finlex" />
+                    <FRBRcountry value="fi" />
+                    <FRBRsubtype value="statute-consolidated" />
+                    <FRBRnumber value="38" />
+                    <FRBRprescriptive value="false" />
+                    <FRBRauthoritative value="false" />
+                </FRBRWork>
+                <FRBRExpression>
+                    <FRBRthis value="/akn/fi/act/statute-consolidated/1978/38/fin@20260835/!main" />
+                    <FRBRuri value="/akn/fi/act/statute-consolidated/1978/38/fin@20260835" />
+                    <FRBRalias name="eli" value="http://data.finlex.fi/eli/sd/1978/38/ajantasa/2026-09-04/fin" />
+                    <FRBRdate date="1978-01-20" name="dateIssued" />
+                    <FRBRdate date="2026-09-04" name="dateConsolidated" />
+                    <FRBRauthor as="#role_author" href="#organization_fi.finlex" />
+                    <FRBRversionNumber value="20260835" />
+                    <FRBRlanguage language="fin" />
+                </FRBRExpression>
+                <FRBRManifestation>
+                    <FRBRthis value="/akn/fi/act/statute-consolidated/1978/38/fin@20260835/!main.xml" />
+                    <FRBRuri value="/akn/fi/act/statute-consolidated/1978/38/fin@20260835.akn" />
+                    <FRBRalias name="eli" value="http://data.finlex.fi/eli/sd/1978/38/ajantasa/2026-09-04/fin/xml" />
+                    <FRBRdate date="2026-10-23" name="dateProduced" />
+                    <FRBRauthor as="#role_editor" href="#organization_fi.finlex" />
+                    <FRBRformat value="xml" />
+                </FRBRManifestation>
+            </identification>
+            <proprietary source="#organization_fi.finlex">
+                <finlex:documentYear>1978</finlex:documentYear>
+                <finlex:administrativeBranch refersTo="#fi.ministry-of-justice" />
+                <finlex:typeStatute refersTo="#act" />
+                <finlex:isInForce value="true" />
+                <finlex:inForce>
+                    <finlex:dateEntryIntoForce date="1978-09-01" />
+                </finlex:inForce>
+                <finlex:commonName>Kuluttajalaki</finlex:commonName>
+                <finlex:issuedUnderAmendmentsOfThisAct>
+                    <finlex:statuteReference>
+                        <finlex:ref href="/akn/fi/act/statute-consolidated/2002/1052">1052/2002</finlex:ref>
+                    </finlex:statuteReference>
+                    <finlex:statuteReference>
+                        <finlex:ref href="/akn/fi/act/statute-consolidated/2004/541">541/2004</finlex:ref>
+                    </finlex:statuteReference>
+                    <finlex:statuteReference>
+                        <finlex:ref href="/akn/fi/act/statute-consolidated/1998/1038">1038/1998</finlex:ref>
+                    </finlex:statuteReference>
+                    <finlex:statuteReference>
+                        <finlex:ref href="/akn/fi/act/statute-consolidated/2002/1271">1271/2002</finlex:ref>
+                    </finlex:statuteReference>
+                    <finlex:statuteReference>
+                        <finlex:ref href="/akn/fi/act/statute-consolidated/2000/859">859/2000</finlex:ref>
+                    </finlex:statuteReference>
+                    <finlex:statuteReference>
+                        <finlex:ref href="/akn/fi/act/statute-consolidated/1997/1298">1298/1997</finlex:ref>
+                    </finlex:statuteReference>
+                    <finlex:statuteReference>
+                        <finlex:ref href="/akn/fi/act/statute-consolidated/2000/854">854/2000</finlex:ref>
+                    </finlex:statuteReference>
+                    <finlex:statuteReference>
+                        <finlex:ref href="/akn/fi/act/statute-consolidated/2002/318">318/2002</finlex:ref>
+                    </finlex:statuteReference>
+                    <finlex:statuteReference>
+                        <finlex:ref href="/akn/fi/act/statute-consolidated/2000/1009">1009/2000</finlex:ref>
+                    </finlex:statuteReference>
+                </finlex:issuedUnderAmendmentsOfThisAct>
+                <finlex:corrigenda>
+                    <finlex:corrigendum href="/akn/fi/act/statute/2000/1072/swe@">
+                        <finlex:ref href="corrigenda/fs20001072_1.pdf">1072/2000</finlex:ref>
+                    </finlex:corrigendum>
+                    <finlex:corrigendum href="/akn/fi/act/statute/2000/1072/fin@">
+                        <finlex:ref href="corrigenda/sk20001072_1.pdf">1072/2000</finlex:ref>
+                    </finlex:corrigendum>
+                    <finlex:corrigendum href="/akn/fi/act/statute/2026/573/fin@">
+                        <finlex:datePublished date="2026-10-12">12.10.2026</finlex:datePublished>
+                        <finlex:ref href="corrigenda/sk20260573_1.pdf">573/2026</finlex:ref>
+                    </finlex:corrigendum>
+                    <finlex:corrigendum href="/akn/fi/act/statute/2026/573/swe@">
+                        <finlex:datePublished date="2026-10-12">12.10.2026</finlex:datePublished>
+                        <finlex:ref href="corrigenda/fs20260573_1.pdf">573/2026</finlex:ref>
+                    </finlex:corrigendum>
+                    <finlex:corrigendum href="/akn/fi/act/statute/2000/1072/fin@">
+                        <finlex:ref href="corrigenda/sk20001072_1.pdf">1072/2000</finlex:ref>
+                    </finlex:corrigendum>
+                    <finlex:corrigendum href="/akn/fi/act/statute/2026/31/swe@">
+                        <finlex:datePublished date="2026-10-23">23.10.2026</finlex:datePublished>
+                        <finlex:ref href="corrigenda/fs20260031_1.pdf">31/2026</finlex:ref>
+                    </finlex:corrigendum>
+                </finlex:corrigenda>
+            </proprietary>
+        </meta>
+        <preface>
+            <p>
+                <docNumber>38/1978</docNumber>
+                <docTitle>Kuluttajansuojalaki</docTitle>
+            </p>
+        </preface>
+        <preamble>
+            <formula eId="enactingClause" name="enactingClause">
+                <p>Eduskunnan päätöksen mukaisesti säädetään:</p>
+            </formula>
+        </preamble>
+        <body>
+            <hcontainer finlex:outline="Säädöksen teksti" name="statuteProvisionsWrapper">
+                <chapter eId="chp_1">
+                    <num>1 luku</num>
+                    <heading eId="chp_1__heading">Yleiset säännökset</heading>
+                    <section eId="chp_1__sec_1">
+                        <num>1 §</num>
+                        <subsection eId="chp_1__sec_1__subsec_1">
+                            <content>
+                                <p>Tämä laki koskee kulutushyödykkeiden tarjontaa, myyntiä ja muuta markkinointia elinkeinonharjoittajilta kuluttajille. Lakia sovelletaan myös, kun elinkeinonharjoittaja välittää hyödykkeitä kuluttajille.</p>
+                            </content>
+                        </subsection>
+                        <subsection eId="chp_1__sec_1__subsec_2v20260031" finlex:originalVersion="@20260031" finlex:originalVersionLabel="16.1.2026/31">
+                            <content>
+                                <p>Tämä laki ei koske lakisääteisiä vakuutuksia eikä työntekijän ryhmähenkivakuutusta tai sitä vastaavaa Kevan myöntämää etuutta, ellei muualla laissa toisin säädetä.</p>
+                            </content>
+                        </subsection>
+                    </section>
+                    <section eId="chp_1__sec_6v19940016" finlex:originalVersion="@19940016" finlex:originalVersionLabel="5.1.1994/16">
+                        <num>6 §</num>
+                        <content>
+                            <p>
+                                6 § on kumottu L:lla 
+                                <ref href="#entryIntoForce_19940016">5.1.1994/16</ref>.
+                            </p>
+                        </content>
+                    </section>
+                </chapter>
+                <chapter eId="chp_2v20080561" finlex:originalVersion="@20080561" finlex:originalVersionLabel="29.8.2008/561">
+                    <num>2 luku</num>
+                    <heading eId="chp_2v20080561__headingv20080561">Markkinointi ja menettelyt asiakassuhteessa</heading>
+                    <section eId="chp_2v20080561__sec_2v20080561" finlex:originalVersion="@20080561" finlex:originalVersionLabel="29.8.2008/561">
+                        <num>2 §</num>
+                        <heading eId="chp_2v20080561__sec_2v20080561__headingv20080561">Markkinoinnin hyvän tavan vastaisuus</heading>
+                        <subsection eId="chp_2v20080561__sec_2v20080561__subsec_1v20080561">
+                            <intro eId="chp_2v20080561__sec_2v20080561__subsec_1v20080561__introv20080561">
+                                <p>Markkinointia pidetään hyvän tavan vastaisena, jos se on selvästi ristiriidassa yleisesti hyväksyttyjen yhteiskunnallisten arvojen kanssa ja erityisesti jos:</p>
+                            </intro>
+                            <paragraph eId="chp_2v20080561__sec_2v20080561__subsec_1v20080561__para_1v20080561">
+                                <num>1)</num>
+                                <content>
+                                    <p>se loukkaa ihmisarvoa taikka uskonnollista tai poliittista vakaumusta;</p>
+                                </content>
+                            </paragraph>
+                            <paragraph eId="chp_2v20080561__sec_2v20080561__subsec_1v20080561__para_2v20080561">
+                                <num>2)</num>
+                                <content>
+                                    <p>siinä esiintyy sukupuoleen, ikään, etniseen tai kansalliseen alkuperään, kansalaisuuteen, kieleen, terveydentilaan, vammaisuuteen, seksuaaliseen suuntautumiseen tai muuhun henkilöön liittyvään seikkaan perustuvaa syrjintää; taikka</p>
+                                </content>
+                            </paragraph>
+                            <paragraph eId="chp_2v20080561__sec_2v20080561__subsec_1v20080561__para_3v20080561">
+                                <num>3)</num>
+                                <content>
+                                    <p>siinä suhtaudutaan hyväksyvästi toimintaan, jossa vaarannetaan terveyttä, yleistä turvallisuutta tai ympäristöä ilman, että tällaisen toiminnan esittämiseen on markkinoitavaan hyödykkeeseen liittyvää asiallista perustetta.</p>
+                                </content>
+                            </paragraph>
+                        </subsection>
+                        <subsection eId="chp_2v20080561__sec_2v20080561__subsec_2v20080561">
+                            <content>
+                                <p>Alaikäisille suunnattua tai alaikäiset yleisesti tavoittavaa markkinointia pidetään hyvän tavan vastaisena erityisesti, jos siinä käytetään hyväksi alaikäisen kokemattomuutta tai herkkäuskoisuutta, jos se on omiaan vaikuttamaan haitallisesti alaikäisen tasapainoiseen kehitykseen tai jos siinä pyritään sivuuttamaan vanhempien mahdollisuus toimia täysipainoisesti lapsensa kasvattajina. Hyvän tavan vastaisuutta arvioitaessa otetaan huomioon markkinoinnin yleisesti tavoittamien alaikäisten ikä ja kehitystaso sekä muut olosuhteet.</p>
+                            </content>
+                        </subsection>
+                    </section>
+                    </chapter>
+                <chapter eId="chp_5v19940016" finlex:originalVersion="@19940016" finlex:originalVersionLabel="5.1.1994/16">
+                    <num>5 luku</num>
+                    <heading eId="chp_5v19940016__headingv20211242" finlex:originalVersion="@20211242" finlex:originalVersionLabel="22.12.2021/1242">
+                        Tavarankauppa 
+                        <ref href="#entryIntoForce_20211242">(22.12.2021/1242)</ref>
+                    </heading>
+                    <crossHeading eId="chp_5v19940016__crossHeadingv20211242" finlex:originalVersion="@20211242" finlex:originalVersionLabel="22.12.2021/1242">Yleiset säännökset tavarankaupasta</crossHeading>
+                    <section eId="chp_5v19940016__sec_1v20211242" finlex:originalVersion="@20211242" finlex:originalVersionLabel="22.12.2021/1242">
+                        <num>1 §</num>
+                        <heading eId="chp_5v19940016__sec_1v20211242__headingv20211242">Luvun soveltamisala</heading>
+                        <subsection eId="chp_5v19940016__sec_1v20211242__subsec_1v20211242">
+                            <content>
+                                <p>Tämän luvun säännökset koskevat tavaran kauppaa, jossa myyjänä on elinkeinonharjoittaja ja ostajana kuluttaja.</p>
+                            </content>
+                        </subsection>
+                        <subsection eId="chp_5v19940016__sec_1v20211242__subsec_2v20211242">
+                            <content>
+                                <p>Tämän luvun säännöksiä sovelletaan myös valmistettavan tavaran tilaukseen. Jos ostajan on toimitettava olennainen osa tarveaineista, tilaukseen sovelletaan kuitenkin 23, 24, 24 a, 24 b, 25–28 ja 28 a §:n sijasta 8 luvun 23–31 §:ää. Tällaiseen tilaukseen sovelletaan lisäksi, mitä 8 luvun 14 ja 32 §:ssä säädetään. Tällaiseen tilaukseen ei sovelleta, mitä tämän luvun 29 §:ssä säädetään.</p>
+                            </content>
+                        </subsection>
+                        <subsection eId="chp_5v19940016__sec_1v20211242__subsec_3v20211242">
+                            <content>
+                                <p>Tämän luvun säännöksiä ei 2, 2 a ja 3–11 §:ää lukuun ottamatta sovelleta käytetyn tavaran julkiseen huutokauppaan eikä yksinomaan digitaalisen sisällön siirtovälineenä käytettävän tavaran kauppaan. Käytetyn tavaran julkiseen huutokauppaan sovelletaan lisäksi 29 §:n 3 momenttia.</p>
+                            </content>
+                        </subsection>
+                        <subsection eId="chp_5v19940016__sec_1v20211242__subsec_4v20211242">
+                            <content>
+                                <p>Mitä tässä luvussa säädetään takuusta, sovelletaan myös sitä vastaavaan sitoumukseen, jonka myyjä tai tuottaja antaa ostajalle lisäkorvausta vastaan. Myyjä ei kuitenkaan vastaa tällöin tuottajan antaman sitoumuksen perusteella virheestä, josta hän ei muuten tämän luvun nojalla olisi vastuussa.</p>
+                            </content>
+                        </subsection>
+                    </section>
+                    <section eId="chp_5v19940016__sec_2v19940016" finlex:originalVersion="@19940016" finlex:originalVersionLabel="5.1.1994/16">
+                        <num>2 §</num>
+                        <heading eId="chp_5v19940016__sec_2v19940016__headingv19940016">Pakottavuus</heading>
+                        <subsection eId="chp_5v19940016__sec_2v19940016__subsec_1v19940016">
+                            <content>
+                                <p>Sopimusehto, joka poikkeaa tämän luvun säännöksistä ostajan vahingoksi, on mitätön, jollei jäljempänä toisin säädetä.</p>
+                            </content>
+                        </subsection>
+                    </section>
+                    <section eId="chp_5v19940016__sec_2av20211242" finlex:originalVersion="@20211242" finlex:originalVersionLabel="22.12.2021/1242">
+                        <num>2 a §</num>
+                        <heading eId="chp_5v19940016__sec_2av20211242__headingv20211242">Tavarankauppaan liittyvät määritelmät</heading>
+                        <subsection eId="chp_5v19940016__sec_2av20211242__subsec_1v20211242">
+                            <intro eId="chp_5v19940016__sec_2av20211242__subsec_1v20211242__introv20211242">
+                                <p>Tässä luvussa tarkoitetaan:</p>
+                            </intro>
+                            <paragraph eId="chp_5v19940016__sec_2av20211242__subsec_1v20211242__para_1v20211242">
+                                <num>1)</num>
+                                <content>
+                                    <p>
+                                        <i>tuottajalla</i>
+                                         tavaran valmistajaa ja sitä, joka tuo tavaran unionin alueelle, sekä sitä, joka esiintyy tuottajana liittämällä tavaraan nimensä, tavaramerkkinsä tai muun erottuvan tunnuksensa;
+                                    </p>
+                                </content>
+                            </paragraph>
+                            <paragraph eId="chp_5v19940016__sec_2av20211242__subsec_1v20211242__para_2v20211242">
+                                <num>2)</num>
+                                <content>
+                                    <p>
+                                        <i>digitaalisia elementtejä sisältävän tavaran kaupalla</i>
+                                         kauppaa, jonka kohteena on tavara, joka sopimuksen mukaan sisältää myyjän tai kolmannen osapuolen toimittamaa digitaalista sisältöä tai digitaalisen palvelun tai joka on sopimuksen mukaan liitetty myyjän tai kolmannen osapuolen toimittamaan digitaaliseen sisältöön tai palveluun ja kyseisen digitaalisen sisällön tai palvelun puuttuminen estäisi tavaran toimintojen suorittamisen;
+                                    </p>
+                                </content>
+                            </paragraph>
+                            <paragraph eId="chp_5v19940016__sec_2av20211242__subsec_1v20211242__para_3v20211242">
+                                <num>3)</num>
+                                <content>
+                                    <p>
+                                        <i>toimivuudella</i>
+                                         tavaran kykyä suorittaa toimintonsa tarkoituksenmukaisesti;
+                                    </p>
+                                </content>
+                            </paragraph>
+                            <paragraph eId="chp_5v19940016__sec_2av20211242__subsec_1v20211242__para_4v20211242">
+                                <num>4)</num>
+                                <content>
+                                    <p>
+                                        <i>yhteensopivuudella</i>
+                                         tavaran kykyä toimia sellaisen laitteen tai ohjelmiston kanssa, joiden kanssa samantyyppisiä tavaroita yleensä käytetään, ilman että tavaraa, laitetta tai ohjelmistoa on tarpeen muuttaa;
+                                    </p>
+                                </content>
+                            </paragraph>
+                            <paragraph eId="chp_5v19940016__sec_2av20211242__subsec_1v20211242__para_5v20211242">
+                                <num>5)</num>
+                                <content>
+                                    <p>
+                                        <i>yhteentoimivuudella</i>
+                                         tavaran kykyä toimia muun kuin sellaisen laitteen tai ohjelmiston kanssa, jonka kanssa samantyyppistä tavaraa yleensä käytetään;
+                                    </p>
+                                </content>
+                            </paragraph>
+                            <paragraph eId="chp_5v19940016__sec_2av20211242__subsec_1v20211242__para_6v20211242">
+                                <num>6)</num>
+                                <content>
+                                    <p>
+                                        <i>julkisella huutokaupalla</i>
+                                         myyntimenetelmää, jossa myyjä tarjoaa huutokaupanpitäjän toteuttamalla avoimella tarjouskilpailulla hyödykkeitä ostajille, jotka osallistuvat tai joilla on mahdollisuus osallistua huutokauppatilaisuuteen henkilökohtaisesti, ja jossa hyväksytyn tarjouksen tehneellä on velvollisuus ostaa hyödyke.
+                                    </p>
+                                </content>
+                            </paragraph>
+                        </subsection>
+                    </section>
+                    <crossHeading eId="chp_5v19940016__crossHeading_2">Tavaran luovutus ja vaaranvastuu</crossHeading>
+                    <crossHeading eId="chp_5v19940016__crossHeading_3">Seuraamukset tavaran luovutuksen viivästymisestä</crossHeading>
+                    <crossHeading eId="chp_5v19940016__crossHeading_4">Tavaran ominaisuudet ja virhe</crossHeading>
+                    <crossHeading eId="chp_5v19940016__crossHeading_5">Virheen seuraamukset</crossHeading>
+                    <crossHeading eId="chp_5v19940016__crossHeading_6">Ostajan velvollisuudet ja ostajan sopimusrikkomuksen seuraamukset</crossHeading>
+                    <crossHeading eId="chp_5v19940016__crossHeading_7v20211242" finlex:originalVersion="@20211242" finlex:originalVersionLabel="22.12.2021/1242">Muut säännökset tavarankaupassa</crossHeading>
+                    </chapter>
+                <chapter eId="chp_5av20211242" finlex:originalVersion="@20211242" finlex:originalVersionLabel="22.12.2021/1242">
+                    <num>5 a luku</num>
+                    <heading eId="chp_5av20211242__headingv20211242">Digitaalista sisältöä ja digitaalisia palveluja koskevat sopimukset</heading>
+                    <crossHeading eId="chp_5av20211242__crossHeading">Yleiset säännökset</crossHeading>
+                    <section eId="chp_5av20211242__sec_1v20211242" finlex:originalVersion="@20211242" finlex:originalVersionLabel="22.12.2021/1242">
+                        <num>1 §</num>
+                        <heading eId="chp_5av20211242__sec_1v20211242__headingv20211242">Luvun soveltamisala</heading>
+                        <subsection eId="chp_5av20211242__sec_1v20211242__subsec_1v20211242">
+                            <intro eId="chp_5av20211242__sec_1v20211242__subsec_1v20211242__introv20211242">
+                                <p>Tässä luvussa säädetään sopimuksista, joiden nojalla elinkeinonharjoittaja toimittaa tai sitoutuu toimittamaan kuluttajalle digitaalista sisältöä tai digitaalisen palvelun ja:</p>
+                            </intro>
+                            <paragraph eId="chp_5av20211242__sec_1v20211242__subsec_1v20211242__para_1v20211242">
+                                <num>1)</num>
+                                <content>
+                                    <p>kuluttaja maksaa tai sitoutuu maksamaan kauppahinnan; tai</p>
+                                </content>
+                            </paragraph>
+                            <paragraph eId="chp_5av20211242__sec_1v20211242__subsec_1v20211242__para_2v20211242">
+                                <num>2)</num>
+                                <content>
+                                    <p>kuluttaja luovuttaa tai sitoutuu luovuttamaan elinkeinonharjoittajalle henkilötietoja, paitsi jos elinkeinonharjoittaja käsittelee kuluttajan luovuttamia henkilötietoja yksinomaan digitaalisen sisällön tai digitaalisen palvelun toimittamiseksi tässä luvussa säädetyn mukaisesti tai täyttääkseen itseään koskevat lakisääteiset vaatimukset.</p>
+                                </content>
+                            </paragraph>
+                        </subsection>
+                        <subsection eId="chp_5av20211242__sec_1v20211242__subsec_2v20211242">
+                            <content>
+                                <p>
+                                    <i>Digitaalisella sisällöllä</i>
+                                     tarkoitetaan digitaalisessa muodossa tuotettua ja toimitettua dataa. 
+                                    <i>Digitaalisella palvelulla</i>
+                                     tarkoitetaan palvelua, jonka avulla kuluttaja voi luoda, käsitellä, tallentaa tai käyttää digitaalisessa muodossa olevaa dataa tai joka mahdollistaa kuluttajan tai palvelun muiden käyttäjien lataaman tai luoman digitaalisessa muodossa olevan datan jakamisen tai muun vuorovaikutuksen sen kanssa.
+                                </p>
+                            </content>
+                        </subsection>
+                        <subsection eId="chp_5av20211242__sec_1v20211242__subsec_3v20211242">
+                            <content>
+                                <p>Tätä lukua sovelletaan 5–9 §:ää lukuun ottamatta myös sopimukseen, joka koskee sellaisen tavaran toimittamista, jota käytetään yksinomaan digitaalisen sisällön siirtovälineenä.</p>
+                            </content>
+                        </subsection>
+                    </section>
+                    <section eId="chp_5av20211242__sec_2v20211242" finlex:originalVersion="@20211242" finlex:originalVersionLabel="22.12.2021/1242">
+                        <num>2 §</num>
+                        <heading eId="chp_5av20211242__sec_2v20211242__headingv20211242">Soveltamisalan rajoitukset</heading>
+                        <subsection eId="chp_5av20211242__sec_2v20211242__subsec_1v20211242">
+                            <intro eId="chp_5av20211242__sec_2v20211242__subsec_1v20211242__introv20211242">
+                                <p>Tämän luvun säännöksiä ei sovelleta sopimukseen:</p>
+                            </intro>
+                            <paragraph eId="chp_5av20211242__sec_2v20211242__subsec_1v20211242__para_1v20211242">
+                                <num>1)</num>
+                                <content>
+                                    <p>
+                                        joka koskee sähköisen viestinnän palveluista annetussa laissa 
+                                        <ref href="/akn/fi/act/statute-consolidated/2014/917">(917/2014)</ref>
+                                         tarkoitettuja viestintäpalveluja, lukuun ottamatta mainitussa laissa tarkoitettuja numeroista riippumattomia henkilöiden välisiä viestintäpalveluja;
+                                    </p>
+                                </content>
+                            </paragraph>
+                            <paragraph eId="chp_5av20211242__sec_2v20211242__subsec_1v20211242__para_2v20260020" finlex:originalVersion="@20260020" finlex:originalVersionLabel="16.1.2026/20">
+                                <num>2)</num>
+                                <content>
+                                    <p>joka koskee arpajaislain tai rahapelilain soveltamisalaan kuuluvaa palvelua;</p>
+                                </content>
+                            </paragraph>
+                            <hcontainer eId="note_2" finlex:outline="huomautus" name="noteAuthorial">
+                                <content>
+                                    <p>
+                                        L:lla 
+                                        <ref href="/akn/fi/act/statute/2026/20">20/2026</ref>
+                                          muutettu 2 kohta tulee voimaan 1.7.2027. Aiempi sanamuoto kuuluu:
+                                    </p>
+                                </content>
+                            </hcontainer>
+                            <paragraph eId="chp_5av20211242__sec_2v20211242__subsec_1v20211242__para_2v20211242">
+                                <num>2)</num>
+                                <content>
+                                    <p>joka koskee arpajaislain soveltamisalaan kuuluvaa palvelua;</p>
+                                </content>
+                            </paragraph>
+                            <paragraph eId="chp_5av20211242__sec_2v20211242__subsec_1v20211242__para_3v20211242">
+                                <num>3)</num>
+                                <content>
+                                    <p>joka koskee rahoituspalvelua tai -välinettä;</p>
+                                </content>
+                            </paragraph>
+                            <paragraph eId="chp_5av20211242__sec_2v20211242__subsec_1v20211242__para_4v20211242">
+                                <num>4)</num>
+                                <content>
+                                    <p>joka koskee vapaaseen lisenssiin tai avoimen lähdekoodin lisenssiin perustuvaa ohjelmistoa, kun kuluttaja ei maksa kauppahintaa ja elinkeinonharjoittaja käyttää kuluttajan luovuttamia henkilötietoja yksinomaan kyseisen ohjelmiston turvallisuuden, yhteensopivuuden tai yhteentoimivuuden parantamiseen;</p>
+                                </content>
+                            </paragraph>
+                            <paragraph eId="chp_5av20211242__sec_2v20211242__subsec_1v20211242__para_5v20211242">
+                                <num>5)</num>
+                                <content>
+                                    <p>jonka perusteella digitaalista sisältöä välitetään yleisölle muuten kuin signaalinsiirron välityksellä osana esitystä tai tapahtumaa;</p>
+                                </content>
+                            </paragraph>
+                            <paragraph eId="chp_5av20211242__sec_2v20211242__subsec_1v20211242__para_6v20211242">
+                                <num>6)</num>
+                                <content>
+                                    <p>joka koskee julkisen sektorin elimen avoimesta datasta ja julkisen sektorin hallussa olevien tietojen uudelleenkäytöstä annetun Euroopan parlamentin ja neuvoston direktiivin (EU) 2019/1024 mukaisesti toimittamaa digitaalista sisältöä.</p>
+                                </content>
+                            </paragraph>
+                        </subsection>
+                        <subsection eId="chp_5av20211242__sec_2v20211242__subsec_2v20211242">
+                            <content>
+                                <p>Jos osapuolten välinen sopimus koskee sekä digitaalisen sisällön tai palvelun toimittamista että muita hyödykkeitä, tämän luvun säännöksiä sovelletaan ainoastaan niihin sopimuksen osiin, jotka koskevat digitaalista sisältöä tai palvelua. Jos kuitenkin kyse on digitaalisia elementtejä sisältävän tavaran kaupasta, tämän luvun säännösten sijasta sopimukseen sovelletaan kokonaisuudessaan 5 luvun säännöksiä.</p>
+                            </content>
+                        </subsection>
+                        <subsection eId="chp_5av20211242__sec_2v20211242__subsec_3v20211242">
+                            <content>
+                                <p>Jos digitaalinen sisältö tai palvelu on osa sähköisen viestinnän palveluista annetun lain 108 a §:ssä tarkoitettua teleyrityksen toimittamaa palvelupakettia, tämän luvun 27 §:ää ei sovelleta.</p>
+                            </content>
+                        </subsection>
+                    </section>
+                    <crossHeading eId="chp_5av20211242__crossHeading_2">Digitaalisen sisällön tai palvelun toimittaminen ja seuraamukset toimituksen viivästyessä</crossHeading>
+                    <crossHeading eId="chp_5av20211242__crossHeading_3">Digitaalisen sisällön tai palvelun ominaisuudet ja virhe</crossHeading>
+                    <crossHeading eId="chp_5av20211242__crossHeading_4">Virheen seuraamukset</crossHeading>
+                    <crossHeading eId="chp_5av20211242__crossHeading_5">Sopimuksen purkamisen vaikutukset</crossHeading>
+                    <crossHeading eId="chp_5av20211242__crossHeading_6">Muut säännökset</crossHeading>
+                    </chapter>
+                </hcontainer>
+            </body>
+    </act>
+</akomaNtoso>
+<akomaNtoso xmlns="http://docs.oasis-open.org/legaldocml/ns/akn/3.0" xmlns:finlex="http://data.finlex.fi/schema/finlex">
+    <act contains="multipleVersions" name="main">
+        <meta>
+            <identification source="#organization_fi.finlex">
+                <FRBRWork>
+                    <FRBRthis value="/akn/fi/act/statute-consolidated/1978/38/!main" />
+                    <FRBRuri value="/akn/fi/act/statute-consolidated/1978/38" />
+                    <FRBRalias name="eli" value="http://data.finlex.fi/eli/sd/1978/38/ajantasa" />
+                    <FRBRdate date="1978-01-20" name="dateIssued" />
+                    <FRBRauthor as="#role_author" href="#organization_fi.finlex" />
+                    <FRBRcountry value="fi" />
+                    <FRBRsubtype value="statute-consolidated" />
+                    <FRBRnumber value="38" />
+                    <FRBRprescriptive value="false" />
+                    <FRBRauthoritative value="false" />
+                </FRBRWork>
+                <FRBRExpression>
+                    <FRBRthis value="/akn/fi/act/statute-consolidated/1978/38/swe@20260835/!main" />
+                    <FRBRuri value="/akn/fi/act/statute-consolidated/1978/38/swe@20260835" />
+                    <FRBRalias name="eli" value="http://data.finlex.fi/eli/sd/1978/38/ajantasa/2026-09-04/swe" />
+                    <FRBRdate date="1978-01-20" name="dateIssued" />
+                    <FRBRdate date="2026-09-04" name="dateConsolidated" />
+                    <FRBRauthor as="#role_author" href="#organization_fi.finlex" />
+                    <FRBRversionNumber value="20260835" />
+                    <FRBRlanguage language="swe" />
+                </FRBRExpression>
+                <FRBRManifestation>
+                    <FRBRthis value="/akn/fi/act/statute-consolidated/1978/38/swe@20260835/!main.xml" />
+                    <FRBRuri value="/akn/fi/act/statute-consolidated/1978/38/swe@20260835.akn" />
+                    <FRBRalias name="eli" value="http://data.finlex.fi/eli/sd/1978/38/ajantasa/2026-09-04/swe/xml" />
+                    <FRBRdate date="2026-10-23" name="dateProduced" />
+                    <FRBRauthor as="#role_editor" href="#organization_fi.finlex" />
+                    <FRBRformat value="xml" />
+                </FRBRManifestation>
+            </identification>
+            <proprietary source="#organization_fi.finlex">
+                <finlex:documentYear>1978</finlex:documentYear>
+                <finlex:administrativeBranch refersTo="#fi.ministry-of-justice" />
+                <finlex:typeStatute refersTo="#act" />
+                <finlex:isInForce value="true" />
+                <finlex:inForce>
+                    <finlex:dateEntryIntoForce date="1978-09-01" />
+                </finlex:inForce>
+                <finlex:issuedUnderAmendmentsOfThisAct>
+                    <finlex:statuteReference>
+                        <finlex:ref href="/akn/fi/act/statute-consolidated/2002/1052">1052/2002</finlex:ref>
+                    </finlex:statuteReference>
+                    <finlex:statuteReference>
+                        <finlex:ref href="/akn/fi/act/statute-consolidated/2004/541">541/2004</finlex:ref>
+                    </finlex:statuteReference>
+                    <finlex:statuteReference>
+                        <finlex:ref href="/akn/fi/act/statute-consolidated/1998/1038">1038/1998</finlex:ref>
+                    </finlex:statuteReference>
+                    <finlex:statuteReference>
+                        <finlex:ref href="/akn/fi/act/statute-consolidated/2002/1271">1271/2002</finlex:ref>
+                    </finlex:statuteReference>
+                    <finlex:statuteReference>
+                        <finlex:ref href="/akn/fi/act/statute-consolidated/2000/859">859/2000</finlex:ref>
+                    </finlex:statuteReference>
+                    <finlex:statuteReference>
+                        <finlex:ref href="/akn/fi/act/statute-consolidated/1997/1298">1298/1997</finlex:ref>
+                    </finlex:statuteReference>
+                    <finlex:statuteReference>
+                        <finlex:ref href="/akn/fi/act/statute-consolidated/2000/854">854/2000</finlex:ref>
+                    </finlex:statuteReference>
+                    <finlex:statuteReference>
+                        <finlex:ref href="/akn/fi/act/statute-consolidated/2002/318">318/2002</finlex:ref>
+                    </finlex:statuteReference>
+                    <finlex:statuteReference>
+                        <finlex:ref href="/akn/fi/act/statute-consolidated/2000/1009">1009/2000</finlex:ref>
+                    </finlex:statuteReference>
+                </finlex:issuedUnderAmendmentsOfThisAct>
+                <finlex:corrigenda>
+                    <finlex:corrigendum href="/akn/fi/act/statute/2000/1072/swe@">
+                        <finlex:ref href="corrigenda/fs20001072_1.pdf">1072/2000</finlex:ref>
+                    </finlex:corrigendum>
+                    <finlex:corrigendum href="/akn/fi/act/statute/2000/1072/fin@">
+                        <finlex:ref href="corrigenda/sk20001072_1.pdf">1072/2000</finlex:ref>
+                    </finlex:corrigendum>
+                    <finlex:corrigendum href="/akn/fi/act/statute/2026/573/fin@">
+                        <finlex:datePublished date="2026-10-12">12.10.2026</finlex:datePublished>
+                        <finlex:ref href="corrigenda/sk20260573_1.pdf">573/2026</finlex:ref>
+                    </finlex:corrigendum>
+                    <finlex:corrigendum href="/akn/fi/act/statute/2026/573/swe@">
+                        <finlex:datePublished date="2026-10-12">12.10.2026</finlex:datePublished>
+                        <finlex:ref href="corrigenda/fs20260573_1.pdf">573/2026</finlex:ref>
+                    </finlex:corrigendum>
+                    <finlex:corrigendum href="/akn/fi/act/statute/2000/1072/fin@">
+                        <finlex:ref href="corrigenda/sk20001072_1.pdf">1072/2000</finlex:ref>
+                    </finlex:corrigendum>
+                    <finlex:corrigendum href="/akn/fi/act/statute/2026/31/swe@">
+                        <finlex:datePublished date="2026-10-23">23.10.2026</finlex:datePublished>
+                        <finlex:ref href="corrigenda/fs20260031_1.pdf">31/2026</finlex:ref>
+                    </finlex:corrigendum>
+                </finlex:corrigenda>
+            </proprietary>
+        </meta>
+        <preface>
+            <p>
+                <docNumber>38/1978</docNumber>
+                <docTitle>Konsumentskyddslag</docTitle>
+            </p>
+        </preface>
+        <preamble>
+            <formula eId="enactingClause" name="enactingClause">
+                <p>I enlighet med riksdagens beslut stadgas:</p>
+            </formula>
+        </preamble>
+        <body>
+            <hcontainer finlex:outline="Förordningens text" name="statuteProvisionsWrapper">
+                <chapter eId="chp_1">
+                    <num>1 kap.</num>
+                    <heading eId="chp_1__heading">Allmänna stadganden</heading>
+                    <section eId="chp_1__sec_1">
+                        <num>1 §</num>
+                        <subsection eId="chp_1__sec_1__subsec_1">
+                            <content>
+                                <p>Denna lag gäller utbud, försäljning och annan marknadsföring av konsumtionsnyttigheter från näringsidkare till konsumenter. Lagen tillämpas även då näringsidkare förmedlar nyttigheter till konsumenter.</p>
+                            </content>
+                        </subsection>
+                        <subsection eId="chp_1__sec_1__subsec_2v20260031" finlex:originalVersion="@20260031" finlex:originalVersionLabel="16.1.2026/31">
+                            <content>
+                                <p>Denna lag gäller inte lagstadgade försäkringar eller arbetstagares grupplivförsäkring eller motsvarande av Keva beviljad förmån, om inte annat föreskrivs någon annanstans i lag.</p>
+                            </content>
+                        </subsection>
+                    </section>
+                    <section eId="chp_1__sec_6v19940016" finlex:originalVersion="@19940016" finlex:originalVersionLabel="5.1.1994/16">
+                        <num>6 §</num>
+                        <subsection eId="chp_1__sec_6v19940016__subsec_1v19940016">
+                            <content>
+                                <p>6 § har upphävts genom L 16/1994.</p>
+                            </content>
+                        </subsection>
+                    </section>
+                </chapter>
+                <chapter eId="chp_2v20080561" finlex:originalVersion="@20080561" finlex:originalVersionLabel="29.8.2008/561">
+                    <num>2 kap.</num>
+                    <heading eId="chp_2v20080561__headingv20080561">Marknadsföring samt förfaranden i kundrelationer</heading>
+                    <section eId="chp_2v20080561__sec_2v20080561" finlex:originalVersion="@20080561" finlex:originalVersionLabel="29.8.2008/561">
+                        <num>2 §</num>
+                        <heading eId="chp_2v20080561__sec_2v20080561__headingv20080561">Marknadsföring som strider mot god sed</heading>
+                        <subsection eId="chp_2v20080561__sec_2v20080561__subsec_1v20080561">
+                            <intro eId="chp_2v20080561__sec_2v20080561__subsec_1v20080561__introv20080561">
+                                <p>Marknadsföringen anses stå i strid med god sed, om den är klart oförenlig med allmänt godtagna samhälleliga värden och i synnerhet om den</p>
+                            </intro>
+                            <paragraph eId="chp_2v20080561__sec_2v20080561__subsec_1v20080561__para_1v20080561">
+                                <num>1)</num>
+                                <content>
+                                    <p>kränker människovärdet eller religiösa eller politiska övertygelser,</p>
+                                </content>
+                            </paragraph>
+                            <paragraph eId="chp_2v20080561__sec_2v20080561__subsec_1v20080561__para_2v20080561">
+                                <num>2)</num>
+                                <content>
+                                    <p>är förenad med diskriminering på grund av kön, ålder, etniskt eller nationellt ursprung, nationalitet, språk, hälsotillstånd, funktionshinder eller sexuell läggning eller med annan motsvarande diskriminering på grund av person, eller</p>
+                                </content>
+                            </paragraph>
+                            <paragraph eId="chp_2v20080561__sec_2v20080561__subsec_1v20080561__para_3v20080561">
+                                <num>3)</num>
+                                <content>
+                                    <p>ger uttryck för en positiv attityd till verksamhet som är farlig för hälsan eller hotar den allmänna säkerheten eller miljön, utan att det finns något relevant samband mellan framställande av verksamheten i fråga och den nyttighet som marknadsförs.</p>
+                                </content>
+                            </paragraph>
+                        </subsection>
+                        <subsection eId="chp_2v20080561__sec_2v20080561__subsec_2v20080561">
+                            <content>
+                                <p>Marknadsföring som riktar sig till eller i allmänhet når minderåriga anses strida mot god sed i synnerhet om den är utformad så att de minderårigas bristande erfarenhet och deras godtrogenhet utnyttjas, om den är ägnad att påverka den balanserade utvecklingen hos de minderåriga på ett negativt sätt eller om den syftar till att undergräva föräldrarnas roll som fullvärdiga fostrare av sina barn. Vid bedömningen av om marknadsföringen strider mot god sed ska åldern och utvecklingsnivån hos de minderåriga som i allmänhet nås av marknadsföringen samt övriga omständigheter beaktas.</p>
+                            </content>
+                        </subsection>
+                    </section>
+                    </chapter>
+                <chapter eId="chp_5v19940016" finlex:originalVersion="@19940016" finlex:originalVersionLabel="5.1.1994/16">
+                    <num>5 kap.</num>
+                    <heading eId="chp_5v19940016__headingv20211242" finlex:originalVersion="@20211242" finlex:originalVersionLabel="22.12.2021/1242">
+                        Köp av varor 
+                        <ref href="#entryIntoForce_20211242">(22.12.2021/1242)</ref>
+                    </heading>
+                    <crossHeading eId="chp_5v19940016__crossHeadingv20211242" finlex:originalVersion="@20211242" finlex:originalVersionLabel="22.12.2021/1242">Allmänna bestämmelser om köp av varor</crossHeading>
+                    <section eId="chp_5v19940016__sec_1v20211242" finlex:originalVersion="@20211242" finlex:originalVersionLabel="22.12.2021/1242">
+                        <num>1 §</num>
+                        <heading eId="chp_5v19940016__sec_1v20211242__headingv20211242">Kapitlets tillämpningsområde</heading>
+                        <subsection eId="chp_5v19940016__sec_1v20211242__subsec_1v20211242">
+                            <content>
+                                <p>Detta kapitel gäller sådana köp av varor där säljaren är näringsidkare och köparen konsument.</p>
+                            </content>
+                        </subsection>
+                        <subsection eId="chp_5v19940016__sec_1v20211242__subsec_2v20211242">
+                            <content>
+                                <p>Bestämmelserna i detta kapitel tillämpas också på beställning av en vara som ska tillverkas. Om köparen ska tillhandahålla en väsentlig del av det material som behövs för att tillverka varan, tillämpas dock på beställningen 8 kap. 23–31 § i stället för 23, 24, 24 a, 24 b, 25–28 och 28 a § i detta kapitel. På en sådan beställning tillämpas dessutom vad som föreskrivs i 8 kap. 14 och 32 §. På en sådan beställning tillämpas inte vad som föreskrivs i 29 § i detta kapitel.</p>
+                            </content>
+                        </subsection>
+                        <subsection eId="chp_5v19940016__sec_1v20211242__subsec_3v20211242">
+                            <content>
+                                <p>Med undantag av 2, 2 a och 3–11 § tillämpas bestämmelserna i detta kapitel inte på offentlig auktion av begagnade varor eller på köp av sådana varor som endast fungerar som bärare av digitalt innehåll. På offentlig auktion av begagnade varor tillämpas dessutom bestämmelserna i 29 § 3 mom.</p>
+                            </content>
+                        </subsection>
+                        <subsection eId="chp_5v19940016__sec_1v20211242__subsec_4v20211242">
+                            <content>
+                                <p>Vad som i detta kapitel föreskrivs om garanti tillämpas också på motsvarande utfästelse som säljaren eller tillverkaren ger köparen mot tilläggsersättning. En utfästelse som getts av tillverkaren binder dock inte i sådana fall säljaren till ansvar för fel som han eller hon inte annars skulle ansvara för med stöd av detta kapitel.</p>
+                            </content>
+                        </subsection>
+                    </section>
+                    <section eId="chp_5v19940016__sec_2v19940016" finlex:originalVersion="@19940016" finlex:originalVersionLabel="5.1.1994/16">
+                        <num>2 § </num>
+                        <heading eId="chp_5v19940016__sec_2v19940016__headingv19940016">Stadgandenas tvingande natur </heading>
+                        <subsection eId="chp_5v19940016__sec_2v19940016__subsec_1v19940016">
+                            <content>
+                                <p>Avtalsvillkor som till köparens nackdel avviker från stadgandena i detta kapitel är utan verkan, om inte något annat stadgas nedan. </p>
+                            </content>
+                        </subsection>
+                    </section>
+                    <section eId="chp_5v19940016__sec_2av20211242" finlex:originalVersion="@20211242" finlex:originalVersionLabel="22.12.2021/1242">
+                        <num>2 a §</num>
+                        <heading eId="chp_5v19940016__sec_2av20211242__headingv20211242">Definitioner som anknyter till köp av varor</heading>
+                        <subsection eId="chp_5v19940016__sec_2av20211242__subsec_1v20211242">
+                            <intro eId="chp_5v19940016__sec_2av20211242__subsec_1v20211242__introv20211242">
+                                <p>I detta kapitel avses med</p>
+                            </intro>
+                            <paragraph eId="chp_5v19940016__sec_2av20211242__subsec_1v20211242__para_1v20211242">
+                                <num>1)</num>
+                                <content>
+                                    <p>
+                                        <i>tillverkare</i>
+                                         den som tillverkar en vara och den som importerar en vara till unionen samt den som uppger sig vara tillverkare genom att sätta sitt namn, varumärke eller annat eget kännetecken på varan,
+                                    </p>
+                                </content>
+                            </paragraph>
+                            <paragraph eId="chp_5v19940016__sec_2av20211242__subsec_1v20211242__para_2v20211242">
+                                <num>2)</num>
+                                <content>
+                                    <p>
+                                        <i>köp av en vara med digitala delar</i>
+                                         köp som gäller en vara som enligt avtalet innehåller digitalt innehåll eller digitala tjänster som tillhandahålls av säljaren eller av en tredje part eller som enligt avtalet är sammankopplat till digitalt innehåll eller digitala tjänster som tillhandahålls av säljaren eller av en tredje part och frånvaron av det digitala innehållet eller de digitala tjänsterna gör att varan inte fungerar,
+                                    </p>
+                                </content>
+                            </paragraph>
+                            <paragraph eId="chp_5v19940016__sec_2av20211242__subsec_1v20211242__para_3v20211242">
+                                <num>3)</num>
+                                <content>
+                                    <p>
+                                        <i>funktionalitet</i>
+                                         en varas förmåga att fungera på avsett vis,
+                                    </p>
+                                </content>
+                            </paragraph>
+                            <paragraph eId="chp_5v19940016__sec_2av20211242__subsec_1v20211242__para_4v20211242">
+                                <num>4)</num>
+                                <content>
+                                    <p>
+                                        <i>kompatibilitet</i>
+                                         en varas förmåga att fungera ihop med maskinvara eller programvara med vilken varor av samma typ normalt används, utan att varan, maskinvaran eller programvaran behöver konverteras,
+                                    </p>
+                                </content>
+                            </paragraph>
+                            <paragraph eId="chp_5v19940016__sec_2av20211242__subsec_1v20211242__para_5v20211242">
+                                <num>5)</num>
+                                <content>
+                                    <p>
+                                        <i>driftskompatibilitet</i>
+                                         en varas förmåga att fungera ihop med annan maskinvara eller programvara än den med vilken varor av samma typ normalt används,
+                                    </p>
+                                </content>
+                            </paragraph>
+                            <paragraph eId="chp_5v19940016__sec_2av20211242__subsec_1v20211242__para_6v20211242">
+                                <num>6)</num>
+                                <content>
+                                    <p>
+                                        <i>offentlig auktion</i>
+                                         en försäljningsmetod där säljaren genom ett öppet anbudsförfarande som sköts av en auktionsförrättare bjuder ut nyttigheter till köpare som personligen närvarar eller ges möjlighet att närvara vid auktionen, och där den som lämnar det vinnande budet är skyldig att köpa nyttigheten.
+                                    </p>
+                                </content>
+                            </paragraph>
+                        </subsection>
+                    </section>
+                    <crossHeading eId="chp_5v19940016__crossHeading_2">Avlämnande och risken för varan </crossHeading>
+                    <crossHeading eId="chp_5v19940016__crossHeading_3">Påföljder vid dröjsmål med varans avlämnande </crossHeading>
+                    <crossHeading eId="chp_5v19940016__crossHeading_4">Varans beskaffenhet samt fel i varan </crossHeading>
+                    <crossHeading eId="chp_5v19940016__crossHeading_5">Påföljder vid fel </crossHeading>
+                    <crossHeading eId="chp_5v19940016__crossHeading_6">Köparens skyldigheter och påföljder vid köparens avtalsbrott </crossHeading>
+                    <crossHeading eId="chp_5v19940016__crossHeading_7v20211242" finlex:originalVersion="@20211242" finlex:originalVersionLabel="22.12.2021/1242">Övriga bestämmelser om köp av varor</crossHeading>
+                    </chapter>
+                <chapter eId="chp_5av20211242" finlex:originalVersion="@20211242" finlex:originalVersionLabel="22.12.2021/1242">
+                    <num>5 a kap.</num>
+                    <heading eId="chp_5av20211242__headingv20211242">Avtal om digitalt innehåll och digitala tjänster</heading>
+                    <crossHeading eId="chp_5av20211242__crossHeadingv20211242" finlex:originalVersion="@20211242" finlex:originalVersionLabel="22.12.2021/1242">Allmänna bestämmelser</crossHeading>
+                    <section eId="chp_5av20211242__sec_1v20211242" finlex:originalVersion="@20211242" finlex:originalVersionLabel="22.12.2021/1242">
+                        <num>1 §</num>
+                        <heading eId="chp_5av20211242__sec_1v20211242__headingv20211242">Kapitlets tillämpningsområde</heading>
+                        <subsection eId="chp_5av20211242__sec_1v20211242__subsec_1v20211242">
+                            <intro eId="chp_5av20211242__sec_1v20211242__subsec_1v20211242__introv20211242">
+                                <p>I detta kapitel föreskrivs om avtal med stöd av vilka en näringsidkare tillhandahåller eller förbinder sig att tillhandahålla ett digitalt innehåll eller en digital tjänst till konsumenten och</p>
+                            </intro>
+                            <paragraph eId="chp_5av20211242__sec_1v20211242__subsec_1v20211242__para_1v20211242">
+                                <num>1)</num>
+                                <content>
+                                    <p>konsumenten betalar eller förbinder sig att betala en köpesumma, eller</p>
+                                </content>
+                            </paragraph>
+                            <paragraph eId="chp_5av20211242__sec_1v20211242__subsec_1v20211242__para_2v20211242">
+                                <num>2)</num>
+                                <content>
+                                    <p>konsumenten lämnar ut eller förbinder sig att lämna ut personuppgifter till näringsidkaren, såvida inte näringsidkaren behandlar personuppgifter som konsumenten lämnat ut enbart för att tillhandahålla digitalt innehåll eller digitala tjänster i enlighet med detta kapitel eller för att uppfylla de lagstadgade krav som gäller honom eller henne själv.</p>
+                                </content>
+                            </paragraph>
+                        </subsection>
+                        <subsection eId="chp_5av20211242__sec_1v20211242__subsec_2v20211242">
+                            <content>
+                                <p>
+                                    Med 
+                                    <i>digitalt innehåll</i>
+                                     avses data som framställs och tillhandahålls i digital form. Med 
+                                    <i>digital tjänst</i>
+                                     avses en tjänst som gör det möjligt för konsumenten att skapa, bearbeta, lagra eller få tillgång till uppgifter i digital form, eller en tjänst som gör det möjligt att utbyta eller interagera på annat sätt med uppgifter i digital form som laddas upp eller skapas av konsumenten eller av andra användare av den tjänsten.
+                                </p>
+                            </content>
+                        </subsection>
+                        <subsection eId="chp_5av20211242__sec_1v20211242__subsec_3v20211242">
+                            <content>
+                                <p>Med undantag för 5–9 § tillämpas detta kapitel också på avtal som gäller leverans av en vara som uteslutande används som bärare av digitalt innehåll.</p>
+                            </content>
+                        </subsection>
+                    </section>
+                    <section eId="chp_5av20211242__sec_2v20211242" finlex:originalVersion="@20211242" finlex:originalVersionLabel="22.12.2021/1242">
+                        <num>2 §</num>
+                        <heading eId="chp_5av20211242__sec_2v20211242__headingv20211242">Begränsningar av tillämpningsområdet</heading>
+                        <subsection eId="chp_5av20211242__sec_2v20211242__subsec_1v20211242">
+                            <intro eId="chp_5av20211242__sec_2v20211242__subsec_1v20211242__introv20211242">
+                                <p>Bestämmelserna i detta kapitel ska inte tillämpas på avtal</p>
+                            </intro>
+                            <paragraph eId="chp_5av20211242__sec_2v20211242__subsec_1v20211242__para_1v20211242">
+                                <num>1)</num>
+                                <content>
+                                    <p>
+                                        som gäller kommunikationstjänster som avses i lagen om tjänster inom elektronisk kommunikation 
+                                        <ref href="/akn/fi/act/statute-consolidated/2014/917">(917/2014)</ref>, med undantag av sådana nummeroberoende interpersonella kommunikationstjänster som avses i den lagen,
+                                    </p>
+                                </content>
+                            </paragraph>
+                            <paragraph eId="chp_5av20211242__sec_2v20211242__subsec_1v20211242__para_2v20260020" finlex:originalVersion="@20260020" finlex:originalVersionLabel="16.1.2026/20">
+                                <num>2)</num>
+                                <content>
+                                    <p>som gäller tjänster som omfattas av tillämpningsområdet för lotterilagen eller penningspelslagen,</p>
+                                </content>
+                            </paragraph>
+                            <hcontainer eId="note_2" finlex:outline="huomautus" name="noteAuthorial">
+                                <content>
+                                    <p>
+                                        2 punkten har ändrats genom L 
+                                        <ref href="/akn/fi/act/statute/2026/20">20/2026</ref>, som träder i kraft 1.7.2027. Den tidigare formen lyder:
+                                    </p>
+                                </content>
+                            </hcontainer>
+                            <paragraph eId="chp_5av20211242__sec_2v20211242__subsec_1v20211242__para_2v20211242">
+                                <num>2)</num>
+                                <content>
+                                    <p>som gäller tjänster som omfattas av tillämpningsområdet för lotterilagen,</p>
+                                </content>
+                            </paragraph>
+                            <paragraph eId="chp_5av20211242__sec_2v20211242__subsec_1v20211242__para_3v20211242">
+                                <num>3)</num>
+                                <content>
+                                    <p>som gäller finansiella tjänster eller finansiella instrument,</p>
+                                </content>
+                            </paragraph>
+                            <paragraph eId="chp_5av20211242__sec_2v20211242__subsec_1v20211242__para_4v20211242">
+                                <num>4)</num>
+                                <content>
+                                    <p>som gäller fri programvara med öppen källkod som näringsidkaren tillhandahållit och där konsumenten inte betalar en köpesumma och de personuppgifter som konsumenten tillhandahåller behandlas av näringsidkaren enbart för att förbättra säkerheten, kompatibiliteten eller driftskompatibiliteten hos den specifika programvaran,</p>
+                                </content>
+                            </paragraph>
+                            <paragraph eId="chp_5av20211242__sec_2v20211242__subsec_1v20211242__para_5v20211242">
+                                <num>5)</num>
+                                <content>
+                                    <p>på basis av vilket digitalt innehåll som är en del av ett framförande eller ett evenemang överförs till allmänheten på annat sätt än genom signalöverföring,</p>
+                                </content>
+                            </paragraph>
+                            <paragraph eId="chp_5av20211242__sec_2v20211242__subsec_1v20211242__para_6v20211242">
+                                <num>6)</num>
+                                <content>
+                                    <p>som gäller digitalt innehåll som tillhandahålls av en offentlig myndighet i enlighet med Europaparlamentets och rådets direktiv (EU) 2019/1024 om öppna data och vidareutnyttjande av information från den offentliga sektorn.</p>
+                                </content>
+                            </paragraph>
+                        </subsection>
+                        <subsection eId="chp_5av20211242__sec_2v20211242__subsec_2v20211242">
+                            <content>
+                                <p>Om ett avtal mellan parterna gäller både tillhandahållande av digitalt innehåll eller digitala tjänster och andra nyttigheter, ska bestämmelserna i detta kapitel tillämpas endast på de delar av avtalet som gäller digitalt innehåll eller digitala tjänster. Om det emellertid rör sig om köp av en vara med digitala delar, tillämpas på avtalet i sin helhet bestämmelserna i 5 kap. i stället för bestämmelserna i detta kapitel.</p>
+                            </content>
+                        </subsection>
+                        <subsection eId="chp_5av20211242__sec_2v20211242__subsec_3v20211242">
+                            <content>
+                                <p>Om det digitala innehållet eller den digitala tjänsten utgör en del av ett sådant paket av tjänster som tillhandahålls av teleföretag och som avses i 108 a § i lagen om tjänster inom elektronisk kommunikation tillämpas inte 27 § i detta kapitel.</p>
+                            </content>
+                        </subsection>
+                    </section>
+                    <crossHeading eId="chp_5av20211242__crossHeading_2v20211242" finlex:originalVersion="@20211242" finlex:originalVersionLabel="22.12.2021/1242">Tillhandahållande av digitalt innehåll eller digitala tjänster och påföljder vid försenad leverans</crossHeading>
+                    <crossHeading eId="chp_5av20211242__crossHeading_3v20211242" finlex:originalVersion="@20211242" finlex:originalVersionLabel="22.12.2021/1242">Egenskaper och fel hos digitalt innehåll eller digitala tjänster</crossHeading>
+                    <crossHeading eId="chp_5av20211242__crossHeading_4v20211242" finlex:originalVersion="@20211242" finlex:originalVersionLabel="22.12.2021/1242">Påföljder vid fel</crossHeading>
+                    <crossHeading eId="chp_5av20211242__crossHeading_5v20211242" finlex:originalVersion="@20211242" finlex:originalVersionLabel="22.12.2021/1242">Verkningar av hävning av avtal</crossHeading>
+                    <crossHeading eId="chp_5av20211242__crossHeading_6v20211242" finlex:originalVersion="@20211242" finlex:originalVersionLabel="22.12.2021/1242">Övriga bestämmelser</crossHeading>
+                    </chapter>
+                </hcontainer>
+            </body>
+    </act>
+</akomaNtoso>
+<akomaNtoso xmlns="http://docs.oasis-open.org/legaldocml/ns/akn/3.0" xmlns:finlex="http://data.finlex.fi/schema/finlex">
+    <act contains="multipleVersions" name="main">
+        <meta>
+            <identification source="#organization_fi.finlex">
+                <FRBRWork>
+                    <FRBRthis value="/akn/fi/act/statute-consolidated/1978/38/!main" />
+                    <FRBRuri value="/akn/fi/act/statute-consolidated/1978/38" />
+                    <FRBRalias name="eli" value="http://data.finlex.fi/eli/sd/1978/38/ajantasa" />
+                    <FRBRdate date="1978-01-20" name="dateIssued" />
+                    <FRBRauthor as="#role_author" href="#organization_fi.finlex" />
+                    <FRBRcountry value="fi" />
+                    <FRBRsubtype value="statute-consolidated" />
+                    <FRBRnumber value="38" />
+                    <FRBRprescriptive value="false" />
+                    <FRBRauthoritative value="false" />
+                </FRBRWork>
+                <FRBRExpression>
+                    <FRBRthis value="/akn/fi/act/statute-consolidated/1978/38/fin@20260354/!main" />
+                    <FRBRuri value="/akn/fi/act/statute-consolidated/1978/38/fin@20260354" />
+                    <FRBRalias name="eli" value="http://data.finlex.fi/eli/sd/1978/38/ajantasa/2026-05-08/fin" />
+                    <FRBRdate date="1978-01-20" name="dateIssued" />
+                    <FRBRdate date="2026-09-04" name="dateConsolidated" />
+                    <FRBRauthor as="#role_author" href="#organization_fi.finlex" />
+                    <FRBRversionNumber value="20260354" />
+                    <FRBRlanguage language="fin" />
+                </FRBRExpression>
+                <FRBRManifestation>
+                    <FRBRthis value="/akn/fi/act/statute-consolidated/1978/38/fin@20260354/!main.xml" />
+                    <FRBRuri value="/akn/fi/act/statute-consolidated/1978/38/fin@20260354.akn" />
+                    <FRBRalias name="eli" value="http://data.finlex.fi/eli/sd/1978/38/ajantasa/2026-05-08/fin/xml" />
+                    <FRBRdate date="2026-10-15" name="dateProduced" />
+                    <FRBRauthor as="#role_editor" href="#organization_fi.finlex" />
+                    <FRBRformat value="xml" />
+                </FRBRManifestation>
+            </identification>
+            <proprietary source="#organization_fi.finlex">
+                <finlex:documentYear>1978</finlex:documentYear>
+                <finlex:administrativeBranch refersTo="#fi.ministry-of-justice" />
+                <finlex:typeStatute refersTo="#act" />
+                <finlex:isInForce value="true" />
+                <finlex:inForce>
+                    <finlex:dateEntryIntoForce date="1978-09-01" />
+                </finlex:inForce>
+                <finlex:commonName>Kuluttajalaki</finlex:commonName>
+                <finlex:issuedUnderAmendmentsOfThisAct>
+                    <finlex:statuteReference>
+                        <finlex:ref href="/akn/fi/act/statute-consolidated/2002/1052">1052/2002</finlex:ref>
+                    </finlex:statuteReference>
+                    <finlex:statuteReference>
+                        <finlex:ref href="/akn/fi/act/statute-consolidated/2004/541">541/2004</finlex:ref>
+                    </finlex:statuteReference>
+                    <finlex:statuteReference>
+                        <finlex:ref href="/akn/fi/act/statute-consolidated/1998/1038">1038/1998</finlex:ref>
+                    </finlex:statuteReference>
+                    <finlex:statuteReference>
+                        <finlex:ref href="/akn/fi/act/statute-consolidated/2002/1271">1271/2002</finlex:ref>
+                    </finlex:statuteReference>
+                    <finlex:statuteReference>
+                        <finlex:ref href="/akn/fi/act/statute-consolidated/2000/859">859/2000</finlex:ref>
+                    </finlex:statuteReference>
+                    <finlex:statuteReference>
+                        <finlex:ref href="/akn/fi/act/statute-consolidated/1997/1298">1298/1997</finlex:ref>
+                    </finlex:statuteReference>
+                    <finlex:statuteReference>
+                        <finlex:ref href="/akn/fi/act/statute-consolidated/2000/854">854/2000</finlex:ref>
+                    </finlex:statuteReference>
+                    <finlex:statuteReference>
+                        <finlex:ref href="/akn/fi/act/statute-consolidated/2002/318">318/2002</finlex:ref>
+                    </finlex:statuteReference>
+                    <finlex:statuteReference>
+                        <finlex:ref href="/akn/fi/act/statute-consolidated/2000/1009">1009/2000</finlex:ref>
+                    </finlex:statuteReference>
+                </finlex:issuedUnderAmendmentsOfThisAct>
+                <finlex:corrigenda>
+                    <finlex:corrigendum href="/akn/fi/act/statute/2000/1072/swe@">
+                        <finlex:ref href="corrigenda/fs20001072_1.pdf">1072/2000</finlex:ref>
+                    </finlex:corrigendum>
+                    <finlex:corrigendum href="/akn/fi/act/statute/2000/1072/fin@">
+                        <finlex:ref href="corrigenda/sk20001072_1.pdf">1072/2000</finlex:ref>
+                    </finlex:corrigendum>
+                    <finlex:corrigendum href="/akn/fi/act/statute/2026/573/fin@">
+                        <finlex:datePublished date="2026-10-12">12.10.2026</finlex:datePublished>
+                        <finlex:ref href="corrigenda/sk20260573_1.pdf">573/2026</finlex:ref>
+                    </finlex:corrigendum>
+                    <finlex:corrigendum href="/akn/fi/act/statute/2026/573/swe@">
+                        <finlex:datePublished date="2026-10-12">12.10.2026</finlex:datePublished>
+                        <finlex:ref href="corrigenda/fs20260573_1.pdf">573/2026</finlex:ref>
+                    </finlex:corrigendum>
+                    <finlex:corrigendum href="/akn/fi/act/statute/2000/1072/fin@">
+                        <finlex:ref href="corrigenda/sk20001072_1.pdf">1072/2000</finlex:ref>
+                    </finlex:corrigendum>
+                </finlex:corrigenda>
+            </proprietary>
+        </meta>
+        <preface>
+            <p>
+                <docNumber>38/1978</docNumber>
+                <docTitle>Kuluttajansuojalaki</docTitle>
+            </p>
+        </preface>
+        <preamble>
+            <formula eId="enactingClause" name="enactingClause">
+                <p>Eduskunnan päätöksen mukaisesti säädetään:</p>
+            </formula>
+        </preamble>
+        <body>
+            <hcontainer finlex:outline="Säädöksen teksti" name="statuteProvisionsWrapper">
+                <chapter eId="chp_1">
+                    <num>1 luku</num>
+                    <heading eId="chp_1__heading">Yleiset säännökset</heading>
+                    <section eId="chp_1__sec_1">
+                        <num>1 §</num>
+                        <subsection eId="chp_1__sec_1__subsec_1">
+                            <content>
+                                <p>Tämä laki koskee kulutushyödykkeiden tarjontaa, myyntiä ja muuta markkinointia elinkeinonharjoittajilta kuluttajille. Lakia sovelletaan myös, kun elinkeinonharjoittaja välittää hyödykkeitä kuluttajille.</p>
+                            </content>
+                        </subsection>
+                        <subsection eId="chp_1__sec_1__subsec_2v20260031" finlex:originalVersion="@20260031" finlex:originalVersionLabel="16.1.2026/31">
+                            <content>
+                                <p>Tämä laki ei koske lakisääteisiä vakuutuksia eikä työntekijän ryhmähenkivakuutusta tai sitä vastaavaa Kevan myöntämää etuutta, ellei muualla laissa toisin säädetä.</p>
+                            </content>
+                        </subsection>
+                    </section>
+                    <section eId="chp_1__sec_6v19940016" finlex:originalVersion="@19940016" finlex:originalVersionLabel="5.1.1994/16">
+                        <num>6 §</num>
+                        <content>
+                            <p>
+                                6 § on kumottu L:lla 
+                                <ref href="#entryIntoForce_19940016">5.1.1994/16</ref>.
+                            </p>
+                        </content>
+                    </section>
+                </chapter>
+                <chapter eId="chp_2v20080561" finlex:originalVersion="@20080561" finlex:originalVersionLabel="29.8.2008/561">
+                    <num>2 luku</num>
+                    <heading eId="chp_2v20080561__headingv20080561">Markkinointi ja menettelyt asiakassuhteessa</heading>
+                    <section eId="chp_2v20080561__sec_2v20080561" finlex:originalVersion="@20080561" finlex:originalVersionLabel="29.8.2008/561">
+                        <num>2 §</num>
+                        <heading eId="chp_2v20080561__sec_2v20080561__headingv20080561">Markkinoinnin hyvän tavan vastaisuus</heading>
+                        <subsection eId="chp_2v20080561__sec_2v20080561__subsec_1v20080561">
+                            <intro eId="chp_2v20080561__sec_2v20080561__subsec_1v20080561__introv20080561">
+                                <p>Markkinointia pidetään hyvän tavan vastaisena, jos se on selvästi ristiriidassa yleisesti hyväksyttyjen yhteiskunnallisten arvojen kanssa ja erityisesti jos:</p>
+                            </intro>
+                            <paragraph eId="chp_2v20080561__sec_2v20080561__subsec_1v20080561__para_1v20080561">
+                                <num>1)</num>
+                                <content>
+                                    <p>se loukkaa ihmisarvoa taikka uskonnollista tai poliittista vakaumusta;</p>
+                                </content>
+                            </paragraph>
+                            <paragraph eId="chp_2v20080561__sec_2v20080561__subsec_1v20080561__para_2v20080561">
+                                <num>2)</num>
+                                <content>
+                                    <p>siinä esiintyy sukupuoleen, ikään, etniseen tai kansalliseen alkuperään, kansalaisuuteen, kieleen, terveydentilaan, vammaisuuteen, seksuaaliseen suuntautumiseen tai muuhun henkilöön liittyvään seikkaan perustuvaa syrjintää; taikka</p>
+                                </content>
+                            </paragraph>
+                            <paragraph eId="chp_2v20080561__sec_2v20080561__subsec_1v20080561__para_3v20080561">
+                                <num>3)</num>
+                                <content>
+                                    <p>siinä suhtaudutaan hyväksyvästi toimintaan, jossa vaarannetaan terveyttä, yleistä turvallisuutta tai ympäristöä ilman, että tällaisen toiminnan esittämiseen on markkinoitavaan hyödykkeeseen liittyvää asiallista perustetta.</p>
+                                </content>
+                            </paragraph>
+                        </subsection>
+                        <subsection eId="chp_2v20080561__sec_2v20080561__subsec_2v20080561">
+                            <content>
+                                <p>Alaikäisille suunnattua tai alaikäiset yleisesti tavoittavaa markkinointia pidetään hyvän tavan vastaisena erityisesti, jos siinä käytetään hyväksi alaikäisen kokemattomuutta tai herkkäuskoisuutta, jos se on omiaan vaikuttamaan haitallisesti alaikäisen tasapainoiseen kehitykseen tai jos siinä pyritään sivuuttamaan vanhempien mahdollisuus toimia täysipainoisesti lapsensa kasvattajina. Hyvän tavan vastaisuutta arvioitaessa otetaan huomioon markkinoinnin yleisesti tavoittamien alaikäisten ikä ja kehitystaso sekä muut olosuhteet.</p>
+                            </content>
+                        </subsection>
+                    </section>
+                    </chapter>
+                <chapter eId="chp_5v19940016" finlex:originalVersion="@19940016" finlex:originalVersionLabel="5.1.1994/16">
+                    <num>5 luku</num>
+                    <heading eId="chp_5v19940016__headingv20211242" finlex:originalVersion="@20211242" finlex:originalVersionLabel="22.12.2021/1242">
+                        Tavarankauppa 
+                        <ref href="#entryIntoForce_20211242">(22.12.2021/1242)</ref>
+                    </heading>
+                    <crossHeading eId="chp_5v19940016__crossHeadingv20211242" finlex:originalVersion="@20211242" finlex:originalVersionLabel="22.12.2021/1242">Yleiset säännökset tavarankaupasta</crossHeading>
+                    <section eId="chp_5v19940016__sec_1v20211242" finlex:originalVersion="@20211242" finlex:originalVersionLabel="22.12.2021/1242">
+                        <num>1 §</num>
+                        <heading eId="chp_5v19940016__sec_1v20211242__headingv20211242">Luvun soveltamisala</heading>
+                        <subsection eId="chp_5v19940016__sec_1v20211242__subsec_1v20211242">
+                            <content>
+                                <p>Tämän luvun säännökset koskevat tavaran kauppaa, jossa myyjänä on elinkeinonharjoittaja ja ostajana kuluttaja.</p>
+                            </content>
+                        </subsection>
+                        <subsection eId="chp_5v19940016__sec_1v20211242__subsec_2v20211242">
+                            <content>
+                                <p>Tämän luvun säännöksiä sovelletaan myös valmistettavan tavaran tilaukseen. Jos ostajan on toimitettava olennainen osa tarveaineista, tilaukseen sovelletaan kuitenkin 23, 24, 24 a, 24 b, 25–28 ja 28 a §:n sijasta 8 luvun 23–31 §:ää. Tällaiseen tilaukseen sovelletaan lisäksi, mitä 8 luvun 14 ja 32 §:ssä säädetään. Tällaiseen tilaukseen ei sovelleta, mitä tämän luvun 29 §:ssä säädetään.</p>
+                            </content>
+                        </subsection>
+                        <subsection eId="chp_5v19940016__sec_1v20211242__subsec_3v20211242">
+                            <content>
+                                <p>Tämän luvun säännöksiä ei 2, 2 a ja 3–11 §:ää lukuun ottamatta sovelleta käytetyn tavaran julkiseen huutokauppaan eikä yksinomaan digitaalisen sisällön siirtovälineenä käytettävän tavaran kauppaan. Käytetyn tavaran julkiseen huutokauppaan sovelletaan lisäksi 29 §:n 3 momenttia.</p>
+                            </content>
+                        </subsection>
+                        <subsection eId="chp_5v19940016__sec_1v20211242__subsec_4v20211242">
+                            <content>
+                                <p>Mitä tässä luvussa säädetään takuusta, sovelletaan myös sitä vastaavaan sitoumukseen, jonka myyjä tai tuottaja antaa ostajalle lisäkorvausta vastaan. Myyjä ei kuitenkaan vastaa tällöin tuottajan antaman sitoumuksen perusteella virheestä, josta hän ei muuten tämän luvun nojalla olisi vastuussa.</p>
+                            </content>
+                        </subsection>
+                    </section>
+                    <section eId="chp_5v19940016__sec_2v19940016" finlex:originalVersion="@19940016" finlex:originalVersionLabel="5.1.1994/16">
+                        <num>2 §</num>
+                        <heading eId="chp_5v19940016__sec_2v19940016__headingv19940016">Pakottavuus</heading>
+                        <subsection eId="chp_5v19940016__sec_2v19940016__subsec_1v19940016">
+                            <content>
+                                <p>Sopimusehto, joka poikkeaa tämän luvun säännöksistä ostajan vahingoksi, on mitätön, jollei jäljempänä toisin säädetä.</p>
+                            </content>
+                        </subsection>
+                    </section>
+                    <section eId="chp_5v19940016__sec_2av20211242" finlex:originalVersion="@20211242" finlex:originalVersionLabel="22.12.2021/1242">
+                        <num>2 a §</num>
+                        <heading eId="chp_5v19940016__sec_2av20211242__headingv20211242">Tavarankauppaan liittyvät määritelmät</heading>
+                        <subsection eId="chp_5v19940016__sec_2av20211242__subsec_1v20211242">
+                            <intro eId="chp_5v19940016__sec_2av20211242__subsec_1v20211242__introv20211242">
+                                <p>Tässä luvussa tarkoitetaan:</p>
+                            </intro>
+                            <paragraph eId="chp_5v19940016__sec_2av20211242__subsec_1v20211242__para_1v20211242">
+                                <num>1)</num>
+                                <content>
+                                    <p>
+                                        <i>tuottajalla</i>
+                                         tavaran valmistajaa ja sitä, joka tuo tavaran unionin alueelle, sekä sitä, joka esiintyy tuottajana liittämällä tavaraan nimensä, tavaramerkkinsä tai muun erottuvan tunnuksensa;
+                                    </p>
+                                </content>
+                            </paragraph>
+                            <paragraph eId="chp_5v19940016__sec_2av20211242__subsec_1v20211242__para_2v20211242">
+                                <num>2)</num>
+                                <content>
+                                    <p>
+                                        <i>digitaalisia elementtejä sisältävän tavaran kaupalla</i>
+                                         kauppaa, jonka kohteena on tavara, joka sopimuksen mukaan sisältää myyjän tai kolmannen osapuolen toimittamaa digitaalista sisältöä tai digitaalisen palvelun tai joka on sopimuksen mukaan liitetty myyjän tai kolmannen osapuolen toimittamaan digitaaliseen sisältöön tai palveluun ja kyseisen digitaalisen sisällön tai palvelun puuttuminen estäisi tavaran toimintojen suorittamisen;
+                                    </p>
+                                </content>
+                            </paragraph>
+                            <paragraph eId="chp_5v19940016__sec_2av20211242__subsec_1v20211242__para_3v20211242">
+                                <num>3)</num>
+                                <content>
+                                    <p>
+                                        <i>toimivuudella</i>
+                                         tavaran kykyä suorittaa toimintonsa tarkoituksenmukaisesti;
+                                    </p>
+                                </content>
+                            </paragraph>
+                            <paragraph eId="chp_5v19940016__sec_2av20211242__subsec_1v20211242__para_4v20211242">
+                                <num>4)</num>
+                                <content>
+                                    <p>
+                                        <i>yhteensopivuudella</i>
+                                         tavaran kykyä toimia sellaisen laitteen tai ohjelmiston kanssa, joiden kanssa samantyyppisiä tavaroita yleensä käytetään, ilman että tavaraa, laitetta tai ohjelmistoa on tarpeen muuttaa;
+                                    </p>
+                                </content>
+                            </paragraph>
+                            <paragraph eId="chp_5v19940016__sec_2av20211242__subsec_1v20211242__para_5v20211242">
+                                <num>5)</num>
+                                <content>
+                                    <p>
+                                        <i>yhteentoimivuudella</i>
+                                         tavaran kykyä toimia muun kuin sellaisen laitteen tai ohjelmiston kanssa, jonka kanssa samantyyppistä tavaraa yleensä käytetään;
+                                    </p>
+                                </content>
+                            </paragraph>
+                            <paragraph eId="chp_5v19940016__sec_2av20211242__subsec_1v20211242__para_6v20211242">
+                                <num>6)</num>
+                                <content>
+                                    <p>
+                                        <i>julkisella huutokaupalla</i>
+                                         myyntimenetelmää, jossa myyjä tarjoaa huutokaupanpitäjän toteuttamalla avoimella tarjouskilpailulla hyödykkeitä ostajille, jotka osallistuvat tai joilla on mahdollisuus osallistua huutokauppatilaisuuteen henkilökohtaisesti, ja jossa hyväksytyn tarjouksen tehneellä on velvollisuus ostaa hyödyke.
+                                    </p>
+                                </content>
+                            </paragraph>
+                        </subsection>
+                    </section>
+                    <crossHeading eId="chp_5v19940016__crossHeading_2">Tavaran luovutus ja vaaranvastuu</crossHeading>
+                    <crossHeading eId="chp_5v19940016__crossHeading_3">Seuraamukset tavaran luovutuksen viivästymisestä</crossHeading>
+                    <crossHeading eId="chp_5v19940016__crossHeading_4">Tavaran ominaisuudet ja virhe</crossHeading>
+                    <crossHeading eId="chp_5v19940016__crossHeading_5">Virheen seuraamukset</crossHeading>
+                    <crossHeading eId="chp_5v19940016__crossHeading_6">Ostajan velvollisuudet ja ostajan sopimusrikkomuksen seuraamukset</crossHeading>
+                    <crossHeading eId="chp_5v19940016__crossHeading_7v20211242" finlex:originalVersion="@20211242" finlex:originalVersionLabel="22.12.2021/1242">Muut säännökset tavarankaupassa</crossHeading>
+                    </chapter>
+                <chapter eId="chp_5av20211242" finlex:originalVersion="@20211242" finlex:originalVersionLabel="22.12.2021/1242">
+                    <num>5 a luku</num>
+                    <heading eId="chp_5av20211242__headingv20211242">Digitaalista sisältöä ja digitaalisia palveluja koskevat sopimukset</heading>
+                    <crossHeading eId="chp_5av20211242__crossHeading">Yleiset säännökset</crossHeading>
+                    <section eId="chp_5av20211242__sec_1v20211242" finlex:originalVersion="@20211242" finlex:originalVersionLabel="22.12.2021/1242">
+                        <num>1 §</num>
+                        <heading eId="chp_5av20211242__sec_1v20211242__headingv20211242">Luvun soveltamisala</heading>
+                        <subsection eId="chp_5av20211242__sec_1v20211242__subsec_1v20211242">
+                            <intro eId="chp_5av20211242__sec_1v20211242__subsec_1v20211242__introv20211242">
+                                <p>Tässä luvussa säädetään sopimuksista, joiden nojalla elinkeinonharjoittaja toimittaa tai sitoutuu toimittamaan kuluttajalle digitaalista sisältöä tai digitaalisen palvelun ja:</p>
+                            </intro>
+                            <paragraph eId="chp_5av20211242__sec_1v20211242__subsec_1v20211242__para_1v20211242">
+                                <num>1)</num>
+                                <content>
+                                    <p>kuluttaja maksaa tai sitoutuu maksamaan kauppahinnan; tai</p>
+                                </content>
+                            </paragraph>
+                            <paragraph eId="chp_5av20211242__sec_1v20211242__subsec_1v20211242__para_2v20211242">
+                                <num>2)</num>
+                                <content>
+                                    <p>kuluttaja luovuttaa tai sitoutuu luovuttamaan elinkeinonharjoittajalle henkilötietoja, paitsi jos elinkeinonharjoittaja käsittelee kuluttajan luovuttamia henkilötietoja yksinomaan digitaalisen sisällön tai digitaalisen palvelun toimittamiseksi tässä luvussa säädetyn mukaisesti tai täyttääkseen itseään koskevat lakisääteiset vaatimukset.</p>
+                                </content>
+                            </paragraph>
+                        </subsection>
+                        <subsection eId="chp_5av20211242__sec_1v20211242__subsec_2v20211242">
+                            <content>
+                                <p>
+                                    <i>Digitaalisella sisällöllä</i>
+                                     tarkoitetaan digitaalisessa muodossa tuotettua ja toimitettua dataa. 
+                                    <i>Digitaalisella palvelulla</i>
+                                     tarkoitetaan palvelua, jonka avulla kuluttaja voi luoda, käsitellä, tallentaa tai käyttää digitaalisessa muodossa olevaa dataa tai joka mahdollistaa kuluttajan tai palvelun muiden käyttäjien lataaman tai luoman digitaalisessa muodossa olevan datan jakamisen tai muun vuorovaikutuksen sen kanssa.
+                                </p>
+                            </content>
+                        </subsection>
+                        <subsection eId="chp_5av20211242__sec_1v20211242__subsec_3v20211242">
+                            <content>
+                                <p>Tätä lukua sovelletaan 5–9 §:ää lukuun ottamatta myös sopimukseen, joka koskee sellaisen tavaran toimittamista, jota käytetään yksinomaan digitaalisen sisällön siirtovälineenä.</p>
+                            </content>
+                        </subsection>
+                    </section>
+                    <section eId="chp_5av20211242__sec_2v20211242" finlex:originalVersion="@20211242" finlex:originalVersionLabel="22.12.2021/1242">
+                        <num>2 §</num>
+                        <heading eId="chp_5av20211242__sec_2v20211242__headingv20211242">Soveltamisalan rajoitukset</heading>
+                        <subsection eId="chp_5av20211242__sec_2v20211242__subsec_1v20211242">
+                            <intro eId="chp_5av20211242__sec_2v20211242__subsec_1v20211242__introv20211242">
+                                <p>Tämän luvun säännöksiä ei sovelleta sopimukseen:</p>
+                            </intro>
+                            <paragraph eId="chp_5av20211242__sec_2v20211242__subsec_1v20211242__para_1v20211242">
+                                <num>1)</num>
+                                <content>
+                                    <p>
+                                        joka koskee sähköisen viestinnän palveluista annetussa laissa 
+                                        <ref href="/akn/fi/act/statute/2014/917">(917/2014)</ref>
+                                         tarkoitettuja viestintäpalveluja, lukuun ottamatta mainitussa laissa tarkoitettuja numeroista riippumattomia henkilöiden välisiä viestintäpalveluja;
+                                    </p>
+                                </content>
+                            </paragraph>
+                            <paragraph eId="chp_5av20211242__sec_2v20211242__subsec_1v20211242__para_2v20260020" finlex:originalVersion="@20260020" finlex:originalVersionLabel="16.1.2026/20">
+                                <num>2)</num>
+                                <content>
+                                    <p>joka koskee arpajaislain tai rahapelilain soveltamisalaan kuuluvaa palvelua;</p>
+                                </content>
+                            </paragraph>
+                            <hcontainer eId="note_2" finlex:outline="huomautus" name="noteAuthorial">
+                                <content>
+                                    <p>
+                                        L:lla 
+                                        <ref href="/akn/fi/act/statute/2026/20">20/2026</ref>
+                                          muutettu 2 kohta tulee voimaan 1.7.2027. Aiempi sanamuoto kuuluu:
+                                    </p>
+                                </content>
+                            </hcontainer>
+                            <paragraph eId="chp_5av20211242__sec_2v20211242__subsec_1v20211242__para_2v20211242">
+                                <num>2)</num>
+                                <content>
+                                    <p>joka koskee arpajaislain soveltamisalaan kuuluvaa palvelua;</p>
+                                </content>
+                            </paragraph>
+                            <paragraph eId="chp_5av20211242__sec_2v20211242__subsec_1v20211242__para_3v20211242">
+                                <num>3)</num>
+                                <content>
+                                    <p>joka koskee rahoituspalvelua tai -välinettä;</p>
+                                </content>
+                            </paragraph>
+                            <paragraph eId="chp_5av20211242__sec_2v20211242__subsec_1v20211242__para_4v20211242">
+                                <num>4)</num>
+                                <content>
+                                    <p>joka koskee vapaaseen lisenssiin tai avoimen lähdekoodin lisenssiin perustuvaa ohjelmistoa, kun kuluttaja ei maksa kauppahintaa ja elinkeinonharjoittaja käyttää kuluttajan luovuttamia henkilötietoja yksinomaan kyseisen ohjelmiston turvallisuuden, yhteensopivuuden tai yhteentoimivuuden parantamiseen;</p>
+                                </content>
+                            </paragraph>
+                            <paragraph eId="chp_5av20211242__sec_2v20211242__subsec_1v20211242__para_5v20211242">
+                                <num>5)</num>
+                                <content>
+                                    <p>jonka perusteella digitaalista sisältöä välitetään yleisölle muuten kuin signaalinsiirron välityksellä osana esitystä tai tapahtumaa;</p>
+                                </content>
+                            </paragraph>
+                            <paragraph eId="chp_5av20211242__sec_2v20211242__subsec_1v20211242__para_6v20211242">
+                                <num>6)</num>
+                                <content>
+                                    <p>joka koskee julkisen sektorin elimen avoimesta datasta ja julkisen sektorin hallussa olevien tietojen uudelleenkäytöstä annetun Euroopan parlamentin ja neuvoston direktiivin (EU) 2019/1024 mukaisesti toimittamaa digitaalista sisältöä.</p>
+                                </content>
+                            </paragraph>
+                        </subsection>
+                        <subsection eId="chp_5av20211242__sec_2v20211242__subsec_2v20211242">
+                            <content>
+                                <p>Jos osapuolten välinen sopimus koskee sekä digitaalisen sisällön tai palvelun toimittamista että muita hyödykkeitä, tämän luvun säännöksiä sovelletaan ainoastaan niihin sopimuksen osiin, jotka koskevat digitaalista sisältöä tai palvelua. Jos kuitenkin kyse on digitaalisia elementtejä sisältävän tavaran kaupasta, tämän luvun säännösten sijasta sopimukseen sovelletaan kokonaisuudessaan 5 luvun säännöksiä.</p>
+                            </content>
+                        </subsection>
+                        <subsection eId="chp_5av20211242__sec_2v20211242__subsec_3v20211242">
+                            <content>
+                                <p>Jos digitaalinen sisältö tai palvelu on osa sähköisen viestinnän palveluista annetun lain 108 a §:ssä tarkoitettua teleyrityksen toimittamaa palvelupakettia, tämän luvun 27 §:ää ei sovelleta.</p>
+                            </content>
+                        </subsection>
+                    </section>
+                    <crossHeading eId="chp_5av20211242__crossHeading_2">Digitaalisen sisällön tai palvelun toimittaminen ja seuraamukset toimituksen viivästyessä</crossHeading>
+                    <crossHeading eId="chp_5av20211242__crossHeading_3">Digitaalisen sisällön tai palvelun ominaisuudet ja virhe</crossHeading>
+                    <crossHeading eId="chp_5av20211242__crossHeading_4">Virheen seuraamukset</crossHeading>
+                    <crossHeading eId="chp_5av20211242__crossHeading_5">Sopimuksen purkamisen vaikutukset</crossHeading>
+                    <crossHeading eId="chp_5av20211242__crossHeading_6">Muut säännökset</crossHeading>
+                    </chapter>
+                </hcontainer>
+            </body>
+    </act>
+</akomaNtoso>
+</Results></AknXmlList>

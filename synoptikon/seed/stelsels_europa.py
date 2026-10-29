@@ -88,13 +88,36 @@ DK = [
     ]),
 ]
 
+# FI: geen burgerlijk wetboek; zelfde opzet als DK, de hoofdstukken komen uit de import.
+FI = [
+    ("FI-VARALL", "Varallisuusoikeus (oikeustoimet, kauppa, vahingonkorvaus)", "", [
+        ("FI-OIKTL", "Oikeustoimilaki (228/1929)", "", [], "OikTL"),
+        ("FI-KL", "Kauppalaki (355/1987)", "", [], "KL"),
+        ("FI-KSL", "Kuluttajansuojalaki (38/1978)", "", [], "KSL"),
+        ("FI-VAHL", "Vahingonkorvauslaki (412/1974)", "", [], "VahL"),
+        ("FI-VANHL", "Laki velan vanhentumisesta (728/2003)", "", [], "VanhL"),
+    ]),
+    ("FI-YHTIÖ", "Yhtiöoikeus", "", [
+        ("FI-OYL", "Osakeyhtiölaki (624/2006)", "", [], "OYL"),
+    ]),
+    ("FI-PROSESSI", "Prosessioikeus", "", [
+        ("FI-OK", "Oikeudenkäymiskaari (4/1734)", "", [], "OK"),
+    ]),
+    ("FI-JULK", "Valtiosääntö ja rikosoikeus", "", [
+        ("FI-PL", "Suomen perustuslaki (731/1999)", "", [], "PL"),
+        ("FI-RL", "Rikoslaki (39/1889)", "", [], "RL"),
+    ]),
+]
+
 # code, naam, taal, toelichting, actief, rechtsfamilie (zelfde vorm als seed/stelsels.py)
 STELSELS = [
     ("DK", "Denemarken", "da", "Geen burgerlijk wetboek: losse vermogensrechtelijke wetten (Aftaleloven 1917, Købeloven 1906), deels in Scandinavische samenwerking tot stand gekomen; Danske Lov (1683) geldt nog in enkele artikelen", True, "nordisch"),
+    ("FI", "Finland", "fi", "Geen burgerlijk wetboek: losse vermogensrechtelijke wetten in Scandinavische samenwerking (Oikeustoimilaki 1929, Kauppalaki 1987); het Zweedse Rijkswetboek van 1734 leeft voort in de procesrechtelijke 'kaari'", True, "nordisch"),
     ("AT", "Oostenrijk", "de", "Allgemeines bürgerliches Gesetzbuch (1811): natuurrechtelijke codificatie, gemoderniseerd door de Teilnovellen (1914–1916) en latere hervormingen", True, "germaans"),
 ]
 
 SYSTEMATIEK = {
     "AT": AT,
     "DK": DK,
+    "FI": FI,
 }

@@ -93,3 +93,24 @@ def test_deense_verwijzingen():
     assert _herken("§ 36 aftl.") == [("DK", "36", "aftl.")]
     assert _herken("§ 4 a kbl.") == [("DK", "4 a", "kbl.")]
     assert _herken("§ 76, stk. 1, kbl.") == [("DK", "76", "kbl.")]
+
+
+def test_finlex_ksl():
+    from synoptikon.importers import finlex
+
+    g = finlex.parse((FIX / "finlex_ksl.xml").read_bytes(), "1978/38")
+    assert g.titel == "Kuluttajansuojalaki"
+    assert g.versie == "ajantasa 2026-09-04 (835/2026)"  # de jongste van de twee Finse standen, niet de Zweedse
+    per = {a.nummer: a for a in g.artikelen}
+    assert {"1:1", "1:6", "2:2", "5:1", "5 a:1"} <= set(per)  # nummering per hoofdstuk
+    assert per["5:1"].pad == "5 luku Tavarankauppa › Yleiset säännökset tavarankaupasta"
+    assert per["2:2"].opschrift == "Markkinoinnin hyvän tavan vastaisuus"
+    assert "\n1) se loukkaa ihmisarvoa" in per["2:2"].tekst
+    assert per["1:6"].tekst == "6 § on kumottu L:lla 5.1.1994/16."
+    assert b"swe@" not in g.ruw[:2000]
+
+
+def test_finse_verwijzingen():
+    assert _herken("OikTL 36 §") == [("FI", "36", "OikTL")]
+    assert _herken("RL 21:1") == [("FI", "21:1", "RL")]
+    assert _herken("KSL 7 a:14 a") == [("FI", "7 a:14 a", "KSL")]

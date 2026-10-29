@@ -289,6 +289,7 @@ synoptikon seed                              # laadt o.a. de omzettingstabel
 | GR | lawspot.gr | ΑΚ, Σύνταγμα, ΠΚ, ΕμπΝ, ν. 2251/1994, 2190/1920, 3190/1955, 4548/2018, 4072/2012, 3869/2010, 4624/2019 | ja |
 | AT | RIS (BKA), geltende Fassung per wet | ABGB, B-VG, UGB, KSchG, ZPO, IPRG, StGB | ja |
 | DK | Retsinformation, LexDania-XML via ELI | grl., aftl., kbl., forbrugeraftalel., EAL, forældelsesl., selskabsl., rpl., strfl. | ja, per lovbekendtgørelse |
+| FI | Finlex open data (Akoma Ntoso) | PL, OikTL, KL, KSL, VahL, VanhL, OYL, OK, RL | ja |
 
 **Alle wetten van een bron** (`synoptikon/importers/bulk.py`), naast het register:
 
