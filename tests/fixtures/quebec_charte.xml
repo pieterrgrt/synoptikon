@@ -1,0 +1,54 @@
+<?xml version='1.0' encoding='utf-8'?>
+<LegislativeDocument xml:lang="fr" date-eev="20261001" DocumentType="cs">
+	<Statute>
+		<Identification Code="id"><Id>C-12</Id><LongTitle Code="id-lt">Charte des droits et libertés de la personne</LongTitle></Identification>
+		<Body>
+			<Group1-Part Code="ga:l_i">
+				<Heading style="group1-part" Code="ga:l_i-h1">
+					<Label>I</Label>
+					<TitleText Code="ga:l_i-h1-t1-nb:1">LES DROITS ET LIBERTÉS DE LA PERSONNE</TitleText>
+				</Heading>
+				<Group2-Division Code="ga:l_i-gb:l_i">
+					<Heading style="group4" Code="ga:l_i-gb:l_i-h1">
+						<Label>I</Label>
+						<TitleText Code="ga:l_i-gb:l_i-h1-t1-nb:2">LIBERTÉS ET DROITS FONDAMENTAUX</TitleText>
+						<HistoricalNote>
+							<Ref>
+								<RefFreeForm>1982, c. 61, a. 1</RefFreeForm>
+							</Ref>
+						</HistoricalNote>
+					</Heading>
+					<Section Code="se:1" full-id="6694" date-eev="19990401">
+						<Label style="P">1</Label>
+						<Subsection Code="se:1-ss:1">
+							<Text>Tout être humain a droit à la vie, ainsi qu’à la sûreté, à l’intégrité et à la liberté de sa personne.</Text>
+						</Subsection>
+						<Subsection Code="se:1-ss:2">
+							<Text>Il possède également la personnalité juridique.</Text>
+						</Subsection>
+						<HistoricalNote>
+							<Ref>
+								<RefFreeForm>1975, c. 6, a. 1</RefFreeForm>
+							</Ref>
+							<Ref>
+								<RefFreeForm>1982, c. 61, a. 1</RefFreeForm>
+							</Ref>
+						</HistoricalNote>
+					</Section><Section Code="se:2" full-id="6695" date-eev="19990401">
+						<Label style="P">2</Label>
+						<Subsection Code="se:2-ss:1">
+							<Text>Tout être humain dont la vie est en péril a droit au secours.</Text>
+						</Subsection>
+						<Subsection Code="se:2-ss:2">
+							<Text>Toute personne doit porter secours à celui dont la vie est en péril, personnellement ou en obtenant du secours, en lui apportant l’aide physique nécessaire et immédiate, à moins d’un risque pour elle ou pour les tiers ou d’un autre motif raisonnable.</Text>
+						</Subsection>
+						<HistoricalNote>
+							<Ref>
+								<RefFreeForm>1975, c. 6, a. 2</RefFreeForm>
+							</Ref>
+						</HistoricalNote>
+					</Section></Group2-Division>
+				</Group1-Part>
+			</Body>
+		</Statute>
+</LegislativeDocument>
