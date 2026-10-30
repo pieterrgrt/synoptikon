@@ -66,7 +66,7 @@ def test_vak_wisselen_is_een_correctie(client):
     with database.session() as s:
         k = s.get(Kaart, kid)
         assert k.lijst.vak == "W" and s.get(Profiel, 1).laatste_vak == "W"
-        assert k.lijst_id == min(s.scalars(select(Leerlijst.id).where(Leerlijst.vak == "W", Leerlijst.profiel_id == 1)))  # de oudste lijst van het vak
+        assert k.lijst_id == min(s.scalars(select(Leerlijst.id).where(Leerlijst.vak == "W", Leerlijst.profiel_id == 1, ~Leerlijst.naam.startswith("Notities"))))  # de oudste lijst van het vak
     assert client.post("/leren/vak", data={"kaarten": "999999", "vak": "W"}).status_code == 400
 
 
