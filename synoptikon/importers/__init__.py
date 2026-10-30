@@ -27,6 +27,8 @@ class Geparseerd:
     artikelen: list[Artikel] = field(default_factory=list)
     ruw: bytes | None = None
     ruw_extensie: str = "xml"
+    afkorting: str | None = None  # citeerafkorting volgens de bron (DE: amtabk/jurabk)
+    stijl: str | None = None  # "Art" als de wet artikelen heeft in plaats van paragrafen (GG, EGBGB)
 
 
 class ImportOvergeslagen(Exception):

@@ -15,6 +15,13 @@
     <label>{{ _('Tags') }} <span class="hint">{{ _('kommagescheiden') }}</span> <input name="tags" lang="nl" value="{{ vraag.tags or '' if vraag else '' }}" placeholder="eigendom, levering, roerende zaken"></label>
   </div>
   <p class="hint">{{ _('Voor elk actief stelsel ({codes}) komt een kolom.', codes=stelsels | map(attribute='code') | join(', ')) }}</p>
+  {% if not vraag and claude_aan %}
+  <fieldset class="onderzoek-start">
+    <label class="kolomschakel"><input type="checkbox" name="laat_onderzoeken" value="1" checked> {{ _('Claude onderzoekt deze vraag meteen') }}</label>
+    <div class="stelsel-keuze">{% for s in stelsels %}<label class="kolomschakel"><input type="checkbox" name="stelsel" value="{{ s.code }}" {% if s.code in standaard_stelsels %}checked{% endif %}> {{ vlag(s.code) }}{{ s.code }}</label>{% endfor %}</div>
+    <p class="hint">{{ _('Wetteksten uit Synoptikon, rechtspraak van het web; per stelsel kern, analyse en bronnen, plus een vergelijking. Niet geverifieerd: controleer voor gebruik.') }}</p>
+  </fieldset>
+  {% endif %}
   <div class="acties">
     <button class="knop primair" type="submit">{{ _('Opslaan') }}</button>
     <a class="knop" href="{{ '/vragen/' ~ vraag.slug if vraag else '/' }}">{{ _('Annuleren') }}</a>

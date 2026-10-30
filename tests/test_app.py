@@ -74,7 +74,7 @@ def test_export_begrippenparen(client):
 
 def test_begrippenkaart_json(client):
     data = client.get("/begrippen/kaart.json").json()
-    assert {k["stelsel"] for k in data["knopen"]} == {"NL", "DE", "FR", "EU", "BE", "IT", "ES", "CH", "EN", "US", "AU"}
+    assert {k["stelsel"] for k in data["knopen"]} == {"NL", "DE", "FR", "EU", "BE", "IT", "ES", "CH", "GR", "EN", "US", "AU"}
     assert {k["type"] for k in data["kanten"]} == {"equivalent", "deels", "faux_ami", "geen"}
     assert all(k["familie"] for k in data["knopen"])
     # De twee clusters (vragen) blijven gescheiden; ieder begrip hangt aan een vraag.
@@ -116,3 +116,30 @@ def test_print_en_pdf(client):
     assert r.status_code in (200, 501)
     if r.status_code == 200:
         assert r.content[:5] == b"%PDF-"
+
+
+def test_een_aanmelding_met_wunderkammer(anoniem, monkeypatch):
+    """Domeincookie van een andere app logt hetzelfde profiel in; uitloggen wist haar; het wachtwoordformaat van
+    Wunderkammer (scrypt:N:r:p:salt:digest) wordt herkend."""
+    import base64
+    import hashlib
+    import os
+
+    from synoptikon import auth, sso
+    from synoptikon.config import settings
+
+    geheim = "x" * 40
+    monkeypatch.setattr(settings, "sso_geheim", geheim)
+    assert anoniem.get("/", follow_redirects=False).status_code == 303
+    anoniem.cookies.set(sso.COOKIE, sso.maak("beheerder", geheim))
+    r = anoniem.get("/", follow_redirects=False)
+    assert r.status_code == 200 and auth.COOKIE in r.cookies
+    anoniem.cookies.clear()
+    anoniem.cookies.set(sso.COOKIE, sso.maak("beheerder", "y" * 40))  # ander geheim: geen toegang
+    assert anoniem.get("/", follow_redirects=False).status_code == 303
+    assert sso.lees(sso.maak("pieter", geheim, dagen=-1), geheim) is None  # verlopen
+
+    salt = os.urandom(16)
+    dk = hashlib.scrypt(b"kammer", salt=salt, n=2**14, r=8, p=1)
+    wk = f"scrypt:{2**14}:8:1:{base64.b64encode(salt).decode()}:{base64.b64encode(dk).decode()}"
+    assert auth.verify_password("kammer", wk) and not auth.verify_password("fout", wk)

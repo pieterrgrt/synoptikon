@@ -14,9 +14,15 @@ router = APIRouter()
 
 @router.get("/wetteksten")
 def lijst(request: Request, db: Session = Depends(get_session)):
-    wetten = db.scalars(select(Wettekst).order_by(Wettekst.stelsel_code, Wettekst.wet.is_not(None), Wettekst.titel, Wettekst.versie.desc())).all()
-    aantallen = dict(db.execute(select(WettekstArtikel.wettekst_id, func.count()).group_by(WettekstArtikel.wettekst_id)).all())
-    return render(request, "wetteksten.html", wetten=wetten, aantallen=aantallen, stelsels=actieve_stelsels(db))
+    # De wetten uit het register per stuk; de bulkimport (alle Duitse wetten, alle EU-handelingen) als telling per stelsel.
+    wetten = db.scalars(select(Wettekst).where(Wettekst.kern.is_(True))
+                        .order_by(Wettekst.stelsel_code, Wettekst.wet.is_not(None), Wettekst.titel, Wettekst.versie.desc())).all()
+    ids = [w.id for w in wetten]
+    aantallen = dict(db.execute(select(WettekstArtikel.wettekst_id, func.count()).where(WettekstArtikel.wettekst_id.in_(ids))
+                                .group_by(WettekstArtikel.wettekst_id)).all())
+    bulk = db.execute(select(Wettekst.stelsel_code, func.count(), func.max(Wettekst.opgehaald)).where(Wettekst.kern.is_(False))
+                      .group_by(Wettekst.stelsel_code)).all()
+    return render(request, "wetteksten.html", wetten=wetten, aantallen=aantallen, bulk=bulk, stelsels=actieve_stelsels(db))
 
 
 @router.get("/wetteksten/{wettekst_id}")

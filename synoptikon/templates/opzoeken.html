@@ -1,0 +1,127 @@
+{% extends "base.html" %}
+{% import "_leren.html" as l %}
+{% block titel %}{% if q %}{{ q }} · {% endif %}{{ _('Opzoeken') }} · Synoptikon{% endblock %}
+{% block inhoud %}
+{% set terug = request.url.path ~ '?' ~ request.url.query %}
+<form method="get" action="/opzoeken" class="opzoek-veld" role="search">
+  <label class="verborgen" for="opzoek-q">{{ _('Opzoeken') }}</label>
+  <input id="opzoek-q" type="search" name="q" value="{{ q }}" {% if not q %}autofocus{% endif %} autocomplete="off" autocapitalize="off" enterkeyhint="search"
+         placeholder="{{ _('§ 823 BGB · Art. 2 GG · 6:162 BW · DSGVO · Baris/Riezenkamp') }}">
+  <select name="stelsel" aria-label="{{ _('Stelsel') }}">
+    <option value="">{{ _('alle stelsels') }}</option>
+    {% for s in stelsels %}<option value="{{ s.code }}" {% if f_stelsel == s.code %}selected{% endif %}>{{ s.code }}</option>{% endfor %}
+  </select>
+  <button class="knop primair">{{ _('Zoek') }}</button>
+</form>
+{% if not q %}<p class="hint">{{ _('Een artikel, een wet of een uitspraak, zoals je het hoort. Wat Synoptikon zelf niet vindt, zoekt Claude op. Met ☆ gaat het naar je leerlijst en zo naar Wunderkammer.') }}</p>{% endif %}
+
+{% if open_id %}{% for o in logboek if o.id == open_id %}{% with groot = true %}{% include "_opzoeking.html" %}{% endwith %}{% endfor %}{% endif %}
+
+{% if uitkomst %}
+{# 1. Artikelen: de tekst meteen #}
+{% for g in uitkomst.artikelen %}
+<article class="bron soort-wet wet-artikel gevonden" id="art-{{ loop.index }}">
+  <header class="bron-kop">
+    {{ sc(g.stelsel) }} <a class="citeertitel" href="{{ g.ref.url }}" title="{{ _('Plaats in de systematiek en corresponderende artikelen in andere stelsels') }}">{{ g.ref.citeer }}</a>
+    {% if g.artikel and g.artikel.opschrift %}<span class="bron-titel">{{ g.artikel.opschrift }}</span>{% endif %}
+    {% if g.artikel %}{{ l.ster(g.ref, bewaarde_refs, terug ~ '#art-' ~ loop.index) }}{% endif %}
+  </header>
+  {% if g.plaats %}<p class="pad klein">{% if g.wettekst %}<a href="/stelsels/{{ g.stelsel }}/wet/{{ g.wettekst.id }}">{{ wet_titel(g.wettekst) }}</a> › {% endif %}{{ g.plaats | join(' › ') }}</p>{% endif %}
+  {% if g.artikel %}
+  <div class="origineel" lang="{{ g.wettekst.taal or '' }}">{{ g.artikel.tekst | md }}</div>
+  <p class="acties klein"><a href="{{ g.url }}">{{ _('In de wet lezen') }} →</a> <a href="{{ g.ref.url }}">{{ _('Vergelijken met andere stelsels') }} →</a></p>
+  {% else %}
+  <p class="stil">{{ _('Dit artikel staat niet in de geïmporteerde tekst (vervallen, of de wet is niet ingelezen).') }}</p>
+  {% endif %}
+</article>
+{% endfor %}
+
+{# 2. Wetten #}
+{% if uitkomst.wetten %}
+<section class="blok">
+  <h2>{{ _('Wetten') }}</h2>
+  <ul class="treffers">{% for g in uitkomst.wetten %}
+    <li><a href="{{ g.url }}">{{ sc(g.stelsel) }} {{ g.titel }}</a>{% if wet_afk(g.wettekst) %} <span class="stil">{{ wet_afk(g.wettekst) }}</span>{% endif %}
+      <span class="stil klein">· {{ _('versie {versie}', versie=g.wettekst.versie) }}</span>
+      <form method="get" action="/stelsels/{{ g.stelsel }}/wet/{{ g.wettekst.id }}" class="wet-snel">
+        <input name="artikel" placeholder="{{ _('Ga naar artikel') }}" aria-label="{{ _('Ga naar artikel') }}"><button class="knop klein">→</button>
+      </form>
+    </li>{% endfor %}
+  </ul>
+</section>
+{% endif %}
+
+{# 3. Uitspraken in de eigen bronnen #}
+{% if uitkomst.uitspraken %}
+<section class="blok">
+  <h2>{{ _('Uitspraken') }}</h2>
+  <ul class="treffers">{% for g in uitkomst.uitspraken %}
+    <li><a href="{{ g.url }}">{{ sc(g.stelsel) }} {{ g.titel }}</a>{% if g.bron.vindplaats %} <span class="stil mono klein">{{ g.bron.vindplaats }}</span>{% endif %} {{ l.ster_bron(g.bron, false, terug) }}
+      {% if g.bron.tekst %}<p class="snippet serif">{{ g.bron.tekst | truncate(260) }}</p>{% endif %}</li>{% endfor %}
+  </ul>
+</section>
+{% endif %}
+
+{# 4. EU-handelingen #}
+{% if uitkomst.eu %}
+<section class="blok">
+  <h2>{{ _('EU-handelingen') }}</h2>
+  <ul class="treffers">{% for g in uitkomst.eu %}
+    <li><a href="{{ g.url }}">{{ sc('EU') }} {{ g.titel }}</a> <span class="stil">{{ g.handeling.soort_label }}</span>
+      <p class="snippet">{{ g.handeling.toon_titel | truncate(220) }}</p></li>{% endfor %}
+  </ul>
+</section>
+{% endif %}
+
+{# Claude #}
+{% if claude_aan and mag_bewerken and not open_id %}
+<form method="post" action="/opzoeken/claude" class="claude-vraag">
+  <input type="hidden" name="q" value="{{ q }}">
+  {% if not uitkomst.raak %}<p>{{ _('Synoptikon vindt hier zelf niets dat precies past.') }}</p>{% endif %}
+  <button class="knop {% if not uitkomst.raak %}primair{% endif %}">{{ _('Claude laten opzoeken') }}</button>
+  <span class="hint">{{ _('Waar het staat, wat er staat, en wat het betekent; wettekst uit de lokale import, rechtspraak van het web.') }}</span>
+</form>
+{% endif %}
+
+{# Volledige tekst en eigen inhoud #}
+{% if resultaat %}
+{% macro groep(titel, treffers, open=false) %}
+{% if treffers %}
+<details class="blok treffer-groep" {% if open %}open{% endif %}>
+  <summary><h2 class="inline">{{ titel }}</h2> <span class="stil">({{ treffers | length }}{% if treffers | length >= per_pagina %}+{% endif %})</span></summary>
+  <ul class="treffers">
+  {% for t in treffers %}
+    <li><a href="{{ t.url }}">{% if t.stelsel %}{{ sc(t.stelsel) }} {% endif %}{{ t.titel }}</a>{% if t.extra %} <span class="stil">{{ t.extra }}</span>{% endif %}<p class="snippet serif">{{ t.snippet | safe }}</p></li>
+  {% endfor %}
+  </ul>
+  {{ caller() if caller }}
+</details>
+{% endif %}
+{% endmacro %}
+<h2 class="gebied">{{ _('Overal gezocht') }}</h2>
+{% call groep(_('In de wetteksten'), resultaat.wetteksten, open=not (uitkomst.artikelen or uitkomst.wetten or uitkomst.uitspraken)) %}
+<nav class="bladeren">
+  {% set basis = request.url.remove_query_params(['p', 'o']) %}
+  {% if p > 1 %}<a class="knop klein" href="{{ basis.include_query_params(p=p - 1) }}">‹ {{ _('vorige') }}</a>{% endif %}
+  {% if resultaat.wetteksten | length >= per_pagina %}<a class="knop klein" href="{{ basis.include_query_params(p=p + 1) }}">{{ _('meer') }} ›</a>{% endif %}
+</nav>
+{% endcall %}
+{{ groep(_('Vragen'), resultaat.vragen, true) }}
+{{ groep(_('Bronnen'), resultaat.bronnen, true) }}
+{{ groep(_('Begrippen'), resultaat.begrippen, true) }}
+{{ groep(_('Analyses'), resultaat.antwoorden) }}
+{{ groep(_('Vertaalde inhoud'), resultaat.vertalingen) }}
+{% if not uitkomst.eu %}{{ groep(_('EU-handelingen'), resultaat.eu) }}{% endif %}
+{% if not resultaat.aantal and not uitkomst.artikelen and not uitkomst.wetten %}<p class="stil">{{ _('Niets gevonden.') }}</p>{% endif %}
+{% endif %}
+{% endif %}
+
+{% set rest = logboek | rejectattr('id', 'equalto', open_id) | list %}
+{% if rest %}
+<section class="blok logboek">
+  <h2 class="gebied">{{ _('Vandaag opgezocht') }}</h2>
+  {% for o in rest %}{% include "_opzoeking.html" with context %}{% endfor %}
+</section>
+{% endif %}
+{% endblock %}
+{% block scripts %}<script src="/static/js/bezig.js?v={{ sv }}"></script>{% endblock %}

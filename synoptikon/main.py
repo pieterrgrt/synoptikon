@@ -13,12 +13,12 @@ from markupsafe import Markup, escape
 from starlette.middleware.base import BaseHTTPMiddleware
 
 from . import __version__, i18n, md
-from .auth import huidig_profiel, is_ingelogd
+from .auth import COOKIE, huidig_profiel, is_ingelogd, maak_sessie_token, profiel_uit_sso
 from .config import settings
 from .db import init_db
 from .models import RECHTSFAMILIES, RELATIE_TYPES
 from .routes import auth as auth_routes
-from .routes import artikelen, begrippen, bronnen, eu, invoer, leren, profielen, stelsels, vertalingen, vragen, wetteksten, wunderkammer, zoeken
+from .routes import artikelen, begrippen, bronnen, eu, invoer, leren, opzoeken, profielen, stelsels, vertalingen, vragen, wetteksten, wunderkammer
 from .services import wetboek
 from .services.artikelen import ref_uit_bron, wetnaam
 from .services.helpers import per_familie
@@ -52,6 +52,8 @@ templates.env.globals["vlag"] = vlag
 templates.env.globals["sc"] = stelsel_code
 templates.env.globals["wetnaam"] = wetnaam
 templates.env.globals["wetref"] = wetboek.ref
+templates.env.globals["wet_titel"] = wetboek.toon_titel
+templates.env.globals["wet_afk"] = wetboek.toon_afkorting
 templates.env.globals["RECHTSFAMILIES"] = RECHTSFAMILIES
 templates.env.globals["per_familie"] = per_familie
 # Versie van css/js voor de cache: nginx bewaart /static/ zeven dagen als immutable.
@@ -83,7 +85,9 @@ def _warm() -> None:
     from .models import Stelsel
 
     try:
+        from .services.artikelen import laad_wetnamen
         with session_factory()() as db:
+            laad_wetnamen(db)
             for s in db.query(Stelsel).all():
                 wetboek.plaatsing(db, s.code)
     except Exception:  # alleen een versnelling; de pagina's rekenen het anders zelf uit
@@ -117,6 +121,10 @@ class AuthMiddleware(BaseHTTPMiddleware):
         pad = request.url.path
         open_pad = pad.startswith(_OPEN_PADEN)
         ingelogd = not open_pad and is_ingelogd(request)
+        via_sso = None
+        if not open_pad and not ingelogd:
+            via_sso = profiel_uit_sso(request)  # elders op het domein ingelogd (Wunderkammer)
+            ingelogd = via_sso is not None
         if open_pad and not pad.startswith(("/static/", "/api/wk/")):
             huidig_profiel(request)  # voor de taal op /login en /taal
         i18n.zet_taal(_taal_van(request), origineel=request.cookies.get("inhoud") == "origineel")
@@ -129,6 +137,9 @@ class AuthMiddleware(BaseHTTPMiddleware):
         else:
             volgende = pad + (f"?{request.url.query}" if request.url.query else "")
             response = RedirectResponse(f"/login?volgende={volgende}", status_code=303)
+        if via_sso is not None:
+            response.set_cookie(COOKIE, maak_sessie_token(via_sso), max_age=settings.session_days * 86400, httponly=True,
+                                secure=settings.cookie_secure, samesite="lax", path="/")
         # Bescheiden beveiligingskoppen; nginx mag ze overschrijven.
         response.headers.setdefault("X-Content-Type-Options", "nosniff")
         response.headers.setdefault("Referrer-Policy", "same-origin")
@@ -159,5 +170,5 @@ def apple_touch_icon():
     return FileResponse(HIER / "static" / "apple-touch-icon.png")
 
 
-for router in (auth_routes.router, profielen.router, vragen.router, bronnen.router, begrippen.router, stelsels.router, artikelen.router, zoeken.router, invoer.router, wetteksten.router, eu.router, vertalingen.router, leren.router, wunderkammer.router):
+for router in (auth_routes.router, profielen.router, vragen.router, bronnen.router, begrippen.router, stelsels.router, artikelen.router, opzoeken.router, invoer.router, wetteksten.router, eu.router, vertalingen.router, leren.router, wunderkammer.router):
     app.include_router(router)

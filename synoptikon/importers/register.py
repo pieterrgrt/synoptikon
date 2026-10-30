@@ -20,6 +20,8 @@ Bronnen per stelsel en waarom:
   (wet van 7 februari 2024) staat niet in de spiegel; Boek 7, 9 en 10 en
   het oud BW ontbreken ook.
 * EN: legislation.gov.uk (CLML), geconsolideerd ("latest available").
+* GR: lawspot.gr, geconsolideerd (de enige open bron met verwerkte wijzigingen; het Staatsblad geeft alleen de
+  oorspronkelijke ΦΕΚ als pdf). ΚΠολΔ en ΚΠΔ staan daar achter een login en ontbreken dus.
 * US en AU: geen open, machineleesbare bron voor UCC, Restatements of ACL
   die zonder scraping werkt; alleen de systematiek.
 """
@@ -32,7 +34,7 @@ from dataclasses import dataclass
 class Wet:
     stelsel: str
     wet: str | None
-    importer: str  # bwb · gii · legi · normattiva · boe · fedlex · etaamb · uk
+    importer: str  # bwb · gii · legi · normattiva · boe · fedlex · etaamb · uk · lawspot
     id: str
     titel: str
     systematiek: bool = False
@@ -65,6 +67,20 @@ WETTEN: list[Wet] = [
     Wet("CH", "OR", "fedlex", "cc/27/317_321_377", "Obligationenrecht"),
     Wet("CH", "IPRG", "fedlex", "cc/1988/1776_1776_1776", "Bundesgesetz über das Internationale Privatrecht", systematiek=True),
     Wet("CH", "PrHG", "fedlex", "cc/1993/3122_3122_3122", "Produktehaftpflichtgesetz", systematiek=True),
+    # GR: de ΑΚ en de wetten eromheen (lawspot.gr)
+    Wet("GR", None, "lawspot", "astikos-kodikas", "Αστικός Κώδικας"),
+    *[Wet("GR", afk, "lawspot", slug, t, systematiek=True) for afk, slug, t in [
+        ("Συντ.", "syntagma-tis-ellados", "Σύνταγμα της Ελλάδος"),
+        ("ν. 2251/1994", "nomos-2251-1994", "Ν. 2251/1994 για την προστασία των καταναλωτών"),
+        ("ν. 4548/2018", "nomos-4548-2018", "Ν. 4548/2018 Αναμόρφωση του δικαίου των ανωνύμων εταιρειών"),
+        ("ν. 3190/1955", "nomos-3190-1955", "Ν. 3190/1955 περί εταιρειών περιωρισμένης ευθύνης"),
+        ("ν. 4072/2012", "nomos-4072-2012", "Ν. 4072/2012 (ΙΚΕ, προσωπικές εταιρείες, σήματα)"),
+        ("ν. 2190/1920", "nomos-2190-1920", "Κ.Ν. 2190/1920 περί ανωνύμων εταιρειών"),
+        ("ΕμπΝ", "emporikos-nomos", "Εμπορικός Νόμος"),
+        ("ν. 3869/2010", "nomos-3869-2010", "Ν. 3869/2010 Ρύθμιση των οφειλών υπερχρεωμένων φυσικών προσώπων"),
+        ("ν. 4624/2019", "nomos-4624-2019", "Ν. 4624/2019 Αρχή Προστασίας Δεδομένων Προσωπικού Χαρακτήρα"),
+        ("ΠΚ", "poinikos-kodikas", "Ποινικός Κώδικας"),
+    ]],
     # BE: het nieuwe BW, boek voor boek (tekst zoals bekendgemaakt)
     Wet("BE", None, "etaamb", "wet-van-28-april-2022_n2022032057", "Burgerlijk Wetboek Boek 1 · Algemene bepalingen", systematiek=True),
     Wet("BE", None, "etaamb", "wet-van-19-januari-2022_n2022030600", "Burgerlijk Wetboek Boek 2 titel 3 en Boek 4 · Relatievermogensrecht, nalatenschappen", systematiek=True),
@@ -115,6 +131,11 @@ def haal_op(w: Wet, legi_map: str | None = None):
     if w.importer == "etaamb":
         from . import etaamb
         return etaamb.haal_op(w.id, titel=w.titel)
+    if w.importer == "lawspot":
+        from . import lawspot
+        g = lawspot.haal_op(w.id)
+        g.titel = w.titel
+        return g
     if w.importer == "uk":
         from . import legislation_uk
         return legislation_uk.haal_op(w.id, titel=w.titel)

@@ -1,5 +1,6 @@
 {% extends "base.html" %}
-{% block titel %}{% if d.pad %}{{ d.label }} · {% endif %}{{ w.titel }} · Synoptikon{% endblock %}
+{% import "_leren.html" as l %}
+{% block titel %}{% if d.pad %}{{ d.label }} · {% endif %}{{ wet_titel(w) }} · Synoptikon{% endblock %}
 {% macro deellink(x) %}<a href="?deel={{ x.sleutel | urlencode }}">{{ x.label }}</a> <span class="sys-bereik">{% if x.eerste %}{{ ref(x.eerste).citeer if x.eerste == x.laatste else ref(x.eerste).citeer ~ ' – ' ~ x.laatste }}{% endif %}</span>{% endmacro %}
 {% macro boom(x, diepte) %}
 <li class="sys-knoop diepte-{{ diepte }}">
@@ -9,23 +10,33 @@
 </li>
 {% endmacro %}
 {% block inhoud %}
-<p class="kruimel"><a href="/stelsels">{{ _('Stelsels') }}</a> › <a href="/stelsels/{{ stelsel.code }}">{{ vlag(stelsel.code) }}{{ vt(stelsel.naam) }}</a>{% if d.pad %} › <a href="?">{{ w.titel }}</a>{% endif %}</p>
+<p class="kruimel"><a href="/stelsels">{{ _('Wetten') }}</a> › <a href="/stelsels/{{ stelsel.code }}">{{ vlag(stelsel.code) }}{{ vt(stelsel.naam) }}</a>{% if d.pad %} › <a href="?">{{ wet_titel(w) }}</a>{% endif %}</p>
 <div class="paginakop">
-  <h1>{% if d.pad %}{{ d.label }}{% else %}{{ w.titel }}{% endif %}</h1>
+  <h1>{% if d.pad %}{{ d.label }}{% else %}{{ wet_titel(w) }}{% endif %}</h1>
   <form method="get" class="inline sys-zoek">
-    <input type="search" name="artikel" placeholder="{{ _('Ga naar artikel') }}" aria-label="{{ _('Ga naar artikel') }}" inputmode="text">
+    <input type="search" name="artikel" value="{{ zoek or '' }}" placeholder="{{ _('Artikel of zoekwoord in deze wet') }}" aria-label="{{ _('Artikel of zoekwoord in deze wet') }}" enterkeyhint="go">
   </form>
 </div>
-<p class="stil klein">{{ w.titel }} · {{ _('versie {versie}', versie=w.versie) }} · {{ n_('{n} artikel', '{n} artikelen', ih.wortel.aantal) }}{% if w.bron_url %} · <a href="{{ w.bron_url }}" target="_blank" rel="noopener">{{ _('officiële bron ↗') }}</a>{% endif %}{% if ih.afgeleid %} · {{ _('indeling uit de systematiek van Synoptikon, niet uit de bron') }}{% endif %}</p>
+<p class="stil klein">{% if w.wet %}{{ wet_afk(w) }} · {% endif %}{{ _('versie {versie}', versie=w.versie) }}{% if w.taal and w.taal != huidige_taal() %} · {{ _('tekst in het {taal}', taal=TALEN.get(w.taal, w.taal)) }}{% endif %} · {{ n_('{n} artikel', '{n} artikelen', ih.wortel.aantal) }}{% if w.bron_url %} · <a href="{{ w.bron_url }}" target="_blank" rel="noopener">{{ _('officiële bron ↗') }}</a>{% endif %}{% if ih.afgeleid %} · {{ _('indeling uit de systematiek van Synoptikon, niet uit de bron') }}{% endif %}</p>
+
+{% if in_systematiek %}<p class="klein"><a href="/stelsels/{{ stelsel.code }}?wet={{ w.id }}">{{ _('Deze wet in de systematiek van het stelsel') }} →</a></p>{% endif %}
+
+{% if treffers is defined %}
+<h2>{{ _('Gevonden in deze wet') }} <span class="stil">({{ treffers | length }}{% if treffers | length >= 60 %}+{% endif %})</span></h2>
+<ul class="treffers">{% for wa, s in treffers %}{% set r = ref(wa.nummer) %}
+  <li><a href="?artikel={{ wa.nummer | urlencode }}">{{ r.citeer }}</a>{% if wa.opschrift %} <span class="stil">{{ wa.opschrift }}</span>{% endif %}<p class="snippet serif">{{ s | safe }}</p></li>
+{% endfor %}</ul>
+{% endif %}
 
 {% if d.pad %}
 <nav class="pad wet-pad" aria-label="{{ _('Plaats in de wet') }}">{% for i in range(d.pad | length) %}{% if i %}<span class="sep">›</span>{% endif %}{% set sub = d.pad[: i + 1] | join(' › ') %}{% if i + 1 < d.pad | length %}<a href="?deel={{ sub | urlencode }}">{{ d.pad[i] }}</a>{% else %}<span aria-current="page">{{ d.pad[i] }}</span>{% endif %}{% endfor %}</nav>
 {% endif %}
 
-{% if not d.pad %}
-{% if wetten | length > 1 %}
-<details class="blok wet-keuze"><summary>{{ _('Andere wetten van dit stelsel') }} ({{ wetten | length - 1 }})</summary>
-<ul class="lijst">{% for x in wetten if x.id != w.id %}<li><a href="/stelsels/{{ stelsel.code }}/wet/{{ x.id }}">{{ x.titel }}</a>{% if x.wet %} <span class="stil">{{ x.wet }}</span>{% endif %}</li>{% endfor %}</ul></details>
+{% if not d.pad and treffers is not defined %}
+{% if wetten | length > 1 or aantal_wetten > 1 %}
+<details class="blok wet-keuze"><summary>{{ _('Andere wetten van dit stelsel') }} ({{ aantal_wetten - 1 }})</summary>
+<ul class="lijst">{% for x in wetten if x.id != w.id %}<li><a href="/stelsels/{{ stelsel.code }}/wet/{{ x.id }}">{{ wet_titel(x) }}</a>{% if x.wet %} <span class="stil">{{ wet_afk(x) }}</span>{% endif %}</li>{% endfor %}</ul>
+{% if aantal_wetten > wetten | length %}<p class="klein"><a href="/stelsels/{{ stelsel.code }}/wetten">{{ _('Alle {n} wetten doorzoeken', n=aantal_wetten) }} →</a></p>{% endif %}</details>
 {% endif %}
 {% if d.kinderen %}
 <h2>{{ _('Inhoudsopgave') }}</h2>
@@ -47,7 +58,7 @@
   {% set ns.vorig = p %}
   {% set r = ref(a.nummer) %}
   <article class="bron soort-wet wet-artikel" id="art-{{ a.nummer }}">
-    <header class="bron-kop"><a class="citeertitel" href="{{ r.url }}" title="{{ _('Plaats in de systematiek en corresponderende artikelen in andere stelsels') }}">{{ r.citeer }}</a>{% if a.opschrift %} <span class="bron-titel">{{ a.opschrift }}</span>{% endif %}</header>
+    <header class="bron-kop"><a class="citeertitel" href="{{ r.url }}" title="{{ _('Plaats in de systematiek en corresponderende artikelen in andere stelsels') }}">{{ r.citeer }}</a>{% if a.opschrift %} <span class="bron-titel">{{ a.opschrift }}</span>{% endif %}{{ l.ster(r, bewaarde_refs, request.url.path ~ '?deel=' ~ (d.sleutel | urlencode) ~ '#art-' ~ a.nummer) }}</header>
     <div class="origineel" lang="{{ stelsel.taal }}">{{ a.tekst | md }}</div>
   </article>
 {% endfor %}

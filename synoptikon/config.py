@@ -41,6 +41,17 @@ class Settings:
     # Koppeling met Wunderkammer (routes/wunderkammer.py): Bearer-token, minstens 24 tekens; leeg = uit.
     wk_token: str | None = field(default_factory=lambda: _env("SYNOPTIKON_WK_TOKEN"))
 
+    # Eén aanmelding met de andere apps op het domein (sso.py): gedeeld geheim (≥ 32 tekens, hetzelfde als WK_SSO_SECRET
+    # in Wunderkammer) en het cookiedomein, bijv. ".regoort.me". Leeg = uit.
+    sso_geheim: str | None = field(default_factory=lambda: _env("SYNOPTIKON_SSO_SECRET"))
+    sso_domein: str | None = field(default_factory=lambda: _env("SYNOPTIKON_SSO_DOMEIN"))
+
+    # Claude (services/claude.py): opzoeken op /opzoeken en rechtsvergelijkend onderzoek bij een vraag. Zonder sleutel
+    # werkt alles behalve die twee. Het maandbudget is een harde grens; daarboven weigert de app elke aanroep.
+    anthropic_api_key: str | None = field(default_factory=lambda: _env("SYNOPTIKON_ANTHROPIC_API_KEY") or _env("ANTHROPIC_API_KEY"))
+    claude_model: str = field(default_factory=lambda: _env("SYNOPTIKON_CLAUDE_MODEL", "claude-opus-5-5"))
+    llm_budget_usd: float = field(default_factory=lambda: float(_env("SYNOPTIKON_LLM_BUDGET_USD", "20")))
+
     # Standaardtaal voor vertalingen in de synopse.
     ui_lang: str = field(default_factory=lambda: _env("SYNOPTIKON_UI_LANG", "nl"))
 

@@ -20,7 +20,7 @@
     {% if bron.url %}<a href="{{ bron.url }}" target="_blank" rel="noopener">{{ _('officiële bron ↗') }}</a>{% endif %}
     {% if bron.systematiek %}<a href="/stelsels/{{ bron.stelsel_code }}">{{ bron.systematiek.pad() | map(attribute='label') | join(' › ') }}</a>{% endif %}
     {% set r = artikel_ref(bron) %}{% if r %}<a href="{{ r.url }}">⇄ {{ _('corresponderende artikelen') }}</a>{% endif %}
-    {% if artikel %}<span class="stil">{{ _('tekst uit {titel}, versie {versie}', titel=artikel.wettekst.titel, versie=artikel.wettekst.versie) }}</span>{% endif %}
+    {% if artikel %}<span class="stil">{{ _('tekst uit {titel}, versie {versie}', titel=wet_titel(artikel.wettekst), versie=artikel.wettekst.versie) }}</span>{% endif %}
   </footer>
   {% if bron.opmerking %}<p class="stil">{{ vt(bron.opmerking) }}</p>{% endif %}
 </article>

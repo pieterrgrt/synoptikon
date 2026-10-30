@@ -23,7 +23,8 @@ def engine():
     global _engine, _SessionLocal
     if _engine is None:
         settings.data_dir.mkdir(parents=True, exist_ok=True)
-        _engine = create_engine(f"sqlite:///{settings.db_path}", future=True)
+        # timeout: een bulkimport schrijft lang door; andere schrijvers wachten dan in plaats van "database is locked"
+        _engine = create_engine(f"sqlite:///{settings.db_path}", future=True, connect_args={"timeout": 60})
 
         @event.listens_for(_engine, "connect")
         def _pragmas(dbapi_conn, _record):
@@ -207,6 +208,9 @@ _NIEUWE_KOLOMMEN = [
     ("stelsel", "familie", "VARCHAR(20)"),
     ("systematiek", "wet", "VARCHAR(60)"),
     ("wettekst", "wet", "VARCHAR(60)"),
+    ("wettekst", "taal", "VARCHAR(5)"),
+    ("wettekst", "kern", "BOOLEAN NOT NULL DEFAULT 1"),
+    ("wettekst", "stijl", "VARCHAR(8)"),
 ]
 
 

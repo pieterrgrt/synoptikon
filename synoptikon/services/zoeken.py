@@ -58,8 +58,13 @@ class Zoekresultaat:
 _SNIP = "snippet({tabel}, {kolom}, '<mark>', '</mark>', '…', 24)"
 
 
-def wetsartikelen(db: Session, q: str, stelsel: str = "", limiet: int = 40) -> list[tuple[WettekstArtikel, str]]:
-    """Artikelen waarvan nummer, opschrift of tekst de woorden bevat, met een fragment."""
+def wetsartikelen(db: Session, q: str, stelsel: str = "", limiet: int = 40, wet: str | None = None, vanaf: int = 0,
+                  wettekst_id: int | None = None) -> list[tuple[WettekstArtikel, str]]:
+    """Artikelen waarvan nummer, opschrift of tekst de woorden bevat, met een fragment.
+
+    De wetten uit het register (BGB, BW, Code civil …) eerst, dan de rest; `wet` beperkt tot één afkorting (GG, StGB),
+    `wettekst_id` tot één geïmporteerde tekst.
+    """
     match = fts_query(q)
     if not match:
         return []
@@ -67,9 +72,10 @@ def wetsartikelen(db: Session, q: str, stelsel: str = "", limiet: int = 40) -> l
         text(
             "SELECT wettekst_artikel_fts.rowid, " + _SNIP.format(tabel="wettekst_artikel_fts", kolom=2) + " AS s "
             "FROM wettekst_artikel_fts JOIN wettekst_artikel a ON a.id = wettekst_artikel_fts.rowid JOIN wettekst w ON w.id = a.wettekst_id "
-            "WHERE wettekst_artikel_fts MATCH :m AND (:st = '' OR w.stelsel_code = :st) ORDER BY rank LIMIT :l"
+            "WHERE wettekst_artikel_fts MATCH :m AND (:st = '' OR w.stelsel_code = :st) AND (:wet = '' OR w.wet = :wet) AND (:wid = 0 OR w.id = :wid) "
+            "ORDER BY w.kern DESC, rank LIMIT :l OFFSET :o"
         ),
-        {"m": match, "st": stelsel, "l": limiet},
+        {"m": match, "st": stelsel, "wet": wet or "", "wid": wettekst_id or 0, "l": limiet, "o": vanaf},
     ).all()
     uit = []
     for rowid, snippet in rows:
@@ -79,7 +85,7 @@ def wetsartikelen(db: Session, q: str, stelsel: str = "", limiet: int = 40) -> l
     return uit
 
 
-def zoek(db: Session, q: str, limiet: int = 30) -> Zoekresultaat:
+def zoek(db: Session, q: str, limiet: int = 30, stelsel: str = "") -> Zoekresultaat:
     res = Zoekresultaat(q=q)
     match = fts_query(q)
     if not match:
@@ -135,26 +141,17 @@ def zoek(db: Session, q: str, limiet: int = 30) -> Zoekresultaat:
                 Treffer("antwoord", vt(a.vraag.titel), snippet or "", f"/vragen/{a.vraag.slug}#{a.stelsel_code}", a.stelsel_code)
             )
 
-    rows = db.execute(
-        text(
-            "SELECT rowid, " + _SNIP.format(tabel="wettekst_artikel_fts", kolom=2) + " AS s "
-            "FROM wettekst_artikel_fts WHERE wettekst_artikel_fts MATCH :m ORDER BY rank LIMIT :l"
-        ),
-        {"m": match, "l": limiet},
-    ).all()
-    for rowid, snippet in rows:
-        wa = db.get(WettekstArtikel, rowid)
-        if wa:
-            res.wetteksten.append(
-                Treffer(
-                    "wettekst",
-                    f"{wa.wettekst.titel} {wa.nummer}",
-                    snippet or "",
-                    Ref(wa.wettekst.stelsel_code, wa.nummer, wa.wettekst.wet).url,
-                    wa.wettekst.stelsel_code,
-                    wa.opschrift,
-                )
+    for wa, snippet in wetsartikelen(db, q, stelsel, limiet):
+        res.wetteksten.append(
+            Treffer(
+                "wettekst",
+                f"{Ref(wa.wettekst.stelsel_code, wa.nummer, wa.wettekst.wet).citeer}",
+                snippet,
+                Ref(wa.wettekst.stelsel_code, wa.nummer, wa.wettekst.wet).url,
+                wa.wettekst.stelsel_code,
+                wa.opschrift,
             )
+        )
     res.vertalingen = _in_vertalingen(db, q, limiet)
     from . import eu
 

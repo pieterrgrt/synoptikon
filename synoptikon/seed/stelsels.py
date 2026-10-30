@@ -7,6 +7,7 @@ from .systematiek_de import BGB
 from .systematiek_en import EN
 from .systematiek_es import CC_ES
 from .systematiek_fr import CC
+from .systematiek_gr import AK
 from .systematiek_it import CC as CC_IT
 from .systematiek_nl import BW
 from .systematiek_us import US
@@ -26,6 +27,7 @@ STELSELS = [
     ("ES", "Spanje", "es", "Código Civil (1889), naast de forale burgerlijke rechten (Catalonië, Aragón, Navarra …)", True, "romaans"),
     ("DE", "Duitsland", "de", "Bürgerliches Gesetzbuch (1900; Schuldrechtsmodernisierung 2002)", True, "germaans"),
     ("CH", "Zwitserland", "de", "Zivilgesetzbuch (1907) en Obligationenrecht (1911): monistisch privaatrecht", True, "germaans"),
+    ("GR", "Griekenland", "el", "Αστικός Κώδικας (1946): pandektistisch naar het voorbeeld van het BGB, met eigen familie- en erfrecht", True, "germaans"),
     ("EN", "Engeland & Wales", "en", "Common law en equity; statutes vullen aan (Sale of Goods Act 1979, Consumer Rights Act 2015)", True, "common_law"),
     ("US", "Verenigde Staten", "en", "Statelijk common law; UCC en Restatements als gemeenschappelijke kern; Louisiana gemengd", True, "common_law"),
     ("AU", "Australië", "en", "Common law (Engelse receptie); federale Australian Consumer Law, verder statelijk recht", True, "common_law"),
@@ -45,6 +47,7 @@ SYSTEMATIEK = {
     "ES": CC_ES,
     "DE": BGB,
     "CH": CH,
+    "GR": AK,
     "EN": EN,
     "US": US,
     "AU": AU,

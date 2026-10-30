@@ -63,6 +63,7 @@ from sqlalchemy import (
     Date,
     DateTime,
     ForeignKey,
+    JSON,
     Integer,
     String,
     Text,
@@ -411,6 +412,9 @@ class Wettekst(Base):
     bron_url: Mapped[str | None] = mapped_column(String(500))
     bestand: Mapped[str | None] = mapped_column(String(300))  # relatief pad onder data/wetteksten
     opgehaald: Mapped[datetime] = mapped_column(DateTime, default=now)
+    taal: Mapped[str | None] = mapped_column(String(5))  # taal van de tekst als het stelsel er meer heeft (EU); None = de taal van het stelsel
+    kern: Mapped[bool] = mapped_column(default=True)  # uit het register (systematiek, overzicht); False = bulkimport (alle wetten)
+    stijl: Mapped[str | None] = mapped_column(String(8))  # citeerwijze als die afwijkt van het stelsel: "Art" (GG, EGBGB)
 
     artikelen: Mapped[list["WettekstArtikel"]] = relationship(
         back_populates="wettekst", cascade="all, delete-orphan", order_by="WettekstArtikel.volgorde"
@@ -735,3 +739,62 @@ class KaartStand(Base):
     laatst: Mapped[datetime | None] = mapped_column(DateTime)
     laatste_score: Mapped[int | None] = mapped_column(Integer)  # 1 opnieuw … 4 makkelijk
     bijgewerkt: Mapped[datetime] = mapped_column(DateTime, default=now, onupdate=now)
+
+
+# --- Claude ----------------------------------------------------------------------------
+# Opzoeken (een artikel, wet of uitspraak noemen, Claude zegt waar het staat en wat er staat) en onderzoek bij een vraag.
+# Alles wat Claude levert is gemarkeerd als niet geverifieerd; de wettekst zelf komt altijd uit de lokale import.
+
+
+class LlmGebruik(Base):
+    """Eén aanroep van de API: voor het maandbudget (config.llm_budget_usd)."""
+
+    __tablename__ = "llm_gebruik"
+
+    id: Mapped[int] = mapped_column(primary_key=True)
+    doel: Mapped[str] = mapped_column(String(20))  # opzoeken | onderzoek
+    model: Mapped[str] = mapped_column(String(60))
+    tokens_in: Mapped[int] = mapped_column(Integer, default=0)
+    tokens_uit: Mapped[int] = mapped_column(Integer, default=0)
+    zoekacties: Mapped[int] = mapped_column(Integer, default=0)
+    usd: Mapped[float] = mapped_column(default=0.0)
+    aangemaakt: Mapped[datetime] = mapped_column(DateTime, default=now, index=True)
+
+
+class Opzoeking(Base):
+    """Wat iemand op /opzoeken intypte en wat er gevonden werd: het logboek van een college."""
+
+    __tablename__ = "opzoeking"
+
+    id: Mapped[int] = mapped_column(primary_key=True)
+    profiel_id: Mapped[int] = mapped_column(ForeignKey("profiel.id", ondelete="CASCADE"), index=True)
+    invoer: Mapped[str] = mapped_column(String(400))
+    # Wat er gevonden is: {"soort": artikel|wet|uitspraak|onbekend, "stelsel", "wet", "nummer", "citeer", "titel",
+    # "vindplaats", "url", "plaats", "tekst", "toelichting", "bron": "lokaal"|"claude"}
+    resultaat: Mapped[dict | None] = mapped_column(JSON)
+    status: Mapped[str] = mapped_column(String(12), default="klaar")  # klaar | bezig | fout
+    fout: Mapped[str | None] = mapped_column(Text)
+    bron_id: Mapped[int | None] = mapped_column(ForeignKey("bron.id", ondelete="SET NULL"))  # uitspraak, als bron bewaard
+    kaart_id: Mapped[int | None] = mapped_column(ForeignKey("kaart.id", ondelete="SET NULL"))  # bewaard voor Wunderkammer
+    aangemaakt: Mapped[datetime] = mapped_column(DateTime, default=now, index=True)
+
+
+class Onderzoek(Base):
+    """Rechtsvergelijkend onderzoek door Claude bij een vraag; het resultaat vult de synopse waar die nog leeg is."""
+
+    __tablename__ = "onderzoek"
+
+    id: Mapped[int] = mapped_column(primary_key=True)
+    vraag_id: Mapped[int] = mapped_column(ForeignKey("vraag.id", ondelete="CASCADE"), index=True)
+    stelsels: Mapped[str] = mapped_column(String(200))  # kommagescheiden codes
+    opdracht: Mapped[str | None] = mapped_column(Text)  # extra aanwijzingen
+    status: Mapped[str] = mapped_column(String(12), default="wacht")  # wacht | bezig | klaar | fout
+    voortgang: Mapped[str | None] = mapped_column(Text)  # laatste stap, voor de statusregel
+    fout: Mapped[str | None] = mapped_column(Text)
+    resultaat: Mapped[dict | None] = mapped_column(JSON)  # {"synthese", "stelsels": [{code, kern, analyse, bronnen: [..]}]}
+    model: Mapped[str | None] = mapped_column(String(60))
+    usd: Mapped[float] = mapped_column(default=0.0)
+    gestart: Mapped[datetime] = mapped_column(DateTime, default=now)
+    klaar: Mapped[datetime | None] = mapped_column(DateTime)
+
+    vraag: Mapped[Vraag] = relationship()

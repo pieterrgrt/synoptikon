@@ -7,7 +7,7 @@ from sqlalchemy.orm import Session, selectinload
 
 from ..db import get_session
 from ..models import Antwoord, AntwoordBron, Begrip, Bron, Concordantie, Notitie, Stelsel, Vraag, VraagBegrip
-from ..services import export
+from ..services import claude, export, onderzoek
 from ..services.helpers import actieve_stelsels, leeg_naar_none, unieke_slug
 from . import render
 
@@ -56,7 +56,8 @@ def index(request: Request, db: Session = Depends(get_session)):
 
 @router.get("/vragen/nieuw")
 def vraag_nieuw(request: Request, db: Session = Depends(get_session)):
-    return render(request, "vraag_form.html", vraag=None, stelsels=actieve_stelsels(db))
+    return render(request, "vraag_form.html", vraag=None, stelsels=actieve_stelsels(db), claude_aan=claude.beschikbaar(),
+                  standaard_stelsels=_standaard(db))
 
 
 @router.post("/vragen/nieuw")
@@ -66,6 +67,8 @@ def vraag_maak(
     omschrijving: str = Form(""),
     rechtsgebied: str = Form(""),
     tags: str = Form(""),
+    laat_onderzoeken: str = Form(""),
+    stelsel: list[str] = Form([]),
     db: Session = Depends(get_session),
 ):
     vraag = Vraag(
@@ -79,7 +82,45 @@ def vraag_maak(
         vraag.antwoorden.append(Antwoord(stelsel_code=st.code))
     db.add(vraag)
     db.flush()
+    if laat_onderzoeken == "1" and claude.beschikbaar():
+        actief = {s.code for s in actieve_stelsels(db)}
+        codes = [c for c in stelsel if c in actief] or _standaard(db)
+        onderzoek.start(db, vraag, codes)
+        return RedirectResponse(f"/vragen/{vraag.slug}#onderzoek", status_code=303)
     return RedirectResponse(f"/vragen/{vraag.slug}", status_code=303)
+
+
+STANDAARD = ("NL", "DE", "FR", "EU")
+
+
+def _standaard(db: Session) -> list[str]:
+    actief = [s.code for s in actieve_stelsels(db)]
+    return [c for c in STANDAARD if c in actief] or actief[:4]
+
+
+def _onderzoek_context(db: Session, vraag: Vraag) -> dict:
+    gevuld = [a.stelsel_code for a in vraag.antwoorden if a.analyse and not a.analyse.startswith(onderzoek.MARKERING)]
+    return dict(ok=onderzoek.laatste(db, vraag), claude_aan=claude.beschikbaar(), standaard_stelsels=_standaard(db), vraag_gevuld=gevuld)
+
+
+@router.post("/vragen/{slug}/onderzoek")
+async def onderzoek_start(request: Request, slug: str, db: Session = Depends(get_session)):
+    form = await request.form()
+    vraag = _laad_vraag(db, slug)
+    if not claude.beschikbaar():
+        raise HTTPException(503, "Claude staat uit: er is geen API-sleutel ingesteld.")
+    lopend = onderzoek.laatste(db, vraag)
+    if lopend is None or lopend.status not in ("wacht", "bezig"):
+        actief = {s.code for s in actieve_stelsels(db)}
+        codes = [str(c) for c in form.getlist("stelsel") if str(c) in actief] or _standaard(db)
+        onderzoek.start(db, vraag, codes, str(form.get("opdracht") or ""))
+    return RedirectResponse(f"/vragen/{vraag.slug}#onderzoek", status_code=303)
+
+
+@router.get("/vragen/{slug}/onderzoek")
+def onderzoek_stand(request: Request, slug: str, db: Session = Depends(get_session)):
+    vraag = _laad_vraag(db, slug)
+    return render(request, "_onderzoek.html", vraag=vraag, stelsels=actieve_stelsels(db), **_onderzoek_context(db, vraag))
 
 
 @router.get("/vragen/{slug}")
@@ -100,6 +141,7 @@ def synopse(request: Request, slug: str, vertaling: str | None = None, db: Sessi
         alle_bronnen=[b for b in alle_bronnen if b.id not in gekoppeld],
         alle_begrippen=[g for g in alle_begrippen if g.id not in gekoppelde_begrippen],
         concordanties=_concordanties_voor(db, vraag),
+        **_onderzoek_context(db, vraag),
     )
 
 

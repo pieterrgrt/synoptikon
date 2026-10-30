@@ -6,7 +6,7 @@ from fastapi import APIRouter, Depends, Form, Request
 from fastapi.responses import RedirectResponse
 from sqlalchemy.orm import Session
 
-from .. import auth
+from .. import auth, sso
 from ..config import settings
 from ..db import get_session
 from ..i18n import _
@@ -24,6 +24,12 @@ def _doel(volgende: str) -> str:
 def login_form(request: Request, volgende: str = "/"):
     if auth.is_ingelogd(request):
         return RedirectResponse(_doel(volgende), status_code=303)
+    p = auth.profiel_uit_sso(request)
+    if p is not None:  # al ingelogd in een andere app op het domein
+        resp = RedirectResponse(_doel(volgende), status_code=303)
+        resp.set_cookie(auth.COOKIE, auth.maak_sessie_token(p), max_age=settings.session_days * 86400, httponly=True,
+                        secure=settings.cookie_secure, samesite="lax", path="/")
+        return resp
     return render(request, "login.html", volgende=volgende, fout=None, gebruikersnaam="")
 
 
@@ -54,6 +60,7 @@ async def login(request: Request, gebruikersnaam: str = Form(...), wachtwoord: s
         path="/",
     )
     resp.set_cookie("taal", p.taal, max_age=365 * 86400, secure=settings.cookie_secure, samesite="lax", path="/")
+    sso.zet(resp, p.gebruikersnaam, settings.sso_geheim, settings.sso_domein, settings.cookie_secure)
     return resp
 
 
@@ -61,4 +68,5 @@ async def login(request: Request, gebruikersnaam: str = Form(...), wachtwoord: s
 def logout():
     resp = RedirectResponse("/login", status_code=303)
     resp.delete_cookie(auth.COOKIE, path="/")
+    sso.wis(resp, settings.sso_domein)
     return resp

@@ -8,8 +8,13 @@
   <thead><tr><th>{{ _('Stelsel') }}</th><th>{{ _('Wet') }}</th><th>{{ _('Citeerwijze') }}</th><th>{{ _('Versie') }}</th><th>{{ _('Artikelen') }}</th><th>{{ _('Opgehaald') }}</th><th>{{ _('Herkomst') }}</th></tr></thead>
   <tbody>
   {% for w in wetten %}
-  <tr><td>{{ sc(w.stelsel_code) }}</td><td><a href="/stelsels/{{ w.stelsel_code }}/wet/{{ w.id }}">{{ w.titel }}</a> <span class="stil">{{ w.wet_id }}</span></td><td>{{ w.wet or _('hoofdwet') }}</td><td>{{ w.versie }}</td><td>{{ aantallen.get(w.id, 0) }}</td><td class="stil">{{ w.opgehaald.strftime('%Y-%m-%d') }}</td><td class="stil">{% if w.bron_url %}<a href="{{ w.bron_url }}" target="_blank" rel="noopener">{{ _('bron ↗') }}</a>{% endif %}</td></tr>
+  <tr><td>{{ sc(w.stelsel_code) }}</td><td><a href="/stelsels/{{ w.stelsel_code }}/wet/{{ w.id }}">{{ wet_titel(w) }}</a> <span class="stil">{{ w.wet_id }}</span></td><td>{{ wet_afk(w) or _('hoofdwet') }}{% if w.taal %} <span class="stil">{{ w.taal }}</span>{% endif %}</td><td>{{ w.versie }}</td><td>{{ aantallen.get(w.id, 0) }}</td><td class="stil">{{ w.opgehaald.strftime('%Y-%m-%d') }}</td><td class="stil">{% if w.bron_url %}<a href="{{ w.bron_url }}" target="_blank" rel="noopener">{{ _('bron ↗') }}</a>{% endif %}</td></tr>
   {% else %}<tr><td colspan="7" class="stil">{{ _('Nog niets geïmporteerd.') }}</td></tr>{% endfor %}
   </tbody>
 </table></div>
+{% if bulk %}
+<h2>{{ _('Alle wetten van een bron') }}</h2>
+<p class="hint" lang="nl"><code>synoptikon import-bulk de</code> (gesetze-im-internet.de) · <code>synoptikon import-bulk eu</code> (alle geldende EU-handelingen, Duits; verdragen in zes talen).</p>
+<ul class="lijst">{% for code, n, wanneer in bulk %}<li>{{ sc(code) }} <a href="/stelsels/{{ code }}/wetten">{{ n_('{n} wet', '{n} wetten', n) }}</a> <span class="stil">{{ _('bijgewerkt {datum}', datum=wanneer.strftime('%Y-%m-%d')) }}</span></li>{% endfor %}</ul>
+{% endif %}
 {% endblock %}
