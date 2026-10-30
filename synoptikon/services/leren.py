@@ -6,6 +6,7 @@ een nieuwe versie van de wet komt zo vanzelf op de kaart, hier en in Wunderkamme
 """
 from __future__ import annotations
 
+import re
 import secrets
 from dataclasses import dataclass
 from datetime import datetime, timezone
@@ -19,6 +20,19 @@ from ..models import ARRESTSOORTEN, ARTIKELSOORTEN, FASEN, Bron, Kaart, KaartSta
 from . import correspondentie as corr
 from . import wk  # noqa: F401  (seint Wunderkammer na een wijziging in de kaarten)
 from .artikelen import Ref
+
+
+KERN_MAX = 500  # tekens van de kerntekst die als samenhang onder de rechtsregel komen
+
+
+def _inkorten(tekst: str, max_tekens: int = KERN_MAX) -> str:
+    """Tot een zinseinde (of woord) onder `max_tekens`, met …; korter blijft zoals het is."""
+    tekst = re.sub(r"\s+", " ", tekst).strip()
+    if len(tekst) <= max_tekens:
+        return tekst
+    kop = tekst[:max_tekens]
+    zin = max(kop.rfind(". "), kop.rfind("; "))
+    return (kop[:zin + 1] if zin > max_tekens // 2 else kop[:kop.rfind(" ")]) + " …"
 
 
 @dataclass
@@ -218,15 +232,20 @@ class Bouwer:
             zaak = k.zaak or (k.bron.citeertitel if k.bron else "?")
             vindplaats = k.vindplaats or (k.bron.vindplaats if k.bron else None)
             titel = f"**{zaak}**" + (f" · {vindplaats}" if vindplaats else "")
-            kern = k.bron.tekst if k.bron and k.bron.tekst else None
+            kern = f"> {_inkorten(k.bron.tekst)}" if k.bron and k.bron.tekst else ""
+            feiten = f"*{_('Feiten')}:* {k.feiten}" if k.feiten else ""
             regel = k.antwoord or ""
             if k.soort == "arrest":
-                voor = k.vraag or f"{titel}\n\n{_('Wat besliste de rechter?')}"
-                delen = [regel, f"> {kern}" if kern else "", f"*{_('Feiten')}:* {k.feiten}" if k.feiten else ""]
+                # Eén feit per kaart: de rechtsregel is het antwoord; feiten en kerntekst staan eronder als samenhang.
+                voor = k.vraag or f"{titel}\n\n{_('Welke rechtsregel volgt uit dit arrest?')}"
+                samenhang = "\n\n".join(d for d in (feiten, kern) if d)
+                if regel:
+                    achter = regel + (f"\n\n*{_('Samenhang')}*\n\n{samenhang}" if samenhang else "")
+                else:  # nog geen rechtsregel aangeduid: dan is de kerntekst het beste wat er is
+                    achter = samenhang or _("(schrijf bij deze kaart de rechtsregel)")
             else:
                 voor = k.vraag or f"{k.feiten or _('(schrijf bij deze kaart de feiten)')}\n\n{_('Welk arrest?')}"
-                delen = [titel, regel, f"> {kern}" if kern else ""]
-            achter = "\n\n".join(d for d in delen if d) or _("(schrijf bij deze kaart de rechtsregel)")
+                achter = "\n\n".join(d for d in (titel, regel, kern) if d)
         else:  # vrij, of een artikelkaart waarvan het artikel ontbreekt
             voor, achter = k.vraag or "?", k.antwoord or ""
         if k.notitie:
@@ -270,6 +289,14 @@ class Bouwer:
     def html(self, k: Kaart) -> tuple[str, str, Zijden]:
         z = self.zijden(k)
         return str(md.render(z.voor)), str(md.render(z.achter)), z
+
+
+def voorbeeld(db: Session, soort: str, ref: Ref | None = None, bron: Bron | None = None, **velden) -> Zijden:
+    """De zijden van een kaart die nog niet bestaat (het bewaarvenster): een kaart die niet in de sessie komt."""
+    k = Kaart(soort=soort, bron=bron, **velden)
+    if ref is not None:
+        k.stelsel_code, k.wet, k.nummer = ref.stelsel, ref.wet, ref.nummer
+    return Bouwer(db).zijden(k)
 
 
 def oefen(db: Session, k: Kaart, gekend: bool) -> None:

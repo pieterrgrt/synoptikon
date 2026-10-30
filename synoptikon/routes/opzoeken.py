@@ -15,7 +15,7 @@ from sqlalchemy.orm import Session
 from ..auth import huidig_profiel
 from ..db import get_session
 from ..i18n import _
-from ..models import Kaart, Leerlijst, Opzoeking
+from ..models import Bron, Kaart, Leerlijst, Opzoeking
 from ..services import claude, herkennen, leren, opzoeken, vakken, zoeken
 from ..services.artikelen import Ref
 from ..services.helpers import actieve_stelsels
@@ -63,7 +63,8 @@ def pagina(request: Request, q: str = "", stelsel: str = "", alle: int = 0, p: i
     return render(
         request, "opzoeken.html", q=q, f_stelsel=stelsel, p=max(1, p), uitkomst=uitkomst, resultaat=resultaat,
         stelsels=keuze.alle, beperkt=codes is not None, alle=bool(alle), verborgen=verborgen,
-        logboek=logboek, vak_van=_vak_van(db, pid, logboek), lijsten=lijsten,
+        logboek=logboek, vak_van=_vak_van(db, pid, logboek),
+        voorbeelden={x.id: _voorbeeld(db, x) for x in logboek if x.id == o}, lijsten=lijsten,
         gekozen_lijst=_gekozen(request, lijsten), claude_aan=claude.beschikbaar(), open_id=o, herkend=herkennen.herken_id(q),
         bewaarde_refs=leren.bewaarde_refs(db, pid), per_pagina=PER_PAGINA,
     )
@@ -73,6 +74,20 @@ def _vak_van(db: Session, pid: int, logboek: list[Opzoeking]) -> dict[int, str |
     """Het vak waarin een opzoeking bij ☆ terechtkomt: afgeleid uit wat het is, anders het laatst gebruikte."""
     return {o.id: vakken.kies(db, pid, "", (o.resultaat or {}).get("stelsel"), (o.resultaat or {}).get("wet"),
                               (o.resultaat or {}).get("nummer")) for o in logboek}
+
+
+def _voorbeeld(db: Session, o: Opzoeking):
+    """De kaart zoals ze bij ☆ wordt (voor- en achterkant), voor het bewaarvenster; None als er geen artikel- of arrestkaart van komt."""
+    r = o.resultaat or {}
+    if o.kaart_id or o.status != "klaar":
+        return None
+    if r.get("nummer") and r.get("stelsel"):
+        return leren.voorbeeld(db, "artikel", ref=Ref(r["stelsel"], r["nummer"], r.get("wet") or None))
+    if r.get("soort") != "uitspraak":
+        return None
+    bron = o.bron_id and db.get(Bron, o.bron_id) or Bron(citeertitel=(r.get("citeer") or o.invoer)[:200], vindplaats=r.get("vindplaats") or None,
+                                                        tekst=r.get("tekst") or None)
+    return leren.voorbeeld(db, "arrest", bron=bron, antwoord=r.get("toelichting") or "")
 
 
 def _met_stelsels(functie, *args, stelsels: list[str] | None, **kw):
@@ -132,7 +147,7 @@ def opzoeking(request: Request, oid: int, db: Session = Depends(get_session)):
         raise HTTPException(404)
     lijsten = leren.lijsten_van(db, _pid(request))
     return render(request, "_opzoeking.html", o=o, lijsten=lijsten, gekozen_lijst=_gekozen(request, lijsten), groot=True,
-                  vak_van=_vak_van(db, _pid(request), [o]))
+                  vak_van=_vak_van(db, _pid(request), [o]), voorbeeld=_voorbeeld(db, o))
 
 
 @router.post("/opzoeken/{oid}/verwijder")
@@ -202,8 +217,8 @@ def _lijst_voor(request: Request, db: Session, lijst: str, vak: str = "", stelse
 
 
 @router.post("/opzoeken/{oid}/bewaren")
-def opzoeking_bewaren(request: Request, oid: int, lijst: str = Form(""), vak: str = Form(""), terug: str = Form(""),
-                      db: Session = Depends(get_session)):
+def opzoeking_bewaren(request: Request, oid: int, lijst: str = Form(""), vak: str = Form(""), regel: str = Form(""),
+                      terug: str = Form(""), db: Session = Depends(get_session)):
     """Met één tik een kaart: een artikel als artikelkaart, een uitspraak als arrestkaart (de uitspraak wordt een bron)."""
     o = db.get(Opzoeking, oid)
     if o is None or o.profiel_id != _pid(request):
@@ -215,7 +230,7 @@ def opzoeking_bewaren(request: Request, oid: int, lijst: str = Form(""), vak: st
         kaarten = leren.maak_kaarten(db, l, ["artikel"], ref=Ref(r["stelsel"], r["nummer"], r.get("wet") or None),
                                      notitie=r.get("toelichting") if r.get("bron") == "claude" else None)
     elif bron := opzoeken.bron_uit(db, o):
-        kaarten = leren.maak_kaarten(db, l, ["arrest"], bron=bron, antwoord=r.get("toelichting") or "")
+        kaarten = leren.maak_kaarten(db, l, ["arrest"], bron=bron, antwoord=regel.strip() or r.get("toelichting") or "")
     else:
         kaarten = leren.maak_kaarten(db, l, ["vrij"], vraag=r.get("citeer") or o.invoer,
                                      antwoord="\n\n".join(x for x in (r.get("plaats"), r.get("toelichting")) if x) or "")

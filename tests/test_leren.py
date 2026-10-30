@@ -187,3 +187,59 @@ def test_sein_naar_wunderkammer(monkeypatch):
 
     monkeypatch.setattr(httpx, "post", stuk)
     assert wk.stuur() is False  # de cron haalt het later op
+
+
+# --- arrestkaarten: de rechtsregel is het antwoord, de rest is samenhang ------------------------------------------------
+
+
+def _arrest(**kw):
+    from synoptikon.models import Bron
+    from synoptikon.services import leren
+
+    with database.session() as s:
+        bron = Bron(stelsel_code="NL", soort="rechtspraak", citeertitel="HR 18 juni 1982 (Plas/Valburg)", taal="nl",
+                    vindplaats="NJ 1982/659", tekst=kw.pop("tekst", None))
+        k = Kaart(soort="arrest", bron=bron, **kw)
+        return leren.Bouwer(s).zijden(k)
+
+
+def test_arrestkaart_rechtsregel_eerst_dan_samenhang():
+    z = _arrest(antwoord="Afbreken van onderhandelingen kan onaanvaardbaar zijn.", feiten="Plas brak de onderhandelingen af.",
+                tekst="De kern. " * 200)
+    assert "Welke rechtsregel volgt uit dit arrest?" in z.voor and "Plas/Valburg" in z.voor
+    assert z.achter.startswith("Afbreken van onderhandelingen")
+    assert z.achter.index("Samenhang") < z.achter.index("Feiten") < z.achter.index("> De kern.")
+    assert len(z.achter) < 1000, "de kerntekst komt ingekort onder de regel, niet in zijn geheel"
+
+
+def test_arrestkaart_zonder_regel_valt_terug_op_de_kern():
+    z = _arrest(tekst="Eén zin kern.")
+    assert z.achter == "> Eén zin kern."
+    assert "(schrijf bij deze kaart de rechtsregel)" in _arrest().achter
+
+
+def test_inkorten_op_zinseinde():
+    from synoptikon.services.leren import _inkorten
+
+    t = ("Een zin die lang genoeg is om mee te tellen. " * 30).strip()
+    kort = _inkorten(t, 200)
+    assert kort.endswith("tellen. …") and len(kort) <= 205
+    assert _inkorten("kort", 200) == "kort"
+
+
+def test_opzoeking_toont_voorbeeld_en_bewaart_eigen_regel(client):
+    from synoptikon.models import Opzoeking
+
+    with database.session() as s:
+        o = Opzoeking(profiel_id=1, invoer="plas", resultaat=dict(soort="uitspraak", stelsel="NL", citeer="HR 18 juni 1982 (Plas/Valburg)",
+                                                                  titel="Plas/Valburg", vindplaats="NJ 1982/659", toelichting="Korte toelichting.", bron="eigen"))
+        s.add(o)
+        s.flush()
+        oid = o.id
+    html = client.get(f"/opzoeken/{oid}").text
+    assert "Zo komt de kaart eruit" in html and "Korte toelichting." in html and 'name="regel"' in html
+    client.post(f"/opzoeken/{oid}/bewaren", data={"regel": "Mijn eigen rechtsregel."})
+    with database.session() as s:
+        k = s.get(Opzoeking, oid).kaart
+        assert k.antwoord == "Mijn eigen rechtsregel."
+    assert "Zo komt de kaart eruit" not in client.get(f"/opzoeken/{oid}").text

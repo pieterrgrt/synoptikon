@@ -27,6 +27,14 @@
       <button class="knop-tekst">{{ _('Ander vak') }}</button></form>{% endif %}
     {% else %}
     <form method="post" action="/opzoeken/{{ o.id }}/bewaren" class="bewaar-form">
+      {% set voorbeeld = voorbeeld if voorbeeld is defined else (voorbeelden.get(o.id) if voorbeelden else none) %}
+      {% if groot and voorbeeld %}<details class="voorbeeld" open>
+        <summary>{{ _('Zo komt de kaart eruit') }}</summary>
+        <p class="hint">{{ _('Voorkant') }}</p><div class="serif" dir="auto">{{ voorbeeld.voor | md }}</div>
+        <p class="hint">{{ _('Achterkant') }}</p><div class="serif" dir="auto">{{ voorbeeld.achter | md }}</div>
+        {% if r.soort == 'uitspraak' %}<label>{{ _('Rechtsregel') }} <span class="hint">{{ _('wat dit arrest bepaalt, in je eigen woorden; leeg = de toelichting hierboven') }}</span>
+          <textarea name="regel" rows="3" lang="nl"></textarea></label>{% endif %}
+      </details>{% endif %}
       <button class="knop klein primair">☆ {{ _('Bewaren') }}</button>
       {% set standaard = vak_van.get(o.id) if vak_van else none %}
       <label class="stil klein">{{ _('in') }} <select name="vak" aria-label="{{ _('Vak') }}">

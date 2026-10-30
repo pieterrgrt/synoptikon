@@ -595,6 +595,9 @@ a.wk-fase { text-decoration: none; }
 .opzoeking-titel { margin: .3rem 0; font-family: var(--serif); font-weight: 600; }
 .opzoeking .toelichting { font-size: .92rem; color: var(--inkt-2); }
 .bewaar-form { display: inline-flex; gap: .4rem; align-items: center; }
+.bewaar-form:has(.voorbeeld) { display: flex; flex-wrap: wrap; width: 100%; }
+.bewaar-form .voorbeeld { width: 100%; border: 1px dashed var(--lijn); border-radius: var(--radius); padding: .4rem .8rem; margin: .4rem 0; }
+.bewaar-form .voorbeeld textarea { width: 100%; }
 .bewaar-form select { width: auto; max-width: 12rem; font-size: .85rem; padding: .2rem .4rem; }
 .draaier { display: inline-block; width: .8em; height: .8em; border: 2px solid var(--lijn); border-top-color: var(--accent); border-radius: 50%; animation: draai 1s linear infinite; vertical-align: -.1em; }
 @keyframes draai { to { transform: rotate(360deg); } }
