@@ -30,6 +30,7 @@
     var quote = range.toString().trim(), ctx = context(range), r = range.getBoundingClientRect();
     menu = document.createElement('div');
     menu.className = 'markeer-menu';
+    menu.dataset.quote = quote;
     menu.setAttribute('role', 'dialog');
     var notitie = document.createElement('input');
     notitie.type = 'text'; notitie.placeholder = d.lNotitie; notitie.setAttribute('aria-label', d.lNotitie);
@@ -61,8 +62,19 @@
   }
 
   doel.addEventListener('mouseup', function () { setTimeout(bekijk, 0); });
-  doel.addEventListener('touchend', function () { setTimeout(bekijk, 350); });
   doel.addEventListener('keyup', function (e) { if (e.shiftKey) bekijk(); });
+  // Op de telefoon versleep je de grepen van de selectie; die geven geen touchend op de tekst. Dus de selectie zelf volgen,
+  // en pas tonen als ze even stilstaat (anders springt het menu mee met elke stap). Staat het menu al voor deze selectie,
+  // dan blijft het (met wat je in de notitie typte) staan.
+  var wacht;
+  document.addEventListener('selectionchange', function () {
+    clearTimeout(wacht);
+    wacht = setTimeout(function () {
+      var sel = window.getSelection();
+      if (menu && sel && menu.dataset.quote === sel.toString().trim()) return;
+      bekijk();
+    }, 500);
+  });
   document.addEventListener('mousedown', function (e) { if (menu && !menu.contains(e.target)) sluit(); });
   document.addEventListener('keydown', function (e) { if (e.key === 'Escape') sluit(); });
 })();
