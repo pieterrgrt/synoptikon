@@ -243,3 +243,54 @@ def test_opzoeking_toont_voorbeeld_en_bewaart_eigen_regel(client):
         k = s.get(Opzoeking, oid).kaart
         assert k.antwoord == "Mijn eigen rechtsregel."
     assert "Zo komt de kaart eruit" not in client.get(f"/opzoeken/{oid}").text
+
+
+# --- lange artikelen: één kaart per lid ----------------------------------------------------------------------------------
+
+LANG = ("(1) " + "Wer vorsätzlich oder fahrlässig das Leben, den Körper oder das Eigentum eines anderen widerrechtlich verletzt. " * 2 +
+        "\n(2) " + "Die gleiche Verpflichtung trifft denjenigen, welcher gegen ein den Schutz eines anderen bezweckendes Gesetz verstößt. " * 2 +
+        "\n(3) " + "Ist nach dem Inhalt des Gesetzes ein Verstoß auch ohne Verschulden möglich, so tritt die Ersatzpflicht nur bei Verschulden ein. " * 2)
+
+
+def test_leden_splitsen():
+    from synoptikon.services.leren import leden
+
+    assert [n for n, _t in leden(LANG)] == ["1", "2", "3"]
+    assert leden(LANG)[1][1].startswith("(2) Die gleiche")
+    assert [n for n, _t in leden("1. Eerste lid.\n2. Tweede lid.")] == ["1", "2"]
+    # genummerde onderdelen binnen een lid zijn geen leden
+    assert [n for n, _t in leden("(1) Voorwaarden:\n1. a\n2. b\n(2) Gevolg.")] == ["1", "2"]
+    assert leden("Eén alinea zonder leden.") == [] and leden("(2) begint niet bij 1\n(3) maar bij 2") == []
+
+
+def test_lang_artikel_wordt_een_kaart_per_lid(client):
+    from synoptikon.models import Kaart as K
+    from synoptikon.services import leren
+
+    with database.session() as s:
+        w = Wettekst(stelsel_code="DE", wet_id="test-lid", wet="LIDG", stijl="§", kern=False, versie="2026-01-01", titel="Lid-Gesetz")
+        s.add(w)
+        s.flush()
+        s.add(WettekstArtikel(wettekst_id=w.id, nummer="1", opschrift="Haftung", tekst=LANG, volgorde=0))
+        s.add(WettekstArtikel(wettekst_id=w.id, nummer="2", opschrift="Kort", tekst="(1) Kort.\n(2) Ook kort.", volgorde=1))
+    from synoptikon.services.artikelen import laad_wetnamen, Ref
+
+    with database.session() as s:
+        laad_wetnamen(s)
+        lijst = Leerlijst(profiel_id=1, naam="Lid-test")
+        s.add(lijst)
+        s.flush()
+        kaarten = leren.maak_kaarten(s, lijst, ["artikel"], ref=Ref("DE", "1", "LIDG"), per_lid=True)
+        assert [k.lid for k in kaarten] == ["1", "2", "3"]
+        z = leren.Bouwer(s).zijden(kaarten[1])
+        assert "lid 2" in z.voor and "Die gleiche Verpflichtung" in z.achter and "vorsätzlich" not in z.achter
+        # nog eens bewaren voegt niets toe; een kort artikel blijft één kaart
+        assert leren.maak_kaarten(s, lijst, ["artikel"], ref=Ref("DE", "1", "LIDG"), per_lid=True) == []
+        kort = leren.maak_kaarten(s, lijst, ["artikel"], ref=Ref("DE", "2", "LIDG"), per_lid=True)
+        assert len(kort) == 1 and kort[0].lid is None
+        # staat het hele artikel er al, dan niet alsnog splitsen
+        hele = Leerlijst(profiel_id=1, naam="Lid-test hele")
+        s.add(hele)
+        s.flush()
+        assert len(leren.maak_kaarten(s, hele, ["artikel"], ref=Ref("DE", "1", "LIDG"))) == 1
+        assert leren.maak_kaarten(s, hele, ["artikel"], ref=Ref("DE", "1", "LIDG"), per_lid=True) == []

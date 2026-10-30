@@ -35,11 +35,30 @@ def _inkorten(tekst: str, max_tekens: int = KERN_MAX) -> str:
     return (kop[:zin + 1] if zin > max_tekens // 2 else kop[:kop.rfind(" ")]) + " …"
 
 
+LID_MIN = 400  # een artikel korter dan dit (tekens) blijft één kaart
+_LID_HAAK = re.compile(r"^[ \t]*\((\d+[a-z]?)\)[ \t]+", re.M)  # (1) Text …  (BGB, GG, EU)
+_LID_PUNT = re.compile(r"^[ \t]*(\d+[a-z]?)\.[ \t]+", re.M)  # 1. Text …  (BW)
+
+
+def leden(tekst: str) -> list[tuple[str, str]]:
+    """De leden van een artikel als [(nummer, tekst)]; leeg als het geen opeenvolgende leden 1, 2, … heeft.
+
+    Alleen de eerste opmaak telt: '(1) …' of '1. …'; genummerde onderdelen binnen een lid ('1. …' in § 823 Abs. 2) blijven in
+    het lid."""
+    for patroon in (_LID_HAAK, _LID_PUNT):
+        m = list(patroon.finditer(tekst or ""))
+        nrs = [x.group(1) for x in m]
+        if len(m) >= 2 and nrs[0] == "1" and [int(re.match(r"\d+", n).group()) for n in nrs] == sorted({int(re.match(r"\d+", n).group()) for n in nrs}):
+            return [(n, tekst[x.start():(m[i + 1].start() if i + 1 < len(m) else len(tekst))].strip()) for i, (n, x) in enumerate(zip(nrs, m))]
+    return []
+
+
 @dataclass
 class Zijden:
     voor: str  # markdown
     achter: str  # markdown
     url: str | None  # pad in Synoptikon om verder te lezen
+    kaarten: int = 1  # voorbeeld: hoeveel kaarten er bij ☆ uit komen (één per lid bij een lang artikel)
 
 
 def nieuwe_uid() -> str:
@@ -144,10 +163,10 @@ def bewaarde_bronnen(db: Session, profiel_id: int) -> set[int]:
     return set(db.scalars(select(Kaart.bron_id).join(Leerlijst).where(Leerlijst.profiel_id == profiel_id, Kaart.bron_id.is_not(None))).all())
 
 
-def _sleutel(soort, stelsel, wet, nummer, doel, bron_id, zaak, vraag) -> tuple:
-    """Waar een kaart over gaat: het artikel, het arrest (bron of zaaknaam) of, bij een vrije kaart, de vraag."""
+def _sleutel(soort, stelsel, wet, nummer, doel, bron_id, zaak, vraag, lid=None) -> tuple:
+    """Waar een kaart over gaat: het artikel (en lid), het arrest (bron of zaaknaam) of, bij een vrije kaart, de vraag."""
     if soort in ARTIKELSOORTEN:
-        return (soort, stelsel, wet or None, nummer, doel)
+        return (soort, stelsel, wet or None, nummer, doel) + ((lid,) if lid else ())
     if soort in ARRESTSOORTEN:
         return (soort, bron_id) if bron_id else (soort, None, (zaak or "").strip().lower())
     return (soort, (vraag or "").strip().lower())
@@ -160,10 +179,14 @@ def maak_kaarten(
     ref: Ref | None = None,
     bron: Bron | None = None,
     doelen: list[str] | None = None,
+    per_lid: bool = False,
     **velden,
 ) -> list[Kaart]:
-    """Kaarten van de gekozen soorten; een kaart die al in de lijst staat (zelfde soort en onderwerp) komt er niet nog eens bij."""
-    bestaand = {_sleutel(k.soort, k.stelsel_code, k.wet, k.nummer, k.doel_stelsel, k.bron_id, k.zaak, k.vraag) for k in lijst.kaarten}
+    """Kaarten van de gekozen soorten; een kaart die al in de lijst staat (zelfde soort en onderwerp) komt er niet nog eens bij.
+
+    `per_lid`: een lang artikel met leden wordt één artikelkaart per lid (één kaart = één feit), tenzij het hele artikel
+    al in de lijst staat."""
+    bestaand = {_sleutel(k.soort, k.stelsel_code, k.wet, k.nummer, k.doel_stelsel, k.bron_id, k.zaak, k.vraag, k.lid) for k in lijst.kaarten}
     velden = {k: (v.strip() or None) if isinstance(v, str) else v for k, v in velden.items()}
     if bron is not None:
         velden.setdefault("zaak", None)
@@ -172,20 +195,30 @@ def maak_kaarten(
     uit = []
     for soort in soorten:
         for doel in (doelen or [None]) if soort == "tegenhanger" else [None]:
-            sleutel = _sleutel(soort, ref.stelsel if ref else None, ref.wet if ref else None, ref.nummer if ref else None, doel,
-                               bron.id if bron else None, velden.get("zaak"), velden.get("vraag"))
             if soort in ARTIKELSOORTEN and ref is None or soort in ARRESTSOORTEN and not (bron or velden.get("zaak")):
                 continue
-            if sleutel in bestaand:
+            hele = _sleutel(soort, ref.stelsel if ref else None, ref.wet if ref else None, ref.nummer if ref else None, doel,
+                            bron.id if bron else None, velden.get("zaak"), velden.get("vraag"))
+            if hele in bestaand:
                 continue
-            bestaand.add(sleutel)
-            k = Kaart(uid=nieuwe_uid(), lijst=lijst, soort=soort, doel_stelsel=doel, bron=bron, **velden)
-            if ref is not None and soort in ARTIKELSOORTEN:
-                k.stelsel_code, k.wet, k.nummer = ref.stelsel, ref.wet, ref.nummer
-            db.add(k)
-            uit.append(k)
+            for lid in (leden_van(db, ref) if per_lid and soort == "artikel" else None) or [None]:
+                sleutel = hele + ((lid,) if lid else ())
+                if sleutel in bestaand:
+                    continue
+                bestaand.add(sleutel)
+                k = Kaart(uid=nieuwe_uid(), lijst=lijst, soort=soort, doel_stelsel=doel, bron=bron, lid=lid, **velden)
+                if ref is not None and soort in ARTIKELSOORTEN:
+                    k.stelsel_code, k.wet, k.nummer = ref.stelsel, ref.wet, ref.nummer
+                db.add(k)
+                uit.append(k)
     db.flush()
     return uit
+
+
+def leden_van(db: Session, ref: Ref) -> list[str]:
+    """Lidnummers van een lang artikel (korter dan LID_MIN tekens of zonder leden: leeg)."""
+    t = corr.Context(db).tekst(ref)
+    return [n for n, _t in leden(t.tekst)] if t and t.tekst and len(t.tekst) > LID_MIN else []
 
 
 class Bouwer:
@@ -203,9 +236,12 @@ class Bouwer:
     def _kop(self, ref: Ref, wa) -> str:
         return f"**{ref.citeer}**" + (f" · {wa.opschrift}" if wa and wa.opschrift else "")
 
-    def _tekst(self, ref: Ref, wa) -> str:
+    def _tekst(self, ref: Ref, wa, lid: str | None = None) -> str:
         t = self.ctx.tekst(ref)
-        return t.tekst if t and t.tekst else _("(geen wettekst ingelezen)")
+        if not (t and t.tekst):
+            return _("(geen wettekst ingelezen)")
+        # Een kaart voor één lid toont alleen dat lid; is het lid uit een nieuwe versie van de wet verdwenen, dan het hele artikel.
+        return next((x for n, x in leden(t.tekst) if n == lid), t.tekst) if lid else t.tekst
 
     def zijden(self, k: Kaart) -> Zijden:
         ref = ref_van(k)
@@ -213,8 +249,9 @@ class Bouwer:
         url = ref.url if ref else (f"/bronnen/{k.bron_id}" if k.bron_id else None)
         voor = achter = ""
         if k.soort == "artikel" and ref:
-            voor = k.vraag or f"**{ref.citeer}**\n\n{_('Wat staat erin?')}"
-            achter = f"{self._kop(ref, wa)}\n\n{self._tekst(ref, wa)}"
+            lid = f" {_('lid {lid}', lid=k.lid)}" if k.lid else ""
+            voor = k.vraag or f"**{ref.citeer}**{lid}\n\n{_('Wat staat erin?')}"
+            achter = f"{self._kop(ref, wa)}{lid}\n\n{self._tekst(ref, wa, k.lid)}"
         elif k.soort == "kern" and ref:
             omschrijving = k.vraag or (wa.opschrift if wa and wa.opschrift else None) or _("(schrijf bij deze kaart een omschrijving)")
             wet = ref.wet_naam or self.namen.get(ref.stelsel, ref.stelsel)
@@ -293,10 +330,13 @@ class Bouwer:
 
 def voorbeeld(db: Session, soort: str, ref: Ref | None = None, bron: Bron | None = None, **velden) -> Zijden:
     """De zijden van een kaart die nog niet bestaat (het bewaarvenster): een kaart die niet in de sessie komt."""
-    k = Kaart(soort=soort, bron=bron, **velden)
+    lid = leden_van(db, ref) if ref is not None and soort == "artikel" else []
+    k = Kaart(soort=soort, bron=bron, lid=lid[0] if lid else None, **velden)
     if ref is not None:
         k.stelsel_code, k.wet, k.nummer = ref.stelsel, ref.wet, ref.nummer
-    return Bouwer(db).zijden(k)
+    z = Bouwer(db).zijden(k)
+    z.kaarten = len(lid) or 1
+    return z
 
 
 def oefen(db: Session, k: Kaart, gekend: bool) -> None:

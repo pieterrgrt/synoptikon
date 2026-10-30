@@ -227,7 +227,7 @@ def opzoeking_bewaren(request: Request, oid: int, lijst: str = Form(""), vak: st
     l = _lijst_voor(request, db, lijst, vak, r.get("stelsel") or None, r.get("wet") or None, r.get("nummer") or None)
     kaarten: list[Kaart] = []
     if r.get("nummer") and r.get("stelsel"):
-        kaarten = leren.maak_kaarten(db, l, ["artikel"], ref=Ref(r["stelsel"], r["nummer"], r.get("wet") or None),
+        kaarten = leren.maak_kaarten(db, l, ["artikel"], ref=Ref(r["stelsel"], r["nummer"], r.get("wet") or None), per_lid=True,
                                      notitie=r.get("toelichting") if r.get("bron") == "claude" else None)
     elif bron := opzoeken.bron_uit(db, o):
         kaarten = leren.maak_kaarten(db, l, ["arrest"], bron=bron, antwoord=regel.strip() or r.get("toelichting") or "")
@@ -258,7 +258,7 @@ def snel_bewaren(request: Request, lijst: str = Form(""), vak: str = Form(""), s
         lijst = str(_gekozen(request, leren.lijsten_van(db, _pid(request))) or "")
     l = _lijst_voor(request, db, lijst, vak, *onderwerp)
     if stelsel and nummer:
-        n = leren.maak_kaarten(db, l, ["artikel"], ref=Ref(stelsel.upper(), nummer, wet or None))
+        n = leren.maak_kaarten(db, l, ["artikel"], ref=Ref(stelsel.upper(), nummer, wet or None), per_lid=True)
     else:
         n = leren.maak_kaarten(db, l, ["arrest"], bron=b)
     doel = _veilig(terug) or "/leren"

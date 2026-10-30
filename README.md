@@ -198,6 +198,9 @@ Uitgebreider gemotiveerd in de docstring van `synoptikon/models.py`.
    AktG/GmbHG/HGB → UG; `services/vakken.py`), anders het vak waarin je het laatst
    bewaarde (`profiel.laatste_vak`). Een vak is een leerlijst met een `vak`; het
    vak wisselen is een correctie onder de melding "bewaard" (`POST /leren/vak`).
+   Een artikel van meer dan 400 tekens met leden wordt één kaart per lid
+   (`Kaart.lid`); bij een arrestkaart is de rechtsregel het antwoord en staan
+   feiten en kerntekst eronder. Opzoeken toont voor- en achterkant vóór het bewaren.
    ⋯ ernaast kiest kaartsoort en lijst. Lijsten met "naar Wunderkammer" komen
    via `/api/wk/kaarten` in Wunderkammer.
    **Kaarten uit notities**: `scripts/notities.sh` kopieert `~/vault/Humboldt`

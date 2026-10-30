@@ -243,6 +243,7 @@ _NIEUWE_KOLOMMEN = [
     ("wettekst", "grootte", "INTEGER"),
     ("profiel", "stelsels", "TEXT"),
     ("profiel", "laatste_vak", "VARCHAR(60)"),
+    ("kaart", "lid", "VARCHAR(8)"),
 ]
 
 

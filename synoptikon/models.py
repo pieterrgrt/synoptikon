@@ -753,6 +753,7 @@ class Kaart(Base):
     wet: Mapped[str | None] = mapped_column(String(40))
     nummer: Mapped[str | None] = mapped_column(String(40))
     doel_stelsel: Mapped[str | None] = mapped_column(String(8))  # tegenhanger: in welk stelsel
+    lid: Mapped[str | None] = mapped_column(String(8))  # artikel: alleen dit lid ("1", "2a"); leeg = het hele artikel
     # Arrest (arrest, feiten): uit een bron, of met eigen zaaknaam en vindplaats
     bron_id: Mapped[int | None] = mapped_column(ForeignKey("bron.id", ondelete="SET NULL"))
     zaak: Mapped[str | None] = mapped_column(String(300))  # "HR 18 juni 1982 (Plas/Valburg)"
