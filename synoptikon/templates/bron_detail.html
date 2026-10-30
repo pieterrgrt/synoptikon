@@ -1,6 +1,7 @@
 {% extends "base.html" %}
 {% block titel %}{{ bron.citeertitel }} · Synoptikon{% endblock %}
 {% import "_leren.html" as l %}
+{% import "_markeringen.html" as mk with context %}
 {% block inhoud %}
 <p class="kruimel"><a href="/bronnen">{{ _('Bronnen') }}</a> › {{ vt(bron.stelsel.naam) }} › {{ _(soorten.get(bron.soort, bron.soort)) }}</p>
 <div class="paginakop">
@@ -10,7 +11,8 @@
 </div>
 {% if bron.titel %}<p class="bron-titel groot" lang="{{ bron.taal }}">{{ bron.titel }}</p>{% endif %}
 <article class="bron detail soort-{{ bron.soort }}">
-  {% if bron.tekst %}<div class="origineel" dir="auto" lang="{{ bron.taal }}">{{ bron.tekst | md }}</div>{% else %}<p class="stil">{{ _('Geen tekst opgeslagen.') }}</p>{% endif %}
+  {% if bron.tekst %}<div class="origineel" dir="auto" lang="{{ bron.taal }}" {{ mk.attrs(markeer) }}>{{ bron.tekst | md | markeer(markeringen) }}</div>
+  {{ mk.lijst(markeringen, bron.tekst | md, request.url.path) }}{% else %}<p class="stil">{{ _('Geen tekst opgeslagen.') }}</p>{% endif %}
   {% for v in bron.vertalingen %}
   <div class="vertaling" lang="{{ v.taal }}"><span class="label">{{ _('vertaling') }} {{ v.taal }} · {{ _(v.herkomst) }}</span>{{ v.tekst | md }}</div>
   {% endfor %}
@@ -47,3 +49,4 @@
 </form>
 </details>
 {% endblock %}
+{% block scripts %}<script src="/static/js/markeren.js?v={{ sv }}"></script>{% endblock %}

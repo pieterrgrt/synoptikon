@@ -10,7 +10,7 @@ from ..db import get_session
 from ..models import Bron, Concordantie, Systematiek, Vertaling, WettekstArtikel
 from ..services import leren
 from ..services.helpers import actieve_stelsels, leeg_naar_none, parse_datum
-from . import render
+from . import markeringen, render
 
 router = APIRouter()
 
@@ -74,7 +74,8 @@ def bron_detail(request: Request, bron_id: int, db: Session = Depends(get_sessio
     artikel = bron.wettekst_artikel
     p = huidig_profiel(request)
     bewaard = bron.id in leren.bewaarde_bronnen(db, p.id if p else 1)
-    return render(request, "bron_detail.html", bron=bron, concordanties=concordanties, artikel=artikel, soorten=SOORTEN, bron_bewaard=bewaard)
+    return render(request, "bron_detail.html", bron=bron, concordanties=concordanties, artikel=artikel, soorten=SOORTEN, bron_bewaard=bewaard,
+                  **markeringen.context_bron(db, p.id if p else 1, bron.id))
 
 
 @router.get("/bronnen/{bron_id}/bewerken")

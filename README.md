@@ -201,6 +201,11 @@ Uitgebreider gemotiveerd in de docstring van `synoptikon/models.py`.
    Een artikel van meer dan 400 tekens met leden wordt één kaart per lid
    (`Kaart.lid`); bij een arrestkaart is de rechtsregel het antwoord en staan
    feiten en kerntekst eronder. Opzoeken toont voor- en achterkant vóór het bewaren.
+   **Markeren** (`services/markeringen.py`, `static/js/markeren.js`): selecteer tekst in een
+   artikel of uitspraak, kies kern / voorwaarde / let op (met vak en notitie). Een markering
+   bewaart de quote met omgeving, niet een index (tabel `markering`), dus ze overleeft een
+   nieuwe versie van de wet. Kern en voorwaarden staan vet op de artikelkaart; de gemarkeerde
+   kern van een uitspraak wordt de rechtsregel van de arrestkaart (per vak).
    ⋯ ernaast kiest kaartsoort en lijst. Lijsten met "naar Wunderkammer" komen
    via `/api/wk/kaarten` in Wunderkammer.
    **Kaarten uit notities**: `scripts/notities.sh` kopieert `~/vault/Humboldt`

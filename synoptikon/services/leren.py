@@ -16,8 +16,9 @@ from sqlalchemy.orm import Session, selectinload
 
 from .. import md
 from ..i18n import _
-from ..models import ARRESTSOORTEN, ARTIKELSOORTEN, FASEN, Bron, Kaart, KaartStand, Leerlijst, Profiel, Stelsel, now
+from ..models import ARRESTSOORTEN, ARTIKELSOORTEN, FASEN, Bron, Kaart, KaartStand, Leerlijst, Markering, Profiel, Stelsel, now
 from . import correspondentie as corr
+from . import markeringen as mk
 from . import wk  # noqa: F401  (seint Wunderkammer na een wijziging in de kaarten)
 from .artikelen import Ref
 
@@ -58,6 +59,7 @@ class Zijden:
     voor: str  # markdown
     achter: str  # markdown
     url: str | None  # pad in Synoptikon om verder te lezen
+    regel: str = ""  # voorbeeld van een arrest: de rechtsregel uit je markeringen, als voorstel
     kaarten: int = 1  # voorbeeld: hoeveel kaarten er bij ☆ uit komen (één per lid bij een lang artikel)
 
 
@@ -192,6 +194,8 @@ def maak_kaarten(
         velden.setdefault("zaak", None)
         velden["zaak"] = velden["zaak"] or bron.citeertitel
         velden["vindplaats"] = velden.get("vindplaats") or bron.vindplaats
+        if not velden.get("antwoord") and bron.id:  # de rechtsregel die je in de uitspraak aanwees (voor het vak van de lijst)
+            velden["antwoord"] = mk.kern_tekst(db, lijst.profiel_id, bron.id, lijst.vak) or None
     uit = []
     for soort in soorten:
         for doel in (doelen or [None]) if soort == "tegenhanger" else [None]:
@@ -229,6 +233,17 @@ class Bouwer:
         self.ctx = corr.Context(db)
         self.namen = {s.code: s.naam for s in db.scalars(select(Stelsel)).all()}
         self._thema_s: dict[tuple, list] = {}
+        self._mk: dict[int, list] = {}
+
+    def _markeringen(self, k: Kaart, ref: Ref) -> list:
+        """Wat je in dit artikel aanwees voor het vak van de lijst van de kaart (een kaart die nog niet bewaard is: niets)."""
+        if k.lijst is None:
+            return []
+        if k.lijst.profiel_id not in self._mk:
+            self._mk[k.lijst.profiel_id] = list(self.db.scalars(select(Markering).where(
+                Markering.profiel_id == k.lijst.profiel_id, Markering.bron_id.is_(None), Markering.stelsel_code.is_not(None))))
+        return mk.voor_vak([m for m in self._mk[k.lijst.profiel_id] if (m.stelsel_code, m.wet or None, m.nummer) == (ref.stelsel, ref.wet or None, ref.nummer)],
+                           k.lijst.vak)
 
     def _artikel(self, ref: Ref):
         return corr.wettekst_artikel(self.db, ref)
@@ -251,7 +266,10 @@ class Bouwer:
         if k.soort == "artikel" and ref:
             lid = f" {_('lid {lid}', lid=k.lid)}" if k.lid else ""
             voor = k.vraag or f"**{ref.citeer}**{lid}\n\n{_('Wat staat erin?')}"
-            achter = f"{self._kop(ref, wa)}{lid}\n\n{self._tekst(ref, wa, k.lid)}"
+            ms = self._markeringen(k, ref)
+            # De kern en voorwaarden die je aanwees staan vet; een 'let op' komt als regel eronder.
+            achter = f"{self._kop(ref, wa)}{lid}\n\n{mk.markeer_md(self._tekst(ref, wa, k.lid), ms)}"
+            achter += "".join(f"\n\n*{_('Let op')}:* {m.notitie or m.quote}" for m in ms if m.soort == "let_op" and (not k.lid or m.quote in self._tekst(ref, wa, k.lid)))
         elif k.soort == "kern" and ref:
             omschrijving = k.vraag or (wa.opschrift if wa and wa.opschrift else None) or _("(schrijf bij deze kaart een omschrijving)")
             wet = ref.wet_naam or self.namen.get(ref.stelsel, ref.stelsel)

@@ -24,7 +24,7 @@ from ..services.artikelen import Ref, herken, lees, sleutel
 from ..models import RECHTSFAMILIES
 from ..services.helpers import actieve_stelsels, leeg_naar_none, stelsels_per_code
 from ..services.stelselkeuze import ook_uit, stelselkeuze
-from . import render
+from . import markeringen, render
 
 router = APIRouter()
 
@@ -215,13 +215,15 @@ def artikel(request: Request, stelsel: str, nummer: str, wet: str | None = None,
     pad = ctx.pad(ref)
     buren = _buren(ctx, ref, pad)
     lezen = _in_wettekst(db, ref)
+    tekst = ctx.tekst(ref)
     return render(
         request,
         "artikel.html",
+        **markeringen.context_artikel(db, huidig_profiel(request).id if huidig_profiel(request) else 1, ref, tekst),
         ref=ref,
         stelsel=st,
         pad=pad,
-        tekst=ctx.tekst(ref),
+        tekst=tekst,
         thema_s=thema_s,
         concordanties=corr.concordanties_voor(db, ref.stelsel, ref.nummer) if not ref.wet else [],
         gebruik=corr.gebruik(ctx, ref),

@@ -1,0 +1,21 @@
+{# Markeren: `attrs` zet de tekst klaar voor static/js/markeren.js; `lijst` toont wat is aangewezen, met een weg-knop zonder JavaScript. #}
+{% macro attrs(doel) -%}
+data-markeerbaar{% if doel.bron %} data-bron="{{ doel.bron }}"{% else %} data-stelsel="{{ doel.stelsel }}" data-wet="{{ doel.wet }}" data-nummer="{{ doel.nummer }}"{% endif %} data-vak="{{ doel.vak }}" data-vakken="{{ vakken_keuze | join(',') }}" data-l-kern="{{ _('Kern') }}" data-l-voorwaarde="{{ _('Voorwaarde') }}" data-l-let_op="{{ _('Let op') }}" data-l-notitie="{{ _('Notitie') }}" data-l-vak="{{ _('Vak') }}"
+{%- endmacro %}
+
+{% macro lijst(markeringen, html, terug) %}
+{% if markeringen %}
+{% set weg = verweesd(html, markeringen) %}
+<details class="markeringen" {% if weg %}open{% endif %}>
+  <summary>{{ n_('{n} markering', '{n} markeringen', markeringen | length) }}</summary>
+  <ul>
+  {% for m in markeringen %}
+    <li><mark class="markering m-{{ m.soort }}">{{ m.soort_label }}</mark>{% if m.vak %} <span class="stil klein">{{ m.vak }}</span>{% endif %}
+      <q class="serif">{{ m.quote | truncate(200) }}</q>{% if m.notitie %} <span class="stil">— {{ m.notitie }}</span>{% endif %}
+      {% if m.id in weg %}<span class="hint">{{ _('niet meer in de tekst te vinden') }}</span>{% endif %}
+      <form method="post" action="/markeringen/{{ m.id }}/verwijder" class="inline"><input type="hidden" name="terug" value="{{ terug }}"><button class="knop-tekst" aria-label="{{ _('Markering verwijderen') }}">×</button></form></li>
+  {% endfor %}
+  </ul>
+</details>
+{% endif %}
+{% endmacro %}

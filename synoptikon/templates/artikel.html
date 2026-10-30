@@ -1,6 +1,7 @@
 {% extends "base.html" %}
 {% import "_artikel.html" as m %}
 {% import "_leren.html" as l %}
+{% import "_markeringen.html" as mk with context %}
 {% block titel %}{{ ref.citeer }} · Synoptikon{% endblock %}
 {% block inhoud %}
 <p class="kruimel"><a href="/artikelen">{{ _('Artikelen') }}</a> › {{ vt(stelsel.naam) }}{% if lezen %} › <a href="{% if lezen.knoop %}/stelsels/{{ stelsel.code }}#knoop-{{ lezen.knoop.id }}{% else %}/stelsels/{{ stelsel.code }}/wet/{{ lezen.wet.id }}{% endif %}">{{ lezen.wet.titel }}</a>{% endif %}</p>
@@ -13,7 +14,8 @@
 
 {% if tekst %}
 <article class="bron detail soort-wet">
-  <div class="origineel" dir="auto" lang="{{ stelsel.taal }}">{{ tekst.tekst | md }}</div>
+  <div class="origineel" dir="auto" lang="{{ stelsel.taal }}" {{ mk.attrs(markeer) }}>{{ tekst.tekst | md | markeer(markeringen) }}</div>
+  {{ mk.lijst(markeringen, tekst.tekst | md, request.url.path) }}
   <footer class="bron-voet">
     <a href="{{ tekst.url }}">{{ _('bron in Synoptikon') if tekst.herkomst == 'bron' else _('geïmporteerde wettekst') }}</a>
     {% if lezen %}<a href="{{ lezen.url }}">{{ _('in de wettekst lezen') }}{% if lezen.knoop %} · {{ lezen.knoop.label | truncate(60) }}{% elif lezen.deel %} · {{ lezen.deel.label | truncate(60) }}{% endif %}</a>{% endif %}
@@ -100,3 +102,4 @@
 <ul class="lijst">{% for ab in gebruik %}<li><a href="/vragen/{{ ab.antwoord.vraag.slug }}#{{ ab.antwoord.stelsel_code }}">{{ vt(ab.antwoord.vraag.titel) }}</a>{{ m.rol(ab.rol) }}</li>{% endfor %}</ul>
 {% endif %}
 {% endblock %}
+{% block scripts %}<script src="/static/js/markeren.js?v={{ sv }}"></script>{% endblock %}

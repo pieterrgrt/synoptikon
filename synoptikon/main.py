@@ -19,8 +19,8 @@ from .config import settings
 from .db import init_db
 from .models import RECHTSFAMILIES, RELATIE_TYPES
 from .routes import auth as auth_routes
-from .routes import artikelen, begrippen, bronnen, eu, gedeeld, invoer, leren, opzoeken, profielen, stelsels, vertalingen, vragen, wetteksten, wunderkammer
-from .services import stelselkeuze, wetboek
+from .routes import artikelen, begrippen, bronnen, eu, gedeeld, invoer, leren, markeringen as markeringen_routes, opzoeken, profielen, stelsels, vertalingen, vragen, wetteksten, wunderkammer
+from .services import markeringen, stelselkeuze, wetboek
 from .services.artikelen import ref_uit_bron, wetnaam
 from .services.helpers import per_familie
 
@@ -44,6 +44,8 @@ def stelsel_code(code: str | None) -> Markup:
 templates = Jinja2Templates(directory=str(HIER / "templates"))
 templates.env.filters["md"] = md.render
 templates.env.filters["md_inline"] = md.render_inline
+templates.env.filters["markeer"] = markeringen.markeer_html
+templates.env.globals["verweesd"] = markeringen.verweesd
 templates.env.globals["RELATIE_TYPES"] = RELATIE_TYPES
 templates.env.globals["versie"] = __version__
 templates.env.globals["ui_lang"] = settings.ui_lang
@@ -191,5 +193,5 @@ def apple_touch_icon():
     return FileResponse(HIER / "static" / "apple-touch-icon.png")
 
 
-for router in (auth_routes.router, profielen.router, vragen.router, bronnen.router, begrippen.router, stelsels.router, artikelen.router, opzoeken.router, invoer.router, wetteksten.router, eu.router, vertalingen.router, gedeeld.router, leren.router, wunderkammer.router):
+for router in (auth_routes.router, profielen.router, vragen.router, bronnen.router, begrippen.router, stelsels.router, artikelen.router, opzoeken.router, invoer.router, wetteksten.router, eu.router, vertalingen.router, gedeeld.router, leren.router, markeringen_routes.router, wunderkammer.router):
     app.include_router(router)

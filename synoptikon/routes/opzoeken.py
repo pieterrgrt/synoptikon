@@ -16,7 +16,7 @@ from ..auth import huidig_profiel
 from ..db import get_session
 from ..i18n import _
 from ..models import Bron, Kaart, Leerlijst, Opzoeking
-from ..services import claude, herkennen, leren, opzoeken, vakken, zoeken
+from ..services import claude, herkennen, leren, markeringen, opzoeken, vakken, zoeken
 from ..services.artikelen import Ref
 from ..services.helpers import actieve_stelsels
 from ..services.stelselkeuze import stelselkeuze
@@ -64,7 +64,7 @@ def pagina(request: Request, q: str = "", stelsel: str = "", alle: int = 0, p: i
         request, "opzoeken.html", q=q, f_stelsel=stelsel, p=max(1, p), uitkomst=uitkomst, resultaat=resultaat,
         stelsels=keuze.alle, beperkt=codes is not None, alle=bool(alle), verborgen=verborgen,
         logboek=logboek, vak_van=_vak_van(db, pid, logboek),
-        voorbeelden={x.id: _voorbeeld(db, x) for x in logboek if x.id == o}, lijsten=lijsten,
+        voorbeelden={x.id: _voorbeeld(request, db, x) for x in logboek if x.id == o}, lijsten=lijsten,
         gekozen_lijst=_gekozen(request, lijsten), claude_aan=claude.beschikbaar(), open_id=o, herkend=herkennen.herken_id(q),
         bewaarde_refs=leren.bewaarde_refs(db, pid), per_pagina=PER_PAGINA,
     )
@@ -76,7 +76,7 @@ def _vak_van(db: Session, pid: int, logboek: list[Opzoeking]) -> dict[int, str |
                               (o.resultaat or {}).get("nummer")) for o in logboek}
 
 
-def _voorbeeld(db: Session, o: Opzoeking):
+def _voorbeeld(request: Request, db: Session, o: Opzoeking):
     """De kaart zoals ze bij ☆ wordt (voor- en achterkant), voor het bewaarvenster; None als er geen artikel- of arrestkaart van komt."""
     r = o.resultaat or {}
     if o.kaart_id or o.status != "klaar":
@@ -87,7 +87,11 @@ def _voorbeeld(db: Session, o: Opzoeking):
         return None
     bron = o.bron_id and db.get(Bron, o.bron_id) or Bron(citeertitel=(r.get("citeer") or o.invoer)[:200], vindplaats=r.get("vindplaats") or None,
                                                         tekst=r.get("tekst") or None)
-    return leren.voorbeeld(db, "arrest", bron=bron, antwoord=r.get("toelichting") or "")
+    pid = _pid(request)
+    regel = markeringen.kern_tekst(db, pid, bron.id, vakken.kies(db, pid, "", r.get("stelsel"))) if bron.id else ""
+    z = leren.voorbeeld(db, "arrest", bron=bron, antwoord=regel or r.get("toelichting") or "")
+    z.regel = regel
+    return z
 
 
 def _met_stelsels(functie, *args, stelsels: list[str] | None, **kw):
@@ -147,7 +151,7 @@ def opzoeking(request: Request, oid: int, db: Session = Depends(get_session)):
         raise HTTPException(404)
     lijsten = leren.lijsten_van(db, _pid(request))
     return render(request, "_opzoeking.html", o=o, lijsten=lijsten, gekozen_lijst=_gekozen(request, lijsten), groot=True,
-                  vak_van=_vak_van(db, _pid(request), [o]), voorbeeld=_voorbeeld(db, o))
+                  vak_van=_vak_van(db, _pid(request), [o]), voorbeeld=_voorbeeld(request, db, o))
 
 
 @router.post("/opzoeken/{oid}/verwijder")

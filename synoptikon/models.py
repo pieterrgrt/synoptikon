@@ -897,6 +897,38 @@ class Opzoeking(Base):
     kaart: Mapped["Kaart | None"] = relationship()
 
 
+MARKERINGSOORTEN: dict[str, str] = {"kern": "Kern", "voorwaarde": "Voorwaarde", "let_op": "Let op"}
+
+
+class Markering(Base):
+    """Een stuk tekst dat je in een artikel of uitspraak aanwees, voor een vak (services/markeringen.py).
+
+    Bewaard als tekstaanhaling (`quote` met een stukje tekst ervoor en erna), niet als index: een nieuwe versie van de
+    wettekst verschuift niets. Een artikel wordt aangewezen met stelsel, wet en nummer (zoals een Kaart), niet met het rijnummer
+    van een import. Gemarkeerde stukken zijn het materiaal voor kaarten: de rechtsregel van een arrest, de vetgedrukte
+    voorwaarden in een artikel."""
+
+    __tablename__ = "markering"
+
+    id: Mapped[int] = mapped_column(primary_key=True)
+    profiel_id: Mapped[int] = mapped_column(ForeignKey("profiel.id", ondelete="CASCADE"), index=True)
+    bron_id: Mapped[int | None] = mapped_column(ForeignKey("bron.id", ondelete="CASCADE"), index=True)
+    stelsel_code: Mapped[str | None] = mapped_column(String(8))
+    wet: Mapped[str | None] = mapped_column(String(40))
+    nummer: Mapped[str | None] = mapped_column(String(40))
+    quote: Mapped[str] = mapped_column(Text)
+    voor: Mapped[str] = mapped_column(String(80), default="")  # tekst vlak vóór de quote (om de juiste plek te vinden)
+    na: Mapped[str] = mapped_column(String(80), default="")
+    vak: Mapped[str | None] = mapped_column(String(60))  # leeg = voor elk vak
+    soort: Mapped[str] = mapped_column(String(12), default="kern")  # sleutel uit MARKERINGSOORTEN
+    notitie: Mapped[str | None] = mapped_column(Text)
+    aangemaakt: Mapped[datetime] = mapped_column(DateTime, default=now)
+
+    @property
+    def soort_label(self) -> str:
+        return _(MARKERINGSOORTEN.get(self.soort, self.soort))
+
+
 class Onderzoek(Base):
     """Rechtsvergelijkend onderzoek door Claude bij een vraag; het resultaat vult de synopse waar die nog leeg is."""
 

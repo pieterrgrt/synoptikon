@@ -647,3 +647,15 @@ a.wk-fase { text-decoration: none; }
 .stelsel-rijen { list-style: none; padding: 0; margin: .2rem 0 .6rem; }
 .stelsel-rijen li { display: flex; flex-wrap: wrap; align-items: baseline; gap: .1rem .6rem; padding: .3rem 0; border-bottom: 1px solid var(--lijn); }
 .stelsel-rijen .cijfers { margin-left: auto; color: var(--inkt-3); font-size: .85rem; font-variant-numeric: tabular-nums; }
+
+/* Markeringen (static/js/markeren.js, services/markeringen.py): kern = geel, voorwaarde = blauw, let op = rood. */
+:root { --mark-kern: #fbe9a6; --mark-voorwaarde: #cfe3f7; --mark-let_op: #f6cfc9; }
+@media (prefers-color-scheme: dark) { :root:not([data-theme="light"]) { --mark-kern: #5a4a14; --mark-voorwaarde: #1f3a55; --mark-let_op: #5a2a26; } }
+:root[data-theme="dark"] { --mark-kern: #5a4a14; --mark-voorwaarde: #1f3a55; --mark-let_op: #5a2a26; }
+mark.markering { color: inherit; border-radius: 2px; padding: 0 .1em; cursor: pointer; }
+.m-kern { background: var(--mark-kern); } .m-voorwaarde { background: var(--mark-voorwaarde); } .m-let_op { background: var(--mark-let_op); }
+.markeringen ul { list-style: none; padding: 0; } .markeringen li { margin: .3rem 0; }
+.markeer-menu { position: absolute; z-index: 20; display: flex; flex-wrap: wrap; gap: .3rem; max-width: min(24rem, calc(100vw - 1rem));
+  padding: .4rem; background: var(--papier); border: 1px solid var(--lijn); border-radius: var(--radius); box-shadow: 0 2px 10px rgba(0, 0, 0, .18); }
+.markeer-menu input, .markeer-menu select { flex: 1 1 8rem; width: auto; font-size: .85rem; padding: .2rem .4rem; }
+.markeer-menu .knop { color: var(--inkt); }
