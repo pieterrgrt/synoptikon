@@ -71,7 +71,12 @@
 
 <main id="inhoud" class="{% block mainclass %}pagina{% endblock %}">
 {% set bewaard = request.query_params.get('bewaard') %}
-{% if bewaard is not none %}<p class="melding" role="status">{% if bewaard == '0' %}{{ _('Die kaarten stonden al in de lijst.') }}{% else %}{{ n_('{n} kaart bewaard.', '{n} kaarten bewaard.', bewaard | int) }}{% endif %} <a href="/leren">{{ _('Naar je leerlijsten') }}</a></p>{% endif %}
+{% set bewaard_vak = request.query_params.get('vak') %}
+{% if bewaard is not none %}<p class="melding" role="status">{% if bewaard == '0' %}{{ _('Die kaarten stonden al in de lijst.') }}{% elif bewaard_vak %}{{ n_('{n} kaart bewaard in {vak}.', '{n} kaarten bewaard in {vak}.', bewaard | int, vak=bewaard_vak) }}{% else %}{{ n_('{n} kaart bewaard.', '{n} kaarten bewaard.', bewaard | int) }}{% endif %} <a href="/leren">{{ _('Naar je leerlijsten') }}</a>
+  {% if bewaard != '0' and request.query_params.get('kaarten') %}<form method="post" action="/leren/vak" class="inline vak-wissel">
+    <input type="hidden" name="kaarten" value="{{ request.query_params.get('kaarten') }}"><input type="hidden" name="terug" value="{{ request.url.path }}?{{ request.url.query }}">
+    <select name="vak" aria-label="{{ _('Ander vak') }}">{% for v in vakken_keuze %}<option {% if v == bewaard_vak %}selected{% endif %}>{{ v }}</option>{% endfor %}</select>
+    <button class="knop-tekst">{{ _('Ander vak') }}</button></form>{% endif %}</p>{% endif %}
 {% block inhoud %}{% endblock %}
 </main>
 

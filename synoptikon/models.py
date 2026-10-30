@@ -678,6 +678,9 @@ class Profiel(Base):
     # Mijn stelsels (kommagescheiden codes), te kiezen op /profiel: alleen die staan in kiezers, filters en kolommen, de
     # rest onder 'meer stelsels…'. None = nog niet gekozen: dan alle actieve, en na het inloggen de stap /welkom.
     stelsels: Mapped[str | None] = mapped_column(Text)
+    # Het vak waarin het laatst is bewaard (services/vakken.py): daar komt de volgende kaart terecht als het vak niet volgt
+    # uit wat je bewaart.
+    laatste_vak: Mapped[str | None] = mapped_column(String(60))
 
     @property
     def stelsel_codes(self) -> list[str] | None:
@@ -889,6 +892,8 @@ class Opzoeking(Base):
     bron_id: Mapped[int | None] = mapped_column(ForeignKey("bron.id", ondelete="SET NULL"))  # uitspraak, als bron bewaard
     kaart_id: Mapped[int | None] = mapped_column(ForeignKey("kaart.id", ondelete="SET NULL"))  # bewaard voor Wunderkammer
     aangemaakt: Mapped[datetime] = mapped_column(DateTime, default=now, index=True)
+
+    kaart: Mapped["Kaart | None"] = relationship()
 
 
 class Onderzoek(Base):

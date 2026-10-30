@@ -20,11 +20,20 @@
   {% if r.zekerheid == 'laag' %}<p class="hint">{{ _('Claude is hier niet zeker van.') }}</p>{% endif %}
   <div class="acties">
     {% if r.bron and r.bron != 'lokaal' and mag_bewerken %}<a class="knop klein" href="/opzoeken/{{ o.id }}/corrigeer">{{ _('Kloppend maken') }}</a>{% endif %}
-    {% if o.kaart_id %}<span class="leren-ster bewaard">★ {{ _('Bewaard') }}</span>
+    {% if o.kaart_id %}<span class="leren-ster bewaard">★ {{ _('Bewaard') }}{% if o.kaart and o.kaart.lijst.vak %} · {{ o.kaart.lijst.vak }}{% endif %}</span>
+    {% if o.kaart %}<form method="post" action="/leren/vak" class="inline vak-wissel">
+      <input type="hidden" name="kaarten" value="{{ o.kaart_id }}"><input type="hidden" name="terug" value="/opzoeken?o={{ o.id }}#opzoeking-{{ o.id }}">
+      <select name="vak" aria-label="{{ _('Ander vak') }}">{% for v in vakken_keuze %}<option {% if v == o.kaart.lijst.vak %}selected{% endif %}>{{ v }}</option>{% endfor %}</select>
+      <button class="knop-tekst">{{ _('Ander vak') }}</button></form>{% endif %}
     {% else %}
     <form method="post" action="/opzoeken/{{ o.id }}/bewaren" class="bewaar-form">
-      {% if lijsten %}<select name="lijst" aria-label="{{ _('Leerlijst') }}">{% for l in lijsten %}<option value="{{ l.id }}" {% if l.id == gekozen_lijst %}selected{% endif %}>{{ l.naam }}</option>{% endfor %}</select>{% endif %}
       <button class="knop klein primair">☆ {{ _('Bewaren') }}</button>
+      {% set standaard = vak_van.get(o.id) if vak_van else none %}
+      <label class="stil klein">{{ _('in') }} <select name="vak" aria-label="{{ _('Vak') }}">
+        {% if not standaard %}<option value="">{{ _('laatste lijst') }}</option>{% endif %}
+        {% for v in vakken_keuze %}<option {% if v == standaard %}selected{% endif %}>{{ v }}</option>{% endfor %}
+        {% if standaard and standaard not in vakken_keuze %}<option selected>{{ standaard }}</option>{% endif %}
+      </select></label>
     </form>
     {% endif %}
   </div>

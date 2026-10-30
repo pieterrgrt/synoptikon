@@ -20,12 +20,11 @@ from ..services import leren, notities
 from ..services.artikelen import Ref, herken
 from ..services.correspondentie import thema_s_voor, wettekst_artikel
 from ..services.helpers import actieve_stelsels, leeg_naar_none
+from ..services.vakken import VAKKEN
 from . import render
 
 router = APIRouter()
 
-# Vakken uit Wunderkammer (Jura, WiSe 2026/27) als suggestie; eigen vakken komen erbij.
-VAKKEN = ("ZR Ia", "W", "GÖ", "UG", "Sachenrecht")
 
 
 def _pid(request: Request) -> int:

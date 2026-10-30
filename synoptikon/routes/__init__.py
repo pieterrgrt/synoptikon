@@ -23,4 +23,7 @@ def render(request: Request, naam: str, status_code: int = 200, **context: Any) 
     # Mijn stelsels (services/stelselkeuze.py): de macro's in _stelsels.html zetten de rest onder 'meer stelsels…'.
     context.setdefault("mijn", profiel.stelsel_codes if profiel is not None else None)
     context.setdefault("wk_url", settings.wk_url)
+    from ..services.vakken import VAKKEN
+
+    context.setdefault("vakken_keuze", VAKKEN)  # voor het vak wisselen onder 'bewaard' (routes/opzoeken.py)
     return templates.TemplateResponse(request, naam, context, status_code=status_code)

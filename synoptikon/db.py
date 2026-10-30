@@ -242,6 +242,7 @@ _NIEUWE_KOLOMMEN = [
     ("wettekst", "aantal", "INTEGER"),
     ("wettekst", "grootte", "INTEGER"),
     ("profiel", "stelsels", "TEXT"),
+    ("profiel", "laatste_vak", "VARCHAR(60)"),
 ]
 
 

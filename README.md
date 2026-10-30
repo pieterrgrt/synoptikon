@@ -193,8 +193,11 @@ Uitgebreider gemotiveerd in de docstring van `synoptikon/models.py`.
    neemt een artikelnummer of woorden (zoekt in deze wet). Bij elk artikel
    ☆ Bewaren.
 9. **Bewaren voor Wunderkammer**: ☆ bij elk artikel (leesweergave, systematiek,
-   artikelpagina, opzoeken) en elke uitspraak maakt met één tik een kaart in de
-   laatst gekozen leerlijst (`POST /leren/snel`; de keuze staat in een cookie);
+   artikelpagina, opzoeken) en elke uitspraak maakt met één tik een kaart in het
+   vak waar het bij hoort (BGB § 1-240 → ZR Ia, § 854-1296 → Sachenrecht, EU → W,
+   AktG/GmbHG/HGB → UG; `services/vakken.py`), anders het vak waarin je het laatst
+   bewaarde (`profiel.laatste_vak`). Een vak is een leerlijst met een `vak`; het
+   vak wisselen is een correctie onder de melding "bewaard" (`POST /leren/vak`).
    ⋯ ernaast kiest kaartsoort en lijst. Lijsten met "naar Wunderkammer" komen
    via `/api/wk/kaarten` in Wunderkammer.
    **Kaarten uit notities**: `scripts/notities.sh` kopieert `~/vault/Humboldt`

@@ -16,7 +16,7 @@ from ..auth import huidig_profiel
 from ..db import get_session
 from ..i18n import _
 from ..models import Kaart, Leerlijst, Opzoeking
-from ..services import claude, herkennen, leren, opzoeken, zoeken
+from ..services import claude, herkennen, leren, opzoeken, vakken, zoeken
 from ..services.artikelen import Ref
 from ..services.helpers import actieve_stelsels
 from ..services.stelselkeuze import stelselkeuze
@@ -59,13 +59,20 @@ def pagina(request: Request, q: str = "", stelsel: str = "", alle: int = 0, p: i
         if p == 1:
             opzoeken.log_lokaal(db, pid, q, uitkomst)
     lijsten = leren.lijsten_van(db, pid)
+    logboek = opzoeken.vandaag(db, pid)
     return render(
         request, "opzoeken.html", q=q, f_stelsel=stelsel, p=max(1, p), uitkomst=uitkomst, resultaat=resultaat,
         stelsels=keuze.alle, beperkt=codes is not None, alle=bool(alle), verborgen=verborgen,
-        logboek=opzoeken.vandaag(db, pid), lijsten=lijsten,
+        logboek=logboek, vak_van=_vak_van(db, pid, logboek), lijsten=lijsten,
         gekozen_lijst=_gekozen(request, lijsten), claude_aan=claude.beschikbaar(), open_id=o, herkend=herkennen.herken_id(q),
         bewaarde_refs=leren.bewaarde_refs(db, pid), per_pagina=PER_PAGINA,
     )
+
+
+def _vak_van(db: Session, pid: int, logboek: list[Opzoeking]) -> dict[int, str | None]:
+    """Het vak waarin een opzoeking bij ☆ terechtkomt: afgeleid uit wat het is, anders het laatst gebruikte."""
+    return {o.id: vakken.kies(db, pid, "", (o.resultaat or {}).get("stelsel"), (o.resultaat or {}).get("wet"),
+                              (o.resultaat or {}).get("nummer")) for o in logboek}
 
 
 def _met_stelsels(functie, *args, stelsels: list[str] | None, **kw):
@@ -124,7 +131,8 @@ def opzoeking(request: Request, oid: int, db: Session = Depends(get_session)):
     if o is None or o.profiel_id != _pid(request):
         raise HTTPException(404)
     lijsten = leren.lijsten_van(db, _pid(request))
-    return render(request, "_opzoeking.html", o=o, lijsten=lijsten, gekozen_lijst=_gekozen(request, lijsten), groot=True)
+    return render(request, "_opzoeking.html", o=o, lijsten=lijsten, gekozen_lijst=_gekozen(request, lijsten), groot=True,
+                  vak_van=_vak_van(db, _pid(request), [o]))
 
 
 @router.post("/opzoeken/{oid}/verwijder")
@@ -172,31 +180,36 @@ def corrigeer(request: Request, oid: int, citeer: str = Form(""), titel: str = F
     return RedirectResponse(f"/opzoeken?o={o.id}#opzoeking-{o.id}", status_code=303)
 
 
-def _lijst_voor(request: Request, db: Session, lijst: str) -> Leerlijst:
-    """De gekozen lijst, of een nieuwe lijst 'Opgezocht' als er nog geen is."""
+def _lijst_voor(request: Request, db: Session, lijst: str, vak: str = "", stelsel: str | None = None, wet: str | None = None,
+                nummer: str | None = None) -> Leerlijst:
+    """De lijst waar een kaart in komt: een expliciet gekozen lijst, anders de lijst van het vak (gekozen, afgeleid uit het
+    onderwerp of het laatst gebruikte; services/vakken.py), anders de laatst gebruikte lijst, anders een nieuwe 'Opgezocht'."""
     pid = _pid(request)
     if lijst.isdigit():
         l = db.get(Leerlijst, int(lijst))
         if l is None or l.profiel_id != pid:
             raise HTTPException(404)
-        return l
-    bestaand = leren.lijsten_van(db, pid)
-    if bestaand:
-        return bestaand[0]
-    l = Leerlijst(profiel_id=pid, naam=_("Opgezocht"), naar_wk=True)
-    db.add(l)
-    db.flush()
+    elif v := vakken.kies(db, pid, vak, stelsel, wet, nummer):
+        l = vakken.lijst_voor(db, pid, v)
+    elif bestaand := leren.lijsten_van(db, pid):
+        l = bestaand[0]
+    else:
+        l = Leerlijst(profiel_id=pid, naam=_("Opgezocht"), naar_wk=True)
+        db.add(l)
+        db.flush()
+    vakken.onthoud(db, pid, l.vak)
     return l
 
 
 @router.post("/opzoeken/{oid}/bewaren")
-def opzoeking_bewaren(request: Request, oid: int, lijst: str = Form(""), terug: str = Form(""), db: Session = Depends(get_session)):
+def opzoeking_bewaren(request: Request, oid: int, lijst: str = Form(""), vak: str = Form(""), terug: str = Form(""),
+                      db: Session = Depends(get_session)):
     """Met één tik een kaart: een artikel als artikelkaart, een uitspraak als arrestkaart (de uitspraak wordt een bron)."""
     o = db.get(Opzoeking, oid)
     if o is None or o.profiel_id != _pid(request):
         raise HTTPException(404)
     r = o.resultaat or {}
-    l = _lijst_voor(request, db, lijst)
+    l = _lijst_voor(request, db, lijst, vak, r.get("stelsel") or None, r.get("wet") or None, r.get("nummer") or None)
     kaarten: list[Kaart] = []
     if r.get("nummer") and r.get("stelsel"):
         kaarten = leren.maak_kaarten(db, l, ["artikel"], ref=Ref(r["stelsel"], r["nummer"], r.get("wet") or None),
@@ -216,25 +229,49 @@ def opzoeking_bewaren(request: Request, oid: int, lijst: str = Form(""), terug: 
 
 
 @router.post("/leren/snel")
-def snel_bewaren(request: Request, lijst: str = Form(""), stelsel: str = Form(""), wet: str = Form(""), nummer: str = Form(""),
-                 bron: str = Form(""), terug: str = Form(""), db: Session = Depends(get_session)):
-    """Eén tik bij een artikel of uitspraak: een kaart in de laatst gekozen lijst (die gaat naar Wunderkammer)."""
+def snel_bewaren(request: Request, lijst: str = Form(""), vak: str = Form(""), stelsel: str = Form(""), wet: str = Form(""),
+                 nummer: str = Form(""), bron: str = Form(""), terug: str = Form(""), db: Session = Depends(get_session)):
+    """Eén tik bij een artikel of uitspraak: een kaart in het vak waar het bij hoort of waar je mee bezig bent (die lijst gaat
+    naar Wunderkammer). Zonder vak en zonder lijst die vak ook niet kent: de laatst gekozen lijst, zoals vroeger."""
     from ..models import Bron
 
-    l = _lijst_voor(request, db, lijst or str(_gekozen(request, leren.lijsten_van(db, _pid(request))) or ""))
+    b = db.get(Bron, int(bron)) if bron.isdigit() else None
+    if not (stelsel and nummer) and b is None:
+        raise HTTPException(400)
+    onderwerp = (stelsel.upper(), wet or None, nummer) if stelsel and nummer else (b.stelsel_code, None, None)
+    if not lijst and not vak and not vakken.kies(db, _pid(request), "", *onderwerp):
+        lijst = str(_gekozen(request, leren.lijsten_van(db, _pid(request))) or "")
+    l = _lijst_voor(request, db, lijst, vak, *onderwerp)
     if stelsel and nummer:
         n = leren.maak_kaarten(db, l, ["artikel"], ref=Ref(stelsel.upper(), nummer, wet or None))
-    elif bron.isdigit() and (b := db.get(Bron, int(bron))):
-        n = leren.maak_kaarten(db, l, ["arrest"], bron=b)
     else:
-        raise HTTPException(400)
+        n = leren.maak_kaarten(db, l, ["arrest"], bron=b)
     doel = _veilig(terug) or "/leren"
     teken = "&" if "?" in doel.split("#")[0] else "?"
     pad, _s, anker = doel.partition("#")
-    resp = RedirectResponse(f"{pad}{teken}bewaard={len(n)}" + (f"#{anker}" if anker else ""), status_code=303)
+    ids = ",".join(str(k.id) for k in n)
+    resp = RedirectResponse(f"{pad}{teken}bewaard={len(n)}&vak={quote(l.vak or '')}&kaarten={ids}" + (f"#{anker}" if anker else ""), status_code=303)
     resp.set_cookie("lijst", str(l.id), max_age=365 * 86400, httponly=True, samesite="lax")
     return resp
 
 
+@router.post("/leren/vak")
+def vak_wisselen(request: Request, vak: str = Form(...), kaarten: str = Form(""), terug: str = Form(""), db: Session = Depends(get_session)):
+    """De correctie na bewaren: de net bewaarde kaarten (id's, kommagescheiden) naar de lijst van een ander vak."""
+    pid = _pid(request)
+    gevonden = [k for i in kaarten.split(",") if i.strip().isdigit() and (k := db.get(Kaart, int(i))) and k.lijst.profiel_id == pid]
+    if not vak.strip() or not gevonden:
+        raise HTTPException(400)
+    vakken.verplaats(db, pid, gevonden, vak)
+    return RedirectResponse(_zonder_melding(_veilig(terug)) or "/leren", status_code=303)
+
+
 def _veilig(terug: str) -> str:
     return terug if terug.startswith("/") and not terug.startswith("//") else ""
+
+
+def _zonder_melding(terug: str) -> str:
+    """Het adres van de pagina zonder de melding 'bewaard' (anders staat die er na het wisselen nog)."""
+    pad, _s, vraag = terug.partition("?")
+    rest = [p for p in vraag.split("&") if p and p.split("=")[0] not in ("bewaard", "vak", "kaarten")]
+    return pad + ("?" + "&".join(rest) if rest else "")
