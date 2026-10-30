@@ -18,7 +18,12 @@ from ..models import Kaart, Leerlijst, Profiel
 from .artikelen import HOOFDWET
 from .notities import LIJST_PREFIX  # lijsten met voorstellen uit notities zijn nooit het doel
 
-VAKKEN = ("ZR Ia", "W", "GÖ", "UG", "Sachenrecht")
+VAKKEN = ("ZR Ia", "W", "GÖ", "UG", "Sachenrecht", "KapMR", "KartR")
+
+# Het laatst gebruikte vak geldt niet over de grens tussen EU-recht en nationaal recht: na een HvJ-arrest in W wordt
+# § 433 BGB niet ook W, en een arrest na § 929 BGB niet Sachenrecht. Vergelijken tussen nationale stelsels mag wel.
+_ALLEEN_EU = {"W"}
+_NIET_EU = {"ZR Ia", "Sachenrecht"}
 
 # Bereiken van BGB-paragrafen: Allgemeiner Teil (ZR Ia) en Sachenrecht (§§ 854-1296).
 _BGB = [(1, 240, "ZR Ia"), (854, 1296, "Sachenrecht")]
@@ -55,8 +60,17 @@ def onthoud(db: Session, profiel_id: int, vak: str | None) -> None:
 
 def kies(db: Session, profiel_id: int, gekozen: str = "", stelsel: str | None = None, wet: str | None = None,
          nummer: str | None = None) -> str | None:
-    """Gekozen vak, anders afgeleid uit het onderwerp, anders het laatst gebruikte."""
-    return gekozen.strip() or afleiden(stelsel, wet, nummer) or laatste(db, profiel_id)
+    """Gekozen vak, anders afgeleid uit het onderwerp, anders het laatst gebruikte (als dat over dit stelsel kan gaan)."""
+    if gekozen.strip():
+        return gekozen.strip()
+    vak = afleiden(stelsel, wet, nummer)
+    if vak:
+        return vak
+    vorig = laatste(db, profiel_id)
+    eu = (stelsel or "").upper() == "EU"
+    if stelsel and ((vorig in _ALLEEN_EU and not eu) or (vorig in _NIET_EU and eu)):
+        return None
+    return vorig
 
 
 def lijst_voor(db: Session, profiel_id: int, vak: str) -> Leerlijst:

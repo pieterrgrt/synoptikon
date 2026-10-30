@@ -305,6 +305,12 @@ OPMERKING = {"claude": "Opgezocht door Claude (niet geverifieerd). ", "cellar": 
              "rechtspraak": "Opgehaald bij rechtspraak.nl. ", "eigen": "Zelf nagekeken. "}
 
 
+def regel_terugval(r: dict) -> str:
+    """Wat op de achterkant van een arrestkaart komt als je geen rechtsregel opgaf. Van EUR-Lex (Cellar) is de
+    toelichting een reeks trefwoorden uit de titel ('Prejudiciële verwijzing – … – Geen'): dat is geen regel, dus niets."""
+    return "" if r.get("bron") == "cellar" else (r.get("toelichting") or "")
+
+
 def bron_uit(db: Session, o: Opzoeking) -> Bron | None:
     """Een uitspraak uit een opzoeking als Bron (rechtspraak), zodat er een arrestkaart van kan komen."""
     r = o.resultaat or {}
@@ -321,6 +327,13 @@ def bron_uit(db: Session, o: Opzoeking) -> Bron | None:
         stelsel = "EU" if stelsel in ("HVJ", "CJEU", "EUGH") else "NL"
     vindplaats = (r.get("vindplaats") or "").strip() or None
     if vindplaats and (b := db.scalar(select(Bron).where(Bron.vindplaats == vindplaats))):
+        # een eerdere, ongeverifieerde gok van Claude ('Niet vastgesteld') wordt bijgewerkt met wat nu wél vaststaat
+        if r.get("bron") in ("cellar", "rechtspraak", "eigen") and (b.opmerking or "").startswith(OPMERKING["claude"]):
+            b.citeertitel = (r.get("citeer") or b.citeertitel)[:200]
+            b.titel = (r.get("titel") or None) and r["titel"][:300]
+            b.url = r.get("url") or b.url
+            b.stelsel_code = stelsel
+            b.opmerking = OPMERKING[r["bron"]] + (r.get("toelichting") or "")
         o.bron_id = b.id
         return b
     b = Bron(stelsel_code=stelsel, soort="rechtspraak", citeertitel=(r.get("citeer") or o.invoer)[:200],

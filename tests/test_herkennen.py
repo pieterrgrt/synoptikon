@@ -233,3 +233,27 @@ def test_kloppend_maken_niet_van_een_ander(client):
         s.flush()
         oid = o.id
     assert client.get(f"/opzoeken/{oid}/corrigeer").status_code == 404
+
+
+def test_ophalen_herstelt_een_oude_gok_van_claude_en_vraagt_een_regel(client, net, monkeypatch):
+    """Na een eerdere 'Niet vastgesteld' van Claude: het ophalen werkt de Bron bij, en de trefwoorden van EUR-Lex worden
+    geen rechtsregel. Zonder regel komt er geen kaart, je gaat terug naar het formulier."""
+    net()
+    monkeypatch.setattr(claude, "loop", lambda *a, **k: pytest.fail("Claude hoort hier niet gebeld te worden"))
+    with database.session() as s:
+        s.add(Bron(stelsel_code="EU", soort="rechtspraak", citeertitel="ECLI:EU:C:2015:806", titel="Niet vastgesteld", taal="nl",
+                   vindplaats="ECLI:EU:C:2015:806", opmerking=opzoeken.OPMERKING["claude"] + "Ik heb niet kunnen vaststellen…"))
+        s.flush()
+        oid = opzoeken.met_claude(s, 1, "ECLI:EU:C:2015:806", achtergrond=False).id
+        assert opzoeken.regel_terugval(s.get(Opzoeking, oid).resultaat) == ""
+    assert "nodig, want de bron geeft alleen trefwoorden" in client.get(f"/opzoeken/{oid}").text
+    r = client.post(f"/opzoeken/{oid}/bewaren", data={"vak": "GÖ"}, follow_redirects=False)
+    assert r.status_code == 303 and f"o={oid}" in r.headers["location"]
+    with database.session() as s:
+        b = s.scalar(select(Bron).where(Bron.vindplaats == "ECLI:EU:C:2015:806"))
+        assert "Kornhaas" in b.citeertitel and b.titel != "Niet vastgesteld" and "Cellar" in b.opmerking
+        assert s.scalar(select(Kaart).where(Kaart.bron_id == b.id)) is None
+    client.post(f"/opzoeken/{oid}/bewaren", data={"vak": "GÖ", "regel": "Die Norm ist insolvenzrechtlich zu qualifizieren."})
+    with database.session() as s:
+        k = s.scalar(select(Kaart).where(Kaart.bron_id == b.id))
+        assert k.antwoord.startswith("Die Norm ist insolvenzrechtlich") and k.lijst.vak == "GÖ"

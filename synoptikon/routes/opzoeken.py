@@ -89,8 +89,8 @@ def _voorbeeld(request: Request, db: Session, o: Opzoeking):
                                                         tekst=r.get("tekst") or None)
     pid = _pid(request)
     regel = markeringen.kern_tekst(db, pid, bron.id, vakken.kies(db, pid, "", r.get("stelsel"))) if bron.id else ""
-    z = leren.voorbeeld(db, "arrest", bron=bron, antwoord=regel or r.get("toelichting") or "")
-    z.regel = regel
+    z = leren.voorbeeld(db, "arrest", bron=bron, antwoord=regel or opzoeken.regel_terugval(r))
+    z.regel, z.terugval = regel, bool(opzoeken.regel_terugval(r))
     return z
 
 
@@ -234,7 +234,12 @@ def opzoeking_bewaren(request: Request, oid: int, lijst: str = Form(""), vak: st
         kaarten = leren.maak_kaarten(db, l, ["artikel"], ref=Ref(r["stelsel"], r["nummer"], r.get("wet") or None), per_lid=True,
                                      notitie=r.get("toelichting") if r.get("bron") == "claude" else None)
     elif bron := opzoeken.bron_uit(db, o):
-        kaarten = leren.maak_kaarten(db, l, ["arrest"], bron=bron, antwoord=regel.strip() or r.get("toelichting") or "")
+        antwoord = regel.strip() or opzoeken.regel_terugval(r)
+        if not (antwoord or bron.tekst or markeringen.kern_tekst(db, _pid(request), bron.id, l.vak)):
+            # geen regel en niets om op terug te vallen: een kaart zonder antwoord heeft geen zin; eerst de regel invullen
+            db.commit()
+            return RedirectResponse(f"/opzoeken?o={o.id}#opzoeking-{o.id}", status_code=303)
+        kaarten = leren.maak_kaarten(db, l, ["arrest"], bron=bron, antwoord=antwoord)
     else:
         kaarten = leren.maak_kaarten(db, l, ["vrij"], vraag=r.get("citeer") or o.invoer,
                                      antwoord="\n\n".join(x for x in (r.get("plaats"), r.get("toelichting")) if x) or "")

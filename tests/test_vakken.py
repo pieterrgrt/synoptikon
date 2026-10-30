@@ -86,9 +86,20 @@ def test_opzoeking_bewaren_in_afgeleid_vak(client):
         oid = o.id
     html = client.get(f"/opzoeken/{oid}").text
     assert '<option selected>W</option>' in html
-    client.post(f"/opzoeken/{oid}/bewaren", data={"vak": ""})
+    client.post(f"/opzoeken/{oid}/bewaren", data={"vak": "", "regel": "Vestigingsvrijheid staat er niet aan in de weg."})
     with database.session() as s:
         o = s.get(Opzoeking, oid)
         assert o.kaart.lijst.vak == "W" and o.kaart.soort == "arrest"
     html = client.get(f"/opzoeken/{oid}").text
     assert "★ Bewaard · W" in html and 'action="/leren/vak"' in html
+
+
+def test_laatste_vak_niet_over_de_grens_eu_nationaal():
+    with database.session() as s:
+        vakken.onthoud(s, 1, "W")
+        assert vakken.kies(s, 1, "", "DE", "BGB", "433") is None  # HvJ-arrest in W, daarna § 433 BGB: niet W
+        assert vakken.kies(s, 1, "", "EU", "Verordening 1346/2000", "4") == "W"
+        vakken.onthoud(s, 1, "Sachenrecht")
+        assert vakken.kies(s, 1, "", "EU") == "W"  # een arrest is afgeleid
+        assert vakken.kies(s, 1, "", "EU", "VO", "12") is None
+        assert vakken.kies(s, 1, "", "NL", "BW", "3:84") == "Sachenrecht"  # vergelijken mag

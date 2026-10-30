@@ -33,8 +33,8 @@
         {% if voorbeeld.kaarten > 1 %}<p class="hint">{{ _('{n} kaarten, één per lid; hier het eerste.', n=voorbeeld.kaarten) }}</p>{% endif %}
         <p class="hint">{{ _('Voorkant') }}</p><div class="serif" dir="auto">{{ voorbeeld.voor | md }}</div>
         <p class="hint">{{ _('Achterkant') }}</p><div class="serif" dir="auto">{{ voorbeeld.achter | md }}</div>
-        {% if r.soort == 'uitspraak' %}<label>{{ _('Rechtsregel') }} <span class="hint">{{ _('wat dit arrest bepaalt, in je eigen woorden; leeg = de toelichting hierboven') }}</span>
-          <textarea name="regel" rows="3" lang="nl">{{ voorbeeld.regel }}</textarea></label>{% endif %}
+        {% if r.soort == 'uitspraak' %}<label>{{ _('Rechtsregel') }} <span class="hint">{% if voorbeeld.terugval %}{{ _('wat dit arrest bepaalt, in je eigen woorden; leeg = de toelichting hierboven') }}{% else %}{{ _('wat dit arrest bepaalt, in je eigen woorden; nodig, want de bron geeft alleen trefwoorden') }}{% endif %}</span>
+          <textarea name="regel" rows="3" lang="nl" {% if not voorbeeld.terugval and not voorbeeld.regel %}required{% endif %}>{{ voorbeeld.regel }}</textarea></label>{% endif %}
       </details>{% endif %}
       <button class="knop klein primair">☆ {{ _('Bewaren') }}</button>
       {% set standaard = vak_van.get(o.id) if vak_van else none %}
