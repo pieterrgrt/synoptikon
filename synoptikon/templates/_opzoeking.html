@@ -3,7 +3,7 @@
 <article class="opzoeking{% if groot %} groot{% endif %}" id="opzoeking-{{ o.id }}" {% if o.status == 'bezig' %}data-bezig="/opzoeken/{{ o.id }}"{% endif %}>
   <header class="opzoeking-kop">
     <span class="opzoeking-invoer">{{ o.invoer }}</span>
-    <span class="stil klein">{{ o.aangemaakt.strftime('%H:%M') }}{% if r.bron == 'claude' %} · Claude{% endif %}</span>
+    <span class="stil klein">{{ o.aangemaakt.strftime('%H:%M') }}{% if r.bron %}{% set herkomst = {'claude': 'Claude', 'cellar': 'EUR-Lex', 'rechtspraak': 'rechtspraak.nl', 'eigen': _('zelf nagekeken')} %}{% if herkomst.get(r.bron) %} · {{ herkomst[r.bron] }}{% endif %}{% endif %}</span>
   </header>
   {% if o.status == 'bezig' %}
   <p class="stil" role="status"><span class="draaier" aria-hidden="true"></span> {{ _('Claude zoekt het op…') }} <noscript><a href="/opzoeken?o={{ o.id }}#opzoeking-{{ o.id }}">{{ _('vernieuwen') }}</a></noscript></p>
@@ -19,6 +19,7 @@
   {% if r.toelichting %}<div class="toelichting">{{ r.toelichting | md }}</div>{% endif %}
   {% if r.zekerheid == 'laag' %}<p class="hint">{{ _('Claude is hier niet zeker van.') }}</p>{% endif %}
   <div class="acties">
+    {% if r.bron and r.bron != 'lokaal' and mag_bewerken %}<a class="knop klein" href="/opzoeken/{{ o.id }}/corrigeer">{{ _('Kloppend maken') }}</a>{% endif %}
     {% if o.kaart_id %}<span class="leren-ster bewaard">★ {{ _('Bewaard') }}</span>
     {% else %}
     <form method="post" action="/opzoeken/{{ o.id }}/bewaren" class="bewaar-form">

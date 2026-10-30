@@ -1,0 +1,27 @@
+{% extends "base.html" %}
+{% import "_stelsels.html" as st with context %}
+{% block titel %}{{ _('Kloppend maken') }} · Synoptikon{% endblock %}
+{% block inhoud %}
+<h1>{{ _('Kloppend maken') }}</h1>
+<p class="stil"><span class="opzoeking-invoer">{{ o.invoer }}</span></p>
+{% if melding %}<p class="melding" role="status">{{ melding }}</p>{% endif %}
+<form method="post" class="formulier">
+  <label>{{ _('Stelsel') }}
+    <select name="stelsel">{% call(s) st.opties(stelsels, r.stelsel) %}<option value="{{ s.code }}" {% if r.stelsel == s.code %}selected{% endif %}>{{ s.code }} · {{ vt(s.naam) }}</option>{% endcall %}</select>
+  </label>
+  <label>{{ _('Citeertitel') }} <span class="hint">HvJ EU 10 december 2015, C-594/14 · HR 18 juni 1982, NJ 1982/659</span>
+    <input name="citeer" required value="{{ r.citeer or '' }}">
+  </label>
+  <label>{{ _('Titel / opschrift / zaaknaam') }} <input name="titel" value="{{ r.titel or '' }}"></label>
+  <label>{{ _('Vindplaats') }} <span class="hint">ECLI · CELEX · NJ · BGHZ</span> <input name="vindplaats" value="{{ r.vindplaats or '' }}"></label>
+  <label>{{ _('Link naar officiële bron') }} <input name="url" type="url" value="{{ r.url or '' }}"></label>
+  <label>{{ _('Plaats') }} <span class="hint">{{ _('gerecht, datum en zaaknummer') }}</span> <input name="plaats" value="{{ r.plaats or '' }}"></label>
+  <label>{{ _('Toelichting') }} <textarea name="toelichting" rows="4" lang="nl">{{ r.toelichting or '' }}</textarea></label>
+  <div class="acties">
+    <button class="knop primair" type="submit">{{ _('Opslaan') }}</button>
+    <button class="knop" type="submit" name="ophalen" value="1" formnovalidate>{{ _('Ophalen uit ECLI of link') }}</button>
+    <a class="knop" href="/opzoeken?o={{ o.id }}#opzoeking-{{ o.id }}">{{ _('Annuleren') }}</a>
+  </div>
+  <p class="hint">{{ _('Wat je hier opslaat telt als zelf nagekeken: de waarschuwing dat het niet geverifieerd is, verdwijnt.') }}</p>
+</form>
+{% endblock %}

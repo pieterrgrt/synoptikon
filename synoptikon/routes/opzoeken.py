@@ -16,7 +16,7 @@ from ..auth import huidig_profiel
 from ..db import get_session
 from ..i18n import _
 from ..models import Kaart, Leerlijst, Opzoeking
-from ..services import claude, leren, opzoeken, zoeken
+from ..services import claude, herkennen, leren, opzoeken, zoeken
 from ..services.artikelen import Ref
 from ..services.helpers import actieve_stelsels
 from ..services.stelselkeuze import stelselkeuze
@@ -63,7 +63,7 @@ def pagina(request: Request, q: str = "", stelsel: str = "", alle: int = 0, p: i
         request, "opzoeken.html", q=q, f_stelsel=stelsel, p=max(1, p), uitkomst=uitkomst, resultaat=resultaat,
         stelsels=keuze.alle, beperkt=codes is not None, alle=bool(alle), verborgen=verborgen,
         logboek=opzoeken.vandaag(db, pid), lijsten=lijsten,
-        gekozen_lijst=_gekozen(request, lijsten), claude_aan=claude.beschikbaar(), open_id=o,
+        gekozen_lijst=_gekozen(request, lijsten), claude_aan=claude.beschikbaar(), open_id=o, herkend=herkennen.herken_id(q),
         bewaarde_refs=leren.bewaarde_refs(db, pid), per_pagina=PER_PAGINA,
     )
 
@@ -111,7 +111,7 @@ def _gekozen(request: Request, lijsten: list[Leerlijst]) -> int | None:
 
 @router.post("/opzoeken/claude")
 def vraag_claude(request: Request, q: str = Form(...), db: Session = Depends(get_session)):
-    if not claude.beschikbaar():
+    if not claude.beschikbaar() and herkennen.herken_id(q) is None:  # een ECLI/CELEX haalt de bron zelf op
         raise HTTPException(503, _("Claude staat uit: er is geen API-sleutel ingesteld."))
     o = opzoeken.met_claude(db, _pid(request), q)
     return RedirectResponse(f"/opzoeken?q={quote(q.strip())}&o={o.id}#opzoeking-{o.id}", status_code=303)
@@ -134,6 +134,42 @@ def opzoeking_weg(request: Request, oid: int, db: Session = Depends(get_session)
         raise HTTPException(404)
     db.delete(o)
     return RedirectResponse("/opzoeken", status_code=303)
+
+
+def _eigen(request: Request, db: Session, oid: int) -> Opzoeking:
+    o = db.get(Opzoeking, oid)
+    if o is None or o.profiel_id != _pid(request) or o.status != "klaar":
+        raise HTTPException(404)
+    return o
+
+
+@router.get("/opzoeken/{oid}/corrigeer")
+def corrigeer_form(request: Request, oid: int, db: Session = Depends(get_session)):
+    """'Kloppend maken': de gevonden gegevens in een formulier, om zelf te verbeteren."""
+    o = _eigen(request, db, oid)
+    return render(request, "opzoeking_corrigeer.html", o=o, r=o.resultaat or {}, stelsels=actieve_stelsels(db),
+                  herkend=herkennen.herken_id(" ".join(str((o.resultaat or {}).get(k) or "") for k in ("vindplaats", "url"))))
+
+
+@router.post("/opzoeken/{oid}/corrigeer")
+def corrigeer(request: Request, oid: int, citeer: str = Form(""), titel: str = Form(""), vindplaats: str = Form(""),
+              url: str = Form(""), plaats: str = Form(""), toelichting: str = Form(""), stelsel: str = Form(""),
+              ophalen: str = Form(""), db: Session = Depends(get_session)):
+    """Opslaan als eigen gegevens (`bron: "eigen"`), of met `ophalen` de ECLI/CELEX uit de link of vindplaats opnieuw ophalen."""
+    o = _eigen(request, db, oid)
+    velden = dict(citeer=citeer, titel=titel, vindplaats=vindplaats, url=url, plaats=plaats, toelichting=toelichting)
+    if ophalen:
+        i = herkennen.herken_id(f"{vindplaats} {url}")
+        feiten = i and herkennen.zoek(i)
+        if not feiten:
+            return render(request, "opzoeking_corrigeer.html", o=o, r={**(o.resultaat or {}), **velden, "stelsel": stelsel or (o.resultaat or {}).get("stelsel")},
+                          stelsels=actieve_stelsels(db), herkend=i, melding=_("Daar is bij de bron niets over gevonden."))
+        velden = {k: feiten.get(k, "") for k in opzoeken.VELDEN}
+        stelsel = feiten["stelsel"]
+        return render(request, "opzoeking_corrigeer.html", o=o, r={**(o.resultaat or {}), **velden, "stelsel": stelsel},
+                      stelsels=actieve_stelsels(db), herkend=i, melding=_("Opgehaald; controleer en bewaar."))
+    opzoeken.corrigeer(db, o, velden, stelsel)
+    return RedirectResponse(f"/opzoeken?o={o.id}#opzoeking-{o.id}", status_code=303)
 
 
 def _lijst_voor(request: Request, db: Session, lijst: str) -> Leerlijst:

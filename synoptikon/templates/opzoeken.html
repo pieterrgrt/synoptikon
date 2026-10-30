@@ -79,12 +79,17 @@
 {% endif %}
 
 {# Claude #}
-{% if claude_aan and mag_bewerken and not open_id %}
+{% if (claude_aan or herkend) and mag_bewerken and not open_id %}
 <form method="post" action="/opzoeken/claude" class="claude-vraag">
   <input type="hidden" name="q" value="{{ q }}">
   {% if not uitkomst.raak %}<p>{{ _('Synoptikon vindt hier zelf niets dat precies past.') }}</p>{% endif %}
+  {% if herkend %}
+  <button class="knop {% if not uitkomst.raak %}primair{% endif %}">{{ _('Ophalen bij {bron}', bron=herkend.bron) }}</button>
+  <span class="hint">{{ herkend.waarde }} · {{ _('zaaknaam, datum, zaaknummer en link komen rechtstreeks uit de bron; Claude alleen als de bron niets geeft.') }}</span>
+  {% else %}
   <button class="knop {% if not uitkomst.raak %}primair{% endif %}">{{ _('Claude laten opzoeken') }}</button>
   <span class="hint">{{ _('Waar het staat, wat er staat, en wat het betekent; wettekst uit de lokale import, rechtspraak van het web.') }}</span>
+  {% endif %}
 </form>
 {% endif %}
 

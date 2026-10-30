@@ -8,6 +8,7 @@ een uitspraak ("Baris/Riezenkamp", "Costa/ENEL", "BGHZ 63, 369", een ECLI). Eers
 3. uitspraken onder de eigen bronnen;
 4. EU-handelingen op roepnaam, nummer of titel.
 
+Een ECLI of CELEX-nummer wordt eerst deterministisch opgehaald (`herkennen`: Cellar voor EU, rechtspraak.nl voor NL).
 Vindt het geen artikel, of gaat het om rechtspraak die er niet in staat, dan zoekt Claude het op (`met_claude`): waar het
 staat, wat er staat, en een korte toelichting. Wettekst komt dan nog steeds uit de lokale import; alleen bij een
 uitspraak komt de tekst van het web, gemarkeerd als niet geverifieerd.
@@ -27,7 +28,7 @@ from sqlalchemy import or_, select, text
 from sqlalchemy.orm import Session
 
 from ..models import Bron, EuHandeling, Opzoeking, Wettekst, WettekstArtikel
-from . import claude, eu, eunamen, wetboek
+from . import claude, eu, eunamen, herkennen, wetboek
 from .artikelen import Ref, herken
 from .correspondentie import Context, wettekst_artikel, zoek_artikel
 from .zoeken import fts_query
@@ -259,7 +260,9 @@ def _verrijk(db: Session, r: dict) -> dict:
 
 
 def met_claude(db: Session, profiel_id: int, q: str, achtergrond: bool = True) -> Opzoeking:
-    """Maakt een Opzoeking en laat Claude haar invullen (standaard in een eigen thread; de pagina vraagt de stand op)."""
+    """Maakt een Opzoeking en laat haar invullen (standaard in een eigen thread; de pagina vraagt de stand op).
+
+    Een ECLI of CELEX gaat eerst naar de bron zelf (`herkennen`); Claude komt pas als die niets geeft."""
     o = Opzoeking(profiel_id=profiel_id, invoer=q.strip()[:400], status="bezig")
     db.add(o)
     db.commit()
@@ -277,6 +280,10 @@ def _vul(oid: int, db: Session | None = None) -> None:
     db = db or session_factory()()
     try:
         o = db.get(Opzoeking, oid)
+        if (i := herkennen.herken_id(o.invoer)) and (feiten := herkennen.zoek(i)):
+            o.resultaat, o.status = feiten, "klaar"
+            db.commit()
+            return
         try:
             r, _usd = claude.loop(db, "opzoeken", SYSTEEM, f"Opzoeken: {o.invoer}", SCHEMA, effort="low", max_rondes=6,
                                   max_zoekacties=3, max_tokens=16000)
@@ -292,6 +299,10 @@ def _vul(oid: int, db: Session | None = None) -> None:
     finally:
         if eigen:
             db.close()
+
+
+OPMERKING = {"claude": "Opgezocht door Claude (niet geverifieerd). ", "cellar": "Opgehaald bij EUR-Lex (Cellar). ",
+             "rechtspraak": "Opgehaald bij rechtspraak.nl. ", "eigen": "Zelf nagekeken. "}
 
 
 def bron_uit(db: Session, o: Opzoeking) -> Bron | None:
@@ -315,10 +326,43 @@ def bron_uit(db: Session, o: Opzoeking) -> Bron | None:
     b = Bron(stelsel_code=stelsel, soort="rechtspraak", citeertitel=(r.get("citeer") or o.invoer)[:200],
              titel=(r.get("titel") or None) and r["titel"][:300], tekst=r.get("tekst") or None,
              taal={"DE": "de", "FR": "fr", "EU": "nl", "NL": "nl"}.get(stelsel, "nl"),
-             vindplaats_type="ECLI" if vindplaats and vindplaats.upper().startswith("ECLI") else None,
+             vindplaats_type=_vindplaats_type(vindplaats),
              vindplaats=vindplaats and vindplaats[:200], url=(r.get("url") or None),
-             opmerking="Opgezocht door Claude (niet geverifieerd). " + (r.get("toelichting") or ""))
+             opmerking=OPMERKING.get(r.get("bron"), OPMERKING["claude"]) + (r.get("toelichting") or ""))
     db.add(b)
     db.flush()
     o.bron_id = b.id
     return b
+
+
+def _vindplaats_type(vindplaats: str | None) -> str | None:
+    i = herkennen.herken_id(vindplaats or "")
+    return i.soort.upper() if i else None
+
+
+# Wat in het formulier 'kloppend maken' te corrigeren is; de rest van de opzoeking blijft zoals ze was.
+VELDEN = ("citeer", "titel", "vindplaats", "url", "plaats", "toelichting")
+
+
+def corrigeer(db: Session, o: Opzoeking, velden: dict[str, str], stelsel: str | None = None) -> Opzoeking:
+    """Zelf verbeteren: de opzoeking wordt `bron: "eigen"`, zodat 'niet geverifieerd' verdwijnt.
+
+    Hoort er al een Bron bij (de uitspraak is eerder bewaard), dan wordt die bijgewerkt; anders komt ze er pas bij het
+    bewaren (`bron_uit`), met de gecorrigeerde gegevens."""
+    r = dict(o.resultaat or {})
+    for k in VELDEN:
+        if k in velden:
+            r[k] = (velden[k] or "").strip()
+    if stelsel:
+        r["stelsel"] = stelsel.strip().upper()
+    r.update(bron="eigen", zekerheid="hoog")
+    o.resultaat, o.status, o.fout = r, "klaar", None
+    if o.bron_id and (b := db.get(Bron, o.bron_id)):
+        b.citeertitel = (r.get("citeer") or b.citeertitel)[:200]
+        b.titel = (r.get("titel") or None) and r["titel"][:300]
+        b.vindplaats = (r.get("vindplaats") or None) and r["vindplaats"][:200]
+        b.vindplaats_type = _vindplaats_type(b.vindplaats)
+        b.url = r.get("url") or None
+        b.opmerking = OPMERKING["eigen"] + (r.get("toelichting") or "")
+    db.flush()
+    return o

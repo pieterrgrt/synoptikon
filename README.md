@@ -156,6 +156,10 @@ Uitgebreider gemotiveerd in de docstring van `synoptikon/models.py`.
    import, rechtspraak van het web, gemarkeerd) en een korte toelichting. Wat
    je opzoekt komt in "Vandaag opgezocht" (tabel `opzoeking`), het logboek van
    een college; elk item gaat met één tik als kaart naar een leerlijst.
+   Een ECLI of CELEX-nummer (ook in een geplakte EUR-Lex-link) gaat eerst naar de
+   bron zelf (`services/herkennen.py`: de Cellar voor `ECLI:EU`/sector 6,
+   rechtspraak.nl voor `ECLI:NL`); Claude alleen als die niets geeft. Met
+   "Kloppend maken" corrigeer je een opzoeking zelf; ze telt dan als `eigen`.
 5. **Artikelen** (`/artikelen`, `/artikelen/NL/3:84`): typ een artikelnummer
    (`3:84`, `§ 929`, `art. 1196 C. civ.`, `1112-1`) en zie de plaats in de
    systematiek, de tekst (uit een bron of een geïmporteerde wet) en per thema
