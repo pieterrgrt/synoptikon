@@ -55,6 +55,9 @@
   --fam-gemengd: #6a4c7d;
   --fam-common_law: #2e6650;
   --fam-supranationaal: #2b4c9a;
+  --fam-oost_aziatisch: #8a5a2b;
+  --fam-post_sovjet: #5c6b7a;
+  --fam-islamitisch: #4a7a52;
   --fam-overig: #85806f;
 
   --radius: 3px;
@@ -71,7 +74,9 @@
     --ok: #7fc48d; --fout: #e08a8a; --mark: #5a4a12;
     --rel-equivalent: #7fc48d; --rel-deels: #e0b35a; --rel-faux_ami: #ee6b74; --rel-geen: #8a8a8a;
     --fam-romaans: #e0937f; --fam-germaans: #9fb2cc; --fam-nordisch: #8ec0de; --fam-gemengd: #c3a6d6;
-    --fam-common_law: #8fcdb2; --fam-supranationaal: #9db4ec; --fam-overig: #7f7a70;
+    --fam-common_law: #8fcdb2; --fam-supranationaal: #9db4ec;
+    --fam-oost_aziatisch: #d6a878; --fam-post_sovjet: #a7b4c2; --fam-islamitisch: #92c79a;
+    --fam-overig: #7f7a70;
   }
 }
 :root[data-theme="dark"] {
@@ -83,7 +88,9 @@
   --ok: #7fc48d; --fout: #e08a8a; --mark: #5a4a12;
   --rel-equivalent: #7fc48d; --rel-deels: #e0b35a; --rel-faux_ami: #ee6b74; --rel-geen: #8a8a8a;
   --fam-romaans: #e0937f; --fam-germaans: #9fb2cc; --fam-nordisch: #8ec0de; --fam-gemengd: #c3a6d6;
-  --fam-common_law: #8fcdb2; --fam-supranationaal: #9db4ec; --fam-overig: #7f7a70;
+  --fam-common_law: #8fcdb2; --fam-supranationaal: #9db4ec;
+    --fam-oost_aziatisch: #d6a878; --fam-post_sovjet: #a7b4c2; --fam-islamitisch: #92c79a;
+    --fam-overig: #7f7a70;
 }
 
 * { box-sizing: border-box; }
@@ -381,6 +388,9 @@ h1 .vlag, h2 .vlag { height: .72em; }
 .fam-gemengd { --fam: var(--fam-gemengd); }
 .fam-common_law { --fam: var(--fam-common_law); }
 .fam-supranationaal { --fam: var(--fam-supranationaal); }
+.fam-oost_aziatisch { --fam: var(--fam-oost_aziatisch); }
+.fam-post_sovjet { --fam: var(--fam-post_sovjet); }
+.fam-islamitisch { --fam: var(--fam-islamitisch); }
 .fam-overig { --fam: var(--fam-overig); }
 .kolomkop { border-bottom-color: var(--fam, var(--inkt)); }
 .thema-kolom h4 { border-bottom-color: var(--fam, var(--inkt)); color: var(--inkt-2); }
@@ -659,3 +669,56 @@ mark.markering { color: inherit; border-radius: 2px; padding: 0 .1em; cursor: po
   padding: .4rem; background: var(--papier); border: 1px solid var(--lijn); border-radius: var(--radius); box-shadow: 0 2px 10px rgba(0, 0, 0, .18); }
 .markeer-menu input, .markeer-menu select { flex: 1 1 8rem; width: auto; font-size: .85rem; padding: .2rem .4rem; }
 .markeer-menu .knop { color: var(--inkt); }
+
+/* --- Bibliotheekoverzicht op de hoofdpagina (_bibliotheek.html) ------------------------------------------------ */
+
+.bibliotheek { margin: 0 0 1.8rem; }
+.bib-kop { display: flex; flex-wrap: wrap; align-items: baseline; gap: .2rem .7rem; margin-bottom: .5rem; }
+.bib-cijfers { font-family: var(--sans); font-size: .82rem; font-weight: 400; color: var(--inkt-2); letter-spacing: .01em; }
+.bib-cijfers b { color: var(--inkt); font-variant-numeric: tabular-nums; }
+
+/* De kaart. Oppervlaktegetrouw (Equal Earth), dus de verhouding staat vast. */
+.wereld { margin: 0 0 1.1rem; }
+.wereld svg { display: block; width: 100%; height: auto; }
+.wereld-achter path { fill: var(--papier-3); stroke: none; }
+.wereld-eu { fill: none; stroke: var(--fam-supranationaal); stroke-width: .012; stroke-linejoin: round; opacity: .75; }
+.wereld-land path { fill: var(--fam, var(--inkt-3)); stroke: var(--fam, var(--inkt-3)); stroke-width: .004; transition: fill-opacity .12s; }
+.wereld-land.is-leeg path { fill-opacity: 0; stroke-opacity: .55; stroke-dasharray: .02 .02; }
+.wereld-land:hover path, .wereld-land:focus-visible path { fill-opacity: 1; stroke-width: .012; }
+.wereld-land:focus-visible { outline: none; }
+.wereld figcaption { margin-top: .3rem; }
+
+/* De boekenkast: een schap per rechtsfamilie, een rug per wet. */
+.kast { display: flex; flex-direction: column; gap: .7rem; }
+.schap-kop { display: flex; flex-wrap: wrap; align-items: baseline; gap: .2rem .6rem; margin-bottom: .25rem; }
+.schap-naam { font-family: var(--sans); font-size: .85rem; color: var(--fam, var(--inkt-2)); font-weight: 600; }
+.ruggen {
+  display: flex; align-items: flex-end; gap: 2px;
+  padding-bottom: .3rem; border-bottom: 2px solid var(--lijn);   /* de plank */
+  overflow-x: auto; scrollbar-width: thin;
+}
+.rug {
+  flex: 0 0 auto; width: var(--rug, 2rem); height: 6.4rem;
+  display: flex; flex-direction: column; justify-content: space-between; align-items: center;
+  padding: .3rem .1rem; border-radius: 2px 2px 0 0;
+  background: var(--fam, var(--inkt-3)); color: var(--papier);
+  text-decoration: none; overflow: hidden;
+  box-shadow: inset -1px 0 0 rgba(0,0,0,.14), inset 1px 0 0 rgba(255,255,255,.12);
+}
+.rug:hover, .rug:focus-visible { outline: none; transform: translateY(-3px); box-shadow: 0 2px 6px rgba(0,0,0,.18); }
+.rug-naam {
+  writing-mode: vertical-rl; text-orientation: mixed; transform: rotate(180deg);   /* titel van onder naar boven */
+  font-family: var(--sans); font-size: .68rem; line-height: 1.1; letter-spacing: .01em;
+  white-space: nowrap; overflow: hidden; text-overflow: ellipsis; max-height: 5.2rem;
+}
+.rug-code { font-family: var(--mono); font-size: .56rem; opacity: .75; }
+.rug-rest {
+  background: none; color: var(--inkt-3); font-family: var(--mono); font-size: .7rem;
+  width: auto; min-width: 2.2rem; height: 2.2rem; align-self: flex-end; box-shadow: none;
+  align-items: center; justify-content: center; padding: 0 .3rem;
+}
+@media (prefers-reduced-motion: reduce) { .rug:hover, .rug:focus-visible { transform: none; } }
+@media (max-width: 34rem) {
+  .rug { height: 5rem; }
+  .rug-naam { font-size: .62rem; max-height: 3.8rem; }
+}

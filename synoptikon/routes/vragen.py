@@ -7,7 +7,7 @@ from sqlalchemy.orm import Session, selectinload
 
 from ..db import get_session
 from ..models import Antwoord, AntwoordBron, Begrip, Bron, Concordantie, Notitie, Stelsel, Vraag, VraagBegrip
-from ..services import claude, export, onderzoek
+from ..services import bibliotheek, claude, export, onderzoek
 from ..services.helpers import actieve_stelsels, leeg_naar_none, unieke_slug
 from ..services.stelselkeuze import ook_uit, stelselkeuze
 from . import render
@@ -52,7 +52,8 @@ def index(request: Request, db: Session = Depends(get_session)):
     gebieden: dict[str, list[Vraag]] = {}
     for v in vragen:
         gebieden.setdefault(v.rechtsgebied or "Overig", []).append(v)
-    return render(request, "index.html", gebieden=gebieden, aantal=len(vragen))
+    return render(request, "index.html", gebieden=gebieden, aantal=len(vragen),
+                  bib=bibliotheek.overzicht(db), wereld=bibliotheek.kaart())
 
 
 @router.get("/vragen/nieuw")

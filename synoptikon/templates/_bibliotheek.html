@@ -1,0 +1,59 @@
+{# Het bibliotheekoverzicht op de hoofdpagina: wat er aan wetteksten in de kast staat.
+   Verwacht `bib` (services.bibliotheek.overzicht) en `wereld` (services.bibliotheek.kaart).
+   Twee weergaven van dezelfde cijfers: een wereldkaart per stelsel en een boekenkast per rechtsfamilie. #}
+{% if not bib.leeg %}
+{% set stelsel_codes = bib.landen | map(attribute='code') | list %}
+<section class="bibliotheek">
+  <h2 class="bib-kop">{{ _('In de kast') }}
+    <span class="bib-cijfers">
+      <b>{{ '{:,}'.format(bib.wetten).replace(',', '.') }}</b> {{ _('wetten') }} ·
+      <b>{{ '{:,}'.format(bib.artikelen).replace(',', '.') }}</b> {{ _('artikelen') }} ·
+      <b>{{ bib.stelsels }}</b> {{ _('van {n} stelsels', n=bib.stelsels_totaal) }}
+    </span>
+  </h2>
+
+  {% if wereld.landen %}
+  <figure class="wereld">
+    <svg viewBox="0 0 {{ wereld.breedte }} {{ wereld.hoogte }}" role="img"
+         aria-label="{{ _('Wereldkaart: elk stelsel getint naar hoeveel wetteksten ervan zijn opgeslagen') }}">
+      {# 1. de rest van de wereld, heel licht: zonder dat is de kaart niet te herkennen #}
+      <g class="wereld-achter">
+        {% for code, pad in wereld.landen.items() if code not in stelsel_codes %}<path d="{{ pad }}"/>{% endfor %}
+      </g>
+      {# 2. de EU als ring om de lidstaten: EU-recht geldt daar naast het nationale recht #}
+      {% if wereld.landen.EU %}<path class="wereld-eu" d="{{ wereld.landen.EU }}"/>{% endif %}
+      {# 3. de stelsels zelf, in hun familiekleur; lege stelsels alleen als omtrek #}
+      {% for l in bib.landen | reverse if wereld.landen[l.code] is defined and l.code != 'EU' %}
+      <a href="/stelsels/{{ l.code }}" class="wereld-land fam-{{ l.familie or 'overig' }}{% if l.leeg %} is-leeg{% endif %}">
+        <title>{{ vt(l.naam) }} ({{ l.code }}) — {% if l.leeg %}{{ _('nog niets opgeslagen') }}{% else %}{{ '{:,}'.format(l.artikelen).replace(',', '.') }} {{ _('artikelen') }}{% endif %}</title>
+        <path d="{{ wereld.landen[l.code] }}" fill-opacity="{{ l.tint }}"/>
+      </a>
+      {% endfor %}
+    </svg>
+    <figcaption class="stil klein">{{ _('Donkerder = meer opgeslagen. De ring is de Europese Unie: dat recht geldt naast het nationale.') }}</figcaption>
+  </figure>
+  {% endif %}
+
+  <div class="kast">
+    {% for sch in bib.schappen %}
+    <div class="schap fam-{{ sch.sleutel }}">
+      <div class="schap-kop">
+        <span class="schap-naam" title="{{ sch.omschrijving }}">{{ sch.naam }}</span>
+        <span class="stil klein">{{ '{:,}'.format(sch.wetten).replace(',', '.') }} {{ _('wetten') }} ·
+          {{ '{:,}'.format(sch.artikelen).replace(',', '.') }} {{ _('artikelen') }}</span>
+      </div>
+      <div class="ruggen">
+        {% for r in sch.ruggen %}
+        <a class="rug" href="{{ r.url }}" style="--rug: {{ r.breedte }}rem"
+           title="{{ r.titel }} — {{ '{:,}'.format(r.artikelen).replace(',', '.') }} {{ _('artikelen') }}">
+          <span class="rug-naam">{{ r.naam }}</span>
+          <span class="rug-code">{{ r.stelsel }}</span>
+        </a>
+        {% endfor %}
+        {% if sch.rest %}<span class="rug rug-rest" title="{{ _('niet alle wetten passen op het schap') }}">+{{ '{:,}'.format(sch.rest).replace(',', '.') }}</span>{% endif %}
+      </div>
+    </div>
+    {% endfor %}
+  </div>
+</section>
+{% endif %}
