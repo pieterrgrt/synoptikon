@@ -241,3 +241,25 @@ def test_wunderkammer_krijgt_de_kaarten_in_de_rechtstaal(anoniem, verdrag):
         s.commit()
 
 
+
+
+def test_een_bron_in_de_verkeerde_taal_verliest_van_de_wettekst(verdrag):
+    """Art. 49 AEUV stond als Nederlandse wetsbron bewaard en versloeg daarmee de Duitse wettekst."""
+    from synoptikon.services.correspondentie import Context
+
+    with database.session() as s:
+        b = Bron(stelsel_code="EU", soort="wet", citeertitel="VWEU 49 (bewaard)", titel="VWEU", taal="nl",
+                 vindplaats="VWEU 49", tekst="In het kader van de volgende bepalingen …")
+        s.add(b)
+        s.flush()
+
+        i18n.zet_taal("nl")
+        heen = Context(s).tekst(Ref("EU", "49", "VWEU"))
+        i18n.zet_rechtstaal("de")
+        terug = Context(s).tekst(Ref("EU", "49", "VWEU"))
+
+        s.delete(b)
+        s.commit()
+
+    assert heen is not None and heen.tekst.startswith("In het kader")        # zonder rechtstaal wint de bron
+    assert terug is not None and terug.tekst == "Beschränkungen sind verboten."
