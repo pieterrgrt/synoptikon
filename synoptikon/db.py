@@ -233,6 +233,7 @@ _NIEUWE_KOLOMMEN = [
     ("profiel", "wunderkammer", "BOOLEAN NOT NULL DEFAULT 0"),
     ("profiel", "wk_gezien", "DATETIME"),
     ("profiel", "zelf_aangemeld", "BOOLEAN NOT NULL DEFAULT 0"),
+    ("profiel", "rechtstaal", "VARCHAR(5)"),
     ("leerlijst", "zichtbaar", "VARCHAR(10) NOT NULL DEFAULT 'prive'"),
     ("leerlijst", "deelcode", "VARCHAR(16)"),
     ("leerlijst", "gedeeld_op", "DATETIME"),

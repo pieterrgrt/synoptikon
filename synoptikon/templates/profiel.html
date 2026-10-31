@@ -16,6 +16,13 @@
   <label>{{ _('Taal') }}
     <select name="taal">{% for k, v in TALEN.items() %}<option value="{{ k }}" lang="{{ k }}" {% if k == p.taal %}selected{% endif %}>{{ v }}</option>{% endfor %}</select>
   </label>
+  <label>{{ _('Taal van het recht') }}
+    <select name="rechtstaal">
+      <option value="">{{ _('dezelfde als de interface') }}</option>
+      {% for k, v in TALEN.items() %}<option value="{{ k }}" lang="{{ k }}" {% if k == p.rechtstaal %}selected{% endif %}>{{ v }}</option>{% endfor %}
+    </select>
+    <span class="hint">{{ _('Welke taalversie van een verdrag je krijgt, hoe een wet wordt afgekort (VWEU of AEUV) en in welke taal je kaarten staan. Studeer je in Berlijn, dan zet je dit op Duits en blijft de interface Nederlands.') }}</span>
+  </label>
   <div class="acties"><button class="knop primair">{{ _('Opslaan') }}</button></div>
 </form>
 

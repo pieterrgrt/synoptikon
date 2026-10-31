@@ -15,7 +15,7 @@ from sqlalchemy import select
 from sqlalchemy.orm import Session, selectinload
 
 from .. import md
-from ..i18n import _
+from ..i18n import _, in_taal, rechtstaal
 from ..models import ARRESTSOORTEN, ARTIKELSOORTEN, FASEN, Bron, Kaart, KaartStand, Leerlijst, Markering, Profiel, Stelsel, now
 from . import correspondentie as corr
 from . import markeringen as mk
@@ -259,6 +259,14 @@ class Bouwer:
         return next((x for n, x in leden(t.tekst) if n == lid), t.tekst) if lid else t.tekst
 
     def zijden(self, k: Kaart) -> Zijden:
+        """De twee zijden van een kaart, opgebouwd in de rechtstaal.
+
+        De vaste zinnen ('Wat staat erin?') horen bij de wettekst en niet bij de interface: wie de Duitse AEUV
+        leert, leest er geen Nederlandse vraag boven."""
+        with in_taal(rechtstaal()):
+            return self._zijden(k)
+
+    def _zijden(self, k: Kaart) -> Zijden:
         ref = ref_van(k)
         wa = self._artikel(ref) if ref else None
         url = ref.url if ref else (f"/bronnen/{k.bron_id}" if k.bron_id else None)
