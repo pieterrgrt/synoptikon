@@ -332,7 +332,7 @@ def cmd_serve(args) -> int:
 
 
 def main(argv: list[str] | None = None) -> int:
-    p = argparse.ArgumentParser(prog="synoptikon", description="Synoptikon — rechtsvergelijking naast elkaar")
+    p = argparse.ArgumentParser(prog="synoptikon", description="Synoptikon")
     sub = p.add_subparsers(dest="opdracht", required=True)
 
     sub.add_parser("init", help="database aanmaken").set_defaults(fn=cmd_init)

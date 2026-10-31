@@ -7,7 +7,6 @@
     <input type="search" name="q" placeholder="{{ _('Wet of artikel: StGB, Art. 20 GG, AVG…') }}" aria-label="{{ _('Wet of artikel opzoeken') }}">
   </form>
 </div>
-<p class="hint">{{ _('Per stelsel de belangrijkste wetten; elke wet lees je hetzelfde: inhoudsopgave, afdeling, artikel, en bij elk artikel ☆ om het te bewaren. De systematiek laat zien waar een onderwerp in het stelsel staat.') }}</p>
 <nav class="stelsel-sprong" aria-label="{{ _('Stelsels') }}">{% for f in families %}{% for s in f.stelsels %}<a href="#stelsel-{{ s.code }}">{{ vlag(s.code) }}{{ s.code }}</a>{% endfor %}{% endfor %}</nav>
 {% for f in families %}
 <section class="blok familie-blok fam-{{ f.sleutel or 'overig' }}">
