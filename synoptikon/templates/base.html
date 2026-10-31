@@ -19,6 +19,7 @@
     <a href="/opzoeken" {% if huidig_pad.startswith('/opzoeken') %}aria-current="page"{% endif %}>{{ _('Opzoeken') }}</a>
     <a href="/stelsels" {% if huidig_pad.startswith('/stelsels') or huidig_pad.startswith('/eu') or huidig_pad.startswith('/wetteksten') %}aria-current="page"{% endif %}>{{ _('Wetten') }}</a>
     <a href="/" {% if huidig_pad == '/' or huidig_pad.startswith('/vragen') %}aria-current="page"{% endif %}>{{ _('Vragen') }}</a>
+    <a href="/bewaard" {% if huidig_pad.startswith('/bewaard') %}aria-current="page"{% endif %}>{{ _('Bewaard') }}</a>
     <a href="/artikelen" {% if huidig_pad.startswith('/artikelen') or huidig_pad.startswith('/concordantie') %}aria-current="page"{% endif %}>{{ _('Vergelijken') }}</a>
     <a href="/begrippen" {% if huidig_pad.startswith('/begrippen') %}aria-current="page"{% endif %}>{{ _('Begrippen') }}</a>
     <a href="/leren" {% if huidig_pad.startswith('/leren') %}aria-current="page"{% endif %}>{{ _('Leren') }}</a>

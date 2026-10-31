@@ -722,3 +722,23 @@ mark.markering { color: inherit; border-radius: 2px; padding: 0 .1em; cursor: po
   .rug { height: 5rem; }
   .rug-naam { font-size: .62rem; max-height: 3.8rem; }
 }
+
+/* --- /bewaard: wat jij zelf bewaarde, per vak ------------------------------------------------------------------ */
+
+.vaktabs { display: flex; flex-wrap: wrap; gap: .1rem .4rem; margin: 0 0 1rem; font-family: var(--sans); font-size: .85rem; }
+.vaktabs a { padding: .15rem .5rem; border-radius: 2px; text-decoration: none; color: var(--inkt-2); }
+.vaktabs a:hover { background: var(--papier-2); }
+.vaktabs a[aria-current="page"] { background: var(--papier-3); color: var(--inkt); font-weight: 600; }
+.bewaard-vak h2 { display: flex; flex-wrap: wrap; align-items: baseline; gap: .2rem .6rem; }
+.bewaard-lijst { list-style: none; margin: .3rem 0 0; padding: 0; }
+.bewaard-lijst li {
+  display: flex; flex-wrap: wrap; align-items: baseline; gap: .2rem .6rem;
+  padding: .28rem 0 .28rem .55rem; border-bottom: 1px solid var(--lijn);
+  border-left: 3px solid var(--fam, var(--lijn));
+}
+.bewaard-lijst li:last-child { border-bottom: none; }
+.bewaard-citeer { font-family: var(--serif); font-size: 1rem; text-decoration: none; }
+.bewaard-opschrift { font-family: var(--serif); color: var(--inkt-2); font-size: .9rem; }
+.bewaard-geen-tekst { font-style: italic; }
+.bewaard-rechtspraak { margin-top: .6rem; }
+.bewaard-rechtspraak .bewaard-citeer { font-style: italic; }

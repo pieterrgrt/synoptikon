@@ -1,0 +1,50 @@
+{% extends "base.html" %}
+{% block titel %}{{ _('Bewaard') }} · Synoptikon{% endblock %}
+{% block inhoud %}
+<div class="paginakop">
+  <h1>{{ _('Bewaard') }}</h1>
+  <span class="bib-cijfers">
+    <b>{{ ov.artikelen }}</b> {{ _('artikelen') }} · <b>{{ ov.uitspraken }}</b> {{ _('uitspraken') }}
+    {%- if ov.stelsels %} · {{ ov.stelsels | length }} {{ _('stelsels') }}{% endif %}
+  </span>
+</div>
+{% if vakken | length > 1 %}
+<nav class="vaktabs" aria-label="{{ _('Vakken') }}">
+  <a href="/bewaard" {% if not gekozen %}aria-current="page"{% endif %}>{{ _('Alles') }}</a>
+  {% for v in vakken %}<a href="/bewaard?vak={{ v | urlencode }}" {% if gekozen == v %}aria-current="page"{% endif %}>{{ v or _('Zonder vak') }}</a>{% endfor %}
+</nav>
+{% endif %}
+{% if ov.leeg %}
+<p class="stil">{{ _('Nog niets bewaard. Zoek een artikel of een uitspraak op en bewaar het in een vak.') }}
+  <a href="/opzoeken">{{ _('Opzoeken') }} →</a></p>
+{% endif %}
+{% for g in ov.groepen %}
+<section class="blok bewaard-vak">
+  <h2>{{ g.naam }}
+    <span class="stil klein">{{ g.artikelen | length }} {{ _('artikelen') }}{% if g.uitspraken %} · {{ g.uitspraken | length }} {{ _('uitspraken') }}{% endif %}</span>
+  </h2>
+  {% if g.artikelen %}
+  <ul class="bewaard-lijst">
+    {% for a in g.artikelen %}
+    <li class="fam-{{ families.get(a.stelsel) or 'overig' }}">
+      <a class="bewaard-citeer" href="{{ a.url }}">{{ vlag(a.stelsel) }}{{ a.citeer }}</a>
+      {%- if a.opschrift %} <span class="bewaard-opschrift">{{ a.opschrift }}</span>{% endif %}
+      <span class="stil klein">{{ a.herkomst | join(' · ') }}</span>
+      {%- if not a.heeft_tekst %} <span class="stil klein bewaard-geen-tekst">{{ _('tekst niet ingelezen') }}</span>{% endif %}
+    </li>
+    {% endfor %}
+  </ul>
+  {% endif %}
+  {% if g.uitspraken %}
+  <ul class="bewaard-lijst bewaard-rechtspraak">
+    {% for u in g.uitspraken %}
+    <li class="fam-{{ families.get(u.stelsel) or 'overig' }}">
+      <a class="bewaard-citeer" href="{{ u.url }}">{{ vlag(u.stelsel) }}{{ u.citeertitel }}</a>
+      {%- if u.vindplaats and u.vindplaats != u.citeertitel %} <span class="bewaard-opschrift">{{ u.vindplaats }}</span>{% endif %}
+    </li>
+    {% endfor %}
+  </ul>
+  {% endif %}
+</section>
+{% endfor %}
+{% endblock %}
