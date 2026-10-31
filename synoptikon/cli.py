@@ -317,6 +317,19 @@ def cmd_notities(args) -> int:
     return 1 if u.fouten else 0
 
 
+def cmd_hertaal(args) -> int:
+    from .services import herkennen
+
+    database.init_db()
+    with database.session() as s:
+        u = herkennen.hertaal(s, args.taal, doen=args.doen, maximum=args.max)
+    print(f"{'Omgezet' if args.doen else 'Om te zetten'}: {u.omgezet} van {u.bekeken} uitspraken naar {args.taal}; "
+          f"{u.overgeslagen} overgeslagen (zelf nagekeken, of geen ECLI/CELEX), {u.mislukt} niet gevonden bij de bron")
+    if not args.doen and u.omgezet:
+        print("Dit was een proef; voeg --doen toe om het ook op te slaan.")
+    return 0
+
+
 def cmd_rebuild_fts(_args) -> int:
     database.init_db()
     database.rebuild_fts()
@@ -411,6 +424,11 @@ def main(argv: list[str] | None = None) -> int:
     s.add_argument("--max", type=int, default=10, help="hoogstens zoveel notities per ronde (standaard 10)")
     s.add_argument("--droog", action="store_true", help="alleen tonen welke notities aan de beurt zijn")
     s.set_defaults(fn=cmd_notities)
+    s = sub.add_parser("hertaal", help="uitspraken opnieuw bij de bron ophalen in de taal van het recht")
+    s.add_argument("--taal", default="de", help="doeltaal (standaard de)")
+    s.add_argument("--max", type=int, default=None, help="hoogstens zoveel omzetten")
+    s.add_argument("--doen", action="store_true", help="opslaan; zonder deze vlag een proef")
+    s.set_defaults(fn=cmd_hertaal)
     sub.add_parser("rebuild-fts", help="zoekindex opnieuw opbouwen").set_defaults(fn=cmd_rebuild_fts)
     s = sub.add_parser("serve", help="ontwikkelserver starten")
     s.add_argument("--host", default="127.0.0.1")

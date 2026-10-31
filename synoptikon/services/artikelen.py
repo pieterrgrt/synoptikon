@@ -38,6 +38,7 @@ from typing import Iterable
 from urllib.parse import quote
 
 from ..i18n import _ as vertaal
+from ..i18n import rechtstaal
 from ..i18n import taal as huidige_taal
 from . import eunamen
 
@@ -264,17 +265,17 @@ def regels(stelsel: str) -> Regels:
 
 
 def wetnaam(stelsel: str, wet: str | None) -> str | None:
-    """Volledige titel bij een afkorting, als die bekend is (EU: in de taal van de interface)."""
+    """Volledige titel bij een afkorting, als die bekend is (EU: in de rechtstaal)."""
     r = regels(stelsel)
     if stelsel == "EU":
-        t = huidige_taal()
+        t = rechtstaal()
         return eunamen.titel(wet, t) or (r.namen.get(wet or "") if t == "nl" else None)
     return r.namen.get(wet or r.hoofdwet or "")
 
 
 def wet_kort(stelsel: str, wet: str | None) -> str | None:
-    """De afkorting zoals ze getoond wordt: EU-wetten in de taal van de interface ("VWEU" → "AEUV")."""
-    return eunamen.kort(wet, huidige_taal()) if stelsel == "EU" and wet else wet
+    """De afkorting zoals ze getoond wordt: EU-wetten in de rechtstaal ("VWEU" → "AEUV")."""
+    return eunamen.kort(wet, rechtstaal()) if stelsel == "EU" and wet else wet
 
 
 # --- wetten uit de database (alle Duitse wetten, de EU-catalogus) ---------------------
@@ -383,7 +384,7 @@ def citeer(stelsel: str, nummer: str | None, wet: str | None = None, tot: str | 
         return f"Art. {nr}{d} {w}".strip()
     if stijl == "s":
         return f"{'ss' if tot else 's'} {nr}{d} {w}".strip()
-    if stelsel == "EU" and huidige_taal() not in ("nl", "fr"):
+    if stelsel == "EU" and rechtstaal() not in ("nl", "fr"):
         return f"Art. {nr}{d} {w}".strip()
     if stijl == "us":
         teken = "art." if w == "La. C.C." else ("§§" if tot else "§")

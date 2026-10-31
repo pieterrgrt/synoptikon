@@ -47,7 +47,7 @@ from sqlalchemy.orm import Session, selectinload
 
 from ..config import settings
 from ..db import get_session
-from ..i18n import zet_taal
+from ..i18n import zet_rechtstaal, zet_taal
 from ..models import Begrip, BegripRelatie, Profiel, now
 from ..services import export, leren
 from ..services.artikelen import Ref
@@ -88,6 +88,7 @@ def artikelen(body: dict = Body(...), db: Session = Depends(get_session)):
     refs = body.get("refs")
     eigenaar = db.get(Profiel, 1)
     zet_taal(eigenaar.taal if eigenaar else "de")  # EU-verdragen in de taal van de eigenaar
+    zet_rechtstaal(getattr(eigenaar, "rechtstaal", None))  # tenzij hij een eigen rechtstaal heeft
     if not isinstance(refs, list) or len(refs) > MAX_REFS:
         raise HTTPException(422, f"refs: lijst van hoogstens {MAX_REFS}")
     uit = []
@@ -113,6 +114,9 @@ def kaarten(profiel: str = "", db: Session = Depends(get_session)):
         raise HTTPException(403, "De koppeling met Wunderkammer staat uit voor dit profiel (Synoptikon › Profiel).")
     p.wk_gezien = now()
     zet_taal(p.taal)
+    # De kaarten gaan in de rechtstaal van het profiel de deur uit, niet in de taal van de interface: wie in Berlijn
+    # studeert leert uit de Duitse verdragstekst, ook al staat Synoptikon voor hem in het Nederlands.
+    zet_rechtstaal(p.rechtstaal)
     lijsten = [l for l in leren.lijsten_van(db, p.id) if l.naar_wk]
     bouwer = leren.Bouwer(db)
     uit = []

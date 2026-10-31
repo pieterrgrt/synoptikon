@@ -7,21 +7,28 @@ Per punt: **wat** (Pieters woorden, samengevat), **waar** (wat er nu staat, nage
 **aanpak** (mijn voorstel, nog niet besloten) en **omvang** (klein = halve dag, midden = een dag of twee,
 groot = meer, of eerst uitzoeken).
 
+## Stand op 30-10-2026
+
+Punt 1 t/m 5 zijn gebouwd en getest; 9 en 11 zijn aangebroken. Wat af is staat hieronder per punt
+onder **Stand**, met de branch of PR erbij. Wunderkammer: 191 tests groen, `npm run build` groen.
+Synoptikon: 216 tests groen, `main` is sinds vandaag de default branch (was `claude/magical-shannon-lv36uh`,
+die lag 72 commits achter).
+
 ## Voorgestelde volgorde
 
 Wat elke dag in de weg zit eerst, dan wat de Klausur ZR Ia (19-02-2027) dient, dan de verkenningen.
 
-1. [Kalk: wachtrij](#1-kalk-wachtrij-bij-het-opzoeken) — klein, dagelijkse ergernis
-2. [ECLI en vindplaats echt ophalen](#2-ecli-en-vindplaats-echt-ophalen-en-zelf-kunnen-verbeteren) — midden, dit is de schermafbeelding
-3. [Bewaren met vak in één tik](#3-bewaren-met-vak-in-één-tik) — klein
-4. [Betere kaarten uit Synoptikon](#4-betere-kaarten-uit-synoptikon) — midden
-5. [Markeren in een artikel of uitspraak](#5-markeren-in-een-artikel-of-uitspraak) — midden, voedt 4
+1. [Kalk: wachtrij](#1-kalk-wachtrij-bij-het-opzoeken) — **klaar** (PR #34, #35)
+2. [ECLI en vindplaats echt ophalen](#2-ecli-en-vindplaats-echt-ophalen-en-zelf-kunnen-verbeteren) — **klaar** (`services/herkennen.py`)
+3. [Bewaren met vak in één tik](#3-bewaren-met-vak-in-één-tik) — **klaar**
+4. [Betere kaarten uit Synoptikon](#4-betere-kaarten-uit-synoptikon) — **grotendeels klaar**, clozes nog open
+5. [Markeren in een artikel of uitspraak](#5-markeren-in-een-artikel-of-uitspraak) — **klaar**
 6. [Overzicht van wat je bewaarde, met samenhang](#6-overzicht-van-wat-je-bewaarde-met-samenhang) — midden
 7. [Onderwerpen: artikelen die je samen leest](#7-onderwerpen-artikelen-die-je-samen-leest) — midden
 8. [Tekst erin, kaarten eruit](#8-tekst-erin-kaarten-eruit) — groot
-9. [Kalk: zinnen en wat je niet begreep](#9-kalk-zinnen-en-wat-je-niet-begreep) — midden
+9. [Kalk: zinnen en wat je niet begreep](#9-kalk-zinnen-en-wat-je-niet-begreep) — zin **klaar**, grammaticakaart nog te ontwerpen
 10. [Wereldkaart voor stelsels en vergelijking](#10-wereldkaart-voor-stelsels-en-vergelijking) — midden
-11. [De andere vaardigheden in Wunderkammer](#11-de-andere-vaardigheden-in-wunderkammer) — nog te snijden
+11. [De andere vaardigheden in Wunderkammer](#11-de-andere-vaardigheden-in-wunderkammer) — Lezen **klaar**, rest nog te snijden
 12. [Wetten en rechtspraak los bewaren](#12-wetten-en-rechtspraak-los-bewaren) — open vraag
 13. [Eén app voor de rechtenstudie, en Obsidian-doeken](#13-één-app-voor-de-rechtenstudie-en-obsidian-doeken) — verkennen
 14. [Andere AI's uitzoeken](#14-andere-ais-uitzoeken) — verkennen
@@ -31,6 +38,10 @@ Wat elke dag in de weg zit eerst, dan wat de Klausur ZR Ia (19-02-2027) dient, d
 ## 1. Kalk: wachtrij bij het opzoeken
 
 **Wat.** Doorgaan met toevoegen terwijl een vorig woord nog laadt; opzoeken duurt soms lang.
+
+**Stand.** Klaar. Gebouwd zoals voorgesteld; op `/calque/kalk` leegt het veld meteen
+en houdt de focus, en elk woord is een eigen regel met zijn eigen status. Enter op een hele zin opent
+'woorden aantikken' in plaats van de zin op te zoeken. PR #34 en #35, live.
 
 **Waar.** `frontend/src/routes/calque/kalk/+page.svelte`: `zoek()` en `bewaar()` beginnen met
 `if (!t || bezig) return;`, en `bezig` is één toestand voor de hele pagina. Elke knop staat
@@ -50,6 +61,16 @@ woord, zoals de wachtenden nu al staan.
 **Wat.** Bij `ECLI:EU:C:2015:806` zei Claude 'Niet vastgesteld', terwijl de EUR-Lex-link wél naar het
 goede arrest leidde. Die informatie moet gewoon opgehaald worden. En als het misgaat: zelf kunnen
 verbeteren.
+
+**Stand.** Klaar, beide helften. Nieuwe `synoptikon/services/herkennen.py`: `herken_id` kent ECLI en CELEX
+(ook in een geplakte EUR-Lex-link), `zoek` haalt EU bij de Cellar en NL bij rechtspraak.nl; Claude komt pas aan
+bod als de bron niets geeft. Knop 'Kloppend maken' slaat een correctie op als bron `eigen`.
+Echt nagespeeld: `ECLI:EU:C:2015:806` → 'HvJ EU 10 december 2015, C-594/14 (Simona Kornhaas tegen Thomas
+Dithmar)', CELEX 62014CJ0594, bron `cellar`, zekerheid hoog — dus zonder de waarschuwing 'niet geverifieerd'.
+DE en FR zijn niet gebouwd: die gaan nog naar Claude.
+
+**Nog open.** De Cellar geeft geen tekst mee (`tekst_herkomst: "geen"`), alleen de gegevens van het arrest.
+De tekst erbij halen is een eigen klusje.
 
 **Waar.** `synoptikon/services/opzoeken.py`. Er is geen enkele deterministische ECLI-route: `uitspraken()`
 zoekt alleen in de eigen `Bron`-tabel, daarna gaat alles naar `met_claude()` → `claude.loop(...,
@@ -75,6 +96,12 @@ achteraf niet te bewerken: `Opzoeking.resultaat` wordt alleen door `_vul()` gesc
 
 **Wat.** Nu moet je te veel zelf kiezen bij het opslaan; dat wil je niet elke keer.
 
+**Stand.** Klaar. `services/vakken.py`: vak afleiden uit het onderwerp (BGB-bereiken), anders het laatst
+gebruikte vak van je profiel, met de keuze onder de knop in plaats van ervoor. Het laatste vak springt niet over
+de grens tussen EU-recht en nationaal recht. `KapMR` en `KartR` erbij.
+
+**Open vraag staat nog.** 'Vak of project' is niet beantwoord; er is nu alleen vak.
+
 **Waar.** `synoptikon/templates/_opzoeking.html`: het bewaarformulier is een `<select>` met álle
 leerlijsten plus een knop. `Leerlijst` heeft al een veld `vak` ("ZR Ia", "Sachenrecht"; leeg = Jura,
 `models.py:725`) en `examen`. Dus het begrip 'vak' bestaat, maar je kiest nog steeds een lijst.
@@ -93,6 +120,14 @@ of wil je daarnaast iets niet-vakgebondens (bv. een Aldus-stuk)?
 ## 4. Betere kaarten uit Synoptikon
 
 **Wat.** De kaarten die in Wunderkammer aankomen moeten echt goede flashcards zijn.
+
+**Stand.** Drie van de vier. Een lang artikel wordt één kaart per lid; bij een arrest is de rechtsregel het
+antwoord en staan feiten en ingekorte kerntekst eronder als samenhang; voorkant en achterkant staan in het
+bewaarvenster voordat je bewaart. De trefwoordenreeks die EUR-Lex als toelichting meegeeft wordt geen
+rechtsregel: zonder regel komt er geen kaart.
+
+**Nog open.** Clozes voor opsommingen van voorwaarden (Tatbestandsmerkmale) — `leren.py` kent nog geen
+clozevorm, dus typen kan op deze kaarten niet.
 
 **Waar.** `synoptikon/services/leren.py`, klasse `Bouwer.zijden()`. Zes soorten (`artikel`, `kern`,
 `plaats`, `tegenhanger`, `arrest`, `feiten`). Bij `artikel` is de achterkant de hele wettekst; bij
@@ -116,6 +151,10 @@ kaarten die je kunt beantwoorden: één kaart vraagt te veel tegelijk.
 
 **Wat.** Meteen kunnen duiden welke onderdelen van een artikel nuttig zijn. En bij een oordeel zelf het
 deel aanwijzen waar de voor dat vak relevante rechtsregel staat.
+
+**Stand.** Klaar. Model `Markering`, selecteren met muis of vinger, soort kiezen, en de markering wordt
+materiaal voor een kaart: `leren.Bouwer.zijden()` zet een *let op*-markering onder de achterkant en
+`markeringen.kern_tekst` levert de rechtsregel per vak. Daarmee doet punt 5 wat punt 4 nodig had.
 
 **Waar.** Bestaat nog niet. `Bron.tekst` en `WettekstArtikel.tekst` zijn platte tekst; `templates/
 artikel.html` en `bron_detail.html` tonen die via `md.render`. Er is geen model voor een markering.

@@ -8,6 +8,11 @@ Twee lagen, bewust gescheiden:
   Nederlands staan. `tests/test_i18n.py` controleert dat elke `_()`-tekst in
   alle talen bestaat.
 
+* **Rechtstaal** (`rechtstaal`): de taal waarin juridische inhoud geleverd wordt —
+  welke taalversie van een verdrag, welke afkorting (VWEU of AEUV), en de taal van
+  de kaartzijden. Staat los van de interface: wie in Berlijn recht studeert wil de
+  Duitse verdragstekst met een Nederlandse interface. Leeg = volg de interface.
+
 * **Inhoud** (`vt`): vragen, analyses, definities, toelichtingen, thema's.
   Die worden in het Nederlands ingevoerd. Vertalingen staan in het
   vertaalgeheugen (`InhoudVertaling`), met als sleutel de hash van de
@@ -24,6 +29,7 @@ from __future__ import annotations
 import hashlib
 import json
 import time
+from contextlib import contextmanager
 from contextvars import ContextVar
 from functools import lru_cache
 from pathlib import Path
@@ -41,6 +47,7 @@ _HIER = Path(__file__).parent / "i18n"
 
 _taal: ContextVar[str] = ContextVar("taal", default=BRONTAAL)
 _origineel: ContextVar[bool] = ContextVar("origineel", default=False)
+_rechtstaal: ContextVar[str] = ContextVar("rechtstaal", default="")
 
 
 def zet_taal(taal: str | None, origineel: bool = False) -> None:
@@ -54,6 +61,32 @@ def taal() -> str:
 
 def toont_origineel() -> bool:
     return _origineel.get()
+
+
+def zet_rechtstaal(code: str | None) -> None:
+    """De taal voor juridische inhoud; leeg of onbekend = volg de interfacetaal."""
+    _rechtstaal.set(code if code in TALEN else "")
+
+
+def rechtstaal() -> str:
+    """De taal waarin wetteksten, afkortingen en kaarten geleverd worden."""
+    return _rechtstaal.get() or _taal.get()
+
+
+def eigen_rechtstaal() -> str:
+    """De ingestelde rechtstaal zelf, zonder terugval: leeg als ze de interface volgt."""
+    return _rechtstaal.get()
+
+
+@contextmanager
+def in_taal(code: str | None):
+    """Tijdelijk een andere interfacetaal, om een tekst in de rechtstaal op te bouwen (kaartzijden)."""
+    vorige = _taal.get()
+    _taal.set(code if code in TALEN else vorige)
+    try:
+        yield
+    finally:
+        _taal.set(vorige)
 
 
 def kies_taal(accept_language: str | None) -> str:

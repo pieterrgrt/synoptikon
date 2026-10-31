@@ -149,6 +149,8 @@ class AuthMiddleware(BaseHTTPMiddleware):
             huidig_profiel(request)  # voor de taal op /login en /taal
         i18n.zet_taal(_taal_van(request), origineel=request.cookies.get("inhoud") == "origineel")
         profiel = getattr(request.state, "profiel", None)
+        # Juridische inhoud mag een andere taal hebben dan de interface (Profiel.rechtstaal).
+        i18n.zet_rechtstaal(getattr(profiel, "rechtstaal", None))
         if ingelogd and request.method not in ("GET", "HEAD") and not pad.startswith(_LEZER_POST) \
                 and profiel is not None and not profiel.mag_bewerken:
             response = PlainTextResponse(i18n._("Dit profiel mag alleen lezen."), status_code=403)

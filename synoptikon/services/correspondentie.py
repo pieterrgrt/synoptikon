@@ -13,7 +13,7 @@ from dataclasses import dataclass, field
 from sqlalchemy import select
 from sqlalchemy.orm import Session, selectinload
 
-from ..i18n import taal
+from ..i18n import rechtstaal
 from ..models import AntwoordBron, Bron, Concordantie, Correspondentie, CorrespondentieArtikel, Systematiek, Wettekst, WettekstArtikel
 from .artikelen import REGELS, Plaatser, Ref, herken, kale_nummers, noemt_wet, plaatser, ref_bevat, ref_uit_bron, sleutel
 
@@ -103,8 +103,9 @@ def wettekst_artikel(db: Session, ref: Ref) -> WettekstArtikel | None:
     if ref.stelsel == "FR" and not ref.wet:
         q = q.where(Wettekst.wet_id == FR_CODE_CIVIL)
     if ref.stelsel == "EU":
-        # De verdragen staan er in zes talen: die van de interface, anders Duits (de taal van de rest van de EU-teksten).
-        t = taal()
+        # De verdragen staan er in zes talen: die van de rechtstaal (standaard de interface), anders Duits
+        # (de taal van de rest van de EU-teksten).
+        t = rechtstaal()
         return db.scalars(q.order_by((Wettekst.taal == t).desc(), (Wettekst.taal == "de").desc(), Wettekst.opgehaald.desc(),
                                      Wettekst.id.desc())).first()
     return db.scalars(q.order_by(Wettekst.opgehaald.desc(), Wettekst.id.desc())).first()
