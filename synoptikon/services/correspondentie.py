@@ -74,12 +74,28 @@ class Context:
         return self._bronnen.get((stelsel, wet, nummer), [])
 
     def tekst(self, ref: Ref) -> Tekst | None:
+        """De tekst van een artikel: een zelf bewaarde wetsbron gaat voor, maar niet in de verkeerde taal.
+
+        Staat er een bron in een andere taal dan de rechtstaal terwijl de wettekst er wél in die taal is, dan wint de
+        wettekst: anders leert iemand met rechtstaal Duits art. 49 AEUV uit een Nederlandse bron die er een keer bij
+        is bewaard. Een tekst zonder taal (de nationale wetten) telt als passend.
+        """
         if ref.nummer is None:
             return None
-        for b in self.bronnen_voor(ref.stelsel, ref.nummer, ref.wet):
-            if b.tekst and b.is_geldig:
-                return Tekst(b.tekst, b.titel, "bron", f"/bronnen/{b.id}", b.url)
+        t = rechtstaal()
+        bronnen = [b for b in self.bronnen_voor(ref.stelsel, ref.nummer, ref.wet) if b.tekst and b.is_geldig]
+
+        def uit_bron(b: Bron) -> Tekst:
+            return Tekst(b.tekst, b.titel, "bron", f"/bronnen/{b.id}", b.url)
+
+        for b in bronnen:
+            if (b.taal or t) == t:
+                return uit_bron(b)
         wa = wettekst_artikel(self.db, ref)
+        if wa and wa.tekst and (wa.wettekst.taal or t) == t:
+            return Tekst(wa.tekst, wa.opschrift, "wettekst", f"/wetteksten/{wa.wettekst_id}#{wa.nummer}", wa.wettekst.bron_url)
+        if bronnen:
+            return uit_bron(bronnen[0])
         if wa:
             return Tekst(wa.tekst, wa.opschrift, "wettekst", f"/wetteksten/{wa.wettekst_id}#{wa.nummer}", wa.wettekst.bron_url)
         return None
