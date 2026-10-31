@@ -25,6 +25,7 @@ docker compose exec app synoptikon seed    # twee uitgewerkte voorbeeldvragen
 - [Export](#export)
 - [Back-up](#back-up)
 - [Nginx](#nginx)
+- [Autodeploy](#autodeploy)
 - [Ontwikkelen](#ontwikkelen)
 
 ## Snel beginnen
@@ -485,11 +486,29 @@ automatisch geïnstalleerd; neem het over in je eigen config en voeg de
 hostnaam toe aan je SNI-stream-router. Wil je basic auth op nginx-niveau, zet
 dan `SYNOPTIKON_AUTH_MODE=none`.
 
+## Autodeploy
+
+Een push naar `main` gaat vanzelf live, zodra de tests groen zijn. Op de server draait `autodeploy.timer`
+(elke 5 minuten, `/usr/local/bin/autodeploy`, regel `synoptikon|…` in `/etc/autodeploy.conf`): hij haalt
+`origin/main`, vraagt bij GitHub of alle checks van die commit geslaagd zijn, doet een fast-forward,
+bouwt de container en wacht tot `/gezond` antwoordt. Antwoordt die binnen drie minuten niet, dan zet hij
+de oude commit terug en bouwt opnieuw. Wijzigt een commit `Dockerfile` of `docker-compose.yml`, dan blijft
+hij staan tot het handmatig gebeurt; dat staat in `/var/log/autodeploy.log`, net als elke ronde.
+
+De checks zijn `.github/workflows/test.yml`: de testsuite bij elke push en pull request, zonder WeasyPrint
+(de PDF-export mag daar 501 geven). Zonder geslaagde check deployt hij niet, dus een push zonder
+werkende CI blijft liggen.
+
+Migraties lopen bij het opstarten van de container en moeten achterwaarts compatibel zijn: tijdens een
+deploy staat er even een oude en een nieuwe container naast dezelfde database.
+
+Met de hand bijwerken blijft `git pull && docker compose up -d --build`.
+
 ## Ontwikkelen
 
 ```bash
 pip install -e ".[pdf,dev]"
-pytest                     # 87 tests: auth, synopse, opzoeken, Claude (nep-client), export, invoer, parsers, artikelen, Unierecht
+pytest                     # 216 tests: auth, synopse, opzoeken, Claude (nep-client), export, invoer, parsers, artikelen, Unierecht
 synoptikon rebuild-fts     # zoekindex opnieuw opbouwen na handmatige DB-ingrepen
 synoptikon seed --overschrijf   # voorbeeldvragen opnieuw laden
 synoptikon seed                 # ook om een bestaande database bij te werken: vult systematiek
