@@ -220,6 +220,13 @@ Uitgebreider gemotiveerd in de docstring van `synoptikon/models.py`.
    naar Wunderkammer; afgewezen kaarten worden niet opnieuw voorgesteld. Cron:
    `30 2 * * * ~/synoptikon/scripts/notities.sh >> ~/synoptikon/data/notities.log 2>&1`
    (hoogstens 10 notities per nacht; `--droog` toont wat aan de beurt is).
+   Vakken, niet modules (sinds 02-11-2026): `Zivilrecht 1A=ZR Ia; Europäisches
+   Gesellschaftsrecht=EuGesR; Kapitalmarktrecht=KapMR; Deutsches und
+   europäisches Kartellrecht 1=KartR; Grundlagen und Grundfragen der
+   Digitalisierung=Digi` (Modul W = KapMR + KartR, GÖ = EuGesR, UG = Digi).
+   Krijgt een map een ander vak, dan verhuizen de bestaande voorstellen en
+   kaarten bij de volgende ronde mee (`notities.herindeel`), zonder nieuwe
+   Claude-ronde als alleen `vak:` veranderde.
    **Delen onder studenten** (`/gedeeld`, `services/delen.py`): per leerlijst
    kies je *alleen ik*, *iedereen met de link* of *alle studenten*. Anderen zien
    de echte kaarten (geen voorstellen), liken (♥), reageren (markdown) en nemen

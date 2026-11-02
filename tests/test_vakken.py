@@ -12,9 +12,14 @@ from synoptikon.services import vakken
     ("DE", None, "119", "ZR Ia"),  # hoofdwet van DE is het BGB
     ("DE", "BGB", "929", "Sachenrecht"),
     ("DE", "BGB", "823", None),  # Schuldrecht BT: geen vak van dit semester
-    ("DE", "AktG", "76", "UG"),
-    ("EU", "AEUV", "101", "W"),
-    ("EU", None, None, "W"),  # een arrest van het HvJ
+    ("DE", "AktG", "76", None),  # vennootschapsrecht: geen vak van dit semester (EuGesR is EU-recht)
+    ("DE", "BGB", "327a", "Digi"),
+    ("DE", "GWB", "1", "KartR"),
+    ("DE", "WpHG", "33", "KapMR"),
+    ("DE", "UrhG", "44b", "Digi"),
+    ("EU", "AEUV", "101", "KartR"),
+    ("EU", "AEUV", "49", None),
+    ("EU", None, None, None),  # een arrest van het HvJ: geen vak uit het onderwerp
     ("NL", "BW", "3:84", None),
     ("DE", "GG", "1", None),
 ])
@@ -60,14 +65,14 @@ def test_vak_wisselen_is_een_correctie(client):
     client.post("/leren/snel", data={"stelsel": "DE", "wet": "BGB", "nummer": "147"})
     with database.session() as s:
         kid = s.scalar(select(Kaart).where(Kaart.nummer == "147")).id
-    r = client.post("/leren/vak", data={"kaarten": str(kid), "vak": "W", "terug": "/artikelen/DE/147?bewaard=1&vak=ZR%20Ia&kaarten=1"},
+    r = client.post("/leren/vak", data={"kaarten": str(kid), "vak": "KartR", "terug": "/artikelen/DE/147?bewaard=1&vak=ZR%20Ia&kaarten=1"},
                     follow_redirects=False)
     assert r.status_code == 303 and r.headers["location"] == "/artikelen/DE/147"
     with database.session() as s:
         k = s.get(Kaart, kid)
-        assert k.lijst.vak == "W" and s.get(Profiel, 1).laatste_vak == "W"
-        assert k.lijst_id == min(s.scalars(select(Leerlijst.id).where(Leerlijst.vak == "W", Leerlijst.profiel_id == 1, ~Leerlijst.naam.startswith("Notities"))))  # de oudste lijst van het vak
-    assert client.post("/leren/vak", data={"kaarten": "999999", "vak": "W"}).status_code == 400
+        assert k.lijst.vak == "KartR" and s.get(Profiel, 1).laatste_vak == "KartR"
+        assert k.lijst_id == min(s.scalars(select(Leerlijst.id).where(Leerlijst.vak == "KartR", Leerlijst.profiel_id == 1, ~Leerlijst.naam.startswith("Notities"))))  # de oudste lijst van het vak
+    assert client.post("/leren/vak", data={"kaarten": "999999", "vak": "KartR"}).status_code == 400
 
 
 def test_notitielijst_is_nooit_het_doel(client):
@@ -82,24 +87,25 @@ def test_opzoeking_bewaren_in_afgeleid_vak(client):
         o = Opzoeking(profiel_id=1, invoer="hvj", resultaat=dict(soort="uitspraak", stelsel="EU", citeer="HvJ EU 10 december 2015, C-594/14",
                                                                  titel="Kornhaas", vindplaats="ECLI:EU:C:2015:806", toelichting="x", bron="cellar"))
         s.add(o)
+        vakken.onthoud(s, 1, "EuGesR")  # een HvJ-arrest geeft zelf geen vak: het laatst gebruikte geldt
         s.flush()
         oid = o.id
     html = client.get(f"/opzoeken/{oid}").text
-    assert '<option selected>W</option>' in html
+    assert '<option selected>EuGesR</option>' in html
     client.post(f"/opzoeken/{oid}/bewaren", data={"vak": "", "regel": "Vestigingsvrijheid staat er niet aan in de weg."})
     with database.session() as s:
         o = s.get(Opzoeking, oid)
-        assert o.kaart.lijst.vak == "W" and o.kaart.soort == "arrest"
+        assert o.kaart.lijst.vak == "EuGesR" and o.kaart.soort == "arrest"
     html = client.get(f"/opzoeken/{oid}").text
-    assert "★ Bewaard · W" in html and 'action="/leren/vak"' in html
+    assert "★ Bewaard · EuGesR" in html and 'action="/leren/vak"' in html
 
 
 def test_laatste_vak_niet_over_de_grens_eu_nationaal():
     with database.session() as s:
-        vakken.onthoud(s, 1, "W")
-        assert vakken.kies(s, 1, "", "DE", "BGB", "433") is None  # HvJ-arrest in W, daarna § 433 BGB: niet W
-        assert vakken.kies(s, 1, "", "EU", "Verordening 1346/2000", "4") == "W"
+        vakken.onthoud(s, 1, "KartR")
+        assert vakken.kies(s, 1, "", "DE", "BGB", "433") == "KartR"  # kartelrecht is ook nationaal: geen grens
+        assert vakken.kies(s, 1, "", "EU", "Verordening 1/2003", "4") == "KartR"
         vakken.onthoud(s, 1, "Sachenrecht")
-        assert vakken.kies(s, 1, "", "EU") == "W"  # een arrest is afgeleid
+        assert vakken.kies(s, 1, "", "EU", "AEUV", "102") == "KartR"  # afgeleid
         assert vakken.kies(s, 1, "", "EU", "VO", "12") is None
         assert vakken.kies(s, 1, "", "NL", "BW", "3:84") == "Sachenrecht"  # vergelijken mag

@@ -3,6 +3,7 @@ import json
 from types import SimpleNamespace as NS
 
 import pytest
+from sqlalchemy import func, select
 
 from synoptikon import db as database
 from synoptikon.config import settings
@@ -180,3 +181,31 @@ def test_voorstellen_per_notitie_en_per_kaart(map_, nep, client):
     assert r.status_code == 303 and f"afgewezen={len(ids)}" in r.headers["location"]
     with database.session() as s:
         assert all(s.get(Kaart, i).status == "afgewezen" for i in ids)
+
+
+def test_herindelen_na_ander_vak(map_, nep, monkeypatch):
+    """Kapitalmarktrecht en Kartellrecht stonden samen onder W; nu elk een eigen vak (02-11-2026). De voorstellen verhuizen
+    mee, de notitie hoeft niet opnieuw naar Claude als alleen `vak:` veranderde."""
+    monkeypatch.setattr(settings, "notities_vakken", "Kapitalmarktrecht=W")
+    (map_ / "Kapitalmarktrecht").mkdir()
+    (map_ / "Kapitalmarktrecht" / "Sitzung.md").write_text(LANG, encoding="utf-8")
+    (map_ / "Kartellrecht").mkdir()
+    (map_ / "Kartellrecht" / "1.pdf.md").write_text("---\nvak: W\nbron: Kartellrecht/1.pdf\n---\n" + LANG, encoding="utf-8")
+    with database.session() as s:
+        notities.verwerk(s, profiel_id=2)
+        assert s.scalar(select(func.count()).select_from(Kaart).join(Leerlijst).where(Leerlijst.naam == "Notities · W", Leerlijst.profiel_id == 2)) > 0
+        # de nep-Claude geeft voor de tweede notitie dezelfde kaarten (die bestaan al): geef er één de Kartellrecht-herkomst
+        s.scalars(select(Kaart).join(Leerlijst).where(Leerlijst.naam == "Notities · W", Leerlijst.profiel_id == 2)).first().herkomst = "Kartellrecht/1.pdf.md"
+        s.commit()
+    vragen = len(nep.verzoeken)
+
+    monkeypatch.setattr(settings, "notities_vakken", "Kapitalmarktrecht=KapMR")
+    (map_ / "Kartellrecht" / "1.pdf.md").write_text("---\nvak: KartR\nbron: Kartellrecht/1.pdf\n---\n" + LANG, encoding="utf-8")
+    with database.session() as s:
+        u = notities.verwerk(s, profiel_id=2)
+        lijsten = {l.naam: {k.herkomst for k in l.kaarten} for l in s.scalars(select(Leerlijst).where(Leerlijst.profiel_id == 2))}
+        vakken_ = {n.pad: n.vak for n in s.scalars(select(NotitieBestand).where(NotitieBestand.profiel_id == 2))}
+    assert u.notities == 0 and len(nep.verzoeken) == vragen  # geen nieuwe Claude-ronde
+    assert "Notities · W" not in lijsten
+    assert lijsten["Notities · KapMR"] == {"Kapitalmarktrecht/Sitzung.md"} and lijsten["Notities · KartR"] == {"Kartellrecht/1.pdf.md"}
+    assert vakken_["Kapitalmarktrecht/Sitzung.md"] == "KapMR" and vakken_["Kartellrecht/1.pdf.md"] == "KartR"

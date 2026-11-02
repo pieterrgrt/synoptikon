@@ -103,6 +103,36 @@ def lijst_voor(db: Session, profiel_id: int, vak: str) -> Leerlijst:
     return lijst
 
 
+def herindeel(db: Session, profiel_id: int = 1) -> dict[str, int]:
+    """Een map kreeg een ander vak (bv. Kapitalmarktrecht: W → KapMR, 02-11-2026): de voorstellen en kaarten uit die notities
+    verhuizen naar "Notities · <nieuw vak>", zonder dat Claude de notitie opnieuw leest. Verschilt de notitie alleen in de
+    regel `vak:`, dan wordt haar hash bijgewerkt; anders blijft ze aan de beurt zoals elke gewijzigde notitie. Lege
+    notitielijsten verdwijnen. Herhaalbaar; geeft per nieuw vak het aantal verhuisde kaarten."""
+    gezien = {n.pad: n for n in db.scalars(select(NotitieBestand).where(NotitieBestand.profiel_id == profiel_id))}
+    verhuisd: dict[str, int] = {}
+    for b in bestanden():
+        n = gezien.get(b.pad)
+        if n is None:
+            continue
+        doel = lijst_voor(db, profiel_id, b.vak)
+        for k in db.scalars(select(Kaart).join(Leerlijst).where(
+                Kaart.herkomst == b.pad, Leerlijst.profiel_id == profiel_id, Leerlijst.id != doel.id,
+                Leerlijst.naam.startswith(LIJST_PREFIX))):
+            k.lijst = doel
+            verhuisd[b.vak] = verhuisd.get(b.vak, 0) + 1
+        if n.vak != b.vak:
+            ruw_oud = (settings.notities_dir / b.pad).read_text(encoding="utf-8").replace(f"vak: {b.vak}\n", f"vak: {n.vak}\n", 1)
+            if hashlib.sha256(ruw_oud.encode()).hexdigest() == n.hash:
+                n.hash = b.hash
+            n.vak = b.vak
+    db.flush()
+    for lijst in db.scalars(select(Leerlijst).where(Leerlijst.profiel_id == profiel_id, Leerlijst.naam.startswith(LIJST_PREFIX))):
+        if not db.scalar(select(Kaart.id).where(Kaart.lijst_id == lijst.id).limit(1)):
+            db.delete(lijst)
+    db.flush()
+    return verhuisd
+
+
 # --- Claude ---------------------------------------------------------------------------------------------------------
 
 SYSTEM = """Je maakt leerkaarten uit de collegeaantekeningen van Pieter, rechtenstudent aan de HU Berlin (LL.M.
@@ -221,6 +251,9 @@ class Uitkomst:
 def verwerk(db: Session, profiel_id: int = 1, maximum: int = 10, droog: bool = False) -> Uitkomst:
     """Nieuwe en gewijzigde notities verwerken, hoogstens `maximum` per ronde. `droog`: alleen tellen."""
     uit = Uitkomst()
+    if not droog:
+        herindeel(db, profiel_id)
+        db.commit()
     gezien = {n.pad: n for n in db.scalars(select(NotitieBestand).where(NotitieBestand.profiel_id == profiel_id))}
     for b in bestanden():
         n = gezien.get(b.pad)

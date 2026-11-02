@@ -1,6 +1,6 @@
 """Vakken: bewaren in het vak waar je mee bezig bent, zonder dat je een lijst kiest.
 
-'Project' en 'vak' zijn hetzelfde: een Leerlijst met een `vak` ("ZR Ia", "W", …). Bij bewaren bepaalt Synoptikon het vak:
+'Project' en 'vak' zijn hetzelfde: een Leerlijst met een `vak` ("ZR Ia", "KartR", …). Bij bewaren bepaalt Synoptikon het vak:
 wat je expres koos, anders wat uit het onderwerp volgt (`afleiden`), anders het vak waarin je het laatst bewaarde
 (`Profiel.laatste_vak`). Het vak wisselen is een correctie achteraf (`verplaats`), geen voorwaarde vooraf.
 
@@ -18,17 +18,23 @@ from ..models import Kaart, Leerlijst, Profiel
 from .artikelen import HOOFDWET
 from .notities import LIJST_PREFIX  # lijsten met voorstellen uit notities zijn nooit het doel
 
-VAKKEN = ("ZR Ia", "W", "GÖ", "UG", "Sachenrecht", "KapMR", "KartR")
+# Sinds 02-11-2026 vakken in plaats van modules: Modul W = KapMR + KartR, Modul GÖ = EuGesR, Modul UG = Digi
+# (Grundlagen und Grundfragen der Digitalisierung). De oude modulecodes blijven alleen als naam van oude lijsten.
+VAKKEN = ("ZR Ia", "KapMR", "KartR", "EuGesR", "Digi", "Sachenrecht")
 
-# Het laatst gebruikte vak geldt niet over de grens tussen EU-recht en nationaal recht: na een HvJ-arrest in W wordt
-# § 433 BGB niet ook W, en een arrest na § 929 BGB niet Sachenrecht. Vergelijken tussen nationale stelsels mag wel.
-_ALLEEN_EU = {"W"}
+# Het laatst gebruikte vak geldt niet over de grens tussen EU-recht en nationaal recht: een arrest na § 929 BGB wordt niet
+# Sachenrecht. Vergelijken tussen nationale stelsels mag wel. (Kartell-, kapitaalmarkt- en digitaal recht zijn zowel EU als
+# nationaal, dus daar geldt geen grens.)
+_ALLEEN_EU: set[str] = set()
 _NIET_EU = {"ZR Ia", "Sachenrecht"}
 
-# Bereiken van BGB-paragrafen: Allgemeiner Teil (ZR Ia) en Sachenrecht (§§ 854-1296).
-_BGB = [(1, 240, "ZR Ia"), (854, 1296, "Sachenrecht")]
-_VENNOOTSCHAP = {"AKTG", "GMBHG", "HGB", "GENG", "UMWG", "PARTGG"}
-_EU_VERDRAG = {"AEUV", "VWEU", "TFEU", "TFUE", "EUV", "VEU", "TEU", "HANDVEST", "GRCH", "CFR"}
+# Bereiken van BGB-paragrafen: Allgemeiner Teil (ZR Ia), digitale Produkte (§§ 327-327u, Digi) en Sachenrecht.
+_BGB = [(1, 240, "ZR Ia"), (327, 327, "Digi"), (854, 1296, "Sachenrecht")]
+# Duitse wetten die bij één vak horen.
+_DE_WET = {"GWB": "KartR", "WPHG": "KapMR", "WPPG": "KapMR", "WPÜG": "KapMR", "BÖRSG": "KapMR", "KAGB": "KapMR",
+           "URHG": "Digi", "URHDAG": "Digi", "DDG": "Digi", "TTDSG": "Digi", "TDDDG": "Digi"}
+_EU_VERDRAG = {"AEUV", "VWEU", "TFEU", "TFUE"}
+_KARTELL = range(101, 110)  # Art. 101-109 AEUV: mededinging en staatssteun
 
 
 def afleiden(stelsel: str | None, wet: str | None = None, nummer: str | None = None) -> str | None:
@@ -40,10 +46,12 @@ def afleiden(stelsel: str | None, wet: str | None = None, nummer: str | None = N
         if m:
             n = int(m.group())
             return next((v for lo, hi, v in _BGB if lo <= n <= hi), None)
-    if stelsel == "DE" and wet in _VENNOOTSCHAP:
-        return "UG"
-    if stelsel == "EU" and (not nummer or wet in _EU_VERDRAG or not wet):
-        return "W"
+    if stelsel == "DE" and wet in _DE_WET:
+        return _DE_WET[wet]
+    if stelsel == "EU" and nummer and wet in _EU_VERDRAG:
+        m = re.match(r"\d+", nummer.strip().lstrip("Art. "))
+        if m and int(m.group()) in _KARTELL:
+            return "KartR"
     return None
 
 
