@@ -103,28 +103,71 @@ def lijst_voor(db: Session, profiel_id: int, vak: str) -> Leerlijst:
     return lijst
 
 
+# Oude modulecodes die eenduidig één vak zijn (02-11-2026); W is twee vakken en gaat per map.
+MODULE_NAAR_VAK = {"GÖ": "EuGesR", "UG": "Digi"}
+
+
+def _zoals_vroeger(ruw: str, vak: str, oud: str | None, pad: str, oud_pad: str) -> str:
+    """De notitie met het oude vak en de oude `bron:` (het pad van de PDF), om te zien of alleen dat veranderde."""
+    if oud:
+        ruw = ruw.replace(f"vak: {vak}\n", f"vak: {oud}\n", 1)
+    if pad != oud_pad and pad.endswith(".pdf.md"):
+        ruw = ruw.replace(f"bron: {pad[:-3]}\n", f"bron: {oud_pad[:-3]}\n", 1)
+    return ruw
+
+
 def herindeel(db: Session, profiel_id: int = 1) -> dict[str, int]:
-    """Een map kreeg een ander vak (bv. Kapitalmarktrecht: W → KapMR, 02-11-2026): de voorstellen en kaarten uit die notities
-    verhuizen naar "Notities · <nieuw vak>", zonder dat Claude de notitie opnieuw leest. Verschilt de notitie alleen in de
-    regel `vak:`, dan wordt haar hash bijgewerkt; anders blijft ze aan de beurt zoals elke gewijzigde notitie. Lege
-    notitielijsten verdwijnen. Herhaalbaar; geeft per nieuw vak het aantal verhuisde kaarten."""
+    """Houdt voorstellen en kaarten uit notities bij het juiste vak, zonder dat Claude een notitie opnieuw leest.
+
+    - Een map kreeg een ander vak (bv. Kapitalmarktrecht: W → KapMR, 02-11-2026): de kaarten verhuizen naar
+      "Notities · <nieuw vak>". Verschilt de notitie alleen in de regel `vak:`, dan wordt haar hash bijgewerkt.
+    - Een notitie is verplaatst of haar map hernoemd ('1. Sitzung' → '1 Finanzmärkte, …'): zelfde bestandsnaam in dezelfde
+      bovenste map, oude plek weg → het is dezelfde notitie (pad en herkomst mee), geen nieuwe.
+    - Kaarten zonder notitie in een lijst met een oude modulecode (`MODULE_NAAR_VAK`) gaan naar het vak.
+    Lege notitielijsten verdwijnen. Herhaalbaar; geeft per vak het aantal verhuisde kaarten."""
+    per_map = vakken()
+    alle = list(bestanden(per_map=per_map))
+    nu = {b.pad for b in alle}
     gezien = {n.pad: n for n in db.scalars(select(NotitieBestand).where(NotitieBestand.profiel_id == profiel_id))}
+    verweesd = {p: n for p, n in gezien.items() if p not in nu}
     verhuisd: dict[str, int] = {}
-    for b in bestanden():
+
+    def verhuis(kaarten, vak):
+        doel = lijst_voor(db, profiel_id, vak)
+        for k in kaarten:
+            if k.lijst_id != doel.id:
+                k.lijst = doel
+                verhuisd[vak] = verhuisd.get(vak, 0) + 1
+
+    def notitiekaarten(*voorwaarden):
+        return db.scalars(select(Kaart).join(Leerlijst).where(
+            Leerlijst.profiel_id == profiel_id, Leerlijst.naam.startswith(LIJST_PREFIX), *voorwaarden)).all()
+
+    for b in alle:
         n = gezien.get(b.pad)
-        if n is None:
-            continue
-        doel = lijst_voor(db, profiel_id, b.vak)
-        for k in db.scalars(select(Kaart).join(Leerlijst).where(
-                Kaart.herkomst == b.pad, Leerlijst.profiel_id == profiel_id, Leerlijst.id != doel.id,
-                Leerlijst.naam.startswith(LIJST_PREFIX))):
-            k.lijst = doel
-            verhuisd[b.vak] = verhuisd.get(b.vak, 0) + 1
-        if n.vak != b.vak:
-            ruw_oud = (settings.notities_dir / b.pad).read_text(encoding="utf-8").replace(f"vak: {b.vak}\n", f"vak: {n.vak}\n", 1)
-            if hashlib.sha256(ruw_oud.encode()).hexdigest() == n.hash:
-                n.hash = b.hash
-            n.vak = b.vak
+        oud_pad = b.pad
+        if n is None:  # hernoemd of verplaatst?
+            top, naam = b.pad.split("/", 1)[0], b.pad.rsplit("/", 1)[-1]
+            oud = [p for p in verweesd if p.split("/", 1)[0] == top and p.rsplit("/", 1)[-1] == naam]
+            if len(oud) != 1:
+                continue
+            n = verweesd.pop(oud[0])
+            oud_pad = n.pad
+            for k in notitiekaarten(Kaart.herkomst == n.pad):
+                k.herkomst = b.pad[:300]
+            n.pad = b.pad
+        verhuis(notitiekaarten(Kaart.herkomst == b.pad), b.vak)
+        ruw = (settings.notities_dir / b.pad).read_text(encoding="utf-8")
+        if n.hash != b.hash and hashlib.sha256(_zoals_vroeger(ruw, b.vak, n.vak, b.pad, oud_pad).encode()).hexdigest() == n.hash:
+            n.hash = b.hash
+        n.vak = b.vak
+    # notities die er niet meer zijn: hun kaarten volgen de map
+    for k in notitiekaarten(Kaart.herkomst.is_not(None)):
+        vak = per_map.get(k.herkomst.split("/", 1)[0]) if "/" in k.herkomst else None
+        if k.herkomst not in nu and vak:
+            verhuis([k], vak)
+    for oud, vak in MODULE_NAAR_VAK.items():
+        verhuis(notitiekaarten(Leerlijst.naam == LIJST_PREFIX + oud), vak)
     db.flush()
     for lijst in db.scalars(select(Leerlijst).where(Leerlijst.profiel_id == profiel_id, Leerlijst.naam.startswith(LIJST_PREFIX))):
         if not db.scalar(select(Kaart.id).where(Kaart.lijst_id == lijst.id).limit(1)):

@@ -209,3 +209,19 @@ def test_herindelen_na_ander_vak(map_, nep, monkeypatch):
     assert "Notities · W" not in lijsten
     assert lijsten["Notities · KapMR"] == {"Kapitalmarktrecht/Sitzung.md"} and lijsten["Notities · KartR"] == {"Kartellrecht/1.pdf.md"}
     assert vakken_["Kapitalmarktrecht/Sitzung.md"] == "KapMR" and vakken_["Kartellrecht/1.pdf.md"] == "KartR"
+
+
+def test_hernoemde_map_is_geen_nieuwe_notitie(map_, nep):
+    """'1. Sitzung' → '1 Finanzmärkte': zelfde bestand, andere map. Geen nieuwe Claude-ronde, herkomst gaat mee."""
+    oud = map_ / "Zivilrecht 1A" / "1 Einführung"
+    with database.session() as s:
+        notities.verwerk(s, profiel_id=3)
+    vragen = len(nep.verzoeken)
+    oud.rename(map_ / "Zivilrecht 1A" / "1 Einführung und Grundlagen")
+    with database.session() as s:
+        u = notities.verwerk(s, profiel_id=3)
+        herkomst = set(s.scalars(select(Kaart.herkomst).join(Leerlijst).where(Leerlijst.profiel_id == 3)))
+        paden = set(s.scalars(select(NotitieBestand.pad).where(NotitieBestand.profiel_id == 3)))
+    assert u.notities == 0 and len(nep.verzoeken) == vragen
+    assert "Zivilrecht 1A/1 Einführung und Grundlagen/Vorlesung.md" in herkomst & paden
+    assert not any(p.startswith("Zivilrecht 1A/1 Einführung/") for p in herkomst | paden)
