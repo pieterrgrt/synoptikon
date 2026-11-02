@@ -91,8 +91,8 @@ CC = [
                 ("CC-III-III-II-1", "Chapitre Ier · La responsabilité extracontractuelle en général", "art. 1240–1244", []),
                 ("CC-III-III-II-2", "Chapitre II · La responsabilité du fait des produits défectueux", "art. 1245–1245-17", []),
                 ("CC-III-III-II-3", "Chapitre III · La réparation du préjudice écologique", "art. 1246–1252", []),
-                ("CC-III-III-II-4", "Chapitre IV · Les troubles anormaux du voisinage", "art. 1253", []),
-                ("CC-III-III-II-5", "Chapitre V · Sanction civile en cas de faute dolosive ayant causé des dommages sériels", "art. 1254", []),
+                ("CC-III-III-II-IV", "Chapitre IV · Les troubles anormaux du voisinage", "art. 1253", []),
+                ("CC-III-III-II-V", "Chapitre V · Sanction civile en cas de faute dolosive ayant causé des dommages sériels", "art. 1254", []),
             ]),
             ("CC-III-III-III", "Sous-titre III · Autres sources d'obligations", "art. 1300–1303-4", [
                 ("CC-III-III-III-1", "Chapitre Ier · La gestion d'affaires", "art. 1301–1301-5", []),
@@ -173,7 +173,7 @@ CC = [
         ("CC-IV-III", "Titre III · De l'agent des sûretés", "art. 2488-6–2488-12", []),
     ]),
     ("CC-V", "Livre V · Dispositions applicables à Mayotte", "art. 2489–2534", [
-        ("CC-V-TP", "Titre préliminaire · Dispositions relatives au titre préliminaire", "art. 2491", []),
+        ("CC-V-PRÉLIMINAIRE", "Titre préliminaire · Dispositions relatives au titre préliminaire", "art. 2491", []),
         ("CC-V-I", "Titre Ier · Dispositions relatives au livre Ier", "art. 2492–2497", []),
         ("CC-V-II", "Titre II · Dispositions relatives au livre II", "art. 2500–2502", []),
         ("CC-V-III", "Titre III · Dispositions relatives au livre III", "art. 2503–2508", []),
