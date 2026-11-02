@@ -7,11 +7,12 @@ Titres III, IV en IV bis), de koop en de bezitsregels zijn tot op
 sous-sectionniveau uitgewerkt. `synoptikon systematiek fr LEGITEXT000006070721`
 vult de rest aan uit een Légifrance-import.
 
-Gecontroleerd tegen de artikelenlijst van de LEGI-database van de DILA
-(stand 16-09-2026, via een niet-officieel extract): alle grensartikelen
-bestaan en geen geldend artikel valt buiten de boom. De namen van de
-titres en secties zijn daarmee níet gecontroleerd; de LEGI-indeling zelf
-kwam via Légifrance (Cloudflare) en de PISTE-API niet binnen.
+Gecontroleerd op 02-11-2026 tegen de officiële indeling in de LEGI-dump van de
+DILA (de import van 27-10-2026, `wettekst_artikel.pad`): elke knoop heeft de
+titel van de LEGI-sectie die precies zijn artikelen omvat, en elke titre van de
+Code staat erin. Opnieuw controleren: `scripts/systematiek_fr_controle.py`.
+Eén bewuste afwijking: `CC-IV-DG` (art. 2284–2287) staat in de Code direct
+onder Livre IV, zonder eigen kop.
 """
 
 CC = [
@@ -27,7 +28,7 @@ CC = [
         ("CC-I-VII", "Titre VII · De la filiation", "art. 310-1–342-13", []),
         ("CC-I-VIII", "Titre VIII · De la filiation adoptive", "art. 343–370-5", []),
         ("CC-I-IX", "Titre IX · De l'autorité parentale", "art. 371–387-6", []),
-        ("CC-I-X", "Titre X · De la minorité et de l'émancipation", "art. 388–413-8", []),
+        ("CC-I-X", "Titre X · De la minorité, de la tutelle et de l'émancipation", "art. 388–413-8", []),
         ("CC-I-XI", "Titre XI · De la majorité et des majeurs protégés par la loi", "art. 414–495-9", []),
         ("CC-I-XII", "Titre XII · De la gestion du patrimoine des mineurs et majeurs en tutelle", "art. 496–515", []),
         ("CC-I-XIII", "Titre XIII · Du pacte civil de solidarité et du concubinage", "art. 515-1–515-8", []),
@@ -86,10 +87,12 @@ CC = [
                     ]),
                 ]),
             ]),
-            ("CC-III-III-II", "Sous-titre II · La responsabilité extracontractuelle", "art. 1240–1252", [
+            ("CC-III-III-II", "Sous-titre II · La responsabilité extracontractuelle", "art. 1240–1254", [
                 ("CC-III-III-II-1", "Chapitre Ier · La responsabilité extracontractuelle en général", "art. 1240–1244", []),
                 ("CC-III-III-II-2", "Chapitre II · La responsabilité du fait des produits défectueux", "art. 1245–1245-17", []),
                 ("CC-III-III-II-3", "Chapitre III · La réparation du préjudice écologique", "art. 1246–1252", []),
+                ("CC-III-III-II-4", "Chapitre IV · Les troubles anormaux du voisinage", "art. 1253", []),
+                ("CC-III-III-II-5", "Chapitre V · Sanction civile en cas de faute dolosive ayant causé des dommages sériels", "art. 1254", []),
             ]),
             ("CC-III-III-III", "Sous-titre III · Autres sources d'obligations", "art. 1300–1303-4", [
                 ("CC-III-III-III-1", "Chapitre Ier · La gestion d'affaires", "art. 1301–1301-5", []),
@@ -132,7 +135,7 @@ CC = [
             ]),
             ("CC-III-VI-V", "Chapitre V · Des obligations de l'acheteur", "art. 1650–1657", []),
             ("CC-III-VI-VI", "Chapitre VI · De la nullité et de la résolution de la vente", "art. 1658–1685", []),
-            ("CC-III-VI-VIII", "Chapitre VIII · Du transport des créances et autres droits incorporels", "art. 1689–1701-1", []),
+            ("CC-III-VI-VIII", "Chapitre VIII · Du transport de certains droits incorporels, des droits successifs et des droits litigieux", "art. 1689–1701-1", []),
         ]),
         ("CC-III-VII", "Titre VII · De l'échange", "art. 1702–1707", []),
         ("CC-III-VIII", "Titre VIII · Du contrat de louage", "art. 1708–1831", []),
@@ -156,7 +159,7 @@ CC = [
         ("CC-III-XXI", "Titre XXI · De la possession et de la prescription acquisitive", "art. 2255–2278", [
             ("CC-III-XXI-I", "Chapitre Ier · Dispositions générales", "art. 2255–2257", []),
             ("CC-III-XXI-II", "Chapitre II · De la prescription acquisitive", "art. 2258–2277", [
-                ("CC-III-XXI-II-1", "Section 1 · Dispositions générales", "art. 2258–2271", []),
+                ("CC-III-XXI-II-1", "Section 1 · Des conditions de la prescription acquisitive", "art. 2260–2271", []),
                 ("CC-III-XXI-II-2", "Section 2 · De la prescription acquisitive en matière immobilière", "art. 2272–2275", []),
                 ("CC-III-XXI-II-3", "Section 3 · De la prescription acquisitive en matière mobilière", "art. 2276–2277", []),
             ]),
@@ -164,11 +167,18 @@ CC = [
         ]),
     ]),
     ("CC-IV", "Livre IV · Des sûretés", "art. 2284–2488-12", [
-        ("CC-IV-DG", "Dispositions générales", "art. 2284–2287", []),
+        ("CC-IV-DG", "Dispositions générales (zonder eigen kop in de Code)", "art. 2284–2287", []),
         ("CC-IV-I", "Titre Ier · Des sûretés personnelles", "art. 2287-1–2322", []),
-        ("CC-IV-II", "Titre II · Des sûretés réelles", "art. 2323–2488-12", []),
+        ("CC-IV-II", "Titre II · Des sûretés réelles", "art. 2323–2488-5", []),
+        ("CC-IV-III", "Titre III · De l'agent des sûretés", "art. 2488-6–2488-12", []),
     ]),
-    ("CC-V", "Livre V · Dispositions applicables à Mayotte", "art. 2489–2534", []),
+    ("CC-V", "Livre V · Dispositions applicables à Mayotte", "art. 2489–2534", [
+        ("CC-V-TP", "Titre préliminaire · Dispositions relatives au titre préliminaire", "art. 2491", []),
+        ("CC-V-I", "Titre Ier · Dispositions relatives au livre Ier", "art. 2492–2497", []),
+        ("CC-V-II", "Titre II · Dispositions relatives au livre II", "art. 2500–2502", []),
+        ("CC-V-III", "Titre III · Dispositions relatives au livre III", "art. 2503–2508", []),
+        ("CC-V-IV", "Titre IV · Dispositions relatives à l'immatriculation des immeubles et aux droits sur les immeubles", "art. 2509–2534", []),
+    ]),
 ]
 
 # Codes die in eerdere versies van de voorbeeldinhoud een andere betekenis
