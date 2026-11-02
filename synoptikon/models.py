@@ -714,11 +714,12 @@ KAARTSOORTEN: dict[str, tuple[str, str]] = {
     "kern": ("inhoud → artikel", "Welk artikel regelt dit?"),
     "plaats": ("waar staat het", "Plaats in de systematiek van de wet"),
     "tegenhanger": ("tegenhanger", "Het corresponderende artikel in een ander stelsel"),
+    "cloze": ("voorwaarde invullen", "Elke voorwaarde die je markeerde als gat in de tekst (typen in Wunderkammer)"),
     "arrest": ("arrest → rechtsregel", "Wat besliste de rechter?"),
     "feiten": ("feiten → arrest", "Welk arrest hoort bij deze feiten?"),
     "vrij": ("vrije kaart", "Eigen vraag en antwoord"),
 }
-ARTIKELSOORTEN = ("artikel", "kern", "plaats", "tegenhanger")
+ARTIKELSOORTEN = ("artikel", "kern", "plaats", "tegenhanger", "cloze")
 ARRESTSOORTEN = ("arrest", "feiten")
 
 
@@ -765,7 +766,7 @@ class Kaart(Base):
     feiten: Mapped[str | None] = mapped_column(Text)
     # Vrij te vullen; bij artikelkaarten overschrijft `vraag` de voorkant (kern: de omschrijving om naar te vragen)
     vraag: Mapped[str | None] = mapped_column(Text)
-    antwoord: Mapped[str | None] = mapped_column(Text)  # arrest: de rechtsregel
+    antwoord: Mapped[str | None] = mapped_column(Text)  # arrest: de rechtsregel; cloze: de gemarkeerde voorwaarde (het gat)
     notitie: Mapped[str | None] = mapped_column(Text)  # komt onder het antwoord
     actief: Mapped[bool] = mapped_column(default=True)
     # Uit een notitie (services/notities.py): eerst een voorstel, dat je overneemt (status leeg) of afwijst. Een

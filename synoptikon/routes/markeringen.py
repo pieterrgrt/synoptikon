@@ -50,7 +50,9 @@ def nieuw(request: Request, quote: str = Form(...), voor: str = Form(""), na: st
     if m is None:
         raise HTTPException(422)
     vakken.onthoud(db, pid, m.vak)
-    return JSONResponse({"id": m.id})
+    from ..services import leren
+    nieuw = leren.clozes_bij_markering(db, m)  # een voorwaarde in een artikel dat al kaarten heeft: meteen een cloze
+    return JSONResponse({"id": m.id, "kaarten": len(nieuw)})
 
 
 def _eigen(request: Request, db: Session, mid: int) -> Markering:
@@ -66,6 +68,9 @@ def wijzig(request: Request, mid: int, soort: str = Form(""), notitie: str = For
     m = _eigen(request, db, mid)
     if soort in MARKERINGSOORTEN:
         m.soort = soort
+        if soort == "voorwaarde":
+            from ..services import leren
+            leren.clozes_bij_markering(db, m)
     if notitie is not None:
         m.notitie = notitie.strip() or None
     if vak is not None:

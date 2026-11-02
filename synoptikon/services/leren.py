@@ -165,8 +165,11 @@ def bewaarde_bronnen(db: Session, profiel_id: int) -> set[int]:
     return set(db.scalars(select(Kaart.bron_id).join(Leerlijst).where(Leerlijst.profiel_id == profiel_id, Kaart.bron_id.is_not(None))).all())
 
 
-def _sleutel(soort, stelsel, wet, nummer, doel, bron_id, zaak, vraag, lid=None) -> tuple:
-    """Waar een kaart over gaat: het artikel (en lid), het arrest (bron of zaaknaam) of, bij een vrije kaart, de vraag."""
+def _sleutel(soort, stelsel, wet, nummer, doel, bron_id, zaak, vraag, lid=None, gat=None) -> tuple:
+    """Waar een kaart over gaat: het artikel (en lid), het arrest (bron of zaaknaam) of, bij een vrije kaart, de vraag.
+    Een cloze gaat over één voorwaarde in het artikel (`gat`, de gemarkeerde tekst)."""
+    if soort == "cloze":
+        return (soort, stelsel, wet or None, nummer, _strak(gat))
     if soort in ARTIKELSOORTEN:
         return (soort, stelsel, wet or None, nummer, doel) + ((lid,) if lid else ())
     if soort in ARRESTSOORTEN:
@@ -188,7 +191,8 @@ def maak_kaarten(
 
     `per_lid`: een lang artikel met leden wordt één artikelkaart per lid (één kaart = één feit), tenzij het hele artikel
     al in de lijst staat."""
-    bestaand = {_sleutel(k.soort, k.stelsel_code, k.wet, k.nummer, k.doel_stelsel, k.bron_id, k.zaak, k.vraag, k.lid) for k in lijst.kaarten}
+    bestaand = {_sleutel(k.soort, k.stelsel_code, k.wet, k.nummer, k.doel_stelsel, k.bron_id, k.zaak, k.vraag, k.lid, k.antwoord)
+                for k in lijst.kaarten}
     velden = {k: (v.strip() or None) if isinstance(v, str) else v for k, v in velden.items()}
     if bron is not None:
         velden.setdefault("zaak", None)
@@ -200,6 +204,9 @@ def maak_kaarten(
     for soort in soorten:
         for doel in (doelen or [None]) if soort == "tegenhanger" else [None]:
             if soort in ARTIKELSOORTEN and ref is None or soort in ARRESTSOORTEN and not (bron or velden.get("zaak")):
+                continue
+            if soort == "cloze":
+                uit += _clozes(db, lijst, ref, bestaand)
                 continue
             hele = _sleutel(soort, ref.stelsel if ref else None, ref.wet if ref else None, ref.nummer if ref else None, doel,
                             bron.id if bron else None, velden.get("zaak"), velden.get("vraag"))
@@ -217,6 +224,57 @@ def maak_kaarten(
                 uit.append(k)
     db.flush()
     return uit
+
+
+def _strak(tekst: str | None) -> str:
+    return re.sub(r"\s+", " ", tekst or "").strip().lower()
+
+
+def voorwaarden(db: Session, profiel_id: int, ref: Ref, vak: str | None) -> list[Markering]:
+    """De voorwaarden (Tatbestandsmerkmale) die je in dit artikel markeerde, voor dit vak, in de volgorde van de tekst."""
+    ms = [m for m in mk.voor_vak(mk.van_artikel(db, profiel_id, ref.stelsel, ref.wet, ref.nummer), vak) if m.soort == "voorwaarde"]
+    t = corr.Context(db).tekst(ref)
+    tekst = t.tekst if t and t.tekst else ""
+    plek = {m.id: (r[0] if (r := mk.vind(tekst, m)) else 10**9) for m in ms}
+    return sorted(ms, key=lambda m: (plek[m.id], m.id))
+
+
+def _clozes(db: Session, lijst: Leerlijst, ref: Ref, bestaand: set) -> list[Kaart]:
+    """Eén clozekaart per gemarkeerde voorwaarde (één kaart = één feit); het gat staat in `antwoord`."""
+    uit = []
+    for m in voorwaarden(db, lijst.profiel_id, ref, lijst.vak):
+        sleutel = _sleutel("cloze", ref.stelsel, ref.wet, ref.nummer, None, None, None, None, gat=m.quote)
+        if sleutel in bestaand:
+            continue
+        bestaand.add(sleutel)
+        k = Kaart(uid=nieuwe_uid(), lijst=lijst, soort="cloze", antwoord=re.sub(r"\s+", " ", m.quote).strip(),
+                  stelsel_code=ref.stelsel, wet=ref.wet, nummer=ref.nummer)
+        db.add(k)
+        uit.append(k)
+    return uit
+
+
+def clozes_bij_markering(db: Session, m: Markering) -> list[Kaart]:
+    """Een nieuwe voorwaarde in een artikel: in elke lijst (van dat vak) waar het artikel al een kaart heeft, komt er een
+    clozekaart bij. Zo hoef je na het markeren niets meer te doen."""
+    if m.soort != "voorwaarde" or not (m.stelsel_code and m.nummer):
+        return []
+    ref = Ref(m.stelsel_code, m.nummer, m.wet or None)
+    uit = []
+    for lijst in lijsten_van(db, m.profiel_id):
+        if m.vak and lijst.vak and m.vak.lower() != lijst.vak.lower():
+            continue
+        if not any(k.soort in ARTIKELSOORTEN and (k.stelsel_code, k.wet or None, k.nummer) == (ref.stelsel, ref.wet, ref.nummer)
+                   for k in lijst.kaarten):
+            continue
+        uit += maak_kaarten(db, lijst, ["cloze"], ref=ref)
+    return uit
+
+
+def cloze_tekst(tekst: str, gat: str, voor: str = "", na: str = "") -> tuple[str, str] | None:
+    """(tekst vóór het gat, tekst erna) als de voorwaarde in de tekst staat; anders None."""
+    r = mk.vind(tekst, Markering(quote=gat, voor=voor, na=na))
+    return (tekst[:r[0]], tekst[r[1]:]) if r else None
 
 
 def leden_van(db: Session, ref: Ref) -> list[str]:
@@ -278,6 +336,8 @@ class Bouwer:
             # De kern en voorwaarden die je aanwees staan vet; een 'let op' komt als regel eronder.
             achter = f"{self._kop(ref, wa)}{lid}\n\n{mk.markeer_md(self._tekst(ref, wa, k.lid), ms)}"
             achter += "".join(f"\n\n*{_('Let op')}:* {m.notitie or m.quote}" for m in ms if m.soort == "let_op" and (not k.lid or m.quote in self._tekst(ref, wa, k.lid)))
+        elif k.soort == "cloze" and ref:
+            voor, achter = self._cloze(k, ref, wa)
         elif k.soort == "kern" and ref:
             omschrijving = k.vraag or (wa.opschrift if wa and wa.opschrift else None) or _("(schrijf bij deze kaart een omschrijving)")
             wet = ref.wet_naam or self.namen.get(ref.stelsel, ref.stelsel)
@@ -314,6 +374,40 @@ class Bouwer:
         if k.notitie:
             achter += f"\n\n---\n\n{k.notitie}"
         return Zijden(voor, achter, url)
+
+    def _cloze_delen(self, k: Kaart, ref: Ref) -> tuple[str, str, str] | None:
+        """(ervoor, gat, erna) binnen het lid waarin de voorwaarde staat (één feit, niet het hele artikel)."""
+        t = self.ctx.tekst(ref)
+        if not (t and t.tekst and k.antwoord):
+            return None
+        m = next((m for m in self._markeringen(k, ref) if m.soort == "voorwaarde" and _strak(m.quote) == _strak(k.antwoord)), None)
+        stukken = [x for _n, x in leden(t.tekst)] or [t.tekst]
+        for stuk in stukken:
+            r = cloze_tekst(stuk, k.antwoord, m.voor if m else "", m.na if m else "")
+            if r:
+                return r[0], k.antwoord, r[1]
+        return None
+
+    def _cloze(self, k: Kaart, ref: Ref, wa) -> tuple[str, str]:
+        delen = self._cloze_delen(k, ref)
+        if delen is None:  # de voorwaarde staat niet (meer) in de wettekst
+            return (f"{self._kop(ref, wa)}\n\n{_('Welke voorwaarde?')}", f"**{k.antwoord or '?'}**\n\n{_('(niet meer gevonden in de wettekst)')}")
+        a, gat, b = delen
+        voor = f"{self._kop(ref, wa)}\n\n{a.strip()} […] {b.strip()}".rstrip()
+        achter = f"{self._kop(ref, wa)}\n\n{a.strip()} **{gat}** {b.strip()}".rstrip()
+        return voor, achter
+
+    def cloze(self, k: Kaart) -> str | None:
+        """Voor Wunderkammer: de tekst met het gat als {{c1::…}} (HTML-veilig), zodat het een typkaart wordt."""
+        ref = ref_van(k)
+        if k.soort != "cloze" or ref is None:
+            return None
+        delen = self._cloze_delen(k, ref)
+        if delen is None:
+            return None
+        import html as htmllib
+        a, gat, b = (htmllib.escape(x.replace("{{", "{ {").replace("}}", "} }"), quote=False) for x in delen)
+        return f"{a}{{{{c1::{gat}}}}}{b}".strip()
 
     def _tegenhanger(self, ref: Ref, doel: str | None) -> str:
         sleutel = (ref.stelsel, ref.wet, ref.nummer)
