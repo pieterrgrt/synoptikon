@@ -22,17 +22,19 @@
 {% if open_id %}{% for o in logboek if o.id == open_id %}{% with groot = true %}{% include "_opzoeking.html" %}{% endwith %}{% endfor %}{% endif %}
 
 {% if uitkomst %}
+{% if uitkomst.onbekend %}<p class="melding fout" role="status">{{ _('"{wet}" ken ik niet als wet, of die wet is niet ingelezen. Daarom staat hier geen artikel: een artikel uit een andere wet zou het verkeerde zijn.', wet=uitkomst.onbekend) }}</p>{% endif %}
 {# 1. Artikelen: de tekst meteen #}
 {% for g in uitkomst.artikelen %}
 <article class="bron soort-wet wet-artikel gevonden" id="art-{{ loop.index }}">
   <header class="bron-kop">
     {{ sc(g.stelsel) }} <a class="citeertitel" href="{{ g.ref.url }}" title="{{ _('Plaats in de systematiek en corresponderende artikelen in andere stelsels') }}">{{ g.ref.citeer }}</a>
     {% if g.artikel and g.artikel.opschrift %}<span class="bron-titel">{{ g.artikel.opschrift }}</span>{% endif %}
-    {% if g.artikel %}{{ l.ster(g.ref, bewaarde_refs, terug ~ '#art-' ~ loop.index) }}{% endif %}
+    {% if g.artikel %}{{ l.ster(g.ref, bewaarde_refs, terug ~ '#art-' ~ loop.index) }} {{ l.citeer(g.ref.citeer) }}{% endif %}
   </header>
   {% if g.plaats %}<p class="pad klein">{% if g.wettekst %}<a href="/stelsels/{{ g.stelsel }}/wet/{{ g.wettekst.id }}">{{ wet_titel(g.wettekst) }}</a> › {% endif %}{{ g.plaats | join(' › ') }}</p>{% endif %}
+  {% if g.artikel and g.wettekst %}<p class="stil klein peil">{{ peil(g.wettekst) }}{% if g.wettekst.taal and g.wettekst.taal != rechtstaal() %} · {{ _('Taalversie: {taal}', taal=TALEN.get(g.wettekst.taal, g.wettekst.taal)) }} · {{ _('geen {code}-versie ingelezen', code=rechtstaal() | upper) }}{% endif %}</p>{% endif %}
   {% if g.artikel %}
-  <div class="origineel" dir="auto" lang="{{ g.wettekst.taal or '' }}">{{ g.artikel.tekst | md }}</div>
+  <div class="origineel" dir="auto" lang="{{ g.wettekst.taal or '' }}">{{ g.artikel.tekst | md_lid(g.ref.detail) }}</div>
   <p class="acties klein"><a href="{{ g.url }}">{{ _('In de wet lezen') }} →</a> <a href="{{ g.ref.url }}">{{ _('Vergelijken met andere stelsels') }} →</a></p>
   {% else %}
   <p class="stil">{{ _('Dit artikel staat niet in de geïmporteerde tekst (vervallen, of de wet is niet ingelezen).') }}</p>
@@ -55,12 +57,23 @@
 </section>
 {% endif %}
 
+{# 2b. Opschriften in de systematiek: de plaats in de wet vóór de rechtspraak #}
+{% if uitkomst.opschriften %}
+<section class="blok">
+  <h2>{{ _('In de wet') }}</h2>
+  <ul class="treffers">{% for k in uitkomst.opschriften %}
+    <li><a href="/stelsels/{{ k.stelsel_code }}/lees/{{ k.id }}">{{ sc(k.stelsel_code) }} {{ k.label }}</a>{% if k.bereik %} <span class="stil">{{ k.bereik }}</span>{% endif %}
+      <p class="pad klein">{{ k.pad()[:-1] | map(attribute='label') | join(' › ') }}</p></li>{% endfor %}
+  </ul>
+</section>
+{% endif %}
+
 {# 3. Uitspraken in de eigen bronnen #}
 {% if uitkomst.uitspraken %}
 <section class="blok">
   <h2>{{ _('Uitspraken') }}</h2>
   <ul class="treffers">{% for g in uitkomst.uitspraken %}
-    <li><a href="{{ g.url }}">{{ sc(g.stelsel) }} {{ g.titel }}</a>{% if g.bron.vindplaats %} <span class="stil mono klein">{{ g.bron.vindplaats }}</span>{% endif %} {{ l.ster_bron(g.bron, false, terug) }}
+    <li><a href="{{ g.url }}">{{ sc(g.stelsel) }} {{ g.titel }}</a>{% if g.bron.vindplaats %} <span class="stil mono klein">{{ g.bron.vindplaats }}</span>{% endif %} {{ l.ster_bron(g.bron, false, terug) }} {{ l.citeer(citaat_bron(g.bron)) }}
       {% if g.bron.tekst %}<p class="snippet serif">{{ g.bron.tekst | truncate(260) }}</p>{% endif %}</li>{% endfor %}
   </ul>
 </section>
@@ -84,7 +97,7 @@
   {% if not uitkomst.raak %}<p>{{ _('Synoptikon vindt hier zelf niets dat precies past.') }}</p>{% endif %}
   {% if herkend %}
   <button class="knop {% if not uitkomst.raak %}primair{% endif %}">{{ _('Ophalen bij {bron}', bron=herkend.bron) }}</button>
-  <span class="hint">{{ herkend.waarde }} · {{ _('zaaknaam, datum, zaaknummer en link komen rechtstreeks uit de bron; Claude alleen als de bron niets geeft.') }}</span>
+  <span class="hint">{% if herkend.naam %}{{ herkend.naam }} = {% endif %}{{ herkend.waarde }} · {{ _('zaaknaam, datum, zaaknummer en link komen rechtstreeks uit de bron; Claude alleen als de bron niets geeft.') }}</span>
   {% else %}
   <button class="knop {% if not uitkomst.raak %}primair{% endif %}">{{ _('Claude laten opzoeken') }}</button>
   <span class="hint">{{ _('Waar het staat, wat er staat, en wat het betekent; wettekst uit de lokale import, rechtspraak van het web.') }}</span>
@@ -108,7 +121,7 @@
 {% endif %}
 {% endmacro %}
 <h2 class="gebied">{{ _('Overal gezocht') }}</h2>
-{% call groep(_('In de wetteksten'), resultaat.wetteksten, open=not (uitkomst.artikelen or uitkomst.wetten or uitkomst.uitspraken)) %}
+{% call groep(_('In de wetteksten'), resultaat.wetteksten, open=not (uitkomst.artikelen or uitkomst.wetten)) %}
 <nav class="bladeren">
   {% set basis = request.url.remove_query_params(['p', 'o']) %}
   {% if p > 1 %}<a class="knop klein" href="{{ basis.include_query_params(p=p - 1) }}">‹ {{ _('vorige') }}</a>{% endif %}

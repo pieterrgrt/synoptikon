@@ -6,7 +6,7 @@ from synoptikon import db as database
 from synoptikon.importers import bwb, store
 from synoptikon.models import Correspondentie, Systematiek
 from synoptikon.seed import seed
-from synoptikon.services.artikelen import Plaatser, herken, lees, parse_bereik, plaatser, sleutel
+from synoptikon.services.artikelen import Plaatser, Ref, herken, lees, parse_bereik, plaatser, sleutel
 from synoptikon.services.systematiek import bouw_uit_wettekst
 
 FIX = Path(__file__).parent / "fixtures"
@@ -29,6 +29,25 @@ def test_herkennen_van_verwijzingen():
     assert herken("culpa in contrahendo") == [] and herken("ECLI:NL:HR:2005:AT7337") == []
     assert lees("FR", "—").nummer is None
     assert lees("NL", "3:84").citeer == "art. 3:84 BW" and lees("DE", "§§ 203–213").citeer == "§§ 203–213 BGB"
+
+
+def test_nederlandse_wetten_buiten_het_bw():
+    """Rv, Sv, Sr, Gw en Awb nummeren niet als het BW (boek:nummer), maar door of per hoofdstuk."""
+    assert herken("art. 12 Rv") == [Ref("NL", "12", "Rv")]
+    assert herken("art. 27 Sv") == [Ref("NL", "27", "Sv")]
+    assert herken("art. 310 Sr") == [Ref("NL", "310", "Sr")]
+    assert herken("art. 92 Gw") == [Ref("NL", "92", "Gw")]
+    assert herken("art. 3:40 Awb") == [Ref("NL", "3:40", "Awb")]
+    assert herken("art. 6 Rome I") == [Ref("EU", "6", "Rome I")]
+
+
+def test_onbekende_wet_geeft_geen_artikel_uit_een_andere_wet():
+    """"art. 3:40 Xyz" is niet art. 3:40 BW."""
+    from synoptikon.services.artikelen import onbekende_wet
+
+    assert herken("art. 3:40 Xyz") == [] and onbekende_wet("art. 3:40 Xyz") == "Xyz"
+    for q in ("6:162 BW", "§ 823 Abs. 1", "art. L217-3", "art. 1240 C. civ.", "6:162 lid 2", "art. 6:162 BW (oud)"):
+        assert onbekende_wet(q) is None, q
 
 
 def test_sleutels_en_bereiken():
@@ -291,3 +310,40 @@ def test_duitse_wetten_met_artikelen():
 
     assert Ref("DE", "1", "GG").citeer == "Art. 1 GG"
     assert Ref("DE", "1", "PatG").citeer == "§ 1 PatG"
+
+
+def test_artikelpagina_met_ingelezen_wet_peil_buren_en_niet_bestaand(client):
+    """Met BW Boek 3 ingelezen: peildatum bij de tekst, alle artikelen van de afdeling bij 'Verder in', en een nummer
+    dat er niet in staat (3:89) bestaat niet, met de buren ervoor en erna."""
+    g = bwb.parse((FIX / "bwb_boek3.xml").read_bytes(), "BWBR0005291")
+    with database.session() as s:
+        wid = store.sla_op(s, "NL", g).id
+    try:
+        html = client.get("/artikelen/NL/3:85").text
+        assert "tekst geldend sinds" in html and "vergeleken met de bron op" in html
+        verder = html.split("Verder in")[1]
+        assert "art. 3:84 BW" in verder and "art. 3:90 BW" in verder
+        r = client.get("/artikelen/NL/3:89")
+        assert r.status_code == 404 and "Dit artikel bestaat niet in" in r.text
+        assert "/artikelen/NL/3:85" in r.text and "/artikelen/NL/3:90" in r.text
+        assert "Aan een thema koppelen" not in r.text and 'action="/leren/snel"' not in r.text
+    finally:
+        with database.session() as s:
+            from synoptikon.models import Wettekst
+
+            s.delete(s.get(Wettekst, wid))
+
+
+def test_aangehaald_lid_uitgelicht():
+    from synoptikon import md
+
+    nl = "1. Hij die jegens een ander.\n\n2. Als onrechtmatige daad.\n\n3. Toerekening."
+    html = str(md.render_lid(nl, "lid 2"))
+    assert html.count('class="lid-blok gekozen"') == 1 and "Als onrechtmatige daad" in html.split("gekozen")[1].split("</div>")[0]
+    de = "(1) Zur Begründung.\n\n(2) Ein Schuldverhältnis entsteht auch durch\n\n1. die Aufnahme,\n\n(3) Dritte."
+    html = str(md.render_lid(de, "Abs. 2 Nr. 1"))
+    gekozen = html.split('class="lid-blok gekozen"')[1].split('<div class="lid-blok">')[0]
+    assert "Ein Schuldverhältnis" in gekozen and "die Aufnahme" in gekozen and "Dritte" not in gekozen
+    assert str(md.render_lid(de, None)) == str(md.render(de))
+    assert str(md.render_lid("Eén alinea.", "lid 1")) == str(md.render("Eén alinea."))
+    assert Ref("DE", "823", detail="Abs. 1").url == "/artikelen/DE/823?lid=Abs.%201"

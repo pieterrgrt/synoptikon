@@ -20,9 +20,9 @@ from .db import init_db
 from .models import RECHTSFAMILIES, RELATIE_TYPES
 from .routes import auth as auth_routes
 from .routes import artikelen, begrippen, bewaard, bronnen, eu, gedeeld, invoer, leren, markeringen as markeringen_routes, opzoeken, profielen, stelsels, vertalingen, vragen, wetteksten, wunderkammer
-from .services import markeringen, stelselkeuze, wetboek
+from .services import citeren, export, markeringen, stelselkeuze, wetboek
 from .services.artikelen import ref_uit_bron, wetnaam
-from .services.helpers import per_familie
+from .services.helpers import extra_titel, per_familie
 
 HIER = Path(__file__).parent
 
@@ -44,6 +44,7 @@ def stelsel_code(code: str | None) -> Markup:
 templates = Jinja2Templates(directory=str(HIER / "templates"))
 templates.env.filters["md"] = md.render
 templates.env.filters["md_inline"] = md.render_inline
+templates.env.filters["md_lid"] = md.render_lid
 templates.env.filters["markeer"] = markeringen.markeer_html
 templates.env.globals["verweesd"] = markeringen.verweesd
 templates.env.globals["RELATIE_TYPES"] = RELATIE_TYPES
@@ -57,6 +58,12 @@ templates.env.globals["wetnaam"] = wetnaam
 templates.env.globals["wetref"] = wetboek.ref
 templates.env.globals["wet_titel"] = wetboek.toon_titel
 templates.env.globals["wet_afk"] = wetboek.toon_afkorting
+templates.env.globals["peil"] = wetboek.peil
+templates.env.globals["extra_titel"] = extra_titel
+templates.env.globals["citaat_bron"] = citeren.bron
+templates.env.globals["peil_bron"] = export.peil_bron
+templates.env.globals["geexporteerd"] = export.geexporteerd
+templates.env.globals["toon_datum"] = wetboek.toon_datum
 templates.env.globals["RECHTSFAMILIES"] = RECHTSFAMILIES
 templates.env.globals["per_familie"] = per_familie
 templates.env.globals["per_regio"] = stelselkeuze.per_regio
@@ -68,6 +75,7 @@ templates.env.globals["n_"] = i18n.n_
 templates.env.globals["vt"] = i18n.vt
 templates.env.globals["TALEN"] = i18n.TALEN
 templates.env.globals["huidige_taal"] = i18n.taal
+templates.env.globals["rechtstaal"] = i18n.rechtstaal
 templates.env.globals["toont_origineel"] = i18n.toont_origineel
 
 

@@ -6,29 +6,43 @@
 {% block inhoud %}
 <p class="kruimel"><a href="/artikelen">{{ _('Artikelen') }}</a> › {{ vt(stelsel.naam) }}{% if lezen %} › <a href="{% if lezen.knoop %}/stelsels/{{ stelsel.code }}#knoop-{{ lezen.knoop.id }}{% else %}/stelsels/{{ stelsel.code }}/wet/{{ lezen.wet.id }}{% endif %}">{{ lezen.wet.titel }}</a>{% endif %}</p>
 <div class="paginakop">
-  <h1>{{ ref.citeer }} {{ l.ster(ref, bewaarde_refs, request.url.path) }}</h1>
+  <h1>{{ ref.citeer }} {% if not bestaat_niet %}{{ l.ster(ref, bewaarde_refs, request.url.path) }} {{ l.citeer(ref.citeer) }}{% endif %}</h1>
   <form method="get" action="/artikelen" class="inline"><input type="search" name="q" placeholder="{{ _('ander artikel: 6:162 · § 823 · 1240') }}" aria-label="{{ _('Ander artikel opzoeken') }}"></form>
 </div>
 {% if tekst and tekst.opschrift %}<p class="bron-titel groot">{{ tekst.opschrift }}</p>{% endif %}
-{% if pad %}{{ m.pad(pad, ref.stelsel) }}{% elif not ref.wet %}<p class="pad">{{ _('Niet geplaatst: de systematiek van {naam} heeft (nog) geen knoop voor dit nummer.', naam=vt(stelsel.naam)) }}</p>{% endif %}
+{% if bestaat_niet %}
+<p class="melding fout" role="status">{{ _('Dit artikel bestaat niet in {wet}, versie {versie}.', wet=wet_titel(bestaat_niet.wet), versie=toon_datum(bestaat_niet.wet.versie)) }}
+{% if bestaat_niet.vorig or bestaat_niet.volgend %}{{ _('Dichtstbij:') }}{% if bestaat_niet.vorig %} <a href="{{ bestaat_niet.vorig.url }}">{{ bestaat_niet.vorig.citeer }}</a>{% endif %}{% if bestaat_niet.vorig and bestaat_niet.volgend %} ·{% endif %}{% if bestaat_niet.volgend %} <a href="{{ bestaat_niet.volgend.url }}">{{ bestaat_niet.volgend.citeer }}</a>{% endif %}{% endif %}</p>
+{% elif pad %}{{ m.pad(pad, ref.stelsel) }}{% elif not ref.wet %}<p class="pad">{{ _('Niet geplaatst: de systematiek van {naam} heeft (nog) geen knoop voor dit nummer.', naam=vt(stelsel.naam)) }}</p>{% endif %}
 
 {% if tekst %}
 <article class="bron detail soort-wet">
-  <div class="origineel" dir="auto" lang="{{ stelsel.taal }}" {{ mk.attrs(markeer) }}>{{ tekst.tekst | md | markeer(markeringen) }}</div>
+  <div class="origineel" dir="auto" lang="{{ stelsel.taal }}" {{ mk.attrs(markeer) }}>{{ tekst.tekst | md_lid(ref.detail) | markeer(markeringen) }}</div>
   {{ mk.lijst(markeringen, tekst.tekst | md, request.url.path) }}
   <footer class="bron-voet">
     <a href="{{ tekst.url }}">{{ _('bron in Synoptikon') if tekst.herkomst == 'bron' else _('geïmporteerde wettekst') }}</a>
     {% if lezen %}<a href="{{ lezen.url }}">{{ _('in de wettekst lezen') }}{% if lezen.knoop %} · {{ lezen.knoop.label | truncate(60) }}{% elif lezen.deel %} · {{ lezen.deel.label | truncate(60) }}{% endif %}</a>{% endif %}
     {% if tekst.officieel %}<a href="{{ tekst.officieel }}" target="_blank" rel="noopener">{{ _('officiële bron ↗') }}</a>{% endif %}
+    {% if lezen and tekst.herkomst != 'bron' %}<span class="stil peil">{{ peil(lezen.wet) }}</span>{% endif %}
   </footer>
 </article>
+{% if getoonde_taal %}
+<p class="stil klein taalversie">{{ _('Taalversie: {taal}', taal=TALEN.get(getoonde_taal, getoonde_taal)) }}{% if getoonde_taal != rechtstaal() %} · {{ _('geen {code}-versie ingelezen', code=rechtstaal() | upper) }}{% if lezen.wet.wet_id %} · <a href="https://eur-lex.europa.eu/legal-content/{{ rechtstaal() | upper }}/TXT/?uri=CELEX:{{ lezen.wet.wet_id.split('.')[0] }}" target="_blank" rel="noopener">EUR-Lex {{ rechtstaal() | upper }} ↗</a>{% endif %}{% endif %}</p>
+{% endif %}
+{% for wa in taalversies %}
+<details class="blok taalversie-ander">
+  <summary>{{ TALEN.get(wa.wettekst.taal, wa.wettekst.taal) }}{% if wa.opschrift %} · {{ wa.opschrift }}{% endif %}</summary>
+  <div class="origineel" dir="auto" lang="{{ wa.wettekst.taal }}">{{ wa.tekst | md_lid(ref.detail) }}</div>
+  <p class="stil klein">{{ peil(wa.wettekst) }}</p>
+</details>
+{% endfor %}
 {% if lezen and (lezen.vorig or lezen.volgend) %}
 <nav class="bladeren wet-bladeren" aria-label="{{ _('Bladeren') }}">
   {% if lezen.vorig %}<a class="knop klein" href="{{ lezen.vorig.url }}" rel="prev">‹ {{ lezen.vorig.citeer }}</a>{% else %}<span></span>{% endif %}
   {% if lezen.volgend %}<a class="knop klein" href="{{ lezen.volgend.url }}" rel="next">{{ lezen.volgend.citeer }} ›</a>{% endif %}
 </nav>
 {% endif %}
-{% else %}
+{% elif not bestaat_niet %}
 <p class="stil">{{ _('Geen tekst in Synoptikon.') }}{% if mag_bewerken %} <a href="/bronnen/nieuw?stelsel={{ ref.stelsel }}">{{ _('Voer het artikel in als bron') }}</a> · <a href="/wetteksten">{{ _('wetteksten') }}</a>{% endif %}</p>
 {% endif %}
 
@@ -38,6 +52,7 @@
 <p class="hint">{{ _('Uitleg in het licht van de richtlijn: zie de werking op de pagina van de handeling.') if europees[0].handeling.soort == 'richtlijn' else _('Uitleg in het licht van de handeling: zie de werking op de pagina van de handeling.') }}</p>
 {% endif %}
 
+{% if not bestaat_niet %}
 <h2>{{ _('Corresponderende artikelen') }}</h2>
 {% for c, eigen, kolommen in thema_s %}
 <section class="thema">
@@ -86,10 +101,12 @@
     <div class="acties"><button class="knop klein">{{ _('Thema aanmaken') }}</button></div>
   </form>
 </details>
+{% endif %}
 
-{% if buren %}
-<h2>{{ _('Verder in {plaats}', plaats=pad[-1].label) }}</h2>
-<p class="buren">{% for b in buren %}<a href="{{ b.url }}">{{ b.citeer }}</a>{% endfor %}</p>
+{% if buren and not bestaat_niet %}
+<h2>{{ _('Verder in {plaats}', plaats=pad[-1].label) if buren_volledig else _('In een thema uit {plaats}', plaats=pad[-1].label) }}</h2>
+<p class="buren">{% for b, thema in buren %}<a href="{{ b.url }}"{% if thema and buren_volledig %} class="in-thema" title="{{ _('staat in een thema') }}"{% endif %}>{{ b.citeer }}</a>{% endfor %}</p>
+{% if buren_volledig and buren | selectattr(1) | list %}<p class="hint">{{ _('Vet: staat in een thema, met corresponderende artikelen.') }}</p>{% endif %}
 {% endif %}
 
 {% if concordanties %}

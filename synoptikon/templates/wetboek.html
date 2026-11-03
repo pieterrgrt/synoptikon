@@ -17,7 +17,7 @@
     <input type="search" name="artikel" value="{{ zoek or '' }}" placeholder="{{ _('Artikel of zoekwoord in deze wet') }}" aria-label="{{ _('Artikel of zoekwoord in deze wet') }}" enterkeyhint="go">
   </form>
 </div>
-<p class="stil klein">{% if w.wet %}{{ wet_afk(w) }} · {% endif %}{{ _('versie {versie}', versie=w.versie) }}{% if w.taal and w.taal != huidige_taal() %} · {{ _('tekst in het {taal}', taal=TALEN.get(w.taal, w.taal)) }}{% endif %} · {{ n_('{n} artikel', '{n} artikelen', ih.wortel.aantal) }}{% if w.bron_url %} · <a href="{{ w.bron_url }}" target="_blank" rel="noopener">{{ _('officiële bron ↗') }}</a>{% endif %}{% if ih.afgeleid %} · {{ _('indeling uit de systematiek van Synoptikon, niet uit de bron') }}{% endif %}</p>
+<p class="stil klein">{% if w.wet %}{{ wet_afk(w) }} · {% endif %}{{ peil(w) }}{% if w.taal and w.taal != huidige_taal() %} · {{ _('tekst in het {taal}', taal=TALEN.get(w.taal, w.taal)) }}{% endif %} · {{ n_('{n} artikel', '{n} artikelen', ih.wortel.aantal) }}{% if w.bron_url %} · <a href="{{ w.bron_url }}" target="_blank" rel="noopener">{{ _('officiële bron ↗') }}</a>{% endif %}{% if ih.afgeleid %} · {{ _('indeling uit de systematiek van Synoptikon, niet uit de bron') }}{% endif %}</p>
 
 {% if in_systematiek %}<p class="klein"><a href="/stelsels/{{ stelsel.code }}?wet={{ w.id }}">{{ _('Deze wet in de systematiek van het stelsel') }} →</a></p>{% endif %}
 

@@ -74,3 +74,13 @@ def op_familie(stelsels) -> list:
 
 def stelsels_per_code(db: Session) -> dict[str, Stelsel]:
     return {s.code: s for s in db.scalars(select(Stelsel)).all()}
+
+
+def extra_titel(hoofd: str | None, titel: str | None) -> str:
+    """De titel naast een citeertitel, behalve als die er al in staat: "EuGH 17. September 2002, C-334/00 (Fonderie …
+    Tacconi SpA gegen …)" krijgt de partijnamen niet nog eens."""
+    if not titel:
+        return ""
+    if hoofd and titel.strip().casefold() in hoofd.casefold():
+        return ""
+    return titel

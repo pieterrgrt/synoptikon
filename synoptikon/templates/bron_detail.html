@@ -5,11 +5,11 @@
 {% block inhoud %}
 <p class="kruimel"><a href="/bronnen">{{ _('Bronnen') }}</a> › {{ vt(bron.stelsel.naam) }} › {{ _(soorten.get(bron.soort, bron.soort)) }}</p>
 <div class="paginakop">
-  <h1>{{ bron.citeertitel }}</h1>
+  <h1>{{ bron.citeertitel }} {{ l.citeer(citaat_bron(bron)) }}</h1>
   {% if bron.soort == 'rechtspraak' %}{{ l.ster_bron(bron, bron_bewaard, request.url.path) }}{% endif %}
   <a class="knop klein" href="/bronnen/{{ bron.id }}/bewerken">{{ _('Bewerken') }}</a>
 </div>
-{% if bron.titel %}<p class="bron-titel groot" lang="{{ bron.taal }}">{{ bron.titel }}</p>{% endif %}
+{% if extra_titel(bron.citeertitel, bron.titel) %}<p class="bron-titel groot" lang="{{ bron.taal }}">{{ bron.titel }}</p>{% endif %}
 <article class="bron detail soort-{{ bron.soort }}">
   {% if bron.tekst %}<div class="origineel" dir="auto" lang="{{ bron.taal }}" {{ mk.attrs(markeer) }}>{{ bron.tekst | md | markeer(markeringen) }}</div>
   {{ mk.lijst(markeringen, bron.tekst | md, request.url.path) }}{% else %}<p class="stil">{{ _('Geen tekst opgeslagen.') }}</p>{% endif %}

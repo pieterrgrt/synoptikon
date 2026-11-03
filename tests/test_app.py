@@ -143,3 +143,17 @@ def test_een_aanmelding_met_wunderkammer(anoniem, monkeypatch):
     dk = hashlib.scrypt(b"kammer", salt=salt, n=2**14, r=8, p=1)
     wk = f"scrypt:{2**14}:8:1:{base64.b64encode(salt).decode()}:{base64.b64encode(dk).decode()}"
     assert auth.verify_password("kammer", wk) and not auth.verify_password("fout", wk)
+
+
+def test_synopse_lege_kolommen_standaard_uit(client):
+    """Stelsels zonder inhoud staan standaard uit (aan te zetten in de kolombalk); de gevulde komen eerst."""
+    import re
+
+    html = client.get("/vragen/precontractuele-aansprakelijkheid").text
+    kolommen = re.findall(r'<div class="kolom [^"]*" data-kolom="(\w+)" id="\w+"( hidden data-leeg)?>', html)
+    gevuld = [c for c, leeg in kolommen if not leeg]
+    assert set(gevuld) >= {"NL", "DE", "FR"}
+    if any(leeg for _c, leeg in kolommen):
+        assert kolommen[: len(gevuld)] == [(c, "") for c in gevuld]  # gevuld eerst
+        assert "zonder inhoud" in html
+    assert 'class="blok onderzoek"' not in html  # geen lege balk zonder Claude en zonder onderzoek

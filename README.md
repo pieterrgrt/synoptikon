@@ -161,6 +161,10 @@ Uitgebreider gemotiveerd in de docstring van `synoptikon/models.py`.
    bron zelf (`services/herkennen.py`: de Cellar voor `ECLI:EU`/sector 6,
    rechtspraak.nl voor `ECLI:NL`); Claude alleen als die niets geeft. Met
    "Kloppend maken" corrigeer je een opzoeking zelf; ze telt dan als `eigen`.
+   Een arrest op zijn roepnaam (Kelderluik, Haviltex, Costa/ENEL; `services/roepnamen.py`, elke ECLI nagekeken bij
+   de bron) gaat net zo. Een afkorting die geen bekende wet is ("art. 3:40 Xyz"), geeft een melding en geen artikel
+   uit een andere wet; een citaat met wetboek zoekt ook buiten mijn stelsels. Bij elk artikel en elke uitspraak kopieert
+   "Citeer" de citatie (`services/citeren.py`); bij elke wettekst staat de peildatum ("tekst geldend sinds …").
 5. **Artikelen** (`/artikelen`, `/artikelen/NL/3:84`): typ een artikelnummer
    (`3:84`, `§ 929`, `art. 1196 C. civ.`, `1112-1`) en zie de plaats in de
    systematiek, de tekst (uit een bron of een geïmporteerde wet) en per thema
@@ -346,6 +350,7 @@ synoptikon seed                              # laadt o.a. de omzettingstabel
 synoptikon import-bulk de          # alle ±6.100 wetten en verordeningen van gesetze-im-internet.de (±30 min)
 synoptikon import-bulk eu          # alle ±17.600 geldende EU-handelingen, Duits, geconsolideerd waar mogelijk (±3 uur)
 synoptikon import-bulk eu --verdragen   # alleen VEU, VWEU en Handvest, in alle zes talen
+synoptikon import-bulk eu --taalversies # de belangrijke handelingen (wetboek.BELANGRIJK: AVG, Rome I …) ook in nl, fr, it, en, es
 ```
 
 ```bash
@@ -356,7 +361,9 @@ synoptikon import-bulk fr          # daarna alle ±75 codes uit de dump
 
 NL komt uit de SRU-zoekdienst van het BWB (lijst met de datum van de geldende toestand) en de toestand-XML in de
 repository van officiële overheidspublicaties; de citeerafkorting (Awb, Rv) uit de kop van het WTI-bestand. FR krijgt
-de gangbare citeerwijze (C. trav., CSP) uit `legi.AFKORTINGEN`, anders de titel.
+de gangbare citeerwijze (C. trav., CSP) uit `legi.AFKORTINGEN`, anders de titel. Een NL-wet die opnieuw moet worden
+ingelezen zonder dat haar versie veranderde (na een wijziging van de parser), gaat met `synoptikon herlees-nl BWBR…`.
+Rv, Sr, Sv en WvK hebben "Boek Eerste" en nummeren door: art. 12 Rv, niet EERSTE:12.
 
 Een tweede run haalt alleen op wat ontbreekt (EU: ook een nieuwere consolidatie). Bulkwetten staan niet in het
 overzicht van Stelsels en niet in de systematiek, maar zijn te vinden via **Alle wetten doorzoeken**

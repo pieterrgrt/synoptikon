@@ -278,12 +278,23 @@ def _migreer(conn) -> None:
                 conn.execute(text(sql() if callable(sql) else sql))
 
 
+def _vindplaats_typen(conn) -> None:
+    """Een bron met een vindplaats maar zonder soort krijgt het soort dat uit de vindplaats volgt (idempotent)."""
+    from .services.vindplaats import soort
+
+    for bid, vp in conn.execute(text("SELECT id, vindplaats FROM bron WHERE (vindplaats_type IS NULL OR vindplaats_type = '') "
+                                     "AND vindplaats IS NOT NULL AND vindplaats != ''")).all():
+        if s := soort(vp):
+            conn.execute(text("UPDATE bron SET vindplaats_type = :s WHERE id = :i"), {"s": s, "i": bid})
+
+
 def init_db() -> None:
     """Maakt tabellen, FTS-tabellen en triggers aan, voegt nieuwe kolommen toe en zorgt voor de profielplekken (idempotent)."""
     eng = engine()
     Base.metadata.create_all(eng)
     with eng.begin() as conn:
         _migreer(conn)
+        _vindplaats_typen(conn)
         for stmt in _splits_ddl(_FTS_DDL + _INDEXEN):
             conn.execute(text(stmt))
     _profielen()

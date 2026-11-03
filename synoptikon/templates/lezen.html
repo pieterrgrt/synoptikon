@@ -5,6 +5,7 @@
 <nav class="pad wet-pad" aria-label="{{ _('Plaats in de systematiek') }}">{% for x in k.pad() %}{% if not loop.first %}<span class="sep">›</span>{% endif %}{% if loop.last %}<span aria-current="page">{{ x.label }}</span>{% else %}<a href="/stelsels/{{ stelsel.code }}/lees/{{ x.id }}">{{ x.label }}</a>{% endif %}{% endfor %}</nav>
 <h1>{{ k.label }}</h1>
 <p class="stil klein">{% if k.bereik %}{{ k.bereik }} · {% endif %}{{ n_('{n} artikel', '{n} artikelen', pl.onder.get(k.id, 0)) }} · <a href="/stelsels/{{ stelsel.code }}#knoop-{{ k.id }}">{{ _('in de systematiek') }}</a></p>
+{% for wid in artikelen | map(attribute='wettekst_id') | unique %}<p class="stil klein peil">{% if loop.length > 1 %}{{ wet_titel(ws[wid]) }}: {% endif %}{{ peil(ws[wid]) }}</p>{% endfor %}
 
 {% if not toon_tekst %}
 <p class="hint">{{ n_('{n} artikel in dit onderdeel; kies een onderdeel.', '{n} artikelen in dit onderdeel; kies een onderdeel.', pl.onder.get(k.id, 0)) }}</p>

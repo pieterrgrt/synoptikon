@@ -103,6 +103,19 @@ def test_bwb_parse_huidig_formaat():
     assert a.pad == "Boek 7a Bijzondere overeenkomsten; vervolg › titel Negende Van maatschap"
 
 
+def test_bwb_boek_zonder_cijfer_nummert_door():
+    """Rv, Sr, Sv en WvK hebben "Boek Eerste" en nummeren door: art. 12 Rv, niet EERSTE:12. Sv Boek 6 draagt het boek al."""
+    xml = b"""<?xml version="1.0" encoding="UTF-8"?><toestand bwb-id="BWBR0001827" inwerkingtreding="2026-07-14">
+<wetgeving><citeertitel>Wetboek van Burgerlijke Rechtsvordering</citeertitel><wet-besluit><wettekst>
+<boek><kop><label>Boek</label><nr>Eerste</nr><titel>De wijze van procederen</titel></kop>
+<artikel><kop><label>Artikel</label><nr>12</nr></kop><al>Indien een zaak aanhangig is gemaakt.</al></artikel></boek>
+<boek><kop><label>Boek</label><nr>6</nr><titel>Tenuitvoerlegging</titel></kop>
+<artikel><kop><label>Artikel</label><nr>6:1:1</nr></kop><al>Het openbaar ministerie.</al></artikel></boek>
+</wettekst></wet-besluit></wetgeving></toestand>"""
+    g = bwb.parse(xml, "BWBR0001827")
+    assert [a.nummer for a in g.artikelen] == ["12", "6:1:1"]
+
+
 def test_gii_pad_uit_documentvolgorde():
     """Zoals gesetze-im-internet.de het nu levert: paragrafen zonder eigen gliederungseinheit."""
     xml = b"""<?xml version="1.0" encoding="UTF-8"?><dokumente builddate="20260926">

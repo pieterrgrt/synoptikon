@@ -9,6 +9,7 @@
 <form class="filters" method="get">
   <select name="stelsel" class="auto-submit" aria-label="{{ _('Stelsel') }}"><option value="">{{ _('alle stelsels') }}</option>{% call(s) st.opties(stelsels, f_stelsel) %}<option value="{{ s.code }}" {% if f_stelsel == s.code %}selected{% endif %}>{{ vt(s.naam) }}</option>{% endcall %}</select>
   <select name="soort" class="auto-submit" aria-label="{{ _('Soort') }}"><option value="">{{ _('alle soorten') }}</option>{% for k, v in soorten.items() %}<option value="{{ k }}" {% if f_soort == k %}selected{% endif %}>{{ _(v) }}</option>{% endfor %}</select>
+  <label class="kolomschakel"><input type="checkbox" name="zonder" value="vindplaats" class="auto-submit" {% if f_zonder == 'vindplaats' %}checked{% endif %}> {{ _('alleen na te kijken: zonder vindplaats of met onbekend soort') }}</label>
   <noscript><button class="knop klein">{{ _('Filter') }}</button></noscript>
 </form>
 <div class="tabel-schuif"><table class="tabel">
@@ -20,7 +21,7 @@
     <td><span class="soort soort-{{ b.soort }}">{{ _(soorten.get(b.soort, b.soort)) }}</span></td>
     <td><a href="/bronnen/{{ b.id }}">{{ b.citeertitel }}</a></td>
     <td class="stil">{{ b.titel or '' }}</td>
-    <td class="stil">{{ b.vindplaats or '' }}</td>
+    <td class="stil">{% if b.vindplaats_type %}<span class="mono klein">{{ b.vindplaats_type }}</span> {% endif %}{{ b.vindplaats or '' }}</td>
     <td class="stil">{{ b.geldig_van or '' }}{% if b.geldig_tot %} – {{ b.geldig_tot }}{% endif %}</td>
   </tr>
   {% else %}<tr><td colspan="6" class="stil">{{ _('Geen bronnen.') }}</td></tr>{% endfor %}

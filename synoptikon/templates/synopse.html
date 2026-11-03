@@ -33,10 +33,11 @@
   {% for f in per_familie(stelsels) %}
   <span class="familie-groep fam-{{ f.sleutel or 'overig' }}">
     <button type="button" class="familie-knop" data-familie="{{ f.sleutel or 'overig' }}" title="{{ _('{naam} aan/uit', naam=f.naam) }} · {{ f.kenmerk }}">{{ f.naam }}</button>
-    {% for s in f.stelsels %}<label class="kolomschakel"><input type="checkbox" data-kolom="{{ s.code }}" data-familie="{{ f.sleutel or 'overig' }}" checked> {{ vlag(s.code) }}{{ s.code }}</label>{% endfor %}
+    {% for s in f.stelsels %}<label class="kolomschakel"><input type="checkbox" data-kolom="{{ s.code }}" data-familie="{{ f.sleutel or 'overig' }}" {% if s.code not in leeg_uit %}checked{% endif %}> {{ vlag(s.code) }}{{ s.code }}</label>{% endfor %}
   </span>
   {% endfor %}
   {{ st.meer_kolommen(overige_stelsels, ook) }}
+  {% if leeg_uit %}<span class="hint">{{ n_('{n} stelsel zonder inhoud staat uit.', '{n} stelsels zonder inhoud staan uit.', leeg_uit | length) }}</span>{% endif %}
   <span class="scheiding"></span>
   <label class="kolomschakel">{{ _('Vertaling') }}
     <select id="vertaal-keuze">
@@ -51,7 +52,7 @@
 <section class="synopse" id="synopse">
   {% for s in stelsels %}
   {% set a = vraag.antwoord_voor(s.code) %}
-  <div class="kolom fam-{{ s.familie or 'overig' }}" data-kolom="{{ s.code }}" id="{{ s.code }}">
+  <div class="kolom fam-{{ s.familie or 'overig' }}" data-kolom="{{ s.code }}" id="{{ s.code }}"{% if s.code in leeg_uit %} hidden data-leeg{% endif %}>
     <header class="kolomkop" draggable="true">
       <span class="greep" aria-hidden="true">⋮⋮</span>
       <h2>{{ vlag(s.code) }}{{ vt(s.naam) }}</h2>

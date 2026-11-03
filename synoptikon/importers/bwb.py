@@ -12,7 +12,8 @@ als XML. Het BW is per boek een eigen regeling:
                                               Boek 10 BWBR0030068
 
 De artikelnummers worden als "3:84" opgeslagen zodra het boeknummer uit de
-structuur bekend is (Boek 7A als "7A:1576").
+structuur bekend is (Boek 7A als "7A:1576"). Een boek zonder cijfer ("Boek Eerste"
+van Rv, Sr, Sv en WvK) telt niet: die wetten nummeren door.
 """
 from __future__ import annotations
 
@@ -98,12 +99,16 @@ def parse(xml_bytes: bytes, wet_id: str, bron_url: str | None = None) -> Geparse
             if tag in _STRUCTUUR:
                 label, nr, kop_titel = _kop(kind)
                 stuk = " ".join(x for x in (label, nr) if x) + (f" {kop_titel}" if kop_titel else "")
-                loop(kind, pad + [stuk.strip()], nr.upper() if tag == "boek" and nr else boek)
+                # Alleen een genummerd boek ("Boek 6", "Boek 7A") gaat voor het artikelnummer, zoals in het BW. Rv, Sr,
+                # Sv en WvK hebben "Boek Eerste" en nummeren door (art. 12 Rv, niet EERSTE:12).
+                nieuw = nr.upper() if tag == "boek" and re.fullmatch(r"\d+[A-Za-z]?", nr) else boek
+                loop(kind, pad + [stuk.strip()], nieuw)
             elif tag == "artikel":
                 _label, nr, kop_titel = _kop(kind)
                 if not nr:
                     continue
-                nummer = f"{boek}:{nr}" if boek else nr
+                # Een nummer dat het boek al draagt (Sv Boek 6: "6:1:12") krijgt het niet nog eens.
+                nummer = f"{boek}:{nr}" if boek and ":" not in nr and "." not in nr else nr
                 tekst = _artikel_tekst(kind)
                 if kind.get("status") == "vervallen" or not tekst:
                     tekst = tekst or "[Vervallen]"

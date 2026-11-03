@@ -27,9 +27,9 @@ from datetime import datetime, timedelta, timezone
 from sqlalchemy import or_, select, text
 from sqlalchemy.orm import Session
 
-from ..models import Bron, EuHandeling, Opzoeking, Wettekst, WettekstArtikel
+from ..models import Bron, EuHandeling, Opzoeking, Systematiek, Wettekst, WettekstArtikel
 from . import claude, eu, eunamen, herkennen, wetboek
-from .artikelen import Ref, herken
+from .artikelen import REGELS, Ref, herken
 from .correspondentie import Context, wettekst_artikel, zoek_artikel
 from .zoeken import fts_query
 
@@ -48,6 +48,7 @@ class Gevonden:
     wettekst: Wettekst | None = None
     bron: Bron | None = None
     handeling: EuHandeling | None = None
+    precies: bool = True  # False: een wet waarvan de titel de woorden bevat (geen afkorting of naam die je intypte)
 
 
 def _plaats(ctx: Context, r: Ref, wa: WettekstArtikel | None) -> list[str]:
@@ -101,19 +102,27 @@ def wetten(db: Session, q: str, stelsel: str = "", n: int = 6, stelsels: list[st
     kandidaten.sort(key=lambda p: p[0])
     if any(not s[0] for s, _w in kandidaten):  # een precieze afkorting: alleen die
         kandidaten = [(s, w) for s, w in kandidaten if not s[0]]
-    return [Gevonden("wet", wetboek.toon_titel(w), f"/stelsels/{w.stelsel_code}/wet/{w.id}", w.stelsel_code, wettekst=w)
-            for _s, w in kandidaten[:n]]
+    return [Gevonden("wet", wetboek.toon_titel(w), f"/stelsels/{w.stelsel_code}/wet/{w.id}", w.stelsel_code, wettekst=w,
+                     precies=not s[0] or wetboek.toon_titel(w).casefold() == q.casefold())
+            for s, w in kandidaten[:n]]
 
 
 def uitspraken(db: Session, q: str, n: int = 6, stelsels: list[str] | None = None) -> list[Gevonden]:
-    """Rechtspraak onder de eigen bronnen: op ECLI of vindplaats, anders full-text."""
+    """Rechtspraak onder de eigen bronnen: op ECLI, vindplaats of naam. Full-text alleen in naam, titel en vindplaats:
+    een arrest waarvan de tekst "onrechtmatige daad" bevat, is geen uitspraak die je opzocht (die staat onder Bronnen)."""
     stmt = select(Bron).where(Bron.soort == "rechtspraak")
     if stelsels:
         stmt = stmt.where(Bron.stelsel_code.in_(stelsels))
-    exact = db.scalars(stmt.where(or_(Bron.vindplaats.ilike(q.strip()), Bron.citeertitel.ilike(f"%{q.strip()}%"))).limit(n)).all()
+    from .roepnamen import zoek as roepnaam
+
+    namen = [Bron.vindplaats.ilike(q.strip()), Bron.citeertitel.ilike(f"%{q.strip()}%")]
+    if r := roepnaam(q):  # "Kelderluik": ook de eigen bron met die ECLI, hoe ze ook heet
+        namen.append(Bron.vindplaats.ilike(f"%{r.ecli}%"))
+    exact = db.scalars(stmt.where(or_(*namen)).limit(n)).all()
     ids = {b.id for b in exact}
     gevonden = list(exact)
     m = fts_query(q)
+    m = f"{{citeertitel titel vindplaats}} : ({m})" if m else ""
     if m and len(gevonden) < n:
         for (rowid,) in db.execute(text("SELECT rowid FROM bron_fts WHERE bron_fts MATCH :m ORDER BY rank LIMIT 20"), {"m": m}):
             b = db.get(Bron, rowid)
@@ -135,6 +144,30 @@ def eu_handelingen(db: Session, q: str, n: int = 4) -> list[Gevonden]:
                      "EU", handeling=h) for h in hs]
 
 
+def _opschrift(label: str) -> str:
+    """"Titel 3 · Onrechtmatige daad" → "onrechtmatige daad"."""
+    return re.sub(r"^.*?·\s*", "", label).strip().casefold()
+
+
+def opschriften(db: Session, q: str, n: int = 6, stelsels: list[str] | None = None) -> list[Systematiek]:
+    """Titels en afdelingen waarvan het opschrift de zoekterm is of bevat ("onrechtmatige daad" → BW Boek 6 Titel 3).
+
+    Voor een jurist komt de wet eerst: wie een rechtsfiguur intypt, wil de plaats in de wet zien voor de rechtspraak."""
+    q = q.strip()
+    if len(q) < 4 or re.search(r"\d", q):
+        return []
+    stmt = select(Systematiek).where(Systematiek.label.ilike(f"%{q}%"))
+    if stelsels:
+        stmt = stmt.where(Systematiek.stelsel_code.in_(stelsels))
+    knopen = list(db.scalars(stmt.limit(200)).all())
+    woord = re.compile(r"(?<!\w)" + re.escape(q.casefold()) + r"(?!\w)")
+    knopen = [k for k in knopen if woord.search(_opschrift(k.label))]
+    orde = list(REGELS)
+    knopen.sort(key=lambda k: (_opschrift(k.label) != q.casefold(), k.wet is not None,
+                               orde.index(k.stelsel_code) if k.stelsel_code in orde else 99, len(k.label)))
+    return knopen[:n]
+
+
 @dataclass
 class Uitkomst:
     q: str
@@ -142,6 +175,8 @@ class Uitkomst:
     wetten: list[Gevonden]
     uitspraken: list[Gevonden]
     eu: list[Gevonden]
+    opschriften: list[Systematiek] = field(default_factory=list)
+    onbekend: str | None = None  # een wetsafkorting in de invoer die Synoptikon niet kent ("Awb" zonder Awb)
 
     @property
     def raak(self) -> bool:
@@ -164,6 +199,10 @@ def lokaal(db: Session, q: str, stelsel: str = "", stelsels: list[str] | None = 
     )
     if not met_tekst and not u.wetten and _binnen("EU", stelsels):
         u.eu = eu_handelingen(db, q)
+    if not arts:
+        from .artikelen import onbekende_wet
+        u.onbekend = onbekende_wet(q)
+        u.opschriften = opschriften(db, q, stelsels=stelsels)
     return u
 
 
@@ -188,8 +227,12 @@ def samenvatting(g: Gevonden) -> dict:
 
 
 def log_lokaal(db: Session, profiel_id: int, q: str, u: Uitkomst) -> Opzoeking | None:
-    """Het eerste wat precies past komt in het logboek; dezelfde invoer op dezelfde dag één keer."""
-    eerste = next((g for g in [*u.artikelen, *u.uitspraken, *u.wetten] if g.artikel or g.soort != "artikel"), None)
+    """Het eerste wat precies past komt in het logboek; dezelfde invoer op dezelfde dag één keer.
+
+    Precies: een artikel met tekst, een uitspraak op naam of ECLI, een wet op afkorting of volle titel. Een vrije
+    zoekterm ("onrechtmatige daad") komt er niet in: het eerste resultaat is dan niet wat je opzocht."""
+    eerste = next((g for g in [*u.artikelen, *u.uitspraken, *u.wetten]
+                   if (g.artikel or g.soort != "artikel") and g.precies), None)
     if eerste is None:
         return None
     bestaand = next((o for o in vandaag(db, profiel_id) if o.invoer.casefold() == q.strip().casefold()), None)
@@ -281,6 +324,8 @@ def _vul(oid: int, db: Session | None = None) -> None:
     try:
         o = db.get(Opzoeking, oid)
         if (i := herkennen.herken_id(o.invoer)) and (feiten := herkennen.zoek(i)):
+            if i.naam and i.naam.casefold() not in (feiten.get("citeer") or "").casefold():
+                feiten = {**feiten, "citeer": f"{feiten.get('citeer') or i.waarde} ({i.naam})"}
             o.resultaat, o.status = feiten, "klaar"
             db.commit()
             return
@@ -349,8 +394,9 @@ def bron_uit(db: Session, o: Opzoeking) -> Bron | None:
 
 
 def _vindplaats_type(vindplaats: str | None) -> str | None:
-    i = herkennen.herken_id(vindplaats or "")
-    return i.soort.upper() if i else None
+    from .vindplaats import soort
+
+    return soort(vindplaats)
 
 
 # Wat in het formulier 'kloppend maken' te corrigeren is; de rest van de opzoeking blijft zoals ze was.

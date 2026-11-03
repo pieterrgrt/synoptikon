@@ -201,10 +201,32 @@ def cmd_import_bulk(args) -> int:
         tel = {k: sum(getattr(t, k) for t in r.tellingen) for k in ("gecontroleerd", "gewijzigd", "nieuw", "fouten")}
     elif args.bron == "de":
         tel = bulk.duitsland(fabriek, parallel=args.parallel, limiet=args.limiet, opnieuw=args.opnieuw, melder=meld)
+    elif args.taalversies:
+        tel = {"nieuw": bulk.taalversies(fabriek, opnieuw=args.opnieuw, melder=meld)}
     else:
         tel = bulk.europa(fabriek, parallel=args.parallel, limiet=args.limiet, opnieuw=args.opnieuw,
                           alleen_verdragen=args.verdragen, melder=meld)
     print(f"klaar: {tel}", flush=True)
+    return 0
+
+
+def cmd_herlees_nl(args) -> int:
+    """NL-wetten opnieuw ophalen en in place bijwerken, ook als de versie niet veranderde (na een parserwijziging)."""
+    from sqlalchemy import select
+
+    from .importers import bwb
+    from .importers.bijwerken import vergelijk
+    from .models import Wettekst
+
+    database.init_db()
+    for wet_id in args.ids:
+        g = bwb.haal_op(wet_id)
+        with database.session() as s:
+            bestaand = s.scalars(select(Wettekst).where(Wettekst.stelsel_code == "NL", Wettekst.wet_id == wet_id)
+                                 .order_by(Wettekst.opgehaald.desc())).first()
+            wet = bestaand.wet if bestaand is not None else (bwb.afkorting(wet_id) or g.titel)[:60]
+            status, w = vergelijk(s, "NL", g, wet, bestaand, kern=bestaand.kern if bestaand is not None else False, historie=False)
+            print(f"{wet_id} {wet} · {g.titel} ({g.versie}): {status}, {len(g.artikelen)} artikelen")
     return 0
 
 
@@ -387,6 +409,7 @@ def main(argv: list[str] | None = None) -> int:
     s.add_argument("--limiet", type=int, help="hoogstens zoveel wetten (proef)")
     s.add_argument("--opnieuw", action="store_true", help="ook wat er al is opnieuw ophalen")
     s.add_argument("--verdragen", action="store_true", help="EU: alleen VEU, VWEU en Handvest")
+    s.add_argument("--taalversies", action="store_true", help="EU: de belangrijke handelingen (AVG, Rome I …) ook in nl, fr, it, en, es")
     s.set_defaults(fn=cmd_import_bulk)
     s = sub.add_parser("bijwerken", help="alle wetteksten met de bron vergelijken en alleen wat veranderde opslaan (wekelijks, in delen)")
     s.add_argument("--bron", nargs="*", choices=["register", "fr", "de", "nl", "eu-catalogus", "eu"], help="alleen deze bronnen")
@@ -396,6 +419,9 @@ def main(argv: list[str] | None = None) -> int:
     s.add_argument("--max-minuten", type=float, help="netjes stoppen na zoveel minuten")
     s.add_argument("--limiet", type=int, help="hoogstens zoveel wetten ophalen per bron (proef)")
     s.set_defaults(fn=cmd_bijwerken)
+    s = sub.add_parser("herlees-nl", help="NL-wetten opnieuw ophalen en bijwerken, ook zonder nieuwe versie: herlees-nl BWBR0001827 …")
+    s.add_argument("ids", nargs="+")
+    s.set_defaults(fn=cmd_herlees_nl)
     s = sub.add_parser("legi", help="FR: LEGI-dump van de DILA ophalen (eenmalig ±1,1 GB gestreamd) en bijwerken")
     s.add_argument("codes", nargs="*", help="LEGITEXT-codes (standaard die uit het register)")
     s.add_argument("--map", help="doelmap (standaard SYNOPTIKON_LEGI_DIR of <datamap>/legi)")
