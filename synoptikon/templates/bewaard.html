@@ -41,7 +41,16 @@
     <li class="fam-{{ families.get(u.stelsel) or 'overig' }}">
       <a class="bewaard-citeer" href="{{ u.url }}">{{ vlag(u.stelsel) }}{{ u.citeertitel }}</a>
       {%- if u.vindplaats and u.vindplaats != u.citeertitel %} <span class="bewaard-opschrift">{{ u.vindplaats }}</span>{% endif %}
+      {%- if u.over %} <span class="stil klein">{{ _('over') }} {% for a in u.over %}<a href="{{ a.url }}">{{ a.citeer }}</a>{% if not loop.last %}, {% endif %}{% endfor %}</span>{% endif %}
     </li>
+    {% endfor %}
+  </ul>
+  {% endif %}
+  {% if g.themas %}
+  <h3 class="stil klein">{{ _('Samen in een thema') }}</h3>
+  <ul class="bewaard-lijst bewaard-themas">
+    {% for t, xs in g.themas %}
+    <li><span class="bewaard-opschrift">{{ t }}</span>: {% for a in xs %}<a href="{{ a.url }}">{{ a.citeer }}</a>{% if not loop.last %}, {% endif %}{% endfor %}</li>
     {% endfor %}
   </ul>
   {% endif %}

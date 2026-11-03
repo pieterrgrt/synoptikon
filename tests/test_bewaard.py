@@ -31,7 +31,8 @@ def materiaal():
                 weg["kaart"].append(k.id)
 
         # een uitspraak met een kaart in ZR Ia
-        b = Bron(stelsel_code="DE", soort="rechtspraak", citeertitel="BGHZ 63, 369", vindplaats="BGHZ 63, 369", taal="de")
+        b = Bron(stelsel_code="DE", soort="rechtspraak", citeertitel="BGHZ 63, 369", vindplaats="BGHZ 63, 369", taal="de",
+                 tekst="Die Übergabe nach § 929 S. 1 BGB setzt voraus …; § 92 ist nicht einschlägig.")
         f.add(b)
         f.flush()
         weg["bron"].append(b.id)
@@ -156,3 +157,18 @@ def test_de_pagina_kan_op_een_vak_filteren(client, materiaal):
 
 def test_bewaard_staat_in_de_navigatie(client):
     assert 'href="/bewaard"' in client.get("/").text
+
+
+def test_uitspraak_noemt_bewaarde_artikelen_uit_haar_vak(materiaal):
+    with database.session() as s:
+        ov = bewaard.overzicht(s, 1)
+    zr = next(g for g in ov.groepen if g.vak == "ZR Ia")
+    assert [a.nummer for a in zr.uitspraken[0].over] == ["929"]  # § 90 en § 92 niet
+
+
+def test_noemt_met_grens_na_het_nummer():
+    a = bewaard.Artikel(stelsel="NL", wet=None, nummer="6:162")
+    assert bewaard.noemt("op grond van art. 6:162 BW", a)
+    assert not bewaard.noemt("art. 6:1621", a) and not bewaard.noemt("art. 6:162a", bewaard.Artikel("NL", None, "6:16"))
+    assert bewaard.noemt("Artikel 101 AEUV", bewaard.Artikel("EU", "AEUV", "101"))
+    assert not bewaard.noemt("Randnummer 929", bewaard.Artikel("DE", None, "929"))

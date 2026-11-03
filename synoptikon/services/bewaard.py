@@ -23,7 +23,7 @@ from sqlalchemy.orm import Session, selectinload
 from ..i18n import _
 from ..models import Bron, Kaart, Leerlijst, Markering
 from .artikelen import Ref, ref_uit_bron
-from .correspondentie import wettekst_artikel
+from .correspondentie import thema_s_voor, wettekst_artikel
 
 ZONDER_VAK = ""
 
@@ -77,6 +77,8 @@ class Uitspraak:
     vindplaats: str | None
     kaarten: int = 0
     vakken: set[str] = field(default_factory=set)
+    tekst: str = ""
+    over: list[Artikel] = field(default_factory=list)  # bewaarde artikelen (uit dit vak) die de uitspraak noemt
 
     @property
     def url(self) -> str:
@@ -88,6 +90,7 @@ class Groep:
     vak: str
     artikelen: list[Artikel] = field(default_factory=list)
     uitspraken: list[Uitspraak] = field(default_factory=list)
+    themas: list[tuple[str, list[Artikel]]] = field(default_factory=list)  # thema → bewaarde artikelen die erin staan (≥ 2)
 
     @property
     def naam(self) -> str:
@@ -136,7 +139,7 @@ def overzicht(db: Session, profiel_id: int, vak: str | None = None) -> Overzicht
         if k.bron_id and k.bron is not None and k.bron.soort == "rechtspraak":
             u = uitspraken.setdefault(k.bron_id, Uitspraak(
                 bron_id=k.bron_id, stelsel=k.bron.stelsel_code, citeertitel=k.bron.citeertitel,
-                vindplaats=k.bron.vindplaats))
+                vindplaats=k.bron.vindplaats, tekst=" ".join(x for x in (k.bron.tekst, k.bron.opmerking) if x)))
             u.kaarten += 1
             u.vakken.add(vak_van_kaart)
 
@@ -180,8 +183,28 @@ def overzicht(db: Session, profiel_id: int, vak: str | None = None) -> Overzicht
                              key=lambda a: (a.stelsel, a.wet or "", _sorteer(a.nummer)))
         g.uitspraken = sorted((u for u in uitspraken.values() if v in u.vakken), key=lambda u: u.citeertitel)
         if not g.leeg:
+            _samenhang(db, g)
             uit.groepen.append(g)
     return uit
+
+
+def noemt(tekst: str, a: Artikel) -> bool:
+    """Noemt deze tekst het artikel? '§ 929', 'Art. 6:162', 'article 1240', 'Artikel 101 AEUV' — met grens na het nummer,
+    zodat § 92 niet in § 929 zit. Zonder wet in de tekst telt het nummer alleen (de uitspraak hoort bij hetzelfde vak)."""
+    nr = re.escape(a.nummer)
+    return bool(re.search(rf"(?:§§?|\bArt(?:ikel|icle|ículo|icolo)?s?\.?|\bart\.)\s*{nr}(?![\w:.-]*\d)", tekst or "", re.I))
+
+
+def _samenhang(db: Session, g: Groep) -> None:
+    """Welke bewaarde uitspraak noemt welk bewaard artikel, en welke artikelen staan samen in een thema van de
+    correspondentietabel. Alleen binnen het vak: daar studeer je ze samen."""
+    for u in g.uitspraken:
+        u.over = [a for a in g.artikelen if a.stelsel == u.stelsel and noemt(u.tekst, a)]
+    per_thema: dict[str, list[Artikel]] = {}
+    for a in g.artikelen:
+        for c, _leden in thema_s_voor(db, a.stelsel, a.nummer, a.wet):
+            per_thema.setdefault(c.titel, []).append(a)
+    g.themas = sorted(((t, xs) for t, xs in per_thema.items() if len(xs) >= 2), key=lambda x: (-len(x[1]), x[0]))
 
 
 def _sorteer(nummer: str) -> tuple:
