@@ -21,7 +21,7 @@
   // Formulieren die bij wijziging direct verzenden (filters, keuzelijsten).
   document.addEventListener('change', function (e) {
     var el = e.target;
-    if (el.matches && el.matches('select.auto-submit, input.auto-submit') && el.form) el.form.submit();
+    if (el.matches && el.matches('select.auto-submit, input.auto-submit') && el.form) { window.bewaarPositie(el.form); el.form.submit(); }
     // Stelselkeuze → taalveld invullen en systematiek-opties filteren.
     if (el.matches && el.matches('select[name="stelsel_code"]')) {
       var opt = el.selectedOptions[0], form = el.form;

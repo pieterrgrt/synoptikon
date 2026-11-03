@@ -21,7 +21,7 @@
     if (d.bron) f.append('bron_id', d.bron);
     else { f.append('stelsel', d.stelsel); f.append('wet', d.wet || ''); f.append('nummer', d.nummer); }
     return fetch('/markeringen', { method: 'POST', body: f, credentials: 'same-origin' })
-      .then(function (r) { if (!r.ok) throw new Error(r.status); window.getSelection().removeAllRanges(); location.reload(); })
+      .then(function (r) { if (!r.ok) throw new Error(r.status); window.getSelection().removeAllRanges(); window.bewaarPositie(); location.reload(); })
       .catch(function () { sluit(); });
   }
 

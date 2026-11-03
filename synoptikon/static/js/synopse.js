@@ -80,6 +80,7 @@
   if (vertaal) vertaal.addEventListener('change', function () {
     var url = new URL(window.location.href);
     if (vertaal.value) url.searchParams.set('vertaling', vertaal.value); else url.searchParams.delete('vertaling');
+    window.bewaarPositie();
     window.location.href = url.toString();
   });
 
