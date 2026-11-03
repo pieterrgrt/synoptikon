@@ -17,7 +17,7 @@ from ..db import get_session
 from ..i18n import _
 from ..models import Bron, Kaart, Leerlijst, Opzoeking
 from ..services import claude, herkennen, leren, markeringen, opzoeken, vakken, zoeken
-from ..services.artikelen import Ref
+from ..services.artikelen import Ref, herken, noemt_wet
 from ..services.helpers import actieve_stelsels
 from ..services.stelselkeuze import stelselkeuze
 from . import render
@@ -45,6 +45,9 @@ def pagina(request: Request, q: str = "", stelsel: str = "", alle: int = 0, p: i
     # Zonder gekozen stelsel zoekt Opzoeken in mijn stelsels; `alle=1` ook in alle andere.
     keuze = stelselkeuze(db, request, [stelsel])
     codes = keuze.codes if keuze.overig and not stelsel and not alle else None
+    if codes is not None and q and noemt_wet(q):
+        # Een citaat met wetboek ("art. 1240 C. civ.") zoekt in het stelsel van dat wetboek, ook buiten mijn stelsels.
+        codes = [*codes, *sorted({r.stelsel for r in herken(q)} - set(codes))]
     uitkomst = resultaat = None
     verborgen = 0
     if q:

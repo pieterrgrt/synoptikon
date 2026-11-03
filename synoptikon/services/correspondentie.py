@@ -10,7 +10,7 @@ import re
 from collections import OrderedDict
 from dataclasses import dataclass, field
 
-from sqlalchemy import select
+from sqlalchemy import func, or_, select
 from sqlalchemy.orm import Session, selectinload
 
 from ..i18n import rechtstaal
@@ -104,6 +104,11 @@ class Context:
         return Lid(a, self.pad(a.ref), self.tekst(a.ref))
 
 
+def _zelfde_wet(wet: str):
+    """De afkorting zonder op hoofdletters te letten: de BWB schrijft "GW" en "FW", men citeert "Gw" en "Fw"."""
+    return or_(Wettekst.wet == wet, func.lower(Wettekst.wet) == wet.lower())
+
+
 def wettekst_artikel(db: Session, ref: Ref) -> WettekstArtikel | None:
     """Het artikel uit de meest recent geïmporteerde versie van de passende wet.
 
@@ -115,7 +120,7 @@ def wettekst_artikel(db: Session, ref: Ref) -> WettekstArtikel | None:
     if ref.nummer is None:
         return None
     q = select(WettekstArtikel).join(Wettekst).where(Wettekst.stelsel_code == ref.stelsel, WettekstArtikel.nummer == ref.nummer)
-    q = q.where(Wettekst.wet == ref.wet) if ref.wet else q.where(Wettekst.wet.is_(None))
+    q = q.where(_zelfde_wet(ref.wet)) if ref.wet else q.where(Wettekst.wet.is_(None))
     if ref.stelsel == "FR" and not ref.wet:
         q = q.where(Wettekst.wet_id == FR_CODE_CIVIL)
     if ref.stelsel == "EU":
@@ -162,7 +167,7 @@ def zoek_artikel(db: Session, q: str, stelsel: str | None = None, stelsels: list
         uit += extra
     if len(uit) > 1 and any(wa for _, wa in uit):
         def met_tekst(r: Ref) -> bool:
-            wet = Wettekst.wet == r.wet if r.wet else Wettekst.wet.is_(None)
+            wet = _zelfde_wet(r.wet) if r.wet else Wettekst.wet.is_(None)
             return db.scalar(select(Wettekst.id).where(Wettekst.stelsel_code == r.stelsel, wet).limit(1)) is not None
 
         uit = [(r, wa) for r, wa in uit if wa or not met_tekst(r)]

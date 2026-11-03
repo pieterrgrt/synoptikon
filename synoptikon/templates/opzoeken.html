@@ -22,6 +22,7 @@
 {% if open_id %}{% for o in logboek if o.id == open_id %}{% with groot = true %}{% include "_opzoeking.html" %}{% endwith %}{% endfor %}{% endif %}
 
 {% if uitkomst %}
+{% if uitkomst.onbekend %}<p class="melding fout" role="status">{{ _('"{wet}" ken ik niet als wet, of die wet is niet ingelezen. Daarom staat hier geen artikel: een artikel uit een andere wet zou het verkeerde zijn.', wet=uitkomst.onbekend) }}</p>{% endif %}
 {# 1. Artikelen: de tekst meteen #}
 {% for g in uitkomst.artikelen %}
 <article class="bron soort-wet wet-artikel gevonden" id="art-{{ loop.index }}">
@@ -51,6 +52,17 @@
         <input name="artikel" placeholder="{{ _('Ga naar artikel') }}" aria-label="{{ _('Ga naar artikel') }}"><button class="knop klein">→</button>
       </form>
     </li>{% endfor %}
+  </ul>
+</section>
+{% endif %}
+
+{# 2b. Opschriften in de systematiek: de plaats in de wet vóór de rechtspraak #}
+{% if uitkomst.opschriften %}
+<section class="blok">
+  <h2>{{ _('In de wet') }}</h2>
+  <ul class="treffers">{% for k in uitkomst.opschriften %}
+    <li><a href="/stelsels/{{ k.stelsel_code }}/lees/{{ k.id }}">{{ sc(k.stelsel_code) }} {{ k.label }}</a>{% if k.bereik %} <span class="stil">{{ k.bereik }}</span>{% endif %}
+      <p class="pad klein">{{ k.pad()[:-1] | map(attribute='label') | join(' › ') }}</p></li>{% endfor %}
   </ul>
 </section>
 {% endif %}
@@ -108,7 +120,7 @@
 {% endif %}
 {% endmacro %}
 <h2 class="gebied">{{ _('Overal gezocht') }}</h2>
-{% call groep(_('In de wetteksten'), resultaat.wetteksten, open=not (uitkomst.artikelen or uitkomst.wetten or uitkomst.uitspraken)) %}
+{% call groep(_('In de wetteksten'), resultaat.wetteksten, open=not (uitkomst.artikelen or uitkomst.wetten)) %}
 <nav class="bladeren">
   {% set basis = request.url.remove_query_params(['p', 'o']) %}
   {% if p > 1 %}<a class="knop klein" href="{{ basis.include_query_params(p=p - 1) }}">‹ {{ _('vorige') }}</a>{% endif %}

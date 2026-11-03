@@ -859,5 +859,7 @@
  "voorwaarde invullen": "compléter la condition",
  "Elke voorwaarde die je markeerde als gat in de tekst (typen in Wunderkammer)": "Chaque condition marquée devient un trou dans le texte (à taper dans Wunderkammer)",
  "over": "sur",
- "Samen in een thema": "Ensemble dans un thème"
+ "Samen in een thema": "Ensemble dans un thème",
+ "\"{wet}\" ken ik niet als wet, of die wet is niet ingelezen. Daarom staat hier geen artikel: een artikel uit een andere wet zou het verkeerde zijn.": "Je ne connais pas « {wet} » comme loi, ou cette loi n'a pas été importée. Aucun article n'est donc affiché : un article d'une autre loi serait le mauvais.",
+ "In de wet": "Dans la loi"
 }

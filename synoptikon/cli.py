@@ -208,6 +208,26 @@ def cmd_import_bulk(args) -> int:
     return 0
 
 
+def cmd_herlees_nl(args) -> int:
+    """NL-wetten opnieuw ophalen en in place bijwerken, ook als de versie niet veranderde (na een parserwijziging)."""
+    from sqlalchemy import select
+
+    from .importers import bwb
+    from .importers.bijwerken import vergelijk
+    from .models import Wettekst
+
+    database.init_db()
+    for wet_id in args.ids:
+        g = bwb.haal_op(wet_id)
+        with database.session() as s:
+            bestaand = s.scalars(select(Wettekst).where(Wettekst.stelsel_code == "NL", Wettekst.wet_id == wet_id)
+                                 .order_by(Wettekst.opgehaald.desc())).first()
+            wet = bestaand.wet if bestaand is not None else (bwb.afkorting(wet_id) or g.titel)[:60]
+            status, w = vergelijk(s, "NL", g, wet, bestaand, kern=bestaand.kern if bestaand is not None else False, historie=False)
+            print(f"{wet_id} {wet} · {g.titel} ({g.versie}): {status}, {len(g.artikelen)} artikelen")
+    return 0
+
+
 def cmd_bijwerken(args) -> int:
     """Alle bronnen aflopen en alleen opslaan wat echt veranderd is (importers/bijwerken.py)."""
     from .importers import bijwerken
@@ -396,6 +416,9 @@ def main(argv: list[str] | None = None) -> int:
     s.add_argument("--max-minuten", type=float, help="netjes stoppen na zoveel minuten")
     s.add_argument("--limiet", type=int, help="hoogstens zoveel wetten ophalen per bron (proef)")
     s.set_defaults(fn=cmd_bijwerken)
+    s = sub.add_parser("herlees-nl", help="NL-wetten opnieuw ophalen en bijwerken, ook zonder nieuwe versie: herlees-nl BWBR0001827 …")
+    s.add_argument("ids", nargs="+")
+    s.set_defaults(fn=cmd_herlees_nl)
     s = sub.add_parser("legi", help="FR: LEGI-dump van de DILA ophalen (eenmalig ±1,1 GB gestreamd) en bijwerken")
     s.add_argument("codes", nargs="*", help="LEGITEXT-codes (standaard die uit het register)")
     s.add_argument("--map", help="doelmap (standaard SYNOPTIKON_LEGI_DIR of <datamap>/legi)")

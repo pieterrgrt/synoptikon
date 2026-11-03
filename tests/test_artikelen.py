@@ -6,7 +6,7 @@ from synoptikon import db as database
 from synoptikon.importers import bwb, store
 from synoptikon.models import Correspondentie, Systematiek
 from synoptikon.seed import seed
-from synoptikon.services.artikelen import Plaatser, herken, lees, parse_bereik, plaatser, sleutel
+from synoptikon.services.artikelen import Plaatser, Ref, herken, lees, parse_bereik, plaatser, sleutel
 from synoptikon.services.systematiek import bouw_uit_wettekst
 
 FIX = Path(__file__).parent / "fixtures"
@@ -29,6 +29,25 @@ def test_herkennen_van_verwijzingen():
     assert herken("culpa in contrahendo") == [] and herken("ECLI:NL:HR:2005:AT7337") == []
     assert lees("FR", "—").nummer is None
     assert lees("NL", "3:84").citeer == "art. 3:84 BW" and lees("DE", "§§ 203–213").citeer == "§§ 203–213 BGB"
+
+
+def test_nederlandse_wetten_buiten_het_bw():
+    """Rv, Sv, Sr, Gw en Awb nummeren niet als het BW (boek:nummer), maar door of per hoofdstuk."""
+    assert herken("art. 12 Rv") == [Ref("NL", "12", "Rv")]
+    assert herken("art. 27 Sv") == [Ref("NL", "27", "Sv")]
+    assert herken("art. 310 Sr") == [Ref("NL", "310", "Sr")]
+    assert herken("art. 92 Gw") == [Ref("NL", "92", "Gw")]
+    assert herken("art. 3:40 Awb") == [Ref("NL", "3:40", "Awb")]
+    assert herken("art. 6 Rome I") == [Ref("EU", "6", "Rome I")]
+
+
+def test_onbekende_wet_geeft_geen_artikel_uit_een_andere_wet():
+    """"art. 3:40 Xyz" is niet art. 3:40 BW."""
+    from synoptikon.services.artikelen import onbekende_wet
+
+    assert herken("art. 3:40 Xyz") == [] and onbekende_wet("art. 3:40 Xyz") == "Xyz"
+    for q in ("6:162 BW", "§ 823 Abs. 1", "art. L217-3", "art. 1240 C. civ.", "6:162 lid 2", "art. 6:162 BW (oud)"):
+        assert onbekende_wet(q) is None, q
 
 
 def test_sleutels_en_bereiken():

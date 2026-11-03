@@ -859,5 +859,7 @@
  "voorwaarde invullen": "fill in the requirement",
  "Elke voorwaarde die je markeerde als gat in de tekst (typen in Wunderkammer)": "Each requirement you marked as a gap in the text (typing in Wunderkammer)",
  "over": "on",
- "Samen in een thema": "Together in a theme"
+ "Samen in een thema": "Together in a theme",
+ "\"{wet}\" ken ik niet als wet, of die wet is niet ingelezen. Daarom staat hier geen artikel: een artikel uit een andere wet zou het verkeerde zijn.": "I don't know \"{wet}\" as a statute, or it hasn't been imported. So no article is shown: an article from another statute would be the wrong one.",
+ "In de wet": "In the statute"
 }

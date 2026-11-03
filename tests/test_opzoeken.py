@@ -53,6 +53,38 @@ def test_artikel_meteen_met_tekst_en_bewaren(client):
     assert "★" in client.get("/opzoeken", params={"q": "Art. 2 GG"}).text
 
 
+def test_onbekende_wet_wordt_gemeld(client):
+    html = client.get("/opzoeken", params={"q": "art. 3:40 Xyz"}).text
+    assert "ken ik niet als wet" in html and "Xyz" in html
+    assert "Burgerlijk Wetboek" not in html.split("Overal gezocht")[0]
+
+
+def test_vrije_zoekterm_niet_in_logboek_en_opschrift_eerst(client):
+    html = client.get("/opzoeken", params={"q": "onrechtmatige daad"}).text
+    assert "Onrechtmatige daad" in html.split("Overal gezocht")[0]  # de titel in de wet, vóór de full-text
+    with database.session() as s:
+        assert s.scalar(select(Opzoeking).where(Opzoeking.invoer == "onrechtmatige daad")) is None
+
+
+def test_citaat_met_wetboek_zoekt_buiten_mijn_stelsels(client):
+    """Ook als FR niet bij mijn stelsels hoort, vindt "art. 1240 C. civ." het artikel."""
+    from synoptikon.routes import opzoeken as route
+    from synoptikon.services import stelselkeuze
+
+    oud = route.stelselkeuze
+
+    def alleen_nl(db, request, ook=()):
+        k = oud(db, request, ook)
+        return stelselkeuze.Keuze([x for x in k.alle if x.code == "NL"], [x for x in k.alle if x.code != "NL"])
+
+    route.stelselkeuze = alleen_nl
+    try:
+        html = client.get("/opzoeken", params={"q": "art. 1240 C. civ."}).text
+    finally:
+        route.stelselkeuze = oud
+    assert "art. 1240 C. civ." in html and "Niets gevonden" not in html.split("Overal gezocht")[0]
+
+
 def test_lezen_bulkwet_met_ster_en_zoeken_in_wet(client):
     with database.session() as s:
         wid = s.scalar(select(Wettekst.id).where(Wettekst.wet == "GG"))

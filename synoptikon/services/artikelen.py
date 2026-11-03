@@ -63,7 +63,9 @@ class Regels:
 
 
 REGELS: dict[str, Regels] = {
-    "NL": Regels("BW", ("Rv", "WvK", "Fw", "Aw", "Hw", "Wft", "Rome I")),
+    "NL": Regels("BW", ("Rv", "Sv", "Sr", "Awb", "Gw", "WvK", "Fw", "Aw", "Hw", "Wft", "Rome I"),
+                 namen={"Rv": "Wetboek van Burgerlijke Rechtsvordering", "Sv": "Wetboek van Strafvordering", "Sr": "Wetboek van Strafrecht",
+                        "Awb": "Algemene wet bestuursrecht", "Gw": "Grondwet", "WvK": "Wetboek van Koophandel", "Fw": "Faillissementswet"}),
     "BE": Regels(
         "BW",
         ("oud BW", "WER", "WVV", "Ger.W.", "Hyp.W.", "Pandwet", "WIPR", "Woninghuurwet", "Handelshuurwet", "W.Verz."),
@@ -252,6 +254,7 @@ _ONBEKEND = Regels(None)
 _FR_HOOFD = re.compile(r"\b(C\.\s*civ\.?|Code\s+civil|Cc)\b", re.I)
 _IT_HOOFD = re.compile(r"(?<![\w.])c\.\s?c\.(?!\w)", re.I)
 _NL_NR = re.compile(r"(\d+[A-Za-z]?)\s*:\s*(\d+[a-z]{0,3})")
+_NL_ANDER_NR = re.compile(r"(?<![\w.:])(\d+[a-z]{0,3}(?:[:.]\d+[a-z]{0,3})*)(?![\w])")
 _DE_NR = re.compile(r"(\d+[a-z]{0,3})\b")
 _FR_NR = re.compile(r"\b([LRD])?\.?\s?(\d+(?:-\d+)*)\b")
 _DETAIL = re.compile(r"\b(lid|leden|onder|sub|Abs\.|S\.|Satz|Ziff\.|lit\.|Nr\.|al\.|alinéa|comma|apartado|párrafo|°)\s*.*$", re.I)
@@ -282,6 +285,7 @@ def wet_kort(stelsel: str, wet: str | None) -> str | None:
 
 _GELADEN = {"tijd": 0.0}
 _DE_WETTEN: dict[str, str] = {}  # kleine letters → afkorting ("patg" → "PatG", "sgb v" → "SGB 5")
+_NL_WETTEN: dict[str, str] = {}  # kleine letters → afkorting zoals opgeslagen ("gemw" → "Gemw", "gw" → "GW")
 _DE_ART: set[str] = {"EGBGB", "GG"}  # Duitse wetten met artikelen in plaats van paragrafen (aangevuld uit de database)
 # Een afkorting begint met een hoofdletter, of met een kleine letter gevolgd door een hoofdletter (eWpG, eIDKG).
 _DE_TOKEN = re.compile(r"(?<![\w.])((?:\d{1,2}\.\s?|\d+-)?(?:[A-ZÄÖÜ]|[a-zäöü](?=[\wÄÖÜäöüß\-]*[A-ZÄÖÜ]))[\wÄÖÜäöüß\-]*(?:\.[A-Za-z]+)*(?:\s(?:\d{1,2}|[IVX]{1,4}))?)(?![\w-])")
@@ -299,6 +303,7 @@ def laad_wetnamen(db=None) -> None:
         db = session_factory()()
     try:
         de = db.scalars(select(Wettekst.wet).where(Wettekst.stelsel_code == "DE", Wettekst.wet.is_not(None)).distinct()).all()
+        nl = db.scalars(select(Wettekst.wet).where(Wettekst.stelsel_code == "NL", Wettekst.wet.is_not(None)).distinct()).all()
         art = db.scalars(select(Wettekst.wet).where(Wettekst.stelsel_code == "DE", Wettekst.stijl == "Art")).all()
         eu = db.execute(select(EuHandeling.celex, EuHandeling.soort, EuHandeling.nummer)).all()
     finally:
@@ -312,6 +317,12 @@ def laad_wetnamen(db=None) -> None:
             namen.setdefault(f"{m.group(1)} {_ROMEINS_NAAR[int(m.group(2))]}".lower(), w)
     _DE_WETTEN.clear()
     _DE_WETTEN.update(namen)
+    # NL: alleen echte afkortingen (Awb, Gemw, WVO 2020); wetten zonder afkorting dragen hun titel als `wet`.
+    _NL_WETTEN.clear()
+    # Geen afkorting die elders een wet is (OR, CC, CE …): die gaat naar dat stelsel.
+    elders = {a.lower() for code, r in REGELS.items() if code != "NL" for a in (r.hoofdwet, *r.andere) if a} | set(_DE_WETTEN)
+    _NL_WETTEN.update({w.lower(): w for w in nl if re.fullmatch(r"[A-Za-z][\w.\-]{1,14}(?: \d{4})?", w)
+                       and w.lower() not in elders and w != "BW"})
     _DE_ART.update(w for w in art if w)
     eunamen.laad([tuple(r) for r in eu])
     _GELADEN["tijd"] = time.time()
@@ -326,13 +337,14 @@ def _zorg_geladen() -> None:
             pass
 
 
-def _de_wet(tekst: str) -> tuple[str | None, str]:
+def _de_wet(tekst: str, namen: dict[str, str] | None = None) -> tuple[str | None, str]:
     _zorg_geladen()
-    if not _DE_WETTEN:
+    namen = _DE_WETTEN if namen is None else namen
+    if not namen:
         return None, tekst
     for m in _DE_TOKEN.finditer(tekst):
         for kandidaat in (m.group(1), m.group(1).split(" ")[0]):
-            w = _DE_WETTEN.get(kandidaat.lower())
+            w = namen.get(kandidaat.lower())
             if w:
                 eind = m.start(1) + len(kandidaat)
                 return w, tekst[: m.start(1)] + " " + tekst[eind:]
@@ -528,6 +540,10 @@ def _wet_uit(stelsel: str, tekst: str) -> tuple[str | None, str]:
         w, rest = _de_wet(re.sub(r"(?<!\w)BGB(?!\w)", " ", tekst))
         if w:
             return w, rest
+    if stelsel == "NL":
+        w, rest = _de_wet(re.sub(r"(?<!\w)BW(?!\w)", " ", tekst), _NL_WETTEN)
+        if w:
+            return w, rest
     hoofd = HOOFDWET.get(stelsel)
     if stelsel == "FR":
         tekst = _FR_HOOFD.sub(" ", tekst)
@@ -569,7 +585,13 @@ def lees(stelsel: str, tekst: str) -> Ref | None:
     if stelsel == "EU":
         rest = re.sub(r"\b([IVX]+)\.\s*[–-]\s*(?=\d)", r"\1.-", rest)
     stukken = [s.strip() for s in rest.split(_STREEP)]
-    if stelsel == "NL":
+    if stelsel == "NL" and wet and wet != "Rome I":
+        # Buiten het BW nummert een wet door (art. 12 Rv, art. 92 Gw) of per hoofdstuk (art. 3:40 Awb, art. 1.1 Ow).
+        nrs = [_NL_ANDER_NR.search(s) for s in stukken]
+        if not nrs[0]:
+            return None
+        nummers = [m.group(1) for m in nrs if m]
+    elif stelsel == "NL":
         nrs = [_NL_NR.search(s) for s in stukken]
         if not nrs[0]:
             return None
@@ -615,6 +637,8 @@ def _wet_treffers(t: str) -> list[str]:
                 rest = re.sub(patroon(w), " ", rest)
     if "DE" not in uit and _de_wet(rest)[0]:
         uit.append("DE")
+    elif "NL" not in uit and _de_wet(rest, _NL_WETTEN)[0]:
+        uit.append("NL")
     for code, r in REGELS.items():
         if code in uit:
             continue
@@ -641,6 +665,8 @@ def herken(tekst: str, stelsel: str | None = None) -> list[Ref]:
     if re.search(r"ECLI|\d{4}-\d{2}-\d{2}", t, re.I):
         return []
     kandidaten = _wet_treffers(t)
+    if not kandidaten and _onbekend(t):
+        return []  # "art. 3:40 Awb" zonder Awb: niet stil art. 3:40 BW
     if "NL" in kandidaten and "BE" in kandidaten:  # "BW" in beide: de nummering beslist
         kandidaten.remove("BE" if _NL_NR.search(t) and "WVV" not in t else "NL")
     if not kandidaten:
@@ -664,6 +690,34 @@ def herken(tekst: str, stelsel: str | None = None) -> list[Ref]:
         if r and r.nummer:
             uit.append(r)
     return uit
+
+
+_GEEN_WET = {"art", "artt", "artikel", "artikelen", "jo", "j°", "oud", "nieuw", "ff", "f", "e.v", "ev", "aF", "nF", "a.F", "n.F", "Art"}
+
+
+def _onbekend(t: str) -> str | None:
+    """Een woord dat een wetsafkorting lijkt (met een hoofdletter, kort) maar geen bekende wet is."""
+    rest = _PREFIX.sub("", t.strip())
+    _, rest = _detail(rest)
+    rest = re.sub(r"\((?:oud|versie [^)]*|a\.F\.|n\.F\.)\)", " ", rest)
+    for m in re.finditer(r"(?<![\w.])([A-Za-zÀ-ÿ][\w.\-]*)", rest):
+        w = m.group(1).rstrip(".")
+        if (len(w) <= 15 and any(c.isupper() for c in w) and not any(c.isdigit() for c in w) and w not in _GEEN_WET
+                and not re.fullmatch(rf"[LRD]|{_LAT}", w, re.I)):
+            return w
+    return None
+
+
+def onbekende_wet(tekst: str) -> str | None:
+    """De afkorting in een artikelverwijzing die Synoptikon niet als wet kent ("Awb" als de Awb er niet is), of None.
+
+    Zo'n verwijzing levert geen artikel op: zonder deze controle werd "art. 3:40 Awb" stil art. 3:40 BW."""
+    t = vervang_namen(_voorbewerk(tekst.strip()))
+    if not t or len(t) > 80 or not re.search(r"\d", t) or re.search(r"ECLI|\d{4}-\d{2}-\d{2}", t, re.I):
+        return None
+    if _wet_treffers(t):
+        return None
+    return _onbekend(t)
 
 
 def noemt_wet(tekst: str) -> bool:

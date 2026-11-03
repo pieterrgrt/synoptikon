@@ -859,5 +859,7 @@
  "voorwaarde invullen": "Merkmal ergänzen",
  "Elke voorwaarde die je markeerde als gat in de tekst (typen in Wunderkammer)": "Jedes markierte Tatbestandsmerkmal als Lücke im Text (Tippen in Wunderkammer)",
  "over": "zu",
- "Samen in een thema": "Gemeinsam in einem Thema"
+ "Samen in een thema": "Gemeinsam in einem Thema",
+ "\"{wet}\" ken ik niet als wet, of die wet is niet ingelezen. Daarom staat hier geen artikel: een artikel uit een andere wet zou het verkeerde zijn.": "„{wet}“ kenne ich nicht als Gesetz, oder das Gesetz ist nicht eingelesen. Deshalb steht hier keine Vorschrift: eine aus einem anderen Gesetz wäre die falsche.",
+ "In de wet": "Im Gesetz"
 }
