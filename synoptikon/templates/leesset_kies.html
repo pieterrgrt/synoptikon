@@ -1,0 +1,24 @@
+{% extends "base.html" %}
+{% block titel %}{{ _('In leesset') }} · Synoptikon{% endblock %}
+{% block inhoud %}
+<p class="kruimel"><a href="/leren/sets">{{ _('Leessets') }}</a></p>
+<h1>{{ _('In leesset') }}: {{ ref.citeer if ref else bron.citeertitel }}</h1>
+<form method="post" action="/leren/sets/toevoegen" class="formulier compact">
+  {% if ref %}<input type="hidden" name="stelsel" value="{{ ref.stelsel }}"><input type="hidden" name="wet" value="{{ ref.wet or '' }}"><input type="hidden" name="nummer" value="{{ ref.nummer }}">
+  {% else %}<input type="hidden" name="bron" value="{{ bron.id }}">{% endif %}
+  <input type="hidden" name="terug" value="{{ terug }}">
+  {% if sets %}
+  <fieldset><legend>{{ _('Leesset') }}</legend>
+  {% for s in sets %}<label class="keuze"><input type="radio" name="leesset" value="{{ s.id }}" {% if loop.first %}checked{% endif %}> {{ s.naam }}{% if s.vak %} <span class="stil klein">{{ s.vak }}</span>{% endif %}</label>{% endfor %}
+  <label class="keuze"><input type="radio" name="leesset" value=""> {{ _('Nieuwe leesset') }}</label>
+  </fieldset>
+  {% else %}<input type="hidden" name="leesset" value="">{% endif %}
+  <div class="rij">
+    <label>{{ _('Onderwerp') }} <input name="naam" placeholder="{{ _('alleen bij een nieuwe leesset') if sets else '' }}"></label>
+    <label>{{ _('Vak') }} <input name="vak" list="vakken" autocapitalize="none"></label>
+  </div>
+  <datalist id="vakken">{% for v in vakken %}<option value="{{ v }}">{% endfor %}</datalist>
+  <label>{{ _('Reden') }} <input name="reden" placeholder="{{ _('Waarom staat dit erbij?') }}"></label>
+  <div class="acties"><button class="knop primair">{{ _('Toevoegen') }}</button>{% if terug %} <a href="{{ terug }}">{{ _('Annuleren') }}</a>{% endif %}</div>
+</form>
+{% endblock %}

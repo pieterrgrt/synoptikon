@@ -742,3 +742,13 @@ mark.markering { color: inherit; border-radius: 2px; padding: 0 .1em; cursor: po
 .bewaard-geen-tekst { font-style: italic; }
 .bewaard-rechtspraak { margin-top: .6rem; }
 .bewaard-rechtspraak .bewaard-citeer { font-style: italic; }
+
+/* Leessets (/leren/sets): onderdelen op volgorde, met de tekst erbij om achter elkaar te lezen. */
+.leesset { margin: .6rem 0 0; padding-left: 1.4rem; }
+.leesset-onderdeel { padding: .7rem 0; border-bottom: 1px solid var(--lijn); }
+.leesset-onderdeel:last-child { border-bottom: none; }
+.leesset-kop { display: flex; flex-wrap: wrap; align-items: baseline; gap: .2rem .6rem; }
+.leesset-knoppen { margin-left: auto; white-space: nowrap; }
+.leesset-reden { margin: .3rem 0; font-style: italic; color: var(--inkt-2); }
+.leesset-tekst { font-family: var(--serif); white-space: pre-line; max-width: 70ch; margin: .4rem 0; }
+.leesset-link { font-weight: normal; }

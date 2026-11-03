@@ -6,7 +6,7 @@
 {% block inhoud %}
 <p class="kruimel"><a href="/artikelen">{{ _('Artikelen') }}</a> › {{ vt(stelsel.naam) }}{% if lezen %} › <a href="{% if lezen.knoop %}/stelsels/{{ stelsel.code }}#knoop-{{ lezen.knoop.id }}{% else %}/stelsels/{{ stelsel.code }}/wet/{{ lezen.wet.id }}{% endif %}">{{ lezen.wet.titel }}</a>{% endif %}</p>
 <div class="paginakop">
-  <h1>{{ ref.citeer }} {{ l.ster(ref, bewaarde_refs, request.url.path) }}</h1>
+  <h1>{{ ref.citeer }} {{ l.ster(ref, bewaarde_refs, request.url.path) }} <a class="klein leesset-link" href="/leren/sets/kies?stelsel={{ ref.stelsel }}&amp;wet={{ (ref.wet or '') | urlencode }}&amp;nummer={{ ref.nummer | urlencode }}&amp;terug={{ request.url.path | urlencode }}">{{ _('In leesset') }}</a></h1>
   <form method="get" action="/artikelen" class="inline"><input type="search" name="q" placeholder="{{ _('ander artikel: 6:162 · § 823 · 1240') }}" aria-label="{{ _('Ander artikel opzoeken') }}"></form>
 </div>
 {% if tekst and tekst.opschrift %}<p class="bron-titel groot">{{ tekst.opschrift }}</p>{% endif %}

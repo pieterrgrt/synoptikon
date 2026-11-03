@@ -16,6 +16,7 @@
   <span class="stil">{% if stand.nu %}{{ n_('{n} kaart nu aan de beurt', '{n} kaarten nu aan de beurt', stand.nu) }}{% elif stand.due %}{{ _('volgende {datum}', datum=stand.due.strftime('%d-%m')) }}{% endif %}</span></p>
 {% endif %}
 {% if lijst.omschrijving %}<div class="hint">{{ lijst.omschrijving | md }}</div>{% endif %}
+{% set uit_set = request.query_params.get('uit_set') %}{% if uit_set is not none %}<p class="melding ok" role="status">{{ _('Uit de leesset: geen nieuwe kaarten, alles stond er al in.') if uit_set == '0' else n_('Uit de leesset: {n} nieuwe kaart.', 'Uit de leesset: {n} nieuwe kaarten.', uit_set | int) }}</p>{% endif %}
 {% if request.query_params.get('overgenomen') %}<p class="melding ok" role="status">{{ _('{a} overgenomen, {b} afgewezen.', a=request.query_params.get('overgenomen'), b=request.query_params.get('afgewezen', '0')) }}</p>{% endif %}
 
 {% if voorstellen %}
