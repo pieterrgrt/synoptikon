@@ -6,7 +6,7 @@
     {% if ab.rol %}<span class="rol">{{ vt(ab.rol) }}</span>{% endif %}
     {% if not b.is_geldig %}<span class="rol vervallen" title="{{ b.geldig_van }} – {{ b.geldig_tot }}">{{ _('niet (meer) geldend') }}</span>{% endif %}
   </header>
-  {% if b.titel and b.titel != b.citeertitel %}<p class="bron-titel" lang="{{ b.taal }}">{{ b.titel }}</p>{% endif %}
+  {% if extra_titel(b.citeertitel, b.titel) %}<p class="bron-titel" lang="{{ b.taal }}">{{ b.titel }}</p>{% endif %}
   {% if b.tekst %}
   <div class="origineel" dir="auto" lang="{{ b.taal }}">{{ b.tekst | md }}</div>
   {% endif %}

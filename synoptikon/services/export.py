@@ -15,7 +15,9 @@ from ..models import Begrip, BegripRelatie, Bron, Vraag
 
 def _bron_kop(b: Bron) -> str:
     kop = b.citeertitel
-    if b.titel and b.titel != b.citeertitel:
+    from .helpers import extra_titel
+
+    if extra_titel(b.citeertitel, b.titel):
         kop += f" — {b.titel}"
     return kop
 

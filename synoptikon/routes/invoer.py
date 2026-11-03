@@ -9,6 +9,7 @@ from sqlalchemy.orm import Session
 from ..db import get_session
 from ..models import Antwoord, AntwoordBron, Begrip, Bron, Notitie, Vraag, VraagBegrip
 from ..services.helpers import actieve_stelsels, leeg_naar_none
+from ..services.vindplaats import soort as vindplaats_soort
 from .bronnen import SOORTEN
 from . import render
 
@@ -64,7 +65,7 @@ def bron(
         titel=leeg_naar_none(titel),
         tekst=leeg_naar_none(tekst),
         taal=(taal.strip().lower() or stelsel.taal),
-        vindplaats_type=leeg_naar_none(vindplaats_type),
+        vindplaats_type=leeg_naar_none(vindplaats_type) or vindplaats_soort(vindplaats),
         vindplaats=leeg_naar_none(vindplaats),
         url=leeg_naar_none(url),
     )

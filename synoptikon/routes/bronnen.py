@@ -2,13 +2,13 @@ from __future__ import annotations
 
 from fastapi import APIRouter, Depends, Form, HTTPException, Request
 from fastapi.responses import RedirectResponse
-from sqlalchemy import select
+from sqlalchemy import and_, or_, select
 from sqlalchemy.orm import Session, selectinload
 
 from ..auth import huidig_profiel
 from ..db import get_session
 from ..models import Bron, Concordantie, Systematiek, Vertaling, WettekstArtikel
-from ..services import leren
+from ..services import leren, vindplaats
 from ..services.helpers import actieve_stelsels, leeg_naar_none, parse_datum
 from . import markeringen, render
 
@@ -18,14 +18,21 @@ SOORTEN = {"wet": "wet", "rechtspraak": "rechtspraak", "literatuur": "literatuur
 
 
 @router.get("/bronnen")
-def bronnen_lijst(request: Request, stelsel: str | None = None, soort: str | None = None, db: Session = Depends(get_session)):
+def bronnen_lijst(request: Request, stelsel: str | None = None, soort: str | None = None, zonder: str | None = None,
+                  db: Session = Depends(get_session)):
     q = select(Bron).options(selectinload(Bron.stelsel)).order_by(Bron.stelsel_code, Bron.soort, Bron.citeertitel)
     if stelsel:
         q = q.where(Bron.stelsel_code == stelsel)
     if soort:
         q = q.where(Bron.soort == soort)
+    if zonder == "vindplaats":
+        # Na te kijken: rechtspraak en literatuur zonder vindplaats, of met een vindplaats waarvan het soort onbekend is.
+        # Een wetsbron heeft genoeg aan haar citeertitel.
+        q = q.where(or_(and_(Bron.soort != "wet", or_(Bron.vindplaats.is_(None), Bron.vindplaats == "")),
+                        and_(Bron.vindplaats.is_not(None), Bron.vindplaats != "", or_(Bron.vindplaats_type.is_(None), Bron.vindplaats_type == ""))))
     bronnen = db.scalars(q).all()
-    return render(request, "bronnen.html", bronnen=bronnen, stelsels=actieve_stelsels(db), soorten=SOORTEN, f_stelsel=stelsel, f_soort=soort)
+    return render(request, "bronnen.html", bronnen=bronnen, stelsels=actieve_stelsels(db), soorten=SOORTEN, f_stelsel=stelsel, f_soort=soort,
+                  f_zonder=zonder)
 
 
 def _systematiek_opties(db: Session) -> list[Systematiek]:
@@ -44,8 +51,8 @@ def _vul_bron(bron: Bron, form: dict) -> None:
     bron.titel = leeg_naar_none(form.get("titel"))
     bron.tekst = leeg_naar_none(form.get("tekst"))
     bron.taal = form["taal"].strip().lower()
-    bron.vindplaats_type = leeg_naar_none(form.get("vindplaats_type"))
     bron.vindplaats = leeg_naar_none(form.get("vindplaats"))
+    bron.vindplaats_type = leeg_naar_none(form.get("vindplaats_type")) or vindplaats.soort(bron.vindplaats)
     bron.url = leeg_naar_none(form.get("url"))
     bron.geldig_van = parse_datum(form.get("geldig_van"))
     bron.geldig_tot = parse_datum(form.get("geldig_tot"))

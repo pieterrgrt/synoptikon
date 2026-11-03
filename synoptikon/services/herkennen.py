@@ -65,6 +65,7 @@ class Id:
     soort: str  # ecli | celex
     waarde: str  # ECLI:EU:C:2015:806, 62014CJ0594
     land: str | None = None  # alleen bij ECLI
+    naam: str | None = None  # roepnaam, als de invoer die was ("Kelderluik")
 
     @property
     def bron(self) -> str:
@@ -82,6 +83,10 @@ def herken_id(q: str) -> Id | None:
     if m := _CELEX.fullmatch(q) or (_CELEX.search(q) if re.search(r"CELEX|eur-lex", q, re.I) else None):
         sector, jaar, soort, nr = m.groups()
         return Id("celex", f"{sector}{jaar}{soort}{nr}".upper())
+    from .roepnamen import zoek as roepnaam
+
+    if r := roepnaam(q):  # "Kelderluik" → ECLI:NL:HR:1965:AB7079
+        return Id("ecli", r.ecli, r.ecli.split(":")[1], naam=r.naam)
     return None
 
 

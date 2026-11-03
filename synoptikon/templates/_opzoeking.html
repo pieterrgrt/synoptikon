@@ -11,7 +11,7 @@
   <p class="melding fout">{{ o.fout }}</p>
   {% else %}
   <h3 class="opzoeking-titel">{% if r.stelsel %}{{ sc(r.stelsel) }} {% endif %}{% if r.url %}<a href="{{ r.url }}"{% if r.url.startswith('http') %} target="_blank" rel="noopener"{% endif %}>{{ r.citeer or r.titel }}</a>{% else %}{{ r.citeer or r.titel }}{% endif %}
-    {% if r.opschrift or (r.titel and r.titel != r.citeer) %}<span class="bron-titel">{{ r.opschrift or r.titel }}</span>{% endif %}</h3>
+    {% if r.opschrift or extra_titel(r.citeer or r.titel, r.titel) %}<span class="bron-titel">{{ r.opschrift or r.titel }}</span>{% endif %}</h3>
   {% if r.plaats %}<p class="pad klein">{{ r.plaats }}</p>{% endif %}
   {% if r.vindplaats and r.vindplaats != r.citeer %}<p class="klein mono">{{ r.vindplaats }}</p>{% endif %}
   {% if groot and r.tekst %}<div class="origineel serif" dir="auto">{{ r.tekst | md }}</div>

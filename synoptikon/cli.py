@@ -201,6 +201,8 @@ def cmd_import_bulk(args) -> int:
         tel = {k: sum(getattr(t, k) for t in r.tellingen) for k in ("gecontroleerd", "gewijzigd", "nieuw", "fouten")}
     elif args.bron == "de":
         tel = bulk.duitsland(fabriek, parallel=args.parallel, limiet=args.limiet, opnieuw=args.opnieuw, melder=meld)
+    elif args.taalversies:
+        tel = {"nieuw": bulk.taalversies(fabriek, opnieuw=args.opnieuw, melder=meld)}
     else:
         tel = bulk.europa(fabriek, parallel=args.parallel, limiet=args.limiet, opnieuw=args.opnieuw,
                           alleen_verdragen=args.verdragen, melder=meld)
@@ -407,6 +409,7 @@ def main(argv: list[str] | None = None) -> int:
     s.add_argument("--limiet", type=int, help="hoogstens zoveel wetten (proef)")
     s.add_argument("--opnieuw", action="store_true", help="ook wat er al is opnieuw ophalen")
     s.add_argument("--verdragen", action="store_true", help="EU: alleen VEU, VWEU en Handvest")
+    s.add_argument("--taalversies", action="store_true", help="EU: de belangrijke handelingen (AVG, Rome I …) ook in nl, fr, it, en, es")
     s.set_defaults(fn=cmd_import_bulk)
     s = sub.add_parser("bijwerken", help="alle wetteksten met de bron vergelijken en alleen wat veranderde opslaan (wekelijks, in delen)")
     s.add_argument("--bron", nargs="*", choices=["register", "fr", "de", "nl", "eu-catalogus", "eu"], help="alleen deze bronnen")

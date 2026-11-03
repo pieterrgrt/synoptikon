@@ -16,6 +16,7 @@ from sqlalchemy.orm import Session, selectinload
 from ..i18n import BRONTAAL, taal, vt
 from ..models import Antwoord, Begrip, Bron, Vraag, WettekstArtikel
 from .artikelen import Ref, herken
+from .helpers import extra_titel
 
 log = logging.getLogger(__name__)
 
@@ -248,7 +249,7 @@ def zoek(db: Session, q: str, limiet: int = 30, stelsel: str = "", stelsels: lis
     for rowid, snippet in rows:
         b = db.get(Bron, rowid)
         if b:
-            res.bronnen.append(Treffer("bron", b.citeertitel, snippet or "", f"/bronnen/{b.id}", b.stelsel_code, b.titel))
+            res.bronnen.append(Treffer("bron", b.citeertitel, snippet or "", f"/bronnen/{b.id}", b.stelsel_code, extra_titel(b.citeertitel, b.titel)))
 
     rows = db.execute(
         beperk(

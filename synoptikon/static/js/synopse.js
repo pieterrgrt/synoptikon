@@ -12,8 +12,18 @@
   var kolommen = function () { return Array.prototype.slice.call(synopse.querySelectorAll('.kolom')); };
   var schakels = Array.prototype.slice.call(balk.querySelectorAll('input[data-kolom]'));
 
-  // Herstel: volgorde en zichtbaarheid (eerst per vraag, anders algemeen).
-  var staat = lees(sleutel) || lees(algemeen) || {};
+  // Herstel: volgorde en zichtbaarheid (eerst per vraag, anders algemeen). Wat je bij deze vraag zelf aanzette, blijft
+  // aan, ook een kolom die de server als leeg uit liet staan; een algemene voorkeur zet alleen kolommen uit.
+  var eigen = lees(sleutel);
+  var staat = eigen || lees(algemeen) || {};
+  if (eigen && eigen.verborgen) {
+    kolommen().forEach(function (k) {
+      if (k.hasAttribute('data-leeg') && eigen.verborgen.indexOf(k.dataset.kolom) < 0) {
+        k.hidden = false;
+        schakels.forEach(function (s) { if (s.dataset.kolom === k.dataset.kolom) s.checked = true; });
+      }
+    });
+  }
   if (staat.volgorde) {
     staat.volgorde.forEach(function (code) {
       var k = synopse.querySelector('.kolom[data-kolom="' + code + '"]');

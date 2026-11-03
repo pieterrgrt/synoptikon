@@ -21,7 +21,7 @@
   // Formulieren die bij wijziging direct verzenden (filters, keuzelijsten).
   document.addEventListener('change', function (e) {
     var el = e.target;
-    if (el.matches && el.matches('select.auto-submit') && el.form) el.form.submit();
+    if (el.matches && el.matches('select.auto-submit, input.auto-submit') && el.form) el.form.submit();
     // Stelselkeuze → taalveld invullen en systematiek-opties filteren.
     if (el.matches && el.matches('select[name="stelsel_code"]')) {
       var opt = el.selectedOptions[0], form = el.form;
@@ -115,5 +115,20 @@
       r.addEventListener('change', function () { tel(r); });
       tel(r);
     });
+  });
+})();
+
+// Citeer: de citatie uit data-citaat naar het klembord; de knop zegt even "gekopieerd".
+(function () {
+  document.addEventListener('click', function (e) {
+    var knop = e.target.closest && e.target.closest('button[data-citaat]');
+    if (!knop) return;
+    var tekst = knop.dataset.citaat, label = knop.textContent;
+    function klaar() { knop.textContent = '✓ ' + (knop.dataset.gekopieerd || ''); setTimeout(function () { knop.textContent = label; }, 1500); }
+    if (navigator.clipboard && window.isSecureContext) {
+      navigator.clipboard.writeText(tekst).then(klaar, function () { window.prompt('', tekst); });
+    } else {
+      window.prompt('', tekst);
+    }
   });
 })();

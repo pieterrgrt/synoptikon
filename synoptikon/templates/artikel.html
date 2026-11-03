@@ -6,7 +6,7 @@
 {% block inhoud %}
 <p class="kruimel"><a href="/artikelen">{{ _('Artikelen') }}</a> › {{ vt(stelsel.naam) }}{% if lezen %} › <a href="{% if lezen.knoop %}/stelsels/{{ stelsel.code }}#knoop-{{ lezen.knoop.id }}{% else %}/stelsels/{{ stelsel.code }}/wet/{{ lezen.wet.id }}{% endif %}">{{ lezen.wet.titel }}</a>{% endif %}</p>
 <div class="paginakop">
-  <h1>{{ ref.citeer }} {% if not bestaat_niet %}{{ l.ster(ref, bewaarde_refs, request.url.path) }}{% endif %}</h1>
+  <h1>{{ ref.citeer }} {% if not bestaat_niet %}{{ l.ster(ref, bewaarde_refs, request.url.path) }} {{ l.citeer(ref.citeer) }}{% endif %}</h1>
   <form method="get" action="/artikelen" class="inline"><input type="search" name="q" placeholder="{{ _('ander artikel: 6:162 · § 823 · 1240') }}" aria-label="{{ _('Ander artikel opzoeken') }}"></form>
 </div>
 {% if tekst and tekst.opschrift %}<p class="bron-titel groot">{{ tekst.opschrift }}</p>{% endif %}
@@ -26,6 +26,16 @@
     {% if lezen and tekst.herkomst != 'bron' %}<span class="stil peil">{{ peil(lezen.wet) }}</span>{% endif %}
   </footer>
 </article>
+{% if getoonde_taal %}
+<p class="stil klein taalversie">{{ _('Taalversie: {taal}', taal=TALEN.get(getoonde_taal, getoonde_taal)) }}{% if getoonde_taal != rechtstaal() %} · {{ _('geen {code}-versie ingelezen', code=rechtstaal() | upper) }}{% if lezen.wet.wet_id %} · <a href="https://eur-lex.europa.eu/legal-content/{{ rechtstaal() | upper }}/TXT/?uri=CELEX:{{ lezen.wet.wet_id.split('.')[0] }}" target="_blank" rel="noopener">EUR-Lex {{ rechtstaal() | upper }} ↗</a>{% endif %}{% endif %}</p>
+{% endif %}
+{% for wa in taalversies %}
+<details class="blok taalversie-ander">
+  <summary>{{ TALEN.get(wa.wettekst.taal, wa.wettekst.taal) }}{% if wa.opschrift %} · {{ wa.opschrift }}{% endif %}</summary>
+  <div class="origineel" dir="auto" lang="{{ wa.wettekst.taal }}">{{ wa.tekst | md_lid(ref.detail) }}</div>
+  <p class="stil klein">{{ peil(wa.wettekst) }}</p>
+</details>
+{% endfor %}
 {% if lezen and (lezen.vorig or lezen.volgend) %}
 <nav class="bladeren wet-bladeren" aria-label="{{ _('Bladeren') }}">
   {% if lezen.vorig %}<a class="knop klein" href="{{ lezen.vorig.url }}" rel="prev">‹ {{ lezen.vorig.citeer }}</a>{% else %}<span></span>{% endif %}

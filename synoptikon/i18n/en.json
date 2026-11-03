@@ -870,5 +870,13 @@
  "staat in een thema": "in a theme",
  "tekst geldend sinds {datum}": "text in force since {datum}",
  "tekst ingevoerd of bijgewerkt op {datum}": "text entered or updated on {datum}",
- "vergeleken met de bron op {datum}": "checked against the source on {datum}"
+ "vergeleken met de bron op {datum}": "checked against the source on {datum}",
+ "Citatie kopiëren: {citaat}": "Copy citation: {citaat}",
+ "Citeer": "Cite",
+ "Taalversie: {taal}": "Language version: {taal}",
+ "alleen na te kijken: zonder vindplaats of met onbekend soort": "only to check: no reference or unknown type",
+ "geen {code}-versie ingelezen": "no {code} version imported",
+ "gekopieerd": "copied",
+ "{n} stelsel zonder inhoud staat uit.": "{n} system without content is hidden.",
+ "{n} stelsels zonder inhoud staan uit.": "{n} systems without content are hidden."
 }

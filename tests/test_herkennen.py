@@ -74,7 +74,7 @@ def test_herken_id(invoer, soort, waarde):
     assert i and (i.soort, i.waarde) == (soort, waarde)
 
 
-@pytest.mark.parametrize("invoer", ["§ 823 BGB", "Baris/Riezenkamp", "art. 6:162 BW", "BGHZ 63, 369", "", "arrest 32016R0679 uit het college"])
+@pytest.mark.parametrize("invoer", ["§ 823 BGB", "Jansen/Pietersen", "art. 6:162 BW", "BGHZ 63, 369", "", "arrest 32016R0679 uit het college"])
 def test_geen_id(invoer):
     assert herkennen.herken_id(invoer) is None
 
@@ -257,3 +257,35 @@ def test_ophalen_herstelt_een_oude_gok_van_claude_en_vraagt_een_regel(client, ne
     with database.session() as s:
         k = s.scalar(select(Kaart).where(Kaart.bron_id == b.id))
         assert k.antwoord.startswith("Die Norm ist insolvenzrechtlich") and k.lijst.vak == "GÖ"
+
+
+def test_roepnaam_wordt_ecli():
+    from synoptikon.services.herkennen import herken_id
+
+    for q in ("Kelderluik", "Kelderluik-arrest", "arrest Kelderluik", "kelderluik"):
+        i = herken_id(q)
+        assert i and i.waarde == "ECLI:NL:HR:1965:AB7079" and i.naam == "Kelderluik" and i.bron == "rechtspraak.nl", q
+    assert herken_id("Lindenbaum - Cohen").waarde == "ECLI:NL:HR:1919:AG1776"
+    assert herken_id("Costa/ENEL").waarde == "ECLI:EU:C:1964:66"  # uit eu_logica
+    assert herken_id("Commissie/Frankrijk") is None and herken_id("onrechtmatige daad") is None
+
+
+def test_citaat_van_uitspraak():
+    from synoptikon.models import Bron
+    from synoptikon.services import citeren
+
+    b = Bron(soort="rechtspraak", stelsel_code="NL", citeertitel="HR 18 juni 1982 (Plas/Valburg)", taal="nl",
+             vindplaats="ECLI:NL:HR:1982:AG4405; NJ 1983/723")
+    assert citeren.bron(b) == "HR 18 juni 1982, ECLI:NL:HR:1982:AG4405, NJ 1983/723 (Plas/Valburg)"
+    b = Bron(soort="rechtspraak", stelsel_code="EU", citeertitel="EuGH 17. September 2002, C-334/00 (Tacconi)", taal="de",
+             vindplaats="ECLI:EU:C:2002:499; CELEX 62000CJ0334")
+    assert citeren.bron(b) == "EuGH 17. September 2002, C-334/00, ECLI:EU:C:2002:499 (Tacconi)"
+
+
+def test_vindplaatssoort_afgeleid():
+    from synoptikon.services.vindplaats import soort
+
+    assert soort("ECLI:NL:HR:1982:AG4405; NJ 1983/723") == "ECLI"
+    assert soort("NJW 2011, 1881") == "NJW" and soort("BGHZ 176, 204 (niet geverifieerd)") == "BGHZ"
+    assert soort("NJ 1990/286") == "NJ" and soort("[2013] UKSC 34") == "neutral citation" and soort("[1897] AC 22") == "law reports"
+    assert soort("n° 00-10.243 et 00-10.949, Bull. civ. IV, n° 186") == "pourvoi" and soort(None) is None

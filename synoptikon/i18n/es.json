@@ -870,5 +870,13 @@
  "staat in een thema": "en un tema",
  "tekst geldend sinds {datum}": "texto vigente desde el {datum}",
  "tekst ingevoerd of bijgewerkt op {datum}": "texto introducido o actualizado el {datum}",
- "vergeleken met de bron op {datum}": "cotejado con la fuente el {datum}"
+ "vergeleken met de bron op {datum}": "cotejado con la fuente el {datum}",
+ "Citatie kopiëren: {citaat}": "Copiar la cita: {citaat}",
+ "Citeer": "Citar",
+ "Taalversie: {taal}": "Versión lingüística: {taal}",
+ "alleen na te kijken: zonder vindplaats of met onbekend soort": "solo por revisar: sin referencia o de tipo desconocido",
+ "geen {code}-versie ingelezen": "ninguna versión {code} importada",
+ "gekopieerd": "copiado",
+ "{n} stelsel zonder inhoud staat uit.": "{n} ordenamiento sin contenido está oculto.",
+ "{n} stelsels zonder inhoud staan uit.": "{n} ordenamientos sin contenido están ocultos."
 }

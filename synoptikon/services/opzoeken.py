@@ -113,7 +113,12 @@ def uitspraken(db: Session, q: str, n: int = 6, stelsels: list[str] | None = Non
     stmt = select(Bron).where(Bron.soort == "rechtspraak")
     if stelsels:
         stmt = stmt.where(Bron.stelsel_code.in_(stelsels))
-    exact = db.scalars(stmt.where(or_(Bron.vindplaats.ilike(q.strip()), Bron.citeertitel.ilike(f"%{q.strip()}%"))).limit(n)).all()
+    from .roepnamen import zoek as roepnaam
+
+    namen = [Bron.vindplaats.ilike(q.strip()), Bron.citeertitel.ilike(f"%{q.strip()}%")]
+    if r := roepnaam(q):  # "Kelderluik": ook de eigen bron met die ECLI, hoe ze ook heet
+        namen.append(Bron.vindplaats.ilike(f"%{r.ecli}%"))
+    exact = db.scalars(stmt.where(or_(*namen)).limit(n)).all()
     ids = {b.id for b in exact}
     gevonden = list(exact)
     m = fts_query(q)
@@ -319,6 +324,8 @@ def _vul(oid: int, db: Session | None = None) -> None:
     try:
         o = db.get(Opzoeking, oid)
         if (i := herkennen.herken_id(o.invoer)) and (feiten := herkennen.zoek(i)):
+            if i.naam and i.naam.casefold() not in (feiten.get("citeer") or "").casefold():
+                feiten = {**feiten, "citeer": f"{feiten.get('citeer') or i.waarde} ({i.naam})"}
             o.resultaat, o.status = feiten, "klaar"
             db.commit()
             return
@@ -387,8 +394,9 @@ def bron_uit(db: Session, o: Opzoeking) -> Bron | None:
 
 
 def _vindplaats_type(vindplaats: str | None) -> str | None:
-    i = herkennen.herken_id(vindplaats or "")
-    return i.soort.upper() if i else None
+    from .vindplaats import soort
+
+    return soort(vindplaats)
 
 
 # Wat in het formulier 'kloppend maken' te corrigeren is; de rest van de opzoeking blijft zoals ze was.

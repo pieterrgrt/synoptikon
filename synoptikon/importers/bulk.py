@@ -204,6 +204,47 @@ def europa(sessie: Callable[[], Session], parallel: int = 4, limiet: int | None 
     return tel
 
 
+def taalversies(sessie: Callable[[], Session], celexen: list[str] | None = None, talen: tuple[str, ...] | None = None,
+                opnieuw: bool = False, melder: Melder = print) -> int:
+    """De belangrijke EU-handelingen (`wetboek.BELANGRIJK`) ook in de andere talen dan Duits: wie "art. 82 AVG" typt,
+    wil de Nederlandse tekst, en taalversies naast elkaar zijn bij uitleg van Unierecht vaak het punt.
+
+    Elke versie krijgt het wet_id `<celex>.<taal>` en dezelfde sleutel (`wet`) als de Duitse, zoals de verdragen. Een
+    taal die EUR-Lex niet heeft, wordt overgeslagen (geen terugval naar een andere taal). Geeft het aantal opgeslagen teksten."""
+    from ..services.wetboek import BELANGRIJK
+
+    talen = talen or tuple(t for t in eunamen.TALEN if t != "de")
+    with sessie() as s:
+        duits = {w.wet_id: (w.wet, w.versie, w.titel) for w in s.scalars(select(Wettekst).where(
+            Wettekst.stelsel_code == "EU", Wettekst.taal == "de", Wettekst.wet_id.in_(celexen or BELANGRIJK["EU"])))}
+        al = {w for (w,) in s.execute(select(Wettekst.wet_id).where(Wettekst.stelsel_code == "EU"))}
+        datums = {h.celex: h.datum.isoformat() for h in s.scalars(select(EuHandeling).where(EuHandeling.celex.in_(list(duits)))) if h.datum}
+    c = cellar.verbinding()
+    cons = consolidaties(c)
+    n = 0
+    try:
+        for celex, (wet, _versie, _titel) in sorted(duits.items()):
+            if celex in eunamen.VERDRAGEN:
+                continue  # die staan er al in zes talen
+            for taal in talen:
+                if not opnieuw and f"{celex}.{taal}" in al:
+                    continue
+                uit = _download_met_terugval(celex, cons.get(celex, celex), taal, c, datums.get(celex))
+                if uit is None or uit[1] != taal:
+                    melder(f"EU {celex} {taal}: niet bij EUR-Lex")
+                    continue
+                g, _t = uit
+                g.wet_id = f"{celex}.{taal}"
+                with sessie() as s:
+                    store.sla_op(s, "EU", g, wet, taal=taal, kern=True, vervang=True)
+                    s.commit()
+                n += 1
+                melder(f"EU {celex} {taal}: {len(g.artikelen)} artikelen")
+    finally:
+        c.close()
+    return n
+
+
 def register_eu_namen() -> list[str]:
     from ..services.artikelen import regels
     return list(regels("EU").andere)

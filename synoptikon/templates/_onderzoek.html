@@ -1,4 +1,5 @@
 {# Onderzoek door Claude bij een vraag (ok = laatste Onderzoek of None). Zolang het loopt, ververst bezig.js dit blok. #}
+{% if ok or (claude_aan and mag_bewerken) %}
 <section class="blok onderzoek" id="onderzoek" {% if ok and ok.status in ('wacht', 'bezig') %}data-bezig="/vragen/{{ vraag.slug }}/onderzoek"{% endif %}>
   {% if ok and ok.status in ('wacht', 'bezig') %}
   <p role="status"><span class="draaier" aria-hidden="true"></span> {{ _('Claude onderzoekt deze vraag voor {codes}.', codes=ok.stelsels.replace(',', ', ')) }}
@@ -33,3 +34,4 @@
   {% endif %}
   {% endif %}
 </section>
+{% endif %}

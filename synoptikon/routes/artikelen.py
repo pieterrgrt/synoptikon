@@ -218,10 +218,14 @@ def artikel(request: Request, stelsel: str, nummer: str, wet: str | None = None,
     lezen = _in_wettekst(db, ref)
     tekst = ctx.tekst(ref)
     bestaat_niet = _bestaat_niet(db, ref) if tekst is None else None
+    versies = corr.taalversies(db, ref)
+    getoond = lezen["wet"].taal if lezen else None
     antwoord = render(
         request,
         "artikel.html",
         bestaat_niet=bestaat_niet,
+        taalversies=[wa for wa in versies if wa.wettekst.taal != getoond],
+        getoonde_taal=getoond,
         **markeringen.context_artikel(db, huidig_profiel(request).id if huidig_profiel(request) else 1, ref, tekst),
         ref=ref,
         stelsel=st,

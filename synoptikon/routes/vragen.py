@@ -133,7 +133,11 @@ def synopse(request: Request, slug: str, vertaling: str | None = None, db: Sessi
     gevuld = [a.stelsel_code for a in vraag.antwoorden if a.kern or a.analyse or a.bronnen]
     ook = ook_uit(request)
     keuze = stelselkeuze(db, request, [*gevuld, *ook])
-    stelsels = keuze.eigen
+    # Stelsels met inhoud eerst; een lege kolom staat standaard uit (aan te zetten in de kolombalk), behalve wat via
+    # ?ook= gevraagd is. Zonder enige inhoud blijft alles aan: dan is de synopse een invulformulier.
+    vol = set(gevuld) | set(ook)
+    stelsels = sorted(keuze.eigen, key=lambda s: s.code not in vol)
+    leeg_uit = {s.code for s in stelsels if s.code not in vol} if vol else set()
     # Alle bronnen, voor het koppelformulier; gegroepeerd per stelsel.
     alle_bronnen = db.scalars(select(Bron).order_by(Bron.stelsel_code, Bron.soort, Bron.citeertitel)).all()
     gekoppeld = {ab.bron_id for a in vraag.antwoorden for ab in a.bronnen}
@@ -144,6 +148,7 @@ def synopse(request: Request, slug: str, vertaling: str | None = None, db: Sessi
         "synopse.html",
         vraag=vraag,
         stelsels=stelsels,
+        leeg_uit=leeg_uit,
         overige_stelsels=keuze.overig,
         alle_stelsels=keuze.alle,
         ook=ook,

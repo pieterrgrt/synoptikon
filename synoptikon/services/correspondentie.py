@@ -132,6 +132,19 @@ def wettekst_artikel(db: Session, ref: Ref) -> WettekstArtikel | None:
     return db.scalars(q.order_by(Wettekst.opgehaald.desc(), Wettekst.id.desc())).first()
 
 
+def taalversies(db: Session, ref: Ref) -> list[WettekstArtikel]:
+    """Hetzelfde EU-artikel in elke ingelezen taal (één per taal, de laatst opgehaalde), in de volgorde nl de fr it en es."""
+    if ref.stelsel != "EU" or ref.nummer is None or not ref.wet:
+        return []
+    q = (select(WettekstArtikel).join(Wettekst).where(Wettekst.stelsel_code == "EU", _zelfde_wet(ref.wet), WettekstArtikel.nummer == ref.nummer)
+         .options(selectinload(WettekstArtikel.wettekst)).order_by(Wettekst.opgehaald.desc()))
+    per_taal: dict[str, WettekstArtikel] = {}
+    for wa in db.scalars(q):
+        per_taal.setdefault(wa.wettekst.taal or "de", wa)
+    orde = ["nl", "de", "fr", "it", "en", "es"]
+    return sorted(per_taal.values(), key=lambda wa: orde.index(wa.wettekst.taal) if wa.wettekst.taal in orde else 9)
+
+
 def zoek_artikel(db: Session, q: str, stelsel: str | None = None, stelsels: list[str] | None = None) -> list[tuple[Ref, WettekstArtikel | None]]:
     """Artikelen die bij de invoer passen, met hun tekst als die geïmporteerd is.
 
