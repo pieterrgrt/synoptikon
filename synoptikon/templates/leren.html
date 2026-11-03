@@ -1,7 +1,7 @@
 {% extends "base.html" %}
 {% block titel %}{{ _('Leren') }} · Synoptikon{% endblock %}
 {% block inhoud %}
-<h1>{{ _('Leren') }}</h1>
+<div class="paginakop"><h1>{{ _('Leren') }}</h1><a class="knop" href="/leren/sets">{{ _('Leessets') }}</a></div>
 
 {% if voorstellen %}<p class="melding"><a href="/leren/voorstellen">{{ n_('{n} voorstel uit je notities', '{n} voorstellen uit je notities', voorstellen) }} · {{ _('beoordelen') }} ›</a></p>{% endif %}
 

@@ -6,7 +6,7 @@
 <p class="kruimel"><a href="/bronnen">{{ _('Bronnen') }}</a> › {{ vt(bron.stelsel.naam) }} › {{ _(soorten.get(bron.soort, bron.soort)) }}</p>
 <div class="paginakop">
   <h1>{{ bron.citeertitel }}</h1>
-  {% if bron.soort == 'rechtspraak' %}{{ l.ster_bron(bron, bron_bewaard, request.url.path) }}{% endif %}
+  {% if bron.soort == 'rechtspraak' %}{{ l.ster_bron(bron, bron_bewaard, request.url.path) }} <a class="klein leesset-link" href="/leren/sets/kies?bron={{ bron.id }}&amp;terug={{ request.url.path | urlencode }}">{{ _('In leesset') }}</a>{% endif %}
   <a class="knop klein" href="/bronnen/{{ bron.id }}/bewerken">{{ _('Bewerken') }}</a>
 </div>
 {% if bron.titel %}<p class="bron-titel groot" lang="{{ bron.taal }}">{{ bron.titel }}</p>{% endif %}

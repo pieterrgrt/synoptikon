@@ -50,7 +50,8 @@
   <h3 class="stil klein">{{ _('Samen in een thema') }}</h3>
   <ul class="bewaard-lijst bewaard-themas">
     {% for t, xs in g.themas %}
-    <li><span class="bewaard-opschrift">{{ t }}</span>: {% for a in xs %}<a href="{{ a.url }}">{{ a.citeer }}</a>{% if not loop.last %}, {% endif %}{% endfor %}</li>
+    <li><span class="bewaard-opschrift">{{ t }}</span>: {% for a in xs %}<a href="{{ a.url }}">{{ a.citeer }}</a>{% if not loop.last %}, {% endif %}{% endfor %}
+      <form method="post" action="/leren/sets" class="inline"><input type="hidden" name="naam" value="{{ t }}"><input type="hidden" name="vak" value="{{ g.vak }}">{% for a in xs %}<input type="hidden" name="artikel" value="{{ a.stelsel }}|{{ a.wet or '' }}|{{ a.nummer }}">{% endfor %}<button class="knop-tekst klein">{{ _('Als leesset') }} ›</button></form></li>
     {% endfor %}
   </ul>
   {% endif %}
