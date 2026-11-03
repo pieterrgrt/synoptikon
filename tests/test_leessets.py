@@ -145,6 +145,18 @@ def test_vanaf_een_artikel_of_uitspraak(client, materiaal):
     with database.session() as db:
         s = db.get(Leesset, sid)
         assert [o.soort for o in s.onderdelen] == ["artikel", "uitspraak"] and s.onderdelen[0].reden == "Kern"
+    r = client.post("/leren/sets/toevoegen", data={"leesset": str(sid), "stelsel": "DE", "nummer": "932", "terug": "/\\evil.example"},
+                    follow_redirects=False)
+    assert r.headers["location"] == f"/leren/sets/{sid}", "geen redirect naar een andere site"
+
+
+def test_alleen_uitspraken_als_bron(client, materiaal):
+    with database.session() as db:
+        wb = Bron(stelsel_code="DE", soort="wet", citeertitel="§ 1 Test", taal="de")
+        db.add(wb)
+        db.commit()
+        materiaal["bron"].append(wb.id)
+    assert client.get(f"/leren/sets/kies?bron={wb.id}").status_code == 400
 
 
 def test_een_ander_profiel_ziet_je_leesset_niet(client, materiaal):
@@ -159,6 +171,8 @@ def test_een_ander_profiel_ziet_je_leesset_niet(client, materiaal):
         sid, pid = s.id, p.id
     assert client.get(f"/leren/sets/{sid}").status_code == 404
     assert client.post(f"/leren/sets/{sid}/kaarten").status_code == 404
+    r = client.post("/leren/sets/toevoegen", data={"leesset": str(sid), "stelsel": "DE", "nummer": "929"})
+    assert r.status_code == 404
     with database.session() as db:
         db.delete(db.get(Profiel, pid))
         db.commit()

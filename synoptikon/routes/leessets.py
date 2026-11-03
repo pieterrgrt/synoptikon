@@ -30,6 +30,12 @@ def _pid(request: Request) -> int:
     return p.id if p is not None else 1
 
 
+def _uitspraak(db: Session, bron) -> Bron | None:
+    """Alleen rechtspraak: een wet- of literatuurbron is geen uitspraak (en zou een arrestkaart worden)."""
+    b = db.get(Bron, int(bron)) if str(bron or "").isdigit() else None
+    return b if b is not None and b.soort == "rechtspraak" else None
+
+
 def _set(request: Request, db: Session, sid: int) -> Leesset:
     s = db.get(Leesset, sid)
     if s is None or s.profiel_id != _pid(request):
@@ -38,7 +44,7 @@ def _set(request: Request, db: Session, sid: int) -> Leesset:
 
 
 def _veilig(terug: str) -> str:
-    return terug if terug.startswith("/") and not terug.startswith("//") else ""
+    return terug if terug.startswith("/") and not terug.startswith(("//", "/\\")) else ""
 
 
 def _vakken(sets: list[Leesset]) -> list[str]:
@@ -68,7 +74,7 @@ async def maak(request: Request, db: Session = Depends(get_session)):
 def kies(request: Request, stelsel: str = "", wet: str = "", nummer: str = "", bron: int | None = None, terug: str = "",
          db: Session = Depends(get_session)):
     """Vanaf een artikel of uitspraak: in welke leesset, en waarom."""
-    b = db.get(Bron, bron) if bron else None
+    b = _uitspraak(db, bron)
     ref = Ref(stelsel.upper(), nummer, wet or None) if stelsel and nummer else None
     if ref is None and b is None:
         raise HTTPException(400)
@@ -80,7 +86,7 @@ def kies(request: Request, stelsel: str = "", wet: str = "", nummer: str = "", b
 def toevoegen(request: Request, leesset: str = Form(""), naam: str = Form(""), vak: str = Form(""), stelsel: str = Form(""),
               wet: str = Form(""), nummer: str = Form(""), bron: str = Form(""), reden: str = Form(""), terug: str = Form(""),
               db: Session = Depends(get_session)):
-    b = db.get(Bron, int(bron)) if bron.isdigit() else None
+    b = _uitspraak(db, bron)
     ref = Ref(stelsel.upper(), nummer, wet or None) if stelsel and nummer else None
     if ref is None and b is None:
         raise HTTPException(400)
@@ -123,7 +129,7 @@ def onderdeel_erbij(request: Request, sid: int, invoer: str = Form(""), stelsel:
         if ref is None:
             return RedirectResponse(f"/leren/sets/{sid}?niet={quote(invoer.strip()[:80])}#erbij", status_code=303)
         leessets.voeg_toe(db, s, ref=ref, reden=reden)
-    elif notitie.strip():
+    if notitie.strip():
         leessets.voeg_toe(db, s, notitie=notitie, reden=reden)
     return RedirectResponse(f"/leren/sets/{sid}#erbij", status_code=303)
 
