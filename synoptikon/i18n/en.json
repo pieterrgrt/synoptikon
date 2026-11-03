@@ -859,5 +859,10 @@
  "voorwaarde invullen": "fill in the requirement",
  "Elke voorwaarde die je markeerde als gat in de tekst (typen in Wunderkammer)": "Each requirement you marked as a gap in the text (typing in Wunderkammer)",
  "over": "on",
- "Samen in een thema": "Together in a theme"
+ "Samen in een thema": "Together in a theme",
+ "Bewaren voor welk vak?": "Save for which course?",
+ "eigen naam": "your own name",
+ "of een project": "or a project",
+ "Bewaren in {vak}": "Save to {vak}",
+ "Bewaren: eerst het vak kiezen": "Save: choose the course first"
 }

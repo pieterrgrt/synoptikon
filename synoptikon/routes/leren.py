@@ -142,6 +142,10 @@ async def nieuw_opslaan(request: Request, db: Session = Depends(get_session)):
     if "vrij" in soorten and not velden["vraag"].strip():
         raise HTTPException(400, _("Een vrije kaart heeft een vraag nodig"))
     nieuw = leren.maak_kaarten(db, lijst, soorten, ref=ref, bron=bron, doelen=[str(d) for d in form.getlist("doel")], **velden)
+    if lijst.vak and lijst.profiel_id == pid:
+        from ..services import vakken
+
+        vakken.onthoud(db, pid, lijst.vak)  # via ⋯ bewaard is ook een keuze (wunderkammer#63)
     terug = _veilig(str(form.get("terug") or ""), f"/leren/{lijst.id}")
     teken = "&" if "?" in terug else "?"
     if "#" in terug:

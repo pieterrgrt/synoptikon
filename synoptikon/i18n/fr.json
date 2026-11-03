@@ -859,5 +859,10 @@
  "voorwaarde invullen": "compléter la condition",
  "Elke voorwaarde die je markeerde als gat in de tekst (typen in Wunderkammer)": "Chaque condition marquée devient un trou dans le texte (à taper dans Wunderkammer)",
  "over": "sur",
- "Samen in een thema": "Ensemble dans un thème"
+ "Samen in een thema": "Ensemble dans un thème",
+ "Bewaren voor welk vak?": "Enregistrer pour quelle matière ?",
+ "eigen naam": "nom personnel",
+ "of een project": "ou un projet",
+ "Bewaren in {vak}": "Enregistrer dans {vak}",
+ "Bewaren: eerst het vak kiezen": "Enregistrer : choisir d’abord la matière"
 }

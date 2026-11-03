@@ -1,4 +1,6 @@
-"""Bewaren met vak in één tik: afleiden, onthouden, en het vak wisselen als correctie."""
+"""Bewaren met vak: kiezen bij de eerste ☆, de keuze vasthouden, afleiden, en het vak wisselen als correctie."""
+from datetime import timedelta
+
 import pytest
 from sqlalchemy import select
 
@@ -27,13 +29,32 @@ def test_afleiden(stelsel, wet, nummer, vak):
     assert vakken.afleiden(stelsel, wet, nummer) == vak
 
 
+def _keuze(vak=None, uren_geleden=0.0, pid=1):
+    """Zet de lopende keuze: geen (None), of een vak dat zoveel uur geleden het laatst gebruikt is."""
+    from synoptikon.models import now
+
+    with database.session() as s:
+        p = s.get(Profiel, pid)
+        p.laatste_vak = vak or p.laatste_vak
+        p.vak_sinds = None if vak is None else now() - timedelta(hours=uren_geleden)
+        s.commit()
+
+
 def _lijsten(pid=1):
     with database.session() as s:
         return {l.vak: l for l in s.scalars(select(Leerlijst).where(Leerlijst.profiel_id == pid, Leerlijst.vak.is_not(None)))}
 
 
-def test_bewaren_leidt_vak_af_en_maakt_de_lijst(client):
+def test_eerste_ster_vraagt_het_vak_met_het_afgeleide_vak_aangevinkt(client):
+    _keuze(None)
     r = client.post("/leren/snel", data={"stelsel": "DE", "wet": "BGB", "nummer": "145", "terug": "/artikelen/DE/145"},
+                    follow_redirects=False)
+    assert r.status_code == 303 and r.headers["location"].startswith("/leren/snel?")
+    with database.session() as s:
+        assert s.scalar(select(Kaart).where(Kaart.nummer == "145")) is None, "nog niets bewaard"
+    html = client.get(r.headers["location"]).text
+    assert 'value="ZR Ia" checked' in html and 'name="project"' in html and "§ 145" in html
+    r = client.post("/leren/snel", data={"stelsel": "DE", "wet": "BGB", "nummer": "145", "vak": "ZR Ia", "terug": "/artikelen/DE/145"},
                     follow_redirects=False)
     assert r.status_code == 303 and "vak=ZR%20Ia" in r.headers["location"] and "kaarten=" in r.headers["location"]
     with database.session() as s:
@@ -44,7 +65,49 @@ def test_bewaren_leidt_vak_af_en_maakt_de_lijst(client):
     assert "bewaard in ZR Ia" in html and 'action="/leren/vak"' in html
 
 
-def test_zonder_afleiding_geldt_het_laatste_vak(client):
+def test_de_keuze_geldt_daarna_zonder_te_vragen_ook_tegen_de_afleiding_in(client):
+    _keuze("KartR")
+    r = client.post("/leren/snel", data={"stelsel": "DE", "wet": "BGB", "nummer": "930"}, follow_redirects=False)
+    assert "vak=KartR" in r.headers["location"], "§ 930 zou Sachenrecht zijn, maar je koos KartR"
+    with database.session() as s:
+        assert s.scalar(select(Kaart).where(Kaart.nummer == "930").order_by(Kaart.id.desc())).lijst.vak == "KartR"
+
+
+def test_na_een_pauze_wordt_weer_gevraagd(client):
+    _keuze("KartR", uren_geleden=3)
+    r = client.post("/leren/snel", data={"stelsel": "DE", "wet": "BGB", "nummer": "931"}, follow_redirects=False)
+    assert r.headers["location"].startswith("/leren/snel?")
+    assert 'value="Sachenrecht" checked' in client.get(r.headers["location"]).text, "voorgesteld: wat uit het artikel volgt"
+
+
+def test_een_project_met_eigen_naam(client):
+    _keuze(None)
+    client.post("/leren/snel", data={"stelsel": "DE", "wet": "BGB", "nummer": "932", "vak": "ZR Ia", "project": "Seminar Haftung"})
+    with database.session() as s:
+        assert s.scalar(select(Kaart).where(Kaart.nummer == "932").order_by(Kaart.id.desc())).lijst.vak == "Seminar Haftung"
+        assert vakken.actief(s, 1) == "Seminar Haftung"
+    html = client.get("/leren/snel?stelsel=DE&wet=BGB&nummer=933").text
+    assert 'value="Seminar Haftung"' in html, "eigen projecten staan daarna in de keuze"
+
+
+def test_uitspraak_vraagt_ook_het_vak(client):
+    from synoptikon.models import Bron
+
+    _keuze(None)
+    with database.session() as s:
+        b = Bron(stelsel_code="EU", soort="rechtspraak", citeertitel="HvJ test-vak-kiezen", taal="nl")
+        s.add(b)
+        s.commit()
+        bid = b.id
+    r = client.post("/leren/snel", data={"bron": str(bid)}, follow_redirects=False)
+    assert r.headers["location"].startswith("/leren/snel?") and "HvJ test-vak-kiezen" in client.get(r.headers["location"]).text
+    client.post("/leren/snel", data={"bron": str(bid), "vak": "EuGesR"})
+    with database.session() as s:
+        assert s.scalar(select(Kaart).where(Kaart.bron_id == bid)).lijst.vak == "EuGesR"
+    assert 'title="Bewaren in EuGesR"' in client.get(f"/bronnen/{bid}").text, "de ster zegt waar hij heen bewaart"
+
+
+def test_net_gekozen_vak_geldt_ook_zonder_afleiding(client):
     vakken_pid = 1
     with database.session() as s:
         vakken.onthoud(s, vakken_pid, "UG")
@@ -61,8 +124,9 @@ def test_vak_expliciet_gaat_voor_afleiding(client):
         assert k.lijst.vak == "Sachenrecht" and s.get(Profiel, 1).laatste_vak == "Sachenrecht"
 
 
-def test_vak_wisselen_is_een_correctie(client):
-    client.post("/leren/snel", data={"stelsel": "DE", "wet": "BGB", "nummer": "147"})
+def test_vak_wisselen_is_een_correctie_en_een_nieuwe_keuze(client):
+    _keuze(None)
+    client.post("/leren/snel", data={"stelsel": "DE", "wet": "BGB", "nummer": "147", "vak": "ZR Ia"})
     with database.session() as s:
         kid = s.scalar(select(Kaart).where(Kaart.nummer == "147")).id
     r = client.post("/leren/vak", data={"kaarten": str(kid), "vak": "KartR", "terug": "/artikelen/DE/147?bewaard=1&vak=ZR%20Ia&kaarten=1"},
@@ -73,6 +137,26 @@ def test_vak_wisselen_is_een_correctie(client):
         assert k.lijst.vak == "KartR" and s.get(Profiel, 1).laatste_vak == "KartR"
         assert k.lijst_id == min(s.scalars(select(Leerlijst.id).where(Leerlijst.vak == "KartR", Leerlijst.profiel_id == 1, ~Leerlijst.naam.startswith("Notities"))))  # de oudste lijst van het vak
     assert client.post("/leren/vak", data={"kaarten": "999999", "vak": "KartR"}).status_code == 400
+    with database.session() as s:
+        assert vakken.actief(s, 1) == "KartR", "'Ander vak' is ook een keuze"
+    r = client.post("/leren/snel", data={"stelsel": "DE", "wet": "BGB", "nummer": "148"}, follow_redirects=False)
+    assert "vak=KartR" in r.headers["location"], "de volgende ster vraagt niet en gaat naar KartR"
+
+
+def test_bewaren_via_het_menu_is_ook_een_keuze(client):
+    _keuze(None)
+    with database.session() as s:
+        lid = vakken.lijst_voor(s, 1, "EuGesR").id
+        s.commit()
+    client.post("/leren/nieuw", data={"lijst": str(lid), "stelsel": "DE", "nummer": "149", "soort": "artikel"})
+    with database.session() as s:
+        assert vakken.actief(s, 1) == "EuGesR"
+
+
+@pytest.mark.parametrize("terug", ["//evil.example", "/\\evil.example", "/\t/evil.example", "https://evil.example"])
+def test_terug_blijft_op_de_site(client, terug):
+    html = client.get("/leren/snel", params={"stelsel": "DE", "nummer": "150", "terug": terug}).text
+    assert '<input type="hidden" name="terug" value="">' in html and ">Annuleren</a>" not in html
 
 
 def test_notitielijst_is_nooit_het_doel(client):
@@ -101,11 +185,19 @@ def test_opzoeking_bewaren_in_afgeleid_vak(client):
 
 
 def test_laatste_vak_niet_over_de_grens_eu_nationaal():
+    """Na het venster is het laatste vak alleen nog een voorstel, en dan geldt de grens tussen EU en nationaal."""
+    _keuze("KartR", uren_geleden=3)
     with database.session() as s:
-        vakken.onthoud(s, 1, "KartR")
         assert vakken.kies(s, 1, "", "DE", "BGB", "433") == "KartR"  # kartelrecht is ook nationaal: geen grens
         assert vakken.kies(s, 1, "", "EU", "Verordening 1/2003", "4") == "KartR"
-        vakken.onthoud(s, 1, "Sachenrecht")
+    _keuze("Sachenrecht", uren_geleden=3)
+    with database.session() as s:
         assert vakken.kies(s, 1, "", "EU", "AEUV", "102") == "KartR"  # afgeleid
         assert vakken.kies(s, 1, "", "EU", "VO", "12") is None
         assert vakken.kies(s, 1, "", "NL", "BW", "3:84") == "Sachenrecht"  # vergelijken mag
+
+
+def test_lopende_keuze_kent_geen_grens():
+    _keuze("Sachenrecht")
+    with database.session() as s:
+        assert vakken.kies(s, 1, "", "EU", "AEUV", "102") == "Sachenrecht"
