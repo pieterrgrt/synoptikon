@@ -308,7 +308,10 @@ def vak_wisselen(request: Request, vak: str = Form(...), kaarten: str = Form("")
 
 
 def _veilig(terug: str) -> str:
-    return terug if terug.startswith("/") and not terug.startswith(("//", "/\\")) else ""
+    """Alleen een pad op deze site: geen '//host', geen '/\\host', en geen tab of regeleinde (een browser haalt die weg, zodat
+    '/<tab>/host' toch '//host' wordt)."""
+    return terug if terug.startswith("/") and not terug.startswith("//") and "\\" not in terug \
+        and not any(ord(c) < 0x20 for c in terug) else ""
 
 
 def _zonder_melding(terug: str) -> str:

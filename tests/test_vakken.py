@@ -107,7 +107,7 @@ def test_uitspraak_vraagt_ook_het_vak(client):
     assert 'title="Bewaren in EuGesR"' in client.get(f"/bronnen/{bid}").text, "de ster zegt waar hij heen bewaart"
 
 
-def test_zonder_afleiding_geldt_het_laatste_vak(client):
+def test_net_gekozen_vak_geldt_ook_zonder_afleiding(client):
     vakken_pid = 1
     with database.session() as s:
         vakken.onthoud(s, vakken_pid, "UG")
@@ -124,8 +124,9 @@ def test_vak_expliciet_gaat_voor_afleiding(client):
         assert k.lijst.vak == "Sachenrecht" and s.get(Profiel, 1).laatste_vak == "Sachenrecht"
 
 
-def test_vak_wisselen_is_een_correctie(client):
-    client.post("/leren/snel", data={"stelsel": "DE", "wet": "BGB", "nummer": "147"})
+def test_vak_wisselen_is_een_correctie_en_een_nieuwe_keuze(client):
+    _keuze(None)
+    client.post("/leren/snel", data={"stelsel": "DE", "wet": "BGB", "nummer": "147", "vak": "ZR Ia"})
     with database.session() as s:
         kid = s.scalar(select(Kaart).where(Kaart.nummer == "147")).id
     r = client.post("/leren/vak", data={"kaarten": str(kid), "vak": "KartR", "terug": "/artikelen/DE/147?bewaard=1&vak=ZR%20Ia&kaarten=1"},
@@ -136,6 +137,26 @@ def test_vak_wisselen_is_een_correctie(client):
         assert k.lijst.vak == "KartR" and s.get(Profiel, 1).laatste_vak == "KartR"
         assert k.lijst_id == min(s.scalars(select(Leerlijst.id).where(Leerlijst.vak == "KartR", Leerlijst.profiel_id == 1, ~Leerlijst.naam.startswith("Notities"))))  # de oudste lijst van het vak
     assert client.post("/leren/vak", data={"kaarten": "999999", "vak": "KartR"}).status_code == 400
+    with database.session() as s:
+        assert vakken.actief(s, 1) == "KartR", "'Ander vak' is ook een keuze"
+    r = client.post("/leren/snel", data={"stelsel": "DE", "wet": "BGB", "nummer": "148"}, follow_redirects=False)
+    assert "vak=KartR" in r.headers["location"], "de volgende ster vraagt niet en gaat naar KartR"
+
+
+def test_bewaren_via_het_menu_is_ook_een_keuze(client):
+    _keuze(None)
+    with database.session() as s:
+        lid = vakken.lijst_voor(s, 1, "EuGesR").id
+        s.commit()
+    client.post("/leren/nieuw", data={"lijst": str(lid), "stelsel": "DE", "nummer": "149", "soort": "artikel"})
+    with database.session() as s:
+        assert vakken.actief(s, 1) == "EuGesR"
+
+
+@pytest.mark.parametrize("terug", ["//evil.example", "/\\evil.example", "/\t/evil.example", "https://evil.example"])
+def test_terug_blijft_op_de_site(client, terug):
+    html = client.get("/leren/snel", params={"stelsel": "DE", "nummer": "150", "terug": terug}).text
+    assert '<input type="hidden" name="terug" value="">' in html and ">Annuleren</a>" not in html
 
 
 def test_notitielijst_is_nooit_het_doel(client):
