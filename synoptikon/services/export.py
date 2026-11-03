@@ -28,13 +28,31 @@ def _bron_meta(b: Bron) -> str:
         van = b.geldig_van.isoformat() if b.geldig_van else "…"
         tot = b.geldig_tot.isoformat() if b.geldig_tot else _("heden")
         delen.append(f"{_('geldig')} {van} – {tot}")
+    delen.append(peil_bron(b))
     if b.url:
         delen.append(f"<{b.url}>")
-    return "; ".join(delen)
+    return "; ".join(d for d in delen if d)
+
+
+def peil_bron(b: Bron) -> str:
+    """Welke tekst een wetsbron toont: die van de gekoppelde import (met haar peildatum), anders de datum van invoer."""
+    from .wetboek import peil, toon_datum
+
+    if b.soort != "wet" or not b.tekst:
+        return ""
+    if b.wettekst_artikel is not None:
+        return peil(b.wettekst_artikel.wettekst)
+    return _("tekst ingevoerd of bijgewerkt op {datum}", datum=toon_datum(b.gewijzigd)) if b.gewijzigd else ""
+
+
+def geexporteerd() -> str:
+    from .wetboek import toon_datum
+
+    return _("Geëxporteerd uit Synoptikon op {datum}.", datum=toon_datum(date.today()))
 
 
 def vraag_naar_markdown(vraag: Vraag, stelsels: list[str] | None = None, vertaal_taal: str | None = "nl") -> str:
-    regels: list[str] = [f"# {vt(vraag.titel)}", ""]
+    regels: list[str] = [f"# {vt(vraag.titel)}", "", f"*{geexporteerd()}*", ""]
     meta = []
     if vraag.rechtsgebied:
         meta.append(f"**{_('Rechtsgebied')}:** {vt(vraag.rechtsgebied)}")

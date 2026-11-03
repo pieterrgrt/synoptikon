@@ -246,6 +246,10 @@ input:focus, select:focus, textarea:focus { outline: 2px solid var(--accent); ou
 .origineel { font-family: var(--serif); font-size: 1.02rem; line-height: 1.55; hyphens: auto; }
 .origineel p { margin: .35rem 0; }
 .origineel p:first-child { margin-top: .2rem; }
+/* Een aangehaald lid ("6:162 lid 2", "§ 823 Abs. 1"): dat lid met nadruk, de andere stil maar leesbaar. */
+.met-lid .lid-blok { color: var(--inkt-3); }
+.met-lid .lid-blok.gekozen { color: var(--inkt); border-left: 3px solid var(--accent); padding-left: .6rem; margin-left: -.85rem; }
+.met-lid .lid-blok ol { margin-top: .35rem; margin-bottom: .35rem; }
 .vertaling { font-family: var(--serif); font-size: .95rem; color: var(--vertaling); background: var(--vertaling-achter); border-left: 3px solid var(--vertaling); padding: .4rem .7rem; margin: .5rem 0; border-radius: 0 var(--radius) var(--radius) 0; }
 .vertaling p { margin: .25rem 0; }
 .annotatie { font-family: var(--sans); font-size: .9rem; color: var(--annotatie); background: var(--annotatie-achter); border-left: 3px solid var(--annotatie); padding: .4rem .7rem; margin: .5rem 0; border-radius: 0 var(--radius) var(--radius) 0; }
@@ -375,6 +379,7 @@ input:focus, select:focus, textarea:focus { outline: 2px solid var(--accent); ou
 .ref-lijst li { margin: .1rem 0; }
 .ref-lijst .detail { color: var(--inkt-3); font-size: .85em; }
 .buren { display: flex; flex-wrap: wrap; gap: .3rem .8rem; font-size: .9rem; }
+.buren a.in-thema { font-weight: 600; }
 .tegenhanger { margin: .5rem 0 1rem; }
 .tegenhanger .pad { margin: 0 0 .2rem; color: var(--inkt-2); font-family: var(--serif); font-size: .95rem; }
 .kandidaten { display: flex; gap: .6rem; flex-wrap: wrap; }

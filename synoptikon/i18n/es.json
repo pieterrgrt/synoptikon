@@ -861,5 +861,14 @@
  "over": "sobre",
  "Samen in een thema": "Juntos en un tema",
  "\"{wet}\" ken ik niet als wet, of die wet is niet ingelezen. Daarom staat hier geen artikel: een artikel uit een andere wet zou het verkeerde zijn.": "No conozco «{wet}» como ley, o esa ley no se ha importado. Por eso no se muestra ningún artículo: uno de otra ley sería el equivocado.",
- "In de wet": "En la ley"
+ "In de wet": "En la ley",
+ "Dichtstbij:": "Los más cercanos:",
+ "Dit artikel bestaat niet in {wet}, versie {versie}.": "Este artículo no existe en {wet}, versión del {versie}.",
+ "Geëxporteerd uit Synoptikon op {datum}.": "Exportado de Synoptikon el {datum}.",
+ "In een thema uit {plaats}": "En un tema de {plaats}",
+ "Vet: staat in een thema, met corresponderende artikelen.": "En negrita: en un tema, con artículos correspondientes.",
+ "staat in een thema": "en un tema",
+ "tekst geldend sinds {datum}": "texto vigente desde el {datum}",
+ "tekst ingevoerd of bijgewerkt op {datum}": "texto introducido o actualizado el {datum}",
+ "vergeleken met de bron op {datum}": "cotejado con la fuente el {datum}"
 }

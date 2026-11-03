@@ -861,5 +861,14 @@
  "over": "on",
  "Samen in een thema": "Together in a theme",
  "\"{wet}\" ken ik niet als wet, of die wet is niet ingelezen. Daarom staat hier geen artikel: een artikel uit een andere wet zou het verkeerde zijn.": "I don't know \"{wet}\" as a statute, or it hasn't been imported. So no article is shown: an article from another statute would be the wrong one.",
- "In de wet": "In the statute"
+ "In de wet": "In the statute",
+ "Dichtstbij:": "Nearest:",
+ "Dit artikel bestaat niet in {wet}, versie {versie}.": "This article does not exist in {wet}, version of {versie}.",
+ "Geëxporteerd uit Synoptikon op {datum}.": "Exported from Synoptikon on {datum}.",
+ "In een thema uit {plaats}": "In a theme from {plaats}",
+ "Vet: staat in een thema, met corresponderende artikelen.": "Bold: in a theme, with corresponding articles.",
+ "staat in een thema": "in a theme",
+ "tekst geldend sinds {datum}": "text in force since {datum}",
+ "tekst ingevoerd of bijgewerkt op {datum}": "text entered or updated on {datum}",
+ "vergeleken met de bron op {datum}": "checked against the source on {datum}"
 }

@@ -376,7 +376,10 @@ class Ref:
         if self.nummer is None:
             return None
         u = f"/artikelen/{self.stelsel}/{quote(self.nummer, safe=':-')}"
-        return u + (f"?wet={quote(self.wet)}" if self.wet else "")
+        q = [f"wet={quote(self.wet)}"] if self.wet else []
+        if self.detail and not self.tot:  # "§ 823 Abs. 1": de pagina licht Abs. 1 uit
+            q.append(f"lid={quote(self.detail)}")
+        return u + ("?" + "&".join(q) if q else "")
 
 
 def citeer(stelsel: str, nummer: str | None, wet: str | None = None, tot: str | None = None, detail: str | None = None) -> str:

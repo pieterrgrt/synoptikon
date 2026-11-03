@@ -367,3 +367,36 @@ def lees_url(db: Session, r: Ref, wa: WettekstArtikel | None = None) -> str | No
     from urllib.parse import quote
 
     return f"/stelsels/{wa.wettekst.stelsel_code}/wet/{wa.wettekst_id}?artikel={quote(wa.nummer)}"
+
+
+# --- peildatum ------------------------------------------------------------------------------------------------------
+
+
+def toon_datum(d) -> str:
+    """Een datum ("2026-07-16" of een datetime) zoals men hem in deze taal schrijft: 16-07-2026, 16.07.2026, 2026-07-16."""
+    import re
+    from datetime import date, datetime
+
+    if isinstance(d, (date, datetime)):
+        d = d.strftime("%Y-%m-%d")
+    m = re.fullmatch(r"(\d{4})-(\d{2})-(\d{2})", (d or "")[:10])
+    if not m:
+        return d or ""
+    j, mnd, dag = m.groups()
+    return {"en": f"{j}-{mnd}-{dag}", "de": f"{dag}.{mnd}.{j}"}.get(taal(), f"{dag}-{mnd}-{j}")
+
+
+def peil(w: Wettekst | None) -> str:
+    """Welke tekst je leest: "tekst geldend sinds 16-07-2026 · vergeleken met de bron op 01-11-2026".
+
+    `versie` is de begindatum van de toestand (BWB, LEGI, GII); `gecontroleerd` de laatste keer dat het bijwerken de
+    tekst met de bron vergeleek. Een jurist moet kunnen zeggen welke tekst hij gebruikte."""
+    from ..i18n import _
+
+    if w is None:
+        return ""
+    delen = [_("tekst geldend sinds {datum}", datum=toon_datum(w.versie))] if w.versie else []
+    vergeleken = w.gecontroleerd or w.opgehaald
+    if vergeleken:
+        delen.append(_("vergeleken met de bron op {datum}", datum=toon_datum(vergeleken)))
+    return " · ".join(delen)

@@ -310,3 +310,40 @@ def test_duitse_wetten_met_artikelen():
 
     assert Ref("DE", "1", "GG").citeer == "Art. 1 GG"
     assert Ref("DE", "1", "PatG").citeer == "§ 1 PatG"
+
+
+def test_artikelpagina_met_ingelezen_wet_peil_buren_en_niet_bestaand(client):
+    """Met BW Boek 3 ingelezen: peildatum bij de tekst, alle artikelen van de afdeling bij 'Verder in', en een nummer
+    dat er niet in staat (3:89) bestaat niet, met de buren ervoor en erna."""
+    g = bwb.parse((FIX / "bwb_boek3.xml").read_bytes(), "BWBR0005291")
+    with database.session() as s:
+        wid = store.sla_op(s, "NL", g).id
+    try:
+        html = client.get("/artikelen/NL/3:85").text
+        assert "tekst geldend sinds" in html and "vergeleken met de bron op" in html
+        verder = html.split("Verder in")[1]
+        assert "art. 3:84 BW" in verder and "art. 3:90 BW" in verder
+        r = client.get("/artikelen/NL/3:89")
+        assert r.status_code == 404 and "Dit artikel bestaat niet in" in r.text
+        assert "/artikelen/NL/3:85" in r.text and "/artikelen/NL/3:90" in r.text
+        assert "Aan een thema koppelen" not in r.text and 'action="/leren/snel"' not in r.text
+    finally:
+        with database.session() as s:
+            from synoptikon.models import Wettekst
+
+            s.delete(s.get(Wettekst, wid))
+
+
+def test_aangehaald_lid_uitgelicht():
+    from synoptikon import md
+
+    nl = "1. Hij die jegens een ander.\n\n2. Als onrechtmatige daad.\n\n3. Toerekening."
+    html = str(md.render_lid(nl, "lid 2"))
+    assert html.count('class="lid-blok gekozen"') == 1 and "Als onrechtmatige daad" in html.split("gekozen")[1].split("</div>")[0]
+    de = "(1) Zur Begründung.\n\n(2) Ein Schuldverhältnis entsteht auch durch\n\n1. die Aufnahme,\n\n(3) Dritte."
+    html = str(md.render_lid(de, "Abs. 2 Nr. 1"))
+    gekozen = html.split('class="lid-blok gekozen"')[1].split('<div class="lid-blok">')[0]
+    assert "Ein Schuldverhältnis" in gekozen and "die Aufnahme" in gekozen and "Dritte" not in gekozen
+    assert str(md.render_lid(de, None)) == str(md.render(de))
+    assert str(md.render_lid("Eén alinea.", "lid 1")) == str(md.render("Eén alinea."))
+    assert Ref("DE", "823", detail="Abs. 1").url == "/artikelen/DE/823?lid=Abs.%201"

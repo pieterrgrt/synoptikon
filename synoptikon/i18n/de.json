@@ -861,5 +861,14 @@
  "over": "zu",
  "Samen in een thema": "Gemeinsam in einem Thema",
  "\"{wet}\" ken ik niet als wet, of die wet is niet ingelezen. Daarom staat hier geen artikel: een artikel uit een andere wet zou het verkeerde zijn.": "„{wet}“ kenne ich nicht als Gesetz, oder das Gesetz ist nicht eingelesen. Deshalb steht hier keine Vorschrift: eine aus einem anderen Gesetz wäre die falsche.",
- "In de wet": "Im Gesetz"
+ "In de wet": "Im Gesetz",
+ "Dichtstbij:": "Am nächsten:",
+ "Dit artikel bestaat niet in {wet}, versie {versie}.": "Diese Vorschrift gibt es in {wet}, Fassung vom {versie}, nicht.",
+ "Geëxporteerd uit Synoptikon op {datum}.": "Aus Synoptikon exportiert am {datum}.",
+ "In een thema uit {plaats}": "In einem Thema aus {plaats}",
+ "Vet: staat in een thema, met corresponderende artikelen.": "Fett: in einem Thema, mit entsprechenden Vorschriften.",
+ "staat in een thema": "in einem Thema",
+ "tekst geldend sinds {datum}": "Fassung gültig seit {datum}",
+ "tekst ingevoerd of bijgewerkt op {datum}": "Text eingegeben oder aktualisiert am {datum}",
+ "vergeleken met de bron op {datum}": "mit der Quelle abgeglichen am {datum}"
 }
