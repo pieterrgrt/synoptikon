@@ -1,0 +1,18 @@
+{% extends "base.html" %}
+{% block titel %}{{ _('Bewaren voor welk vak?') }} · Synoptikon{% endblock %}
+{% block inhoud %}
+<h1>{{ _('Bewaren voor welk vak?') }}</h1>
+<p class="bewaard-citeer">{{ vlag(ref.stelsel if ref else bron.stelsel_code) }}{{ ref.citeer if ref else bron.citeertitel }}</p>
+<form method="post" action="/leren/snel" class="formulier compact vak-kiezen">
+  {% if ref %}<input type="hidden" name="stelsel" value="{{ ref.stelsel }}"><input type="hidden" name="wet" value="{{ ref.wet or '' }}"><input type="hidden" name="nummer" value="{{ ref.nummer }}">
+  {% else %}<input type="hidden" name="bron" value="{{ bron.id }}">{% endif %}
+  <input type="hidden" name="terug" value="{{ terug }}">
+  <fieldset><legend>{{ _('Vak') }}</legend>
+  {% for v in vakken_lijst %}<label class="keuze"><input type="radio" name="vak" value="{{ v }}" {% if v == voorstel or (not voorstel and loop.first) %}checked{% endif %}> {{ v }}</label>
+  {% endfor %}
+  {% if voorstel and voorstel not in vakken_lijst %}<label class="keuze"><input type="radio" name="vak" value="{{ voorstel }}" checked> {{ voorstel }}</label>{% endif %}
+  </fieldset>
+  <label>{{ _('of een project') }} <input name="project" maxlength="60" placeholder="{{ _('eigen naam') }}" autocapitalize="none"></label>
+  <div class="acties"><button class="knop primair" autofocus>☆ {{ _('Bewaren') }}</button>{% if terug %} <a href="{{ terug }}">{{ _('Annuleren') }}</a>{% endif %}</div>
+</form>
+{% endblock %}

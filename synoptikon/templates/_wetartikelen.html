@@ -1,4 +1,4 @@
-{% import "_leren.html" as l %}
+{% import "_leren.html" as l with context %}
 {% for a in artikelen %}
   {% set w = ws[a.wettekst_id] %}
   {% set kop = koppen.get((a.wettekst_id, a.nummer)) %}
