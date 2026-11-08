@@ -1,0 +1,29 @@
+{% extends "base.html" %}
+{% block titel %}{{ _('Leessets') }} · Synoptikon{% endblock %}
+{% block inhoud %}
+<p class="kruimel"><a href="/leren">{{ _('Leren') }}</a></p>
+<h1>{{ _('Leessets') }}</h1>
+{% if sets %}
+<ul class="leerlijsten">
+{% for s in sets %}
+  <li class="leerlijst-kaart">
+    <a class="leerlijst-naam" href="/leren/sets/{{ s.id }}">{{ s.naam }}</a>
+    <span class="stil klein">{{ n_('{n} onderdeel', '{n} onderdelen', s.onderdelen | length) }}{% if s.vak %} · {{ s.vak }}{% endif %}</span>
+    {% if s.omschrijving %}<span class="klein">{{ s.omschrijving | truncate(140) }}</span>{% endif %}
+  </li>
+{% endfor %}
+</ul>
+{% else %}
+<p class="stil">{{ _('Nog geen leessets. Maak er hieronder een, of begin bij een thema op Bewaard.') }}</p>
+{% endif %}
+<details class="blok" {% if not sets %}open{% endif %}>
+  <summary>{{ _('Nieuwe leesset') }}</summary>
+  <form method="post" action="/leren/sets" class="formulier compact">
+    <label>{{ _('Onderwerp') }} <input name="naam" required placeholder="Eigentumsübertragung"></label>
+    <label>{{ _('Vak') }} <input name="vak" list="vakken" autocapitalize="none"></label>
+    <datalist id="vakken">{% for v in vakken %}<option value="{{ v }}">{% endfor %}</datalist>
+    <label>{{ _('Omschrijving') }} <textarea name="omschrijving" rows="2"></textarea></label>
+    <div class="acties"><button class="knop primair">{{ _('Aanmaken') }}</button></div>
+  </form>
+</details>
+{% endblock %}

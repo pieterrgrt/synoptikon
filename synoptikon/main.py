@@ -19,7 +19,7 @@ from .config import settings
 from .db import init_db
 from .models import RECHTSFAMILIES, RELATIE_TYPES
 from .routes import auth as auth_routes
-from .routes import artikelen, begrippen, bewaard, bronnen, eu, gedeeld, invoer, leren, markeringen as markeringen_routes, opzoeken, profielen, stelsels, vertalingen, vragen, wetteksten, wunderkammer
+from .routes import artikelen, begrippen, bewaard, bronnen, eu, gedeeld, invoer, leessets, leren, markeringen as markeringen_routes, opzoeken, profielen, stelsels, vertalingen, vragen, wetteksten, wunderkammer
 from .services import citeren, export, markeringen, stelselkeuze, wetboek
 from .services.artikelen import ref_uit_bron, wetnaam
 from .services.helpers import extra_titel, per_familie
@@ -203,5 +203,5 @@ def apple_touch_icon():
     return FileResponse(HIER / "static" / "apple-touch-icon.png")
 
 
-for router in (auth_routes.router, profielen.router, vragen.router, bewaard.router, bronnen.router, begrippen.router, stelsels.router, artikelen.router, opzoeken.router, invoer.router, wetteksten.router, eu.router, vertalingen.router, gedeeld.router, leren.router, markeringen_routes.router, wunderkammer.router):
+for router in (auth_routes.router, profielen.router, vragen.router, bewaard.router, bronnen.router, begrippen.router, stelsels.router, artikelen.router, opzoeken.router, invoer.router, wetteksten.router, eu.router, vertalingen.router, gedeeld.router, leessets.router, leren.router, markeringen_routes.router, wunderkammer.router):
     app.include_router(router)

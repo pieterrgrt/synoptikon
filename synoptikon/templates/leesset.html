@@ -1,0 +1,75 @@
+{% extends "base.html" %}
+{% import "_stelsels.html" as st with context %}
+{% block titel %}{{ s.naam }} · {{ _('Leessets') }} · Synoptikon{% endblock %}
+{% block inhoud %}
+<p class="kruimel"><a href="/leren">{{ _('Leren') }}</a> › <a href="/leren/sets">{{ _('Leessets') }}</a></p>
+<div class="paginakop">
+  <h1>{{ s.naam }}</h1>
+  {% if onderdelen | selectattr('onderdeel.soort', 'ne', 'notitie') | list %}
+  <form method="post" action="/leren/sets/{{ s.id }}/kaarten" class="acties">
+    <button class="knop primair" title="{{ _('Een kaart per artikel en per uitspraak, in de leerlijst van het vak') }}">{{ _('Kaarten maken') }}{% if s.vak %} · {{ s.vak }}{% endif %}</button>
+  </form>
+  {% endif %}
+</div>
+{% if s.vak or s.omschrijving %}<p class="stil">{% if s.vak %}{{ s.vak }}{% endif %}{% if s.vak and s.omschrijving %} · {% endif %}{{ s.omschrijving or '' }}</p>{% endif %}
+
+{% if not onderdelen %}<p class="stil">{{ _('Nog leeg. Zet hieronder een artikel of een notitie erbij, of tik bij een artikel of uitspraak op ‘In leesset’.') }}</p>{% endif %}
+
+<ol class="leesset">
+{% for g in onderdelen %}{% set o = g.onderdeel %}
+  <li id="o{{ o.id }}" class="leesset-onderdeel fam-{{ families.get(g.stelsel) or 'overig' }}">
+    <div class="leesset-kop">
+      {% if g.url %}<a class="bewaard-citeer" href="{{ g.url }}">{{ vlag(g.stelsel) if g.stelsel }}{{ g.titel }}</a>{% else %}<b>{{ g.titel }}</b>{% endif %}
+      {%- if g.opschrift %} <span class="bewaard-opschrift">{{ g.opschrift }}</span>{% endif %}
+      <span class="leesset-knoppen">
+        <form method="post" action="/leren/sets/{{ s.id }}/onderdeel/{{ o.id }}" class="inline">
+          {% if not loop.first %}<button class="knop-tekst" name="actie" value="omhoog" aria-label="{{ _('Omhoog') }}" title="{{ _('Omhoog') }}">↑</button>{% endif %}
+          {% if not loop.last %}<button class="knop-tekst" name="actie" value="omlaag" aria-label="{{ _('Omlaag') }}" title="{{ _('Omlaag') }}">↓</button>{% endif %}
+          <button class="knop-tekst" name="actie" value="verwijder" aria-label="{{ _('Uit de leesset') }}" title="{{ _('Uit de leesset') }}">×</button>
+        </form>
+      </span>
+    </div>
+    {% if o.reden %}<p class="leesset-reden">{{ o.reden }}</p>{% endif %}
+    {% if g.tekst %}<div class="leesset-tekst">{{ g.tekst }}</div>
+    {% elif o.soort == 'artikel' %}<p class="stil klein">{{ _('tekst niet ingelezen') }}</p>{% endif %}
+    <details class="klein">
+      <summary>{{ _('Waarom staat dit erbij?') if not o.reden else _('Reden aanpassen') }}</summary>
+      <form method="post" action="/leren/sets/{{ s.id }}/onderdeel/{{ o.id }}" class="formulier compact">
+        {% if o.soort == 'notitie' %}<label>{{ _('Notitie') }} <textarea name="notitie" rows="3">{{ o.notitie or '' }}</textarea></label>{% endif %}
+        <label>{{ _('Reden') }} <textarea name="reden" rows="2">{{ o.reden or '' }}</textarea></label>
+        <div class="acties"><button class="knop klein primair" name="actie" value="opslaan">{{ _('Opslaan') }}</button></div>
+      </form>
+    </details>
+  </li>
+{% endfor %}
+</ol>
+
+<section class="blok" id="erbij">
+  <h2>{{ _('Erbij zetten') }}</h2>
+  {% set niet = request.query_params.get('niet') %}
+  {% if niet %}<p class="melding" role="status">{{ _('Kan ‘{invoer}’ niet lezen als artikel.', invoer=niet) }}</p>{% endif %}
+  <form method="post" action="/leren/sets/{{ s.id }}/onderdeel" class="formulier compact">
+    <div class="rij">
+      <label>{{ _('Artikel') }} <input name="invoer" placeholder="§ 929 BGB" autocapitalize="none"></label>
+      <label>{{ _('Stelsel') }} <select name="stelsel"><option value="">{{ _('herkennen') }}</option>{% call(x) st.opties(stelsels) %}<option value="{{ x.code }}">{{ x.code }}</option>{% endcall %}</select></label>
+    </div>
+    <label>{{ _('of een eigen notitie') }} <textarea name="notitie" rows="2"></textarea></label>
+    <label>{{ _('Reden') }} <input name="reden" placeholder="{{ _('Waarom staat dit erbij?') }}"></label>
+    <div class="acties"><button class="knop primair">{{ _('Toevoegen') }}</button></div>
+  </form>
+</section>
+
+<details class="blok">
+  <summary>{{ _('Leesset bewerken') }}</summary>
+  <form method="post" action="/leren/sets/{{ s.id }}" class="formulier compact">
+    <label>{{ _('Onderwerp') }} <input name="naam" required value="{{ s.naam }}"></label>
+    <label>{{ _('Vak') }} <input name="vak" list="vakken" value="{{ s.vak or '' }}" autocapitalize="none"></label>
+    <datalist id="vakken">{% for v in vakken %}<option value="{{ v }}">{% endfor %}</datalist>
+    <label>{{ _('Omschrijving') }} <textarea name="omschrijving" rows="2">{{ s.omschrijving or '' }}</textarea></label>
+    <div class="acties"><button class="knop primair">{{ _('Opslaan') }}</button></div>
+  </form>
+  <form method="post" action="/leren/sets/{{ s.id }}/verwijder" class="gevaar-zone" data-bevestig="{{ _('Deze leesset verwijderen?') }}">
+    <button class="knop gevaar klein">{{ _('Leesset verwijderen') }}</button>
+  </form>
+</details>
+{% endblock %}

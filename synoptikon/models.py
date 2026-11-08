@@ -904,6 +904,49 @@ class Opzoeking(Base):
     kaart: Mapped["Kaart | None"] = relationship()
 
 
+class Leesset(Base):
+    """Artikelen, uitspraken en eigen notities die je samen leest voor één onderwerp (services/leessets.py).
+
+    Geen thema uit de correspondentietabel: dat is een vergelijkingsas tussen stelsels. Hier gaat het om de volgorde
+    binnen je eigen studie en om waarom elk onderdeel erbij staat."""
+
+    __tablename__ = "leesset"
+
+    id: Mapped[int] = mapped_column(primary_key=True)
+    profiel_id: Mapped[int] = mapped_column(ForeignKey("profiel.id", ondelete="CASCADE"), index=True)
+    naam: Mapped[str] = mapped_column(String(120))
+    vak: Mapped[str | None] = mapped_column(String(60))
+    omschrijving: Mapped[str | None] = mapped_column(Text)
+    aangemaakt: Mapped[datetime] = mapped_column(DateTime, default=now)
+
+    onderdelen: Mapped[list["LeessetOnderdeel"]] = relationship(
+        back_populates="leesset", cascade="all, delete-orphan", order_by="LeessetOnderdeel.positie")
+
+
+class LeessetOnderdeel(Base):
+    """Eén onderdeel: een artikel (stelsel, wet, nummer, zoals een Kaart), een uitspraak (bron) of een eigen notitie."""
+
+    __tablename__ = "leesset_onderdeel"
+
+    id: Mapped[int] = mapped_column(primary_key=True)
+    leesset_id: Mapped[int] = mapped_column(ForeignKey("leesset.id", ondelete="CASCADE"), index=True)
+    positie: Mapped[int] = mapped_column(Integer, default=0)
+    stelsel_code: Mapped[str | None] = mapped_column(String(8))
+    wet: Mapped[str | None] = mapped_column(String(40))
+    nummer: Mapped[str | None] = mapped_column(String(40))
+    bron_id: Mapped[int | None] = mapped_column(ForeignKey("bron.id", ondelete="CASCADE"))
+    notitie: Mapped[str | None] = mapped_column(Text)  # eigen tekst (als het onderdeel geen artikel of uitspraak is)
+    reden: Mapped[str | None] = mapped_column(Text)  # waarom dit erbij staat
+    aangemaakt: Mapped[datetime] = mapped_column(DateTime, default=now)
+
+    leesset: Mapped[Leesset] = relationship(back_populates="onderdelen")
+    bron: Mapped["Bron | None"] = relationship()
+
+    @property
+    def soort(self) -> str:
+        return "artikel" if self.nummer else "uitspraak" if self.bron_id else "notitie"
+
+
 MARKERINGSOORTEN: dict[str, str] = {"kern": "Kern", "voorwaarde": "Voorwaarde", "let_op": "Let op"}
 
 
