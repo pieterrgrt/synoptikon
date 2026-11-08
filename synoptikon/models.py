@@ -681,6 +681,8 @@ class Profiel(Base):
     # Het vak waarin het laatst is bewaard (services/vakken.py): daar komt de volgende kaart terecht als het vak niet volgt
     # uit wat je bewaart.
     laatste_vak: Mapped[str | None] = mapped_column(String(60))
+    # Wanneer dat vak het laatst gekozen of gebruikt is: binnen services/vakken.VENSTER geldt het zonder te vragen.
+    vak_sinds: Mapped[datetime | None] = mapped_column(DateTime)
     # De taal waarin juridische inhoud geleverd wordt: welke taalversie van een verdrag, welke afkorting (VWEU of AEUV)
     # en de taal van de kaartzijden. Leeg = volg de interfacetaal. Wie in Berlijn recht studeert zet dit op 'de' en houdt
     # de interface in het Nederlands.

@@ -878,5 +878,10 @@
  "geen {code}-versie ingelezen": "ninguna versión {code} importada",
  "gekopieerd": "copiado",
  "{n} stelsel zonder inhoud staat uit.": "{n} ordenamiento sin contenido está oculto.",
- "{n} stelsels zonder inhoud staan uit.": "{n} ordenamientos sin contenido están ocultos."
+ "{n} stelsels zonder inhoud staan uit.": "{n} ordenamientos sin contenido están ocultos.",
+ "Bewaren voor welk vak?": "¿Guardar para qué asignatura?",
+ "eigen naam": "nombre propio",
+ "of een project": "o un proyecto",
+ "Bewaren in {vak}": "Guardar en {vak}",
+ "Bewaren: eerst het vak kiezen": "Guardar: primero elige la asignatura"
 }

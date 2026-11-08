@@ -1,6 +1,6 @@
 {% extends "base.html" %}
 {% block titel %}{{ bron.citeertitel }} · Synoptikon{% endblock %}
-{% import "_leren.html" as l %}
+{% import "_leren.html" as l with context %}
 {% import "_markeringen.html" as mk with context %}
 {% block inhoud %}
 <p class="kruimel"><a href="/bronnen">{{ _('Bronnen') }}</a> › {{ vt(bron.stelsel.naam) }} › {{ _(soorten.get(bron.soort, bron.soort)) }}</p>

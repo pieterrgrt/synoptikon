@@ -878,5 +878,10 @@
  "geen {code}-versie ingelezen": "no {code} version imported",
  "gekopieerd": "copied",
  "{n} stelsel zonder inhoud staat uit.": "{n} system without content is hidden.",
- "{n} stelsels zonder inhoud staan uit.": "{n} systems without content are hidden."
+ "{n} stelsels zonder inhoud staan uit.": "{n} systems without content are hidden.",
+ "Bewaren voor welk vak?": "Save for which course?",
+ "eigen naam": "your own name",
+ "of een project": "or a project",
+ "Bewaren in {vak}": "Save to {vak}",
+ "Bewaren: eerst het vak kiezen": "Save: choose the course first"
 }

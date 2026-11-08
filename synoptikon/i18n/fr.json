@@ -878,5 +878,10 @@
  "geen {code}-versie ingelezen": "pas de version {code} importée",
  "gekopieerd": "copié",
  "{n} stelsel zonder inhoud staat uit.": "{n} système sans contenu est masqué.",
- "{n} stelsels zonder inhoud staan uit.": "{n} systèmes sans contenu sont masqués."
+ "{n} stelsels zonder inhoud staan uit.": "{n} systèmes sans contenu sont masqués.",
+ "Bewaren voor welk vak?": "Enregistrer pour quelle matière ?",
+ "eigen naam": "nom personnel",
+ "of een project": "ou un projet",
+ "Bewaren in {vak}": "Enregistrer dans {vak}",
+ "Bewaren: eerst het vak kiezen": "Enregistrer : choisir d’abord la matière"
 }

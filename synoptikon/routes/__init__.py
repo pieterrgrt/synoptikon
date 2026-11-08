@@ -25,5 +25,8 @@ def render(request: Request, naam: str, status_code: int = 200, **context: Any) 
     context.setdefault("wk_url", settings.wk_url)
     from ..services.vakken import VAKKEN
 
+    from ..services.vakken import actief_van
+
+    context.setdefault("vak_nu", actief_van(profiel))  # de lopende keuze: ☆ bewaart daar zonder te vragen
     context.setdefault("vakken_keuze", VAKKEN)  # voor het vak wisselen onder 'bewaard' (routes/opzoeken.py)
     return templates.TemplateResponse(request, naam, context, status_code=status_code)

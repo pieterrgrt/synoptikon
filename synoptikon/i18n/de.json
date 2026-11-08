@@ -878,5 +878,10 @@
  "geen {code}-versie ingelezen": "keine {code}-Fassung eingelesen",
  "gekopieerd": "kopiert",
  "{n} stelsel zonder inhoud staat uit.": "{n} Rechtsordnung ohne Inhalt ist ausgeblendet.",
- "{n} stelsels zonder inhoud staan uit.": "{n} Rechtsordnungen ohne Inhalt sind ausgeblendet."
+ "{n} stelsels zonder inhoud staan uit.": "{n} Rechtsordnungen ohne Inhalt sind ausgeblendet.",
+ "Bewaren voor welk vak?": "Für welches Fach speichern?",
+ "eigen naam": "eigener Name",
+ "of een project": "oder ein Projekt",
+ "Bewaren in {vak}": "In {vak} speichern",
+ "Bewaren: eerst het vak kiezen": "Speichern: erst das Fach wählen"
 }

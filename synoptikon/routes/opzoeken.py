@@ -6,7 +6,7 @@ wetteksten (eerst de wetten uit het register) en in de eigen inhoud, en het logb
 from __future__ import annotations
 
 import inspect
-from urllib.parse import quote
+from urllib.parse import quote, urlencode
 
 from fastapi import APIRouter, Depends, Form, HTTPException, Request
 from fastapi.responses import RedirectResponse
@@ -19,6 +19,7 @@ from ..models import Bron, Kaart, Leerlijst, Opzoeking
 from ..services import claude, herkennen, leren, markeringen, opzoeken, vakken, zoeken
 from ..services.artikelen import Ref, herken, noemt_wet
 from ..services.helpers import actieve_stelsels
+from ..services.notities import LIJST_PREFIX
 from ..services.stelselkeuze import stelselkeuze
 from . import render
 
@@ -255,19 +256,35 @@ def opzoeking_bewaren(request: Request, oid: int, lijst: str = Form(""), vak: st
     return resp
 
 
-@router.post("/leren/snel")
-def snel_bewaren(request: Request, lijst: str = Form(""), vak: str = Form(""), stelsel: str = Form(""), wet: str = Form(""),
-                 nummer: str = Form(""), bron: str = Form(""), terug: str = Form(""), db: Session = Depends(get_session)):
-    """Eén tik bij een artikel of uitspraak: een kaart in het vak waar het bij hoort of waar je mee bezig bent (die lijst gaat
-    naar Wunderkammer). Zonder vak en zonder lijst die vak ook niet kent: de laatst gekozen lijst, zoals vroeger."""
-    from ..models import Bron
-
+@router.get("/leren/snel")
+def snel_kies_vak(request: Request, stelsel: str = "", wet: str = "", nummer: str = "", bron: str = "", terug: str = "",
+                  db: Session = Depends(get_session)):
+    """☆ zonder lopende keuze: eerst het vak of project kiezen (services/vakken.py). Daarna geldt die keuze zonder te vragen."""
     b = db.get(Bron, int(bron)) if bron.isdigit() else None
     if not (stelsel and nummer) and b is None:
         raise HTTPException(400)
+    pid = _pid(request)
+    ref = Ref(stelsel.upper(), nummer, wet or None) if stelsel and nummer else None
+    onderwerp = (ref.stelsel, ref.wet, ref.nummer) if ref else (b.stelsel_code, None, None)
+    eigen = sorted({l.vak for l in leren.lijsten_van(db, pid) if l.vak and not l.naam.startswith(LIJST_PREFIX)} - set(vakken.VAKKEN))
+    return render(request, "vak_kiezen.html", ref=ref, bron=b, terug=_veilig(terug), vakken_lijst=[*vakken.VAKKEN, *eigen],
+                  voorstel=vakken.kies(db, pid, "", *onderwerp))
+
+
+@router.post("/leren/snel")
+def snel_bewaren(request: Request, lijst: str = Form(""), vak: str = Form(""), project: str = Form(""), stelsel: str = Form(""),
+                 wet: str = Form(""), nummer: str = Form(""), bron: str = Form(""), terug: str = Form(""),
+                 db: Session = Depends(get_session)):
+    """Eén tik bij een artikel of uitspraak: een kaart in het vak of project dat je koos (die lijst gaat naar Wunderkammer).
+    Zonder lopende keuze (niet net iets bewaard) eerst naar de keuze; `project` is een eigen naam en gaat voor `vak`."""
+    b = db.get(Bron, int(bron)) if bron.isdigit() else None
+    if not (stelsel and nummer) and b is None:
+        raise HTTPException(400)
+    vak = project.strip()[:60] or vak.strip()
+    if not lijst and not vak and vakken.actief(db, _pid(request)) is None:
+        vraag = urlencode({"stelsel": stelsel, "wet": wet, "nummer": nummer, "bron": bron, "terug": _veilig(terug)})
+        return RedirectResponse(f"/leren/snel?{vraag}", status_code=303)
     onderwerp = (stelsel.upper(), wet or None, nummer) if stelsel and nummer else (b.stelsel_code, None, None)
-    if not lijst and not vak and not vakken.kies(db, _pid(request), "", *onderwerp):
-        lijst = str(_gekozen(request, leren.lijsten_van(db, _pid(request))) or "")
     l = _lijst_voor(request, db, lijst, vak, *onderwerp)
     if stelsel and nummer:
         n = leren.maak_kaarten(db, l, ["artikel"], ref=Ref(stelsel.upper(), nummer, wet or None), per_lid=True)
@@ -294,7 +311,10 @@ def vak_wisselen(request: Request, vak: str = Form(...), kaarten: str = Form("")
 
 
 def _veilig(terug: str) -> str:
-    return terug if terug.startswith("/") and not terug.startswith("//") else ""
+    """Alleen een pad op deze site: geen '//host', geen '/\\host', en geen tab of regeleinde (een browser haalt die weg, zodat
+    '/<tab>/host' toch '//host' wordt)."""
+    return terug if terug.startswith("/") and not terug.startswith("//") and "\\" not in terug \
+        and not any(ord(c) < 0x20 for c in terug) else ""
 
 
 def _zonder_melding(terug: str) -> str:

@@ -1,5 +1,5 @@
 {% extends "base.html" %}
-{% import "_leren.html" as l %}
+{% import "_leren.html" as l with context %}
 {% block titel %}{% if d.pad %}{{ d.label }} · {% endif %}{{ wet_titel(w) }} · Synoptikon{% endblock %}
 {% macro deellink(x) %}<a href="?deel={{ x.sleutel | urlencode }}">{{ x.label }}</a> <span class="sys-bereik">{% if x.eerste %}{{ ref(x.eerste).citeer if x.eerste == x.laatste else ref(x.eerste).citeer ~ ' – ' ~ x.laatste }}{% endif %}</span>{% endmacro %}
 {% macro boom(x, diepte) %}
