@@ -912,5 +912,16 @@
  "herkennen": "detect",
  "of een eigen notitie": "or a note of your own",
  "{n} onderdeel": "{n} item",
- "{n} onderdelen": "{n} items"
+ "{n} onderdelen": "{n} items",
+ "Claude gaf geen Musterlösung.": "Claude returned no model answer.",
+ "Claude gaf geen Sachverhalt.": "Claude returned no case facts.",
+ "Deze poging is al ingeleverd.": "This attempt has already been handed in.",
+ "Er is nog niets geschreven om te beoordelen.": "Nothing has been written yet to assess.",
+ "{norm} ({groep}) staat na {na_norm} ({na_groep}).": "{norm} ({groep}) comes after {na_norm} ({na_groep}).",
+ "AG-Fall": "Tutorial case (AG-Fall)",
+ "Klausur, 2 uur": "Klausur, 2 hours",
+ "Klausur, 5 uur": "Klausur, 5 hours",
+ "gezien": "seen",
+ "gemist": "missed",
+ "fout": "wrong"
 }

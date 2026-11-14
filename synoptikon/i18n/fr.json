@@ -912,5 +912,16 @@
  "herkennen": "reconnaître",
  "of een eigen notitie": "ou une note personnelle",
  "{n} onderdeel": "{n} élément",
- "{n} onderdelen": "{n} éléments"
+ "{n} onderdelen": "{n} éléments",
+ "Claude gaf geen Musterlösung.": "Claude n'a pas fourni de corrigé.",
+ "Claude gaf geen Sachverhalt.": "Claude n'a pas fourni d'énoncé.",
+ "Deze poging is al ingeleverd.": "Cette tentative a déjà été remise.",
+ "Er is nog niets geschreven om te beoordelen.": "Rien n'a encore été écrit à évaluer.",
+ "{norm} ({groep}) staat na {na_norm} ({na_groep}).": "{norm} ({groep}) vient après {na_norm} ({na_groep}).",
+ "AG-Fall": "Cas de TD (AG-Fall)",
+ "Klausur, 2 uur": "Klausur, 2 heures",
+ "Klausur, 5 uur": "Klausur, 5 heures",
+ "gezien": "vu",
+ "gemist": "manqué",
+ "fout": "erroné"
 }
