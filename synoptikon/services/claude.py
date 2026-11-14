@@ -35,6 +35,7 @@ PRIJZEN = {
     "claude-sonnet-5-5": (2.0, 10.0),
     "claude-haiku-5-5": (0.10, 0.50),
     "claude-fable-5-1": (10.0, 50.0),
+    "claude-fable-5-2": (8.0, 40.0),
 }
 ZOEKPRIJS = 0.01  # $ per webzoekactie
 FALLBACK_BETA = "server-side-fallback-2026-07-01"
