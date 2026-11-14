@@ -998,3 +998,135 @@ class Onderzoek(Base):
     klaar: Mapped[datetime | None] = mapped_column(DateTime)
 
     vraag: Mapped[Vraag] = relationship()
+
+
+# --- Klausurtrainer (services/klausur.py) ---------------------------------------------------------------------------
+# Een casus (Sachverhalt) los je op in Gutachtenstil: eerst een Lösungsskizze, dan de uitwerking. Claude beoordeelt per
+# Prüfungspunkt volgens een vast schema; wat je mist komt in `casus_probleem`, zodat over meerdere casussen heen te zien is
+# wat je steeds laat liggen.
+
+# niveau → (label, standaardtijd in minuten voor de Klausurmodus)
+CASUS_NIVEAUS: dict[str, tuple[str, int]] = {
+    "ag": ("AG-Fall", 60),
+    "klausur2": ("Klausur, 2 uur", 120),
+    "klausur5": ("Klausur, 5 uur", 300),
+}
+# De volgorde waarin Anspruchsgrundlagen geprüft worden.
+ANSPRUCHSGRUPPEN: dict[str, str] = {
+    "vertrag": "Vertragliche Ansprüche",
+    "vertragsaehnlich": "Vertragsähnliche Ansprüche",
+    "dinglich": "Dingliche Ansprüche",
+    "delikt": "Deliktische Ansprüche",
+    "bereicherung": "Bereicherungsrechtliche Ansprüche",
+}
+PROBLEEM_STATUS: dict[str, str] = {"gezien": "gezien", "deels": "deels", "gemist": "gemist", "fout": "fout"}
+
+
+class Casus(Base):
+    __tablename__ = "casus"
+
+    id: Mapped[int] = mapped_column(primary_key=True)
+    profiel_id: Mapped[int | None] = mapped_column(ForeignKey("profiel.id", ondelete="CASCADE"), index=True)  # leeg = voor iedereen (voorbeeldcasus)
+    sleutel: Mapped[str | None] = mapped_column(String(60), unique=True)  # alleen de voorbeeldcasussen: zo laadt de seed ze één keer
+    titel: Mapped[str] = mapped_column(String(200))
+    sachverhalt: Mapped[str] = mapped_column(Text, default="")  # markdown
+    fallfrage: Mapped[str | None] = mapped_column(Text)
+    onderwerp: Mapped[str | None] = mapped_column(String(200))
+    niveau: Mapped[str] = mapped_column(String(12), default="ag")  # sleutel uit CASUS_NIVEAUS
+    vak: Mapped[str | None] = mapped_column(String(60))
+    normen: Mapped[list | None] = mapped_column(JSON)  # ["§ 119 Abs. 1 BGB", …]: de normen die de casus raakt
+    herkomst: Mapped[str] = mapped_column(String(10), default="eigen")  # eigen | claude | seed
+    geverifieerd: Mapped[bool] = mapped_column(default=False)  # de Lösungsskizze en Musterlösung zijn nagekeken
+    status: Mapped[str] = mapped_column(String(12), default="klaar")  # klaar | wacht | bezig | fout (genereren)
+    fout: Mapped[str | None] = mapped_column(Text)
+    opdracht: Mapped[str | None] = mapped_column(Text)  # wat aan Claude gevraagd is (onderwerp, extra aanwijzingen)
+    # De verwachte oplossing in punten: [{"niveau", "titel", "groep", "normen": [], "inhoud", "probleem": bool}]. Verborgen
+    # tot een poging is ingeleverd; de beoordeling gebruikt haar als maatstaf.
+    skizze: Mapped[list | None] = mapped_column(JSON)
+    musterloesung: Mapped[str | None] = mapped_column(Text)  # markdown, in Gutachtenstil
+    muster_status: Mapped[str | None] = mapped_column(String(12))  # leeg | wacht | bezig | klaar | fout
+    muster_fout: Mapped[str | None] = mapped_column(Text)
+    model: Mapped[str | None] = mapped_column(String(60))
+    usd: Mapped[float] = mapped_column(default=0.0)
+    aangemaakt: Mapped[datetime] = mapped_column(DateTime, default=now)
+
+    pogingen: Mapped[list["CasusPoging"]] = relationship(back_populates="casus", cascade="all, delete-orphan", order_by="CasusPoging.id")
+
+    @property
+    def niveau_label(self) -> str:
+        return _(CASUS_NIVEAUS.get(self.niveau, (self.niveau, 0))[0])
+
+    @property
+    def minuten(self) -> int:
+        return CASUS_NIVEAUS.get(self.niveau, ("", 120))[1]
+
+
+class CasusPoging(Base):
+    """Eén keer een casus oplossen: skizze en uitwerking, tussentijds bewaard, daarna ingeleverd en beoordeeld."""
+
+    __tablename__ = "casus_poging"
+
+    id: Mapped[int] = mapped_column(primary_key=True)
+    casus_id: Mapped[int] = mapped_column(ForeignKey("casus.id", ondelete="CASCADE"), index=True)
+    profiel_id: Mapped[int] = mapped_column(ForeignKey("profiel.id", ondelete="CASCADE"), index=True)
+    modus: Mapped[str] = mapped_column(String(10), default="oefenen")  # oefenen | klausur (timer, alleen de wettekst)
+    skizze: Mapped[str] = mapped_column(Text, default="")
+    uitwerking: Mapped[str] = mapped_column(Text, default="")
+    limiet: Mapped[int | None] = mapped_column(Integer)  # minuten; leeg = geen tijdslimiet
+    begonnen: Mapped[datetime] = mapped_column(DateTime, default=now)
+    bewaard: Mapped[datetime | None] = mapped_column(DateTime)
+    revisie: Mapped[int] = mapped_column(Integer, default=0)  # hoogt op bij elke keer bewaren: een ander apparaat overschrijft niet stil
+    ingeleverd: Mapped[datetime | None] = mapped_column(DateTime)
+    status: Mapped[str] = mapped_column(String(12), default="bezig")  # bezig | ingeleverd | wacht | beoordelen | beoordeeld | fout
+    beoordeling: Mapped[dict | None] = mapped_column(JSON)  # volgens klausur.BEOORDELING
+    fout: Mapped[str | None] = mapped_column(Text)
+    model: Mapped[str | None] = mapped_column(String(60))
+    usd: Mapped[float] = mapped_column(default=0.0)
+
+    casus: Mapped[Casus] = relationship(back_populates="pogingen")
+    problemen: Mapped[list["CasusProbleem"]] = relationship(back_populates="poging", cascade="all, delete-orphan", order_by="CasusProbleem.id")
+
+    @property
+    def open(self) -> bool:
+        return self.ingeleverd is None
+
+    @property
+    def einde(self) -> datetime | None:
+        """Wanneer de tijd om is (Klausurmodus met limiet)."""
+        from datetime import timedelta
+
+        return self.begonnen + timedelta(minutes=self.limiet) if self.limiet else None
+
+    @property
+    def woorden(self) -> int:
+        return len((self.uitwerking or "").split())
+
+
+class CasusProbleem(Base):
+    """Een Prüfungspunkt of probleem uit een beoordeling, met wat ervan terechtkwam. Bron van 'wat ik steeds mis'."""
+
+    __tablename__ = "casus_probleem"
+
+    id: Mapped[int] = mapped_column(primary_key=True)
+    poging_id: Mapped[int] = mapped_column(ForeignKey("casus_poging.id", ondelete="CASCADE"), index=True)
+    profiel_id: Mapped[int] = mapped_column(ForeignKey("profiel.id", ondelete="CASCADE"), index=True)
+    titel: Mapped[str] = mapped_column(String(300))
+    # De hoofdnorm, als ze in de lokale tekst gevonden is (zoals een Kaart): hierop groepeert het overzicht.
+    stelsel_code: Mapped[str | None] = mapped_column(String(8))
+    wet: Mapped[str | None] = mapped_column(String(40))
+    nummer: Mapped[str | None] = mapped_column(String(40))
+    detail: Mapped[str | None] = mapped_column(String(60))
+    normen: Mapped[list | None] = mapped_column(JSON)  # alle genoemde normen, zoals Claude ze schreef
+    status: Mapped[str] = mapped_column(String(10), default="gemist")  # sleutel uit PROBLEEM_STATUS
+    uitleg: Mapped[str | None] = mapped_column(Text)
+    leervraag: Mapped[str | None] = mapped_column(Text)
+    leerantwoord: Mapped[str | None] = mapped_column(Text)
+    kaart_id: Mapped[int | None] = mapped_column(ForeignKey("kaart.id", ondelete="SET NULL"))
+    aangemaakt: Mapped[datetime] = mapped_column(DateTime, default=now)
+
+    poging: Mapped[CasusPoging] = relationship(back_populates="problemen")
+    kaart: Mapped["Kaart | None"] = relationship()
+
+    @property
+    def status_label(self) -> str:
+        return _(PROBLEEM_STATUS.get(self.status, self.status))

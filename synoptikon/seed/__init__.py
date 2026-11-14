@@ -252,6 +252,9 @@ def seed(db: Session, overschrijf: bool = False) -> int:
         if _vraag(db, systematiek, spec, overschrijf) is not None:
             n += 1
     _begrippen_overig(db)
+    from .casussen import laad as laad_casussen
+
+    laad_casussen(db, overschrijf)  # voorbeeldcasussen voor de Klausurtrainer
     db.flush()
     from ..services.vertalen import laad_seed
 

@@ -912,5 +912,16 @@
  "herkennen": "detectar",
  "of een eigen notitie": "o una nota propia",
  "{n} onderdeel": "{n} elemento",
- "{n} onderdelen": "{n} elementos"
+ "{n} onderdelen": "{n} elementos",
+ "Claude gaf geen Musterlösung.": "Claude no entregó una solución modelo.",
+ "Claude gaf geen Sachverhalt.": "Claude no entregó los hechos del caso.",
+ "Deze poging is al ingeleverd.": "Este intento ya se ha entregado.",
+ "Er is nog niets geschreven om te beoordelen.": "Aún no hay nada escrito que evaluar.",
+ "{norm} ({groep}) staat na {na_norm} ({na_groep}).": "{norm} ({groep}) va después de {na_norm} ({na_groep}).",
+ "AG-Fall": "Caso de seminario (AG-Fall)",
+ "Klausur, 2 uur": "Klausur, 2 horas",
+ "Klausur, 5 uur": "Klausur, 5 horas",
+ "gezien": "visto",
+ "gemist": "omitido",
+ "fout": "erróneo"
 }

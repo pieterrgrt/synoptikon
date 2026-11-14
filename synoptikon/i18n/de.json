@@ -912,5 +912,16 @@
  "herkennen": "erkennen",
  "of een eigen notitie": "oder eine eigene Notiz",
  "{n} onderdeel": "{n} Eintrag",
- "{n} onderdelen": "{n} Einträge"
+ "{n} onderdelen": "{n} Einträge",
+ "Claude gaf geen Musterlösung.": "Claude hat keine Musterlösung geliefert.",
+ "Claude gaf geen Sachverhalt.": "Claude hat keinen Sachverhalt geliefert.",
+ "Deze poging is al ingeleverd.": "Dieser Versuch ist bereits abgegeben.",
+ "Er is nog niets geschreven om te beoordelen.": "Es ist noch nichts geschrieben, das bewertet werden könnte.",
+ "{norm} ({groep}) staat na {na_norm} ({na_groep}).": "{norm} ({groep}) steht nach {na_norm} ({na_groep}).",
+ "AG-Fall": "AG-Fall",
+ "Klausur, 2 uur": "Klausur, 2 Stunden",
+ "Klausur, 5 uur": "Klausur, 5 Stunden",
+ "gezien": "gesehen",
+ "gemist": "übersehen",
+ "fout": "falsch"
 }
