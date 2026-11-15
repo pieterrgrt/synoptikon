@@ -1,0 +1,11 @@
+{% extends "base.html" %}
+{% block titel %}Gesetz · Klausur · Synoptikon{% endblock %}
+{% block bodyclass %}klausurmodus{% endblock %}
+{% block inhoud %}
+<h1>Gesetz</h1>
+<form method="get" action="/klausur/wet" class="wet-zoek">
+  <input type="search" name="q" value="{{ w.q }}" placeholder="433 · § 119 II · Verjährung" aria-label="{{ _('Artikel of woorden in de wettekst') }}" autocapitalize="none">
+  <button class="knop klein">{{ _('Zoek') }}</button>
+</form>
+{% include "_klausur_wet.html" %}
+{% endblock %}

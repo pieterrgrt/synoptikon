@@ -757,3 +757,92 @@ mark.markering { color: inherit; border-radius: 2px; padding: 0 .1em; cursor: po
 .leesset-reden { margin: .3rem 0; font-style: italic; color: var(--inkt-2); }
 .leesset-tekst { font-family: var(--serif); white-space: pre-line; max-width: 70ch; margin: .4rem 0; }
 .leesset-link { font-weight: normal; }
+
+/* --- Klausurtrainer ------------------------------------------------------------------------------------------------ */
+.casuslijst { list-style: none; padding: 0; margin: 0; display: grid; gap: .6rem; grid-template-columns: repeat(auto-fill, minmax(17rem, 1fr)); }
+.casus-kaart { border: 1px solid var(--lijn); border-radius: var(--radius); padding: .7rem .9rem; display: flex; flex-direction: column; gap: .25rem; background: var(--papier); }
+.casus-kaart.lopend { border-left: 3px solid var(--accent); }
+.casus-titel { font-family: var(--serif); font-size: 1.05rem; font-weight: 600; }
+.tag.punkte { background: var(--accent); color: #fff; }
+:root[data-theme="dark"] .tag.punkte { color: #1a1a1a; }
+.tag.onzeker { color: var(--fout); border: 1px solid var(--fout); background: none; }
+.sachverhalt { font-family: var(--serif); font-size: 1.05rem; line-height: 1.6; max-width: 46rem; }
+.sachverhalt h2, .sachverhalt h3 { font-family: var(--sans); }
+.casus-normen { margin: .8rem 0; }
+.normen { margin: .4rem 0 0; padding-left: 1.2rem; }
+.opdracht { white-space: pre-wrap; }
+.start-form .keuze { flex-direction: row; align-items: baseline; gap: .5rem; }
+.formulier label.smal { max-width: 16rem; }
+/* werkblad */
+main.pagina.breed { max-width: 90rem; }
+.wb-kop { display: flex; justify-content: space-between; align-items: center; gap: 1rem; flex-wrap: wrap; position: sticky; top: 0; z-index: 3; background: var(--papier); padding: .3rem 0; }
+.wb-kop .kruimel { margin: 0; }
+.wb-stand { display: flex; align-items: baseline; gap: .8rem; }
+.wb-klok { font-variant-numeric: tabular-nums; font-weight: 600; font-size: 1.15rem; }
+.wb-klok.krap { color: var(--fout); }
+.wb { display: grid; gap: 1rem; grid-template-columns: minmax(0, 5fr) minmax(0, 7fr); grid-template-areas: "sv form" "wet form"; align-items: start; }
+#paneel-sachverhalt { grid-area: sv; font-family: var(--serif); line-height: 1.6; }
+#paneel-wet { grid-area: wet; }
+.wb-form { grid-area: form; display: flex; flex-direction: column; gap: 1rem; }
+.wb-paneel h2 { font-size: .8rem; text-transform: uppercase; letter-spacing: .06em; color: var(--inkt-3); font-family: var(--sans); margin: 0 0 .4rem; }
+.wb-paneel textarea { width: 100%; font-family: var(--serif); font-size: 1rem; line-height: 1.55; padding: .6rem .7rem; border: 1px solid var(--lijn); border-radius: var(--radius); background: var(--papier); color: var(--inkt); resize: vertical; }
+#skizze { font-family: var(--sans); font-size: .95rem; }
+.wb-knoppen { display: flex; gap: .3rem; flex-wrap: wrap; margin-bottom: .4rem; }
+.wb-tabs { display: none; }
+.wet-zoek { display: flex; gap: .4rem; margin-bottom: .6rem; }
+.wet-zoek input { flex: 1; min-width: 0; font: inherit; padding: .35rem .6rem; border: 1px solid var(--lijn); border-radius: var(--radius); background: var(--papier); color: var(--inkt); }
+.wet-uit { max-height: 60vh; overflow-y: auto; }
+.wet-nav { display: flex; justify-content: space-between; gap: .5rem; align-items: baseline; }
+.wet-opschrift { font-weight: 600; margin: .3rem 0; }
+.wet-blok .wettekst { font-family: var(--serif); line-height: 1.55; }
+.wet-treffers { list-style: none; padding: 0; margin: 0; display: grid; gap: .5rem; }
+.klausurmodus .kop .nav, .klausurmodus .kop .zoekveld, .klausurmodus .voet, .klausurmodus .inhoud-taal { display: none; }
+@media (max-width: 900px) {
+  .wb { display: block; }
+  .wb-js .wb-tabs { display: flex; position: sticky; top: 2.2rem; z-index: 2; background: var(--papier); }
+  .wb-js .wb-paneel { display: none; }
+  .wb-js .wb[data-actief="sachverhalt"] #paneel-sachverhalt, .wb-js .wb[data-actief="skizze"] #paneel-skizze,
+  .wb-js .wb[data-actief="uitwerking"] #paneel-uitwerking, .wb-js .wb[data-actief="wet"] #paneel-wet { display: block; }
+  .wb-paneel { margin-bottom: 1rem; }
+  .wb-paneel textarea { font-size: 16px; }  /* iOS zoomt in onder 16px */
+  .wb-acties { position: sticky; bottom: 0; background: var(--papier); padding: .5rem 0 calc(.5rem + env(safe-area-inset-bottom)); margin: 0; }
+  .wb-acties .knop { flex: 1; min-height: 2.6rem; }
+  .wet-uit { max-height: none; }
+}
+/* beoordeling */
+.punkte-kop { display: flex; align-items: baseline; gap: .6rem; flex-wrap: wrap; margin: .6rem 0; }
+.punkte-getal { font-size: 2.4rem; font-weight: 700; line-height: 1; font-family: var(--serif); }
+.punkte-note { font-size: 1.05rem; }
+.twee-kolommen, .drie-oordelen { display: grid; gap: .8rem 1.5rem; grid-template-columns: repeat(auto-fit, minmax(16rem, 1fr)); margin: .8rem 0; }
+.drie-oordelen > div { border-top: 2px solid var(--lijn); padding-top: .4rem; }
+.drie-oordelen h3, .twee-kolommen h3 { font-size: .95rem; margin: 0 0 .3rem; }
+.oordeel { display: inline-block; font-size: .75rem; font-weight: 400; padding: .05rem .45rem; border-radius: 1rem; border: 1px solid var(--lijn); color: var(--inkt-2); white-space: nowrap; }
+.oordeel.o-gut, .oordeel.o-richtig, .oordeel.o-angemessen, .oordeel.o-gutachtenstil { border-color: var(--ok); color: var(--ok); }
+.oordeel.o-fehlt, .oordeel.o-falsch, .oordeel.o-verfehlt, .oordeel.o-urteilsstil { border-color: var(--fout); color: var(--fout); }
+.stil-voorbeeld { margin: .5rem 0; padding-left: .8rem; border-left: 2px solid var(--lijn); font-family: var(--serif); }
+.stil-voorbeeld p { margin: .2rem 0; }
+.pp-lijst { list-style: none; padding: 0; margin: .6rem 0; display: grid; gap: .6rem; }
+.pp { border: 1px solid var(--lijn); border-left-width: 3px; border-radius: var(--radius); padding: .6rem .8rem; }
+.pp.st-gezien { border-left-color: var(--ok); }
+.pp.st-gemist, .pp.st-fout { border-left-color: var(--fout); }
+.pp.st-deels { border-left-color: var(--inkt-3); }
+.pp p { margin: .25rem 0; }
+.pp-kop { display: flex; gap: .5rem; align-items: baseline; flex-wrap: wrap; }
+.pp-status { font-size: .72rem; text-transform: uppercase; letter-spacing: .05em; padding: .05rem .4rem; border-radius: 1rem; background: var(--papier-2); color: var(--inkt-2); }
+.pp-status.st-gezien { color: var(--ok); }
+.pp-status.st-gemist, .pp-status.st-fout { color: var(--fout); }
+.pp-onderdelen { display: flex; gap: .3rem; flex-wrap: wrap; }
+.kaartknop { margin-top: .4rem; }
+.normen-rij { display: flex; gap: .3rem; flex-wrap: wrap; }
+.ingeleverd { font-family: var(--serif); line-height: 1.6; max-width: 46rem; }
+.ingeleverd.skizze { white-space: pre-wrap; font-family: var(--sans); font-size: .95rem; }
+.musterloesung { font-family: var(--serif); line-height: 1.6; max-width: 46rem; }
+.musterloesung h2, .musterloesung h3 { font-family: var(--sans); }
+.skizze-boom { list-style: none; padding: 0; margin: 0; }
+.skizze-boom li { margin: .3rem 0; }
+.skizze-boom .niv-1 { margin-top: 1rem; font-weight: 600; }
+.skizze-boom .niv-2 { padding-left: 1rem; }
+.skizze-boom .niv-3 { padding-left: 2rem; }
+.skizze-boom .niv-4 { padding-left: 3rem; }
+.skizze-inhoud { display: block; font-weight: 400; color: var(--inkt-2); }
+.skizze-normen { display: block; font-weight: 400; }

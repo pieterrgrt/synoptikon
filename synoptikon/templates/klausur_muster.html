@@ -1,0 +1,24 @@
+{% extends "base.html" %}
+{% block titel %}Musterlösung · {{ c.titel }} · Synoptikon{% endblock %}
+{% block inhoud %}
+<p class="kruimel"><a href="/klausur">Klausur</a> › <a href="/klausur/{{ c.id }}">{{ c.titel }}</a></p>
+<h1>Lösungsskizze · Musterlösung</h1>
+{% if not ingeleverd %}<p class="melding">{{ _('Je hebt deze casus nog niet ingeleverd. Eerst zelf oplossen levert het meeste op.') }} <a href="/klausur/{{ c.id }}#start">{{ _('Naar de casus') }}</a></p>{% endif %}
+<p class="stil klein">{% if c.geverifieerd %}{{ _('Nagekeken en goedgekeurd.') }}{% else %}{{ _('Niet geverifieerd: een voorstel (van Claude of uit de voorbeeldcasussen) tot je het zelf hebt nagekeken.') }}{% endif %}</p>
+
+<section class="blok">
+  <h2>Lösungsskizze</h2>
+  {% if verwacht %}{% include "_klausur_skizze.html" %}
+  {% else %}<p class="stil">{{ _('Er is nog geen Lösungsskizze. Claude maakt er een bij de eerste beoordeling.') }}</p>{% endif %}
+</section>
+
+{% include "_klausur_muster.html" %}
+
+{% if mag_wijzigen and mag_bewerken and (verwacht or c.musterloesung) %}
+<form method="post" action="/klausur/{{ c.id }}/goedkeuren" class="blok">
+  <input type="hidden" name="aan" value="{{ '0' if c.geverifieerd else '1' }}">
+  <button class="knop">{{ _('Goedkeuring intrekken') if c.geverifieerd else _('Nagekeken: goedkeuren') }}</button>
+</form>
+{% endif %}
+{% endblock %}
+{% block scripts %}<script src="/static/js/bezig.js?v={{ sv }}"></script>{% endblock %}

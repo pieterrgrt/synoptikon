@@ -246,6 +246,17 @@ Uitgebreider gemotiveerd in de docstring van `synoptikon/models.py`.
    worden bronnen met de lokale tekst; wat je zelf schreef blijft staan. Draait op
    de achtergrond; de pagina toont de voortgang (tabel `onderzoek`).
 
+11. **Klausur** (`/klausur`, `services/klausur.py`): een casus oplossen in Gutachtenstil. Sachverhalt plakken of door
+   Claude laten schrijven (onderwerp, niveau: AG-Fall, Klausur 2 of 5 uur); drie voorbeeldcasussen staan er vanzelf
+   (`seed/casussen.py`). Het werkblad heeft Sachverhalt, Lösungsskizze, Gutachten en Gesetz (tabs op de telefoon), bewaart
+   elke twintig seconden en houdt een kopie op het apparaat; in de Klausurmodus loopt de klok en is alleen de wettekst
+   erbij. Na het inleveren: zelf nakijken zonder Claude (volgorde van de Anspruchsgrundlagen, bestaan van elke genoemde
+   norm, ruwe stijltelling) en de beoordeling door Claude per Prüfungspunkt volgens een JSON-schema, met elke norm als
+   link naar de lokale tekst. Lösungsskizze en Musterlösung staan apart (`/klausur/<id>/muster`) en zijn niet geverifieerd
+   tot je ze goedkeurt. Een gemist probleem wordt met één tik een kaartvoorstel in de leerlijst van het vak;
+   `/klausur/problemen` toont wat over meerdere casussen heen misgaat. `services/citaties.py` vindt de verwijzingen in
+   lopende tekst ("§§ 280 I, III, 281 BGB").
+
 ### Claude
 
 `SYNOPTIKON_ANTHROPIC_API_KEY` aan = opzoeken en onderzoek aan

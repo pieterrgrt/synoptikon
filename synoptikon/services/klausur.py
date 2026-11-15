@@ -810,3 +810,94 @@ def steeds_gemist(db: Session, profiel_id: int) -> list[Gemist]:
         g.casussen[pr.poging.casus_id] = pr.poging.casus.titel
         g.pogingen[pr.poging.casus_id] = pr.poging_id
     return sorted((g for g in groepen.values() if g.score > 0), key=lambda g: (-len(g.casussen), -g.score, g.titel))
+
+
+# --- weergave ----------------------------------------------------------------------------------------------------------
+
+# De waarden uit het schema, voor de pagina (door `_()`).
+OORDEEL: dict[str, str] = {
+    "gut": "goed", "mangelhaft": "zwak", "fehlt": "ontbreekt", "entfaellt": "n.v.t.", "richtig": "juist", "falsch": "onjuist",
+    "teilweise": "deels", "gutachtenstil": "Gutachtenstil", "urteilsstil": "Urteilsstil", "gemischt": "gemengd",
+    "angemessen": "passend", "verfehlt": "niet passend",
+}
+ONDERDELEN = [("anspruchsgrundlage", "Anspruchsgrundlage"), ("obersatz", "Obersatz"), ("definition", "Definition"),
+              ("subsumtion", "Subsumtion"), ("ergebnis", "Ergebnis")]
+
+
+def oordeel(waarde: str | None) -> str:
+    return _(OORDEEL.get(waarde or "", waarde or ""))
+
+
+def toon_skizze(db: Session, skizze: list | None) -> list[dict]:
+    """De Lösungsskizze met elke norm als link en de inhoud als HTML."""
+    k = Koppelaar(db)
+    return [{**p, "normen": k.normen(p.get("normen")), "inhoud": k.inline(p.get("inhoud")), "titel_html": k.inline(p.get("titel"))}
+            for p in (skizze or []) if isinstance(p, dict)]
+
+
+def weergave(db: Session, p: CasusPoging) -> dict | None:
+    """De beoordeling klaar voor de pagina: normen gekoppeld aan de lokale tekst, elk punt met zijn `CasusProbleem`."""
+    b = p.beoordeling
+    if not b:
+        return None
+    k = Koppelaar(db)
+    per_titel = {pr.titel: pr for pr in p.problemen}
+
+    def rij(titel) -> CasusProbleem | None:
+        return per_titel.get(str(titel or "").strip()[:300] or "?")
+
+    punten = [{**pp, "titel_html": k.inline(pp.get("titel")), "normen": k.normen(pp.get("normen")), "erwartet": k.inline(pp.get("erwartet")),
+               "kommentar": k.md(pp.get("kommentar")), "rij": rij(pp.get("titel")),
+               "onderdelen": [(label, pp.get(sleutel) or "entfaellt") for sleutel, label in ONDERDELEN if (pp.get(sleutel) or "entfaellt") != "entfaellt"]}
+              for pp in b.get("pruefungspunkte") or [] if isinstance(pp, dict)]
+    fehlend = [{**fp, "titel_html": k.inline(fp.get("titel")), "normen": k.normen(fp.get("normen")), "erklaerung": k.md(fp.get("erklaerung")),
+                "rij": rij(fp.get("titel"))} for fp in b.get("fehlende_probleme") or [] if isinstance(fp, dict)]
+    stil = b.get("stil") or {}
+    return {
+        "punkte": b.get("punkte"), "note": note(b.get("punkte")), "gesamturteil": k.md(b.get("gesamturteil")),
+        "staerken": [k.inline(x) for x in b.get("staerken") or []], "schwaechen": [k.inline(x) for x in b.get("schwaechen") or []],
+        "aufbau": {"urteil": (b.get("aufbau") or {}).get("urteil"), "kommentar": k.md((b.get("aufbau") or {}).get("kommentar"))},
+        "stil": {"urteil": stil.get("urteil"), "kommentar": k.md(stil.get("kommentar")),
+                 "beispiele": [x for x in stil.get("beispiele") or [] if isinstance(x, dict) and x.get("zitat")]},
+        "schwerpunkte": {"urteil": (b.get("schwerpunkte") or {}).get("urteil"), "kommentar": k.md((b.get("schwerpunkte") or {}).get("kommentar"))},
+        "punten": punten, "fehlend": fehlend,
+        "telling": {s: sum(1 for x in punten if x.get("status") == s) for s in ("gezien", "deels", "gemist", "fout")},
+    }
+
+
+@dataclass
+class Wet:
+    """Wat het paneel 'Gesetz' in het werkblad toont: één artikel met zijn buren, of treffers in de wettekst."""
+
+    q: str
+    ref: Ref | None = None
+    artikel: object | None = None  # WettekstArtikel
+    vorig: Ref | None = None
+    volgend: Ref | None = None
+    treffers: list[tuple[Ref, str | None, str]] = field(default_factory=list)  # (ref, opschrift, fragment)
+
+
+def wet(db: Session, q: str, stelsel: str = "DE") -> Wet:
+    """De kale wettekst voor het werkblad: zonder eigen markeringen, notities of kaarten, zoals het wetboek op tafel.
+
+    Een verwijzing ("433", "§ 119 II", "Art. 2 GG") geeft het artikel met vorige en volgende; woorden zoeken in de
+    wetteksten van het stelsel."""
+    from . import wetboek, zoeken
+
+    q = (q or "").strip()[:120]
+    uit = Wet(q)
+    if not q:
+        return uit
+    gelezen = [r for r in herken(q) if r.stelsel == stelsel] or (herken(q, stelsel) if re.search(r"\d", q) and len(q) < 40 else [])
+    for r in gelezen:
+        wa = wettekst_artikel(db, r)
+        if wa is not None:
+            vorig, volgend = wetboek.naast(db, wa)
+            uit.ref, uit.artikel = r, wa
+            uit.vorig = wetboek.ref(wa.wettekst, vorig.nummer) if vorig else None
+            uit.volgend = wetboek.ref(wa.wettekst, volgend.nummer) if volgend else None
+            return uit
+    if not gelezen:
+        for wa, fragment in zoeken.wetsartikelen(db, q, stelsel, limiet=12):
+            uit.treffers.append((wetboek.ref(wa.wettekst, wa.nummer), wa.opschrift, fragment))
+    return uit

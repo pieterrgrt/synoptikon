@@ -176,6 +176,16 @@ elk artikel en elke uitspraak bestaan al. Erbij: `leesset.feiten`, `leesset.peil
 onderdeel `rubriek` (feit · tijdlijn · rechtsvraag · bron), `datum`, en koppelingen naar berekening, schema en casus.
 Uitvoer: memo als .md, .docx en PDF met citaties in de gekozen stijl, bronnenlijst en de peildatum van elke wettekst.
 
+## Stand op 15-11-2026
+
+Module A is af en staat op `main` (PR #30 en de PR erna). B t/m G zijn niet begonnen: Pieter heeft het werk na A
+stilgezet omdat het te veel limiet kostte. Wat er voor B t/m G al ligt: dit plan en `services/citaties.py`.
+
 ## Vijf volgende stappen
 
-Volgt aan het eind, als duidelijk is wat de modules in de praktijk laten liggen.
+1. Module A een keer echt gebruiken met de API-sleutel aan: één voorbeeldcasus oplossen en laten beoordelen. De
+   Claude-delen zijn alleen met de nep-client getest.
+2. Module F (termijnen): geen Claude, geen migratie van bestaande data, direct bruikbaar voor de Klausur.
+3. Module B (schemata en Streitstände): hangt aan A (gemiste problemen koppelen aan een schema).
+4. Module E (versies en wijzigingen): hoe eerder de haak in `bijwerken` zit, hoe meer geschiedenis er is.
+5. Module C en D samen: beide bouwen op de scanner in `services/citaties.py`.

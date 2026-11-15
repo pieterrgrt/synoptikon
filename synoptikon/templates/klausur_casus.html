@@ -1,0 +1,71 @@
+{% extends "base.html" %}
+{% block titel %}{{ c.titel }} · Klausur · Synoptikon{% endblock %}
+{% block inhoud %}
+<p class="kruimel"><a href="/klausur">Klausur</a></p>
+<div class="paginakop">
+  <h1>{{ c.titel }}</h1>
+  {% if c.status == 'klaar' %}<a class="knop" href="/klausur/{{ c.id }}/muster">Lösungsskizze · Musterlösung</a>{% endif %}
+</div>
+<p class="stil">{{ c.niveau_label }}{% if c.vak %} · {{ c.vak }}{% endif %}{% if c.onderwerp %} · {{ c.onderwerp }}{% endif %}
+  {%- if c.herkomst == 'seed' %} · {{ _('voorbeeldcasus') }}{% elif c.herkomst == 'claude' %} · {{ _('geschreven door Claude') }}{% endif %}</p>
+{% if c.herkomst == 'claude' and c.status == 'klaar' %}<p class="melding klein">{{ _('Deze casus is door Claude geschreven en niet geverifieerd.') }}</p>{% endif %}
+
+{% include "_klausur_sachverhalt.html" %}
+
+{% if c.status == 'klaar' and mag_bewerken %}
+<section class="blok" id="start">
+  <h2>{{ _('Oplossen') }}</h2>
+  <form method="post" action="/klausur/{{ c.id }}/start" class="formulier compact start-form">
+    <label class="keuze"><input type="radio" name="modus" value="oefenen" checked> <span><b>{{ _('Oefenen') }}</b> <span class="stil">{{ _('zonder tijd, tussentijds bewaren') }}</span></span></label>
+    <label class="keuze"><input type="radio" name="modus" value="klausur"> <span><b>{{ _('Klausurmodus') }}</b> <span class="stil">{{ _('de tijd loopt, alleen de wettekst erbij; als de tijd om is, is de poging ingeleverd') }}</span></span></label>
+    <label class="smal">{{ _('Tijd in minuten (Klausurmodus)') }} <input type="number" name="limiet" min="5" max="600" value="{{ c.minuten }}" inputmode="numeric"></label>
+    <div class="acties"><button class="knop primair">{{ _('Beginnen') }}</button></div>
+  </form>
+</section>
+{% endif %}
+
+{% if pogingen %}
+<section class="blok">
+  <h2>{{ _('Pogingen') }}</h2>
+  <ul class="casuslijst">
+  {% for p in pogingen %}
+    <li class="casus-kaart{% if p.open %} lopend{% endif %}">
+      <a class="casus-titel" href="/klausur/poging/{{ p.id }}">{{ p.begonnen.strftime('%d-%m-%Y %H:%M') }}</a>
+      <span class="stil klein">{{ _('Klausurmodus') if p.modus == 'klausur' else _('oefenen') }}{% if p.limiet %} · {{ p.limiet }} min{% endif %} · {{ n_('{n} woord', '{n} woorden', p.woorden) }}</span>
+      <span class="klein">
+        {% if p.open %}<span class="tag">{{ _('loopt') }}</span>
+        {% elif p.beoordeling and p.beoordeling.punkte is not none %}<span class="tag punkte">{{ p.beoordeling.punkte }} P. · {{ note(p.beoordeling.punkte) }}</span>
+        {% elif p.status in ('wacht', 'beoordelen') %}<span class="tag">{{ _('Claude beoordeelt…') }}</span>
+        {% else %}<span class="tag">{{ _('ingeleverd') }}</span>{% endif %}
+      </span>
+    </li>
+  {% endfor %}
+  </ul>
+</section>
+{% endif %}
+
+{% if mag_wijzigen and mag_bewerken and c.status != 'wacht' and c.status != 'bezig' %}
+<details class="blok">
+  <summary>{{ _('Casus bewerken') }}</summary>
+  <form method="post" action="/klausur/{{ c.id }}/bewerk" class="formulier compact">
+    <label>{{ _('Titel') }} <input name="titel" value="{{ c.titel }}" maxlength="200"></label>
+    <label>Sachverhalt <textarea name="sachverhalt" rows="10" lang="de">{{ c.sachverhalt }}</textarea></label>
+    <label>Fallfrage <textarea name="fallfrage" rows="2" lang="de">{{ c.fallfrage or '' }}</textarea></label>
+    <div class="rij">
+      <label>{{ _('Niveau') }} <select name="niveau">{% for k, v in niveaus.items() %}<option value="{{ k }}" {% if k == c.niveau %}selected{% endif %}>{{ _(v[0]) }}</option>{% endfor %}</select></label>
+      <label>{{ _('Vak') }} <input name="vak" list="vakken" value="{{ c.vak or '' }}" autocapitalize="none"></label>
+    </div>
+    <label>{{ _('Onderwerp') }} <input name="onderwerp" value="{{ c.onderwerp or '' }}" maxlength="200"></label>
+    <label>{{ _('Normen die de casus raakt') }} <input name="normen" value="{{ (c.normen or []) | join('; ') }}" autocapitalize="none"></label>
+    <datalist id="vakken">{% for v in vakken %}<option value="{{ v }}">{% endfor %}</datalist>
+    <div class="acties"><button class="knop primair">{{ _('Opslaan') }}</button></div>
+  </form>
+  {% if c.profiel_id %}
+  <form method="post" action="/klausur/{{ c.id }}/verwijder" class="gevaar-zone" data-bevestig="{{ _('Deze casus met alle pogingen verwijderen?') }}">
+    <button class="knop gevaar klein">{{ _('Casus verwijderen') }}</button>
+  </form>
+  {% endif %}
+</details>
+{% endif %}
+{% endblock %}
+{% block scripts %}<script src="/static/js/bezig.js?v={{ sv }}"></script>{% endblock %}

@@ -1,0 +1,56 @@
+{% extends "base.html" %}
+{% block titel %}{{ c.titel }} · Klausur · Synoptikon{% endblock %}
+{% block inhoud %}
+<p class="kruimel"><a href="/klausur">Klausur</a> › <a href="/klausur/{{ c.id }}">{{ c.titel }}</a></p>
+<div class="paginakop">
+  <h1>{{ _('Poging van {datum}', datum=p.begonnen.strftime('%d-%m-%Y')) }}</h1>
+  <a class="knop" href="/klausur/{{ c.id }}/muster">Lösungsskizze · Musterlösung</a>
+</div>
+<p class="stil">{{ _('Klausurmodus') if p.modus == 'klausur' else _('oefenen') }} · {{ _('{n} min gewerkt', n=duur) }}{% if p.limiet %} {{ _('van {n}', n=p.limiet) }}{% endif %} · {{ n_('{n} woord', '{n} woorden', p.woorden) }}</p>
+{% if request.query_params.get('voorstel') %}<p class="melding ok" role="status">{{ _('Kaartvoorstel gemaakt.') }} <a href="/leren/voorstellen?lijst={{ request.query_params.get('voorstel') }}">{{ _('Voorstellen beoordelen') }} ›</a></p>{% endif %}
+
+{% include "_klausur_beoordeling.html" %}
+
+<section class="blok">
+  <h2>{{ _('Zelf nakijken') }}</h2>
+  <h3>{{ _('Volgorde van de Anspruchsgrundlagen') }}</h3>
+  {% if volgorde %}
+  <ul class="lijst">{% for o in volgorde %}<li>{{ _('Regel {n}', n=o.regel) }}: {{ o.tekst }}</li>{% endfor %}</ul>
+  <p class="hint">{{ _('Gebruikelijk: Vertrag, vertragsähnlich, dinglich, Delikt, Bereicherung. Een hint, geen oordeel.') }}</p>
+  {% elif p.skizze.strip() %}<p class="stil">{{ _('Geen afwijking gevonden van Vertrag, vertragsähnlich, dinglich, Delikt, Bereicherung.') }}</p>
+  {% else %}<p class="stil">{{ _('Geen skizze ingeleverd.') }}</p>{% endif %}
+  <h3>{{ _('Normen die je noemt') }}</h3>
+  {% if genoemd %}
+  <p class="normen-rij">{% for n in genoemd %}{% if n.url %}<a class="tag" href="{{ n.url }}">{{ n.tekst }}</a>{% elif n.onbekend %}<span class="tag onzeker" title="{{ _('‘{wet}’ is geen wet die Synoptikon kent', wet=n.onbekend) }}">{{ n.tekst }} ?</span>{% else %}<span class="tag onzeker" title="{{ _('niet in de lokale tekst') }}">{{ n.tekst }} ?</span>{% endif %} {% endfor %}</p>
+  {% if genoemd | rejectattr('gevonden') | list %}<p class="hint">{{ _('Met een vraagteken: niet gevonden in de lokale wettekst. Controleer het nummer.') }}</p>{% endif %}
+  {% else %}<p class="stil">{{ _('Je noemt geen normen.') }}</p>{% endif %}
+  <h3>{{ _('Stijl, ruw geteld') }}</h3>
+  <p>{{ _('{a} keer een woord van de Gutachtenstil (könnte, fraglich, folglich …), {b} keer da, weil of denn, op {n} woorden.', a=stijl.gutachten, b=stijl.urteil, n=stijl.woorden) }}</p>
+</section>
+
+{% if verwacht %}
+<details class="blok">
+  <summary>Lösungsskizze{% if not c.geverifieerd %} <span class="tag onzeker">{{ _('niet geverifieerd') }}</span>{% endif %}</summary>
+  {% include "_klausur_skizze.html" %}
+</details>
+{% endif %}
+
+<details class="blok" open>
+  <summary>{{ _('Wat je inleverde') }}</summary>
+  {% if p.skizze.strip() %}<h3>Lösungsskizze</h3><div class="ingeleverd skizze" lang="de">{{ p.skizze }}</div>{% endif %}
+  <h3>Gutachten</h3>
+  {% if p.uitwerking.strip() %}<div class="ingeleverd" lang="de">{{ uitwerking_html }}</div>{% else %}<p class="stil">{{ _('Geen uitwerking ingeleverd.') }}</p>{% endif %}
+</details>
+<details class="blok">
+  <summary>Sachverhalt</summary>
+  <div class="sachverhalt" lang="de">{{ sachverhalt }}{% if c.fallfrage %}<h3>Fallfrage</h3>{{ fallfrage }}{% endif %}</div>
+</details>
+
+{% if mag_bewerken %}
+<div class="acties">
+  <form method="post" action="/klausur/{{ c.id }}/start"><input type="hidden" name="modus" value="{{ p.modus }}"><button class="knop">{{ _('Nog een keer proberen') }}</button></form>
+  <form method="post" action="/klausur/poging/{{ p.id }}/verwijder" data-bevestig="{{ _('Deze poging met haar beoordeling verwijderen?') }}"><button class="knop gevaar klein">{{ _('Poging verwijderen') }}</button></form>
+</div>
+{% endif %}
+{% endblock %}
+{% block scripts %}<script src="/static/js/bezig.js?v={{ sv }}"></script><script src="/static/js/klausur.js?v={{ sv }}"></script>{% endblock %}

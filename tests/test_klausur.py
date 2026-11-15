@@ -209,3 +209,129 @@ def test_genereren_en_musterloesung(bgb, nep):
     with database.session() as s:
         c = klausur.genereer(s, 1, "Leeg", "ag")
         assert c.status == "fout" and c.fout
+
+
+# --- de schermen ---------------------------------------------------------------------------------------------------------
+
+
+def test_schermen_van_begin_tot_eind(client, bgb, nep):
+    nep(BEOORDELING)
+    r = client.get("/klausur")
+    assert r.status_code == 200 and "Der vertippte Preis" in r.text and 'href="/klausur"' in r.text
+    assert client.get("/klausur/nieuw").status_code == 200
+    assert client.post("/klausur/nieuw", data={"sachverhalt": " "}).status_code == 400  # leeg: uitleg, geen 500
+    r = client.post("/klausur/nieuw", data={"titel": "Schermtest", "sachverhalt": "V verkauft K ein Rad. Anspruch aus § 433 I 1 BGB?",
+                                            "fallfrage": "Kann K Lieferung verlangen?", "niveau": "ag", "vak": "ZR Ia"}, follow_redirects=False)
+    assert r.status_code == 303
+    cid = int(r.headers["location"].rsplit("/", 1)[1])
+    r = client.get(f"/klausur/{cid}")
+    assert r.status_code == 200 and "Sachverhalt" in r.text and "/artikelen/DE/433" in r.text and "Klausurmodus" in r.text
+    # Klausurmodus: werkblad met klok, zonder hoofdmenu (alleen de wettekst erbij)
+    r = client.post(f"/klausur/{cid}/start", data={"modus": "klausur", "limiet": "90"}, follow_redirects=False)
+    pad = r.headers["location"]
+    pid = int(pad.rsplit("/", 1)[1])
+    r = client.get(pad)
+    assert r.status_code == 200 and 'class="werkblad klausurmodus' in r.text and 'id="klok"' in r.text and "klausur.js" in r.text
+    assert "Vertragliche Ansprüche" in r.text  # de knoppen voor de volgorde
+    # autosave (JSON) met revisie; een verouderde revisie wordt geweigerd
+    kop = {"X-Requested-With": "fetch"}
+    j = client.post(f"{pad}/bewaar", data={"skizze": "A. K gegen V aus § 812 I 1 Alt. 1 BGB\nB. K gegen V aus § 985 BGB", "uitwerking": "", "revisie": "0"}, headers=kop).json()
+    assert j["ok"] and j["revisie"] == 1 and 5300 < j["rest"] <= 5400
+    r = client.post(f"{pad}/bewaar", data={"skizze": "oud", "uitwerking": "", "revisie": "0"}, headers=kop)
+    assert r.status_code == 409 and r.json()["conflict"]
+    # zonder JavaScript: gewoon formulier
+    assert client.post(f"{pad}/bewaar", data={"skizze": "A. K gegen V aus § 812 I 1 Alt. 1 BGB\nB. K gegen V aus § 985 BGB",
+                                              "uitwerking": "K könnte einen Anspruch aus § 433 I 1 BGB haben, weil § 9999 BGB greift."},
+                       follow_redirects=False).status_code == 303
+    # de wettekst in het werkblad: artikel, buren, zoeken; onbekend geeft uitleg
+    r = client.get("/klausur/wet?q=433&fragment=1")
+    assert r.status_code == 200 and "Durch den Kaufvertrag" in r.text and "<html" not in r.text and 'data-wet="§ 985 BGB"' in r.text
+    assert "Niets gevonden" in client.get("/klausur/wet?q=xyzzyplugh&fragment=1").text
+    assert client.get("/klausur/wet?q=Kaufvertrag").status_code == 200
+    # inleveren → resultaat met de eigen controle
+    assert client.post(f"{pad}/inleveren", data={}, follow_redirects=False).status_code == 303
+    r = client.get(pad)
+    assert r.status_code == 200 and "Zelf nakijken" in r.text and "Dingliche Ansprüche" in r.text  # § 985 na § 812
+    assert "§ 9999 BGB ?" in r.text and "Laten beoordelen door Claude" in r.text
+    assert client.post(f"{pad}/bewaar", data={"skizze": "x", "revisie": "9"}, headers=kop).status_code == 409  # ingeleverd
+    # beoordelen (nep-Claude) → feedback met links en kaartvoorstel
+    assert client.post(f"{pad}/beoordeel", follow_redirects=False).status_code == 303
+    r = client.get(pad)
+    assert "niet geverifieerd" in r.text and "Punkte · sehr gut" in r.text and "Prüfungspunkte" in r.text
+    assert '<a href="/artikelen/DE/119?lid=Abs.%201">§ 119 Abs. 1 BGB</a>' in r.text and "Gemiste problemen" in r.text
+    assert "Obersatz: goed" in r.text and "Definition: ontbreekt" in r.text
+    frag = client.get(f"{pad}/stand")
+    assert frag.status_code == 200 and "<html" not in frag.text and "data-bezig" not in frag.text
+    with database.session() as s:
+        pr = s.query(CasusProbleem).filter_by(poging_id=pid, titel="Ersatz des Vertrauensschadens").one().id
+    j = client.post(f"/klausur/probleem/{pr}/kaart", headers=kop).json()
+    assert j["ok"] and j["kaart"]
+    r = client.post(f"/klausur/probleem/{pr}/kaart", data={"terug": "/klausur/problemen"}, follow_redirects=False)
+    assert r.status_code == 303 and r.headers["location"].startswith("/klausur/problemen?voorstel=")
+    assert "kaartvoorstel gemaakt" in client.get(pad).text
+    # het voorstel staat in de gewone voorstellenstroom
+    assert "§ 122 BGB" in client.get(f"/leren/voorstellen?lijst={j['lijst']}").text
+    r = client.get("/klausur/problemen")
+    assert r.status_code == 200 and "§ 122 BGB" in r.text
+    # Lösungsskizze en Musterlösung apart
+    r = client.get(f"/klausur/{cid}/muster")
+    assert r.status_code == 200 and "Lösungsskizze" in r.text and "Musterlösung laten schrijven" in r.text
+    nep({"musterloesung": "## A. Anspruch aus § 433 Abs. 1 S. 1 BGB\n\nK könnte …"})
+    assert client.post(f"/klausur/{cid}/muster", follow_redirects=False).status_code == 303
+    r = client.get(f"/klausur/{cid}/muster")
+    assert "K könnte …" in r.text and "niet geverifieerd" in r.text
+    assert client.get(f"/klausur/{cid}/muster/stand").status_code == 200
+    client.post(f"/klausur/{cid}/goedkeuren", data={"aan": "1"})
+    assert "Nagekeken en goedgekeurd." in client.get(f"/klausur/{cid}/muster").text
+    # bewerken, opnieuw proberen, verwijderen
+    client.post(f"/klausur/{cid}/bewerk", data={"titel": "Schermtest 2", "sachverhalt": "Neu.", "niveau": "klausur2", "normen": "§ 433 BGB"})
+    assert "Schermtest 2" in client.get(f"/klausur/{cid}").text
+    assert client.post(f"{pad}/verwijder", follow_redirects=False).status_code == 303
+    assert client.post(f"/klausur/{cid}/verwijder", follow_redirects=False).status_code == 303
+    assert client.get(f"/klausur/{cid}").status_code == 404
+
+
+def test_voorbeeldcasus_en_lege_toestanden(client, bgb, monkeypatch):
+    with database.session() as s:
+        seed = s.query(Casus).filter_by(sleutel="verbranntes-gemaelde").one().id
+    r = client.get(f"/klausur/{seed}")
+    assert r.status_code == 200 and "voorbeeldcasus" in r.text and "Casus verwijderen" not in r.text
+    r = client.get(f"/klausur/{seed}/muster")
+    assert r.status_code == 200 and "Unmöglichkeit" in r.text and "nog niet ingeleverd" in r.text and "Schwerpunkt" in r.text
+    assert client.post(f"/klausur/{seed}/verwijder", follow_redirects=False).status_code == 403
+    assert client.get("/klausur/999999").status_code == 404 and client.get("/klausur/poging/999999").status_code == 404
+    # zonder Claude: uitleg in plaats van een knop, en de route weigert netjes
+    monkeypatch.setattr(settings, "anthropic_api_key", None)
+    assert "Claude staat uit" in client.get("/klausur").text and "Claude staat uit" in client.get("/klausur/nieuw").text
+    assert client.post("/klausur/genereer", data={"onderwerp": "Anfechtung"}).status_code == 503
+    r = client.post(f"/klausur/{seed}/start", data={"modus": "oefenen"}, follow_redirects=False)
+    pad = r.headers["location"]
+    r = client.get(pad)
+    assert r.status_code == 200 and 'id="klok"' not in r.text and "klausurmodus" not in r.text
+    client.post(f"{pad}/inleveren", data={"skizze": "", "uitwerking": ""})
+    r = client.get(pad)
+    assert "Claude staat uit" in r.text and "Geen skizze ingeleverd." in r.text and "Je noemt geen normen." in r.text
+    assert client.post(f"{pad}/beoordeel").status_code == 503
+    client.post(f"{pad}/verwijder")
+
+
+def test_lezer_mag_lezen_maar_niet_schrijven(anoniem, bgb):
+    from synoptikon.auth import hash_password
+    from synoptikon.models import Profiel
+
+    velden = ("gebruikersnaam", "rol", "actief", "wachtwoord_hash", "stelsels", "sessie_versie")
+    with database.session() as s:
+        p = s.get(Profiel, 4)
+        oud = {v: getattr(p, v) for v in velden}
+        p.gebruikersnaam, p.rol, p.actief, p.wachtwoord_hash, p.stelsels = "lezer-klausur", "lezer", True, hash_password("lees"), "NL,DE"
+        cid = s.query(Casus).filter_by(sleutel="vertippter-preis").one().id
+    try:
+        anoniem.post("/login", data={"gebruikersnaam": "lezer-klausur", "wachtwoord": "lees", "volgende": "/"})
+        r = anoniem.get(f"/klausur/{cid}")
+        assert r.status_code == 200 and "Beginnen" not in r.text
+        assert anoniem.post(f"/klausur/{cid}/start", data={"modus": "oefenen"}).status_code == 403
+    finally:  # de profielplek terug zoals ze was: andere tests rekenen daarop
+        with database.session() as s:
+            p = s.get(Profiel, 4)
+            for v in velden:
+                setattr(p, v, oud[v])

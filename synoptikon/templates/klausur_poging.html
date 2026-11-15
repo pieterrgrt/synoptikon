@@ -1,0 +1,63 @@
+{% extends "base.html" %}
+{% block titel %}{{ c.titel }} · Klausur · Synoptikon{% endblock %}
+{% block bodyclass %}werkblad{% if p.modus == 'klausur' %} klausurmodus{% endif %}{% endblock %}
+{% block mainclass %}pagina breed{% endblock %}
+{% block inhoud %}
+<div class="wb-kop">
+  <div>
+    <p class="kruimel"><a href="/klausur/{{ c.id }}">{{ c.titel }}</a> · {{ _('Klausurmodus') if p.modus == 'klausur' else _('oefenen') }}</p>
+  </div>
+  <div class="wb-stand">
+    {% if rest is not none %}<span class="wb-klok" id="klok" role="timer" data-rest="{{ rest }}" aria-label="{{ _('Resterende tijd') }}">{{ '%d:%02d' % (rest // 3600, rest % 3600 // 60) }}</span>{% endif %}
+    <span class="stil klein" id="bewaard-stand" role="status">{% if p.bewaard %}{{ _('bewaard') }} {{ p.bewaard.strftime('%H:%M') }}{% else %}{{ _('nog niet bewaard') }}{% endif %}</span>
+  </div>
+</div>
+<p class="melding fout" id="wb-melding" role="alert" hidden></p>
+
+<nav class="tabs wb-tabs" aria-label="{{ _('Onderdelen') }}">
+  <a href="#paneel-sachverhalt" data-paneel="sachverhalt" aria-current="page">Sachverhalt</a>
+  <a href="#paneel-skizze" data-paneel="skizze">Skizze</a>
+  <a href="#paneel-uitwerking" data-paneel="uitwerking">Gutachten</a>
+  <a href="#paneel-wet" data-paneel="wet">Gesetz</a>
+</nav>
+
+<div class="wb" id="wb" data-poging="{{ p.id }}" data-revisie="{{ p.revisie }}" data-bewaard="{{ (p.bewaard.timestamp() * 1000) | int if p.bewaard else 0 }}"
+     data-t-bewaard="{{ _('bewaard') }}" data-t-bezig="{{ _('bewaren…') }}" data-t-offline="{{ _('niet bewaard (geen verbinding); de tekst staat op dit apparaat') }}"
+     data-t-conflict="{{ _('Op een ander apparaat is een nieuwere versie bewaard. Herlaad de pagina; wat je hier schreef staat nog in de velden.') }}"
+     data-t-terug="{{ _('Niet-bewaarde tekst van dit apparaat is teruggezet.') }}" data-t-om="{{ _('De tijd is om; de poging wordt ingeleverd.') }}">
+  <section class="wb-paneel" id="paneel-sachverhalt" data-paneel="sachverhalt" lang="de">
+    <h2>Sachverhalt</h2>
+    {{ sachverhalt }}
+    {% if c.fallfrage %}<h3>Fallfrage</h3>{{ fallfrage }}{% endif %}
+  </section>
+
+  <form method="post" action="/klausur/poging/{{ p.id }}/bewaar" id="werkblad" class="wb-form">
+    <section class="wb-paneel" id="paneel-skizze" data-paneel="skizze">
+      <h2>Lösungsskizze</h2>
+      <div class="wb-knoppen" aria-label="{{ _('Anspruchsgrundlagen in de gebruikelijke volgorde invoegen') }}">
+        {% for sleutel, naam in groepen.items() %}<button type="button" class="knop klein" data-voeg="{{ 'ABCDE'[loop.index0] }}. {{ naam }}">{{ naam.split(' ')[0] }}</button>{% endfor %}
+        <button type="button" class="knop klein" data-voeg="I. Anspruch entstanden&#10;II. Anspruch nicht untergegangen&#10;III. Anspruch durchsetzbar">I. · II. · III.</button>
+      </div>
+      <textarea name="skizze" id="skizze" rows="12" lang="de" spellcheck="false" placeholder="A. K gegen V aus § 433 I 1 BGB&#10;  I. Anspruch entstanden&#10;  …">{{ p.skizze }}</textarea>
+    </section>
+    <section class="wb-paneel" id="paneel-uitwerking" data-paneel="uitwerking">
+      <h2>Gutachten <span class="stil klein" id="woorden"></span></h2>
+      <textarea name="uitwerking" id="uitwerking" rows="24" lang="de" placeholder="K könnte gegen V einen Anspruch auf … aus § … haben.">{{ p.uitwerking }}</textarea>
+    </section>
+    <div class="acties wb-acties">
+      <button class="knop" id="bewaar-knop">{{ _('Bewaren') }}</button>
+      <button class="knop primair" formaction="/klausur/poging/{{ p.id }}/inleveren" id="inlever-knop" data-vraag="{{ _('Inleveren? Daarna kun je niet meer verder schrijven.') }}">{{ _('Inleveren') }}</button>
+    </div>
+  </form>
+
+  <section class="wb-paneel" id="paneel-wet" data-paneel="wet">
+    <h2>Gesetz</h2>
+    <form method="get" action="/klausur/wet" target="_blank" class="wet-zoek" id="wet-zoek">
+      <input type="search" name="q" placeholder="433 · § 119 II · Verjährung" aria-label="{{ _('Artikel of woorden in de wettekst') }}" autocapitalize="none" enterkeyhint="search">
+      <button class="knop klein">{{ _('Zoek') }}</button>
+    </form>
+    <div id="wet-uit" class="wet-uit" aria-live="polite"><p class="stil klein">{{ _('Alleen de wettekst, zonder je markeringen en notities.') }}</p></div>
+  </section>
+</div>
+{% endblock %}
+{% block scripts %}<script src="/static/js/klausur.js?v={{ sv }}"></script>{% endblock %}
