@@ -1,0 +1,29 @@
+{% extends "base.html" %}
+{% block titel %}{{ _('Wat ik steeds mis') }} · Klausur · Synoptikon{% endblock %}
+{% block inhoud %}
+<p class="kruimel"><a href="/klausur">Klausur</a></p>
+<h1>{{ _('Wat ik steeds mis') }}</h1>
+{% if request.query_params.get('voorstel') %}<p class="melding ok" role="status">{{ _('Kaartvoorstel gemaakt.') }} <a href="/leren/voorstellen?lijst={{ request.query_params.get('voorstel') }}">{{ _('Voorstellen beoordelen') }} ›</a></p>{% endif %}
+{% if not gemist %}
+<p class="stil">{{ _('Nog niets. Dit overzicht vult zich met de Prüfungspunkte die in een beoordeling niet (helemaal) goed gingen, gegroepeerd per norm.') }}</p>
+{% else %}
+<p class="hint">{{ _('Per norm of probleem: hoe vaak het aan de orde was en hoe vaak het misging. Bovenaan wat in meer dan één casus misging.') }}</p>
+<ul class="pp-lijst gemist-lijst">
+{% for g in gemist %}
+  <li class="pp {% if g.steeds %}st-gemist{% else %}st-deels{% endif %}" id="pr-{{ g.probleem_id }}">
+    <div class="pp-kop">
+      {% if g.ref %}<a href="{{ g.ref.url }}"><b>{{ g.ref.citeer }}</b></a>{% else %}<b lang="de">{{ g.titel }}</b>{% endif %}
+      {% if g.steeds %}<span class="tag onzeker">{{ _('in {n} casussen', n=g.casussen | length) }}</span>{% endif %}
+      <span class="stil klein">{{ _('{a}× gemist, {b}× deels, {n}× aan de orde', a=g.gemist, b=g.deels, n=g.keren) }}</span>
+    </div>
+    {% if g.ref %}<p class="klein" lang="de">{{ g.titels | join(' · ') }}</p>{% endif %}
+    <p class="klein">{% for cid, titel in g.casussen.items() %}<a href="/klausur/poging/{{ g.pogingen[cid] }}#beoordeling">{{ titel }}</a>{% if not loop.last %} · {% endif %}{% endfor %}</p>
+    {% if g.kaart_id %}<p class="klein kaartknop"><a href="/leren/kaart/{{ g.kaart_id }}">✓ {{ _('kaartvoorstel gemaakt') }}</a></p>
+    {% elif mag_bewerken and g.probleem_id %}<form method="post" action="/klausur/probleem/{{ g.probleem_id }}/kaart" class="kaartknop" data-kaartknop data-klaar="✓ {{ _('kaartvoorstel gemaakt') }}">
+      <input type="hidden" name="terug" value="/klausur/problemen"><button class="knop klein">＋ {{ _('Kaartvoorstel') }}</button></form>{% endif %}
+  </li>
+{% endfor %}
+</ul>
+{% endif %}
+{% endblock %}
+{% block scripts %}<script src="/static/js/klausur.js?v={{ sv }}"></script>{% endblock %}

@@ -1,0 +1,50 @@
+{% extends "base.html" %}
+{% block titel %}Klausur · Synoptikon{% endblock %}
+{% block inhoud %}
+<div class="paginakop">
+  <h1>Klausur</h1>
+  <div class="acties">
+    <a class="knop" href="/klausur/problemen">{{ _('Wat ik steeds mis') }}{% if gemist %} · {{ gemist }}{% endif %}</a>
+    {% if mag_bewerken %}<a class="knop primair" href="/klausur/nieuw">{{ _('Nieuwe casus') }}</a>{% endif %}
+  </div>
+</div>
+
+{% if lopend %}
+<section class="blok">
+  <h2>{{ _('Lopend') }}</h2>
+  <ul class="casuslijst">
+  {% for p in lopend %}
+    <li class="casus-kaart lopend">
+      <a class="casus-titel" href="/klausur/poging/{{ p.id }}">{{ p.casus.titel }}</a>
+      <span class="stil klein">{{ _('Klausurmodus') if p.modus == 'klausur' else _('oefenen') }} · {{ _('begonnen {datum}', datum=p.begonnen.strftime('%d-%m %H:%M')) }}
+        {%- if rest[p.id] is not none %} · {{ _('nog {n} min', n=(rest[p.id] // 60)) }}{% endif %} · {{ n_('{n} woord', '{n} woorden', p.woorden) }}</span>
+      <a class="knop klein primair" href="/klausur/poging/{{ p.id }}">{{ _('Verder schrijven') }}</a>
+    </li>
+  {% endfor %}
+  </ul>
+</section>
+{% endif %}
+
+<section class="blok">
+  <h2>{{ _('Casussen') }}</h2>
+  {% if not casussen %}
+  <p class="stil">{{ _('Nog geen casussen. Plak er een of laat Claude er een schrijven.') }}</p>
+  {% endif %}
+  <ul class="casuslijst">
+  {% for c in casussen %}
+    {% set p = laatste.get(c.id) %}
+    <li class="casus-kaart">
+      <a class="casus-titel" href="/klausur/{{ c.id }}">{{ c.titel }}</a>
+      <span class="stil klein">{{ c.niveau_label }}{% if c.vak %} · {{ c.vak }}{% endif %}{% if c.onderwerp %} · {{ c.onderwerp }}{% endif %}</span>
+      <span class="klein">
+        {% if c.herkomst == 'seed' %}<span class="tag">{{ _('voorbeeld') }}</span>{% elif c.herkomst == 'claude' %}<span class="tag">Claude</span>{% endif %}
+        {% if c.status in ('wacht', 'bezig') %}<span class="tag">{{ _('Claude schrijft…') }}</span>{% elif c.status == 'fout' %}<span class="tag onzeker">{{ _('mislukt') }}</span>{% endif %}
+        {% if p and p.beoordeling and p.beoordeling.punkte is not none %}<a class="tag punkte" href="/klausur/poging/{{ p.id }}">{{ p.beoordeling.punkte }} P. · {{ note(p.beoordeling.punkte) }}</a>
+        {% elif p and not p.open %}<a class="tag" href="/klausur/poging/{{ p.id }}">{{ _('ingeleverd') }}</a>{% endif %}
+      </span>
+    </li>
+  {% endfor %}
+  </ul>
+</section>
+{% if not claude_aan %}<p class="stil klein">{{ _('Claude staat uit op deze installatie: casussen laten schrijven en laten beoordelen kan niet; plakken, oplossen en zelf nakijken wel.') }}</p>{% endif %}
+{% endblock %}

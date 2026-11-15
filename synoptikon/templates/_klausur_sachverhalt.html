@@ -1,0 +1,21 @@
+<div class="casus-tekst" {% if c.status in ('wacht', 'bezig') %}data-bezig="/klausur/{{ c.id }}/stand"{% endif %}>
+{% if c.status in ('wacht', 'bezig') %}
+  <p class="melding" role="status">{{ _('Claude schrijft de casus…') }} <span class="stil">{{ _('Dit duurt een paar minuten; de pagina ververst zichzelf.') }}</span></p>
+  {% if c.opdracht %}<pre class="stil klein opdracht">{{ c.opdracht }}</pre>{% endif %}
+{% elif c.status == 'fout' %}
+  <p class="melding fout" role="alert">{{ _('Het schrijven van de casus is mislukt.') }} {{ c.fout }}</p>
+  {% if claude_aan and mag_bewerken %}<form method="post" action="/klausur/{{ c.id }}/opnieuw"><button class="knop">{{ _('Opnieuw proberen') }}</button></form>{% endif %}
+{% else %}
+  <section class="sachverhalt" lang="de">
+    <h2>Sachverhalt</h2>
+    {{ sachverhalt }}
+    {% if c.fallfrage %}<h3>Fallfrage</h3>{{ fallfrage }}{% endif %}
+  </section>
+  {% if normen %}
+  <details class="klein casus-normen">
+    <summary>{{ _('Normen die de casus raakt') }} ({{ normen | length }})</summary>
+    <ul class="normen">{% for n in normen %}<li>{% if n.url %}<a href="{{ n.url }}">{{ n.tekst }}</a>{% else %}{{ n.tekst }} <span class="stil">· {{ _('niet in de lokale tekst') }}</span>{% endif %}</li>{% endfor %}</ul>
+  </details>
+  {% endif %}
+{% endif %}
+</div>

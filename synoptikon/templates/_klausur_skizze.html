@@ -1,0 +1,9 @@
+<ul class="skizze-boom" lang="de">
+{% for s in verwacht %}
+  <li class="niv-{{ s.niveau }}{% if s.probleem %} schwerpunkt{% endif %}">
+    <span class="skizze-titel">{{ s.titel_html }}</span>{% if s.probleem %} <span class="tag">Schwerpunkt</span>{% endif %}
+    {% if s.inhoud %}<span class="skizze-inhoud" lang="nl">{{ s.inhoud }}</span>{% endif %}
+    {% if s.normen %}<span class="klein skizze-normen">{% for n in s.normen %}{% if n.url %}<a href="{{ n.url }}">{{ n.tekst }}</a>{% else %}{{ n.tekst }}{% endif %}{% if not loop.last %} · {% endif %}{% endfor %}</span>{% endif %}
+  </li>
+{% endfor %}
+</ul>

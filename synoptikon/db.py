@@ -299,6 +299,7 @@ def init_db() -> None:
         for stmt in _splits_ddl(_FTS_DDL + _INDEXEN):
             conn.execute(text(stmt))
     _profielen()
+    _voorbeeldcasussen()
 
 
 def _profielen() -> None:
@@ -317,6 +318,14 @@ def _profielen() -> None:
                     taal=settings.ui_lang if eerste else "nl",
                     actief=eerste,
                 ))
+
+
+def _voorbeeldcasussen() -> None:
+    """De voorbeeldcasussen van de Klausurtrainer (seed/casussen.py), als ze er nog niet staan. Wat er staat blijft."""
+    from .seed.casussen import laad
+
+    with session() as s:
+        laad(s)
 
 
 def _splits_ddl(ddl: str) -> list[str]:

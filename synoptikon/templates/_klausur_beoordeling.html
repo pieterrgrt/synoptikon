@@ -1,0 +1,64 @@
+<section class="blok beoordeling" id="beoordeling" {% if p.status in ('wacht', 'beoordelen') %}data-bezig="/klausur/poging/{{ p.id }}/stand"{% endif %}>
+  <h2>{{ _('Beoordeling') }}</h2>
+{% if p.status in ('wacht', 'beoordelen') %}
+  <p class="melding" role="status">{{ _('Claude beoordeelt je uitwerking…') }} <span class="stil">{{ _('Dit duurt een paar minuten; de pagina ververst zichzelf.') }}</span></p>
+{% elif not w %}
+  {% if p.fout %}<p class="melding fout" role="alert">{{ _('De beoordeling is mislukt.') }} {{ p.fout }}</p>{% endif %}
+  {% if not claude_aan %}<p class="stil">{{ _('Claude staat uit op deze installatie.') }}</p>
+  {% elif mag_bewerken %}
+  <form method="post" action="/klausur/poging/{{ p.id }}/beoordeel">
+    <button class="knop primair">{{ _('Laten beoordelen door Claude') }}</button>
+    <span class="hint">{{ _('Per Prüfungspunkt, volgens een vast schema; meestal enkele dubbeltjes tot een euro.') }}</span>
+  </form>
+  {% endif %}
+{% else %}
+  <p class="melding klein">{{ _('Voorstel van Claude, niet geverifieerd.') }}{% if p.model %} <span class="stil">{{ p.model }} · ${{ '%.2f' % p.usd }}</span>{% endif %}</p>
+  <div class="punkte-kop">
+    {% if w.punkte is not none %}<span class="punkte-getal">{{ w.punkte }}</span><span class="punkte-note">Punkte · {{ w.note }}</span>{% endif %}
+    <span class="stil klein">{% for s in ('gezien', 'deels', 'gemist', 'fout') if w.telling[s] %}<span class="pp-status st-{{ s }}">{{ w.telling[s] }} {{ _(s) }}</span> {% endfor %}</span>
+  </div>
+  <div class="beoordeling-tekst">{{ w.gesamturteil }}</div>
+  {% if w.staerken or w.schwaechen %}
+  <div class="twee-kolommen">
+    {% if w.staerken %}<div><h3>{{ _('Sterk') }}</h3><ul class="lijst">{% for x in w.staerken %}<li>{{ x }}</li>{% endfor %}</ul></div>{% endif %}
+    {% if w.schwaechen %}<div><h3>{{ _('Zwak') }}</h3><ul class="lijst">{% for x in w.schwaechen %}<li>{{ x }}</li>{% endfor %}</ul></div>{% endif %}
+  </div>
+  {% endif %}
+
+  <div class="drie-oordelen">
+    <div><h3>Aufbau <span class="oordeel o-{{ w.aufbau.urteil }}">{{ oordeel(w.aufbau.urteil) }}</span></h3>{{ w.aufbau.kommentar }}</div>
+    <div><h3>Stil <span class="oordeel o-{{ w.stil.urteil }}">{{ oordeel(w.stil.urteil) }}</span></h3>{{ w.stil.kommentar }}
+      {% for b in w.stil.beispiele %}<blockquote class="stil-voorbeeld" lang="de"><p>„{{ b.zitat }}“</p>{% if b.problem %}<p class="stil klein" lang="{{ huidige_taal() }}">{{ b.problem }}</p>{% endif %}{% if b.besser %}<p><b>→</b> {{ b.besser }}</p>{% endif %}</blockquote>{% endfor %}</div>
+    <div><h3>Schwerpunktsetzung <span class="oordeel o-{{ w.schwerpunkte.urteil }}">{{ oordeel(w.schwerpunkte.urteil) }}</span></h3>{{ w.schwerpunkte.kommentar }}</div>
+  </div>
+
+  <h3>Prüfungspunkte</h3>
+  <ol class="pp-lijst">
+  {% for x in w.punten %}
+    <li class="pp st-{{ x.status }}" {% if x.rij %}id="pr-{{ x.rij.id }}"{% endif %}>
+      <div class="pp-kop"><span class="pp-status st-{{ x.status }}">{{ _(x.status) }}</span> <b lang="de">{{ x.titel_html }}</b>{% if x.probleem %} <span class="tag">Schwerpunkt</span>{% endif %}</div>
+      {% if x.normen %}<p class="pp-normen klein">{% for n in x.normen %}{% if n.url %}<a href="{{ n.url }}">{{ n.tekst }}</a>{% else %}<span title="{{ _('niet in de lokale tekst') }}">{{ n.tekst }}<sup>?</sup></span>{% endif %}{% if not loop.last %} · {% endif %}{% endfor %}</p>{% endif %}
+      {% if x.onderdelen %}<p class="pp-onderdelen klein">{% for label, waarde in x.onderdelen %}<span class="oordeel o-{{ waarde }}">{{ label }}: {{ oordeel(waarde) }}</span> {% endfor %}</p>{% endif %}
+      {% if x.erwartet %}<p class="klein"><span class="stil">{{ _('Verwacht') }}:</span> {{ x.erwartet }}</p>{% endif %}
+      {{ x.kommentar }}
+      {% if x.status != 'gezien' and x.rij %}{% set pr = x.rij %}{% include "_klausur_kaartknop.html" %}{% endif %}
+    </li>
+  {% endfor %}
+  </ol>
+
+  {% if w.fehlend %}
+  <h3>{{ _('Gemiste problemen') }}</h3>
+  <ul class="pp-lijst">
+  {% for x in w.fehlend %}
+    <li class="pp st-gemist" {% if x.rij %}id="pr-{{ x.rij.id }}"{% endif %}>
+      <div class="pp-kop"><b lang="de">{{ x.titel_html }}</b></div>
+      {% if x.normen %}<p class="pp-normen klein">{% for n in x.normen %}{% if n.url %}<a href="{{ n.url }}">{{ n.tekst }}</a>{% else %}<span title="{{ _('niet in de lokale tekst') }}">{{ n.tekst }}<sup>?</sup></span>{% endif %}{% if not loop.last %} · {% endif %}{% endfor %}</p>{% endif %}
+      {{ x.erklaerung }}
+      {% if x.rij %}{% set pr = x.rij %}{% include "_klausur_kaartknop.html" %}{% endif %}
+    </li>
+  {% endfor %}
+  </ul>
+  {% endif %}
+  {% if claude_aan and mag_bewerken %}<form method="post" action="/klausur/poging/{{ p.id }}/beoordeel" class="klein" data-bevestig="{{ _('Opnieuw laten beoordelen? Dat kost opnieuw geld.') }}"><button class="knop-tekst">{{ _('Opnieuw laten beoordelen') }}</button></form>{% endif %}
+{% endif %}
+</section>

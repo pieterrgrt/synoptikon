@@ -1,0 +1,23 @@
+<div class="wet-blok">
+{% if w.artikel %}
+  <div class="wet-nav">
+    {% if w.vorig %}<a href="/klausur/wet?q={{ w.vorig.citeer | urlencode }}" data-wet="{{ w.vorig.citeer }}">‹ {{ w.vorig.nummer }}</a>{% else %}<span></span>{% endif %}
+    <b>{{ w.ref.citeer }}</b>
+    {% if w.volgend %}<a href="/klausur/wet?q={{ w.volgend.citeer | urlencode }}" data-wet="{{ w.volgend.citeer }}">{{ w.volgend.nummer }} ›</a>{% else %}<span></span>{% endif %}
+  </div>
+  {% if w.artikel.opschrift %}<p class="wet-opschrift">{{ w.artikel.opschrift }}</p>{% endif %}
+  <div class="wettekst" lang="{{ w.artikel.wettekst.taal or 'de' }}">{{ w.artikel.tekst | md_lid(w.ref.detail) }}</div>
+  {% if w.artikel.pad %}<p class="stil klein">{{ w.artikel.pad }}</p>{% endif %}
+{% elif w.treffers %}
+  <ul class="wet-treffers">
+  {% for r, opschrift, fragment in w.treffers %}
+    <li><a href="/klausur/wet?q={{ r.citeer | urlencode }}" data-wet="{{ r.citeer }}">{{ r.citeer }}</a>{% if opschrift %} <span class="stil">{{ opschrift }}</span>{% endif %}
+      <div class="klein">{{ fragment | safe }}</div></li>
+  {% endfor %}
+  </ul>
+{% elif w.q %}
+  <p class="stil">{{ _('Niets gevonden voor ‘{q}’ in de lokale wettekst.', q=w.q) }}</p>
+{% else %}
+  <p class="stil klein">{{ _('Alleen de wettekst, zonder je markeringen en notities.') }}</p>
+{% endif %}
+</div>

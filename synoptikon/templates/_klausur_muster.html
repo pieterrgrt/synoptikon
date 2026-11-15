@@ -1,0 +1,15 @@
+<section class="blok" id="muster" {% if c.muster_status in ('wacht', 'bezig') %}data-bezig="/klausur/{{ c.id }}/muster/stand"{% endif %}>
+  <h2>Musterlösung{% if c.musterloesung and not c.geverifieerd %} <span class="tag onzeker">{{ _('niet geverifieerd') }}</span>{% endif %}</h2>
+{% if c.muster_status in ('wacht', 'bezig') %}
+  <p class="melding" role="status">{{ _('Claude schrijft de Musterlösung…') }} <span class="stil">{{ _('Dit duurt een paar minuten; de pagina ververst zichzelf.') }}</span></p>
+{% else %}
+  {% if c.muster_status == 'fout' %}<p class="melding fout" role="alert">{{ _('Het schrijven van de Musterlösung is mislukt.') }} {{ c.muster_fout }}</p>{% endif %}
+  {% if c.musterloesung %}<div class="musterloesung" lang="de">{{ muster_html }}</div>
+  {% elif not claude_aan %}<p class="stil">{{ _('Er is nog geen Musterlösung, en Claude staat uit op deze installatie.') }}</p>{% endif %}
+  {% if claude_aan and mag_bewerken %}
+  <form method="post" action="/klausur/{{ c.id }}/muster" {% if c.musterloesung %}data-bevestig="{{ _('De Musterlösung opnieuw laten schrijven? Dat kost opnieuw geld.') }}"{% endif %}>
+    <button class="knop{% if not c.musterloesung %} primair{% endif %}">{{ _('Opnieuw laten schrijven') if c.musterloesung else _('Musterlösung laten schrijven door Claude') }}</button>
+  </form>
+  {% endif %}
+{% endif %}
+</section>

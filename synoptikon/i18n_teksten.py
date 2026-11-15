@@ -65,6 +65,9 @@ def _uit_gegevens() -> set[str]:
     uit |= {t for paar in KAARTSOORTEN.values() for t in paar} | set(FASEN.values())
     uit |= {w for paar in EU_SOORTEN.values() for w in paar}
     uit |= {label for label, _minuten in CASUS_NIVEAUS.values()} | set(PROBLEEM_STATUS.values())
+    from .services.klausur import OORDEEL
+
+    uit |= set(OORDEEL.values())
     uit |= set(SOORTEN.values()) | set(SOORTEN)  # ook de sleutels: de systematiek toont b.soort
     uit |= {"eigen", "officieel", "literatuur"}  # herkomst van een bronvertaling
     from .routes.begrippen import KAART_TEKSTEN

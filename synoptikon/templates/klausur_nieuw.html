@@ -1,0 +1,43 @@
+{% extends "base.html" %}
+{% block titel %}{{ _('Nieuwe casus') }} · Klausur · Synoptikon{% endblock %}
+{% block inhoud %}
+<p class="kruimel"><a href="/klausur">Klausur</a></p>
+<h1>{{ _('Nieuwe casus') }}</h1>
+{% if fout %}<p class="melding fout" role="alert">{{ fout }}</p>{% endif %}
+
+<section class="blok">
+  <h2>{{ _('Plakken') }}</h2>
+  <form method="post" action="/klausur/nieuw" class="formulier">
+    <label>{{ _('Titel') }} <input name="titel" maxlength="200" placeholder="{{ _('leeg = de eerste zin') }}"></label>
+    <label>Sachverhalt <textarea name="sachverhalt" rows="10" required lang="de"></textarea></label>
+    <label>Fallfrage <textarea name="fallfrage" rows="2" lang="de"></textarea></label>
+    <div class="rij">
+      <label>{{ _('Niveau') }} <select name="niveau">{% for k, v in niveaus.items() %}<option value="{{ k }}">{{ _(v[0]) }}</option>{% endfor %}</select></label>
+      <label>{{ _('Vak') }} <input name="vak" list="vakken" value="{{ vak }}" autocapitalize="none"></label>
+    </div>
+    <label>{{ _('Normen die de casus raakt') }} <input name="normen" placeholder="§ 119 BGB; § 122 BGB" autocapitalize="none">
+      <span class="hint">{{ _('Gescheiden door puntkomma’s. Leeg: de normen die in de tekst zelf staan.') }}</span></label>
+    <div class="acties"><button class="knop primair">{{ _('Opslaan') }}</button></div>
+  </form>
+</section>
+
+<section class="blok">
+  <h2>{{ _('Door Claude laten schrijven') }}</h2>
+  {% if claude_aan %}
+  <form method="post" action="/klausur/genereer" class="formulier">
+    <label>{{ _('Onderwerp') }} <input name="onderwerp" required maxlength="200" value="{{ onderwerp }}" placeholder="Anfechtung wegen Eigenschaftsirrtums; Stellvertretung ohne Vertretungsmacht"></label>
+    <div class="rij">
+      <label>{{ _('Niveau') }} <select name="niveau">{% for k, v in niveaus.items() %}<option value="{{ k }}">{{ _(v[0]) }}</option>{% endfor %}</select></label>
+      <label>{{ _('Vak') }} <input name="vak" list="vakken" value="{{ vak }}" autocapitalize="none"></label>
+    </div>
+    <label>{{ _('Normen die erin moeten voorkomen') }} <input name="normen" value="{{ normen }}" placeholder="§ 119 Abs. 2 BGB; § 179 BGB" autocapitalize="none"></label>
+    <label>{{ _('Extra aanwijzing') }} <input name="aanwijzing" placeholder="{{ _('bijv. drie personen, met een Streitstand') }}"></label>
+    <p class="hint">{{ _('Claude leest de normen in de lokale wettekst en levert de Sachverhalt met een Lösungsskizze. Beide zijn een voorstel en niet geverifieerd. Een AG-Fall kost enkele dubbeltjes, een Klausur van vijf uur meer.') }}</p>
+    <div class="acties"><button class="knop primair">{{ _('Laten schrijven') }}</button></div>
+  </form>
+  {% else %}
+  <p class="stil">{{ _('Claude staat uit op deze installatie.') }}</p>
+  {% endif %}
+</section>
+<datalist id="vakken">{% for v in vakken %}<option value="{{ v }}">{% endfor %}</datalist>
+{% endblock %}
