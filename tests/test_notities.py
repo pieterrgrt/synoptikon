@@ -115,6 +115,7 @@ def test_voorstellen_beoordelen_en_wunderkammer(map_, nep, client, monkeypatch):
     assert r.status_code == 303 and "overgenomen=2&afgewezen=4" in r.headers["location"]
     naar_wk = [k for k in client.get("/api/wk/kaarten", headers=hdr).json()["kaarten"] if k["lijst"] == lid]
     assert sorted(k["soort"] for k in naar_wk) == ["arrest", "artikel"]
+    assert all(k["herkomst"] == "Zivilrecht 1A/1 Einführung/Vorlesung.md" for k in naar_wk)  # Wunderkammer: de collegeweek
 
     # Ongewijzigd: geen nieuwe aanroep. Gewijzigd: wel, met wat er al is (ook afgewezen) in de opdracht.
     with database.session() as s:

@@ -23,12 +23,14 @@ Alleen voor profielen die de koppeling op /profiel aan hebben gezet; anders 403 
                              {"format", "version": 2, "exported", "profiel", "lijsten": [{id, naam, vak, examen, omschrijving}],
                               "kaarten": [{uid, lijst, soort, soort_label, voor, achter, url, refs: [{stelsel, wet, nummer}],
                               zaak, vindplaats, gewijzigd, lees_url, tegenhangers: [{stelsel, wet, nummer, citeer, url,
-                              thema, rol}], cloze}]}
+                              thema, rol}], cloze, herkomst}]}
                              Alleen actieve kaarten uit lijsten met "naar Wunderkammer"; voor/achter zijn HTML, url,
                              lees_url (het artikel in zijn wet, `/lezen/…`) en de url's van de tegenhangers zijn paden in
                              Synoptikon. Een uid die niet meer meekomt is verwijderd of uitgezet. lees_url en tegenhangers
                              zijn later toegevoegd (nog steeds versie 2); een oudere Wunderkammer negeert ze. Zo ook
-                             `cloze` (soort cloze: de lid-tekst met het gat als {{c1::…}}, anders null).
+                             `cloze` (soort cloze: de lid-tekst met het gat als {{c1::…}}, anders null), en `herkomst`
+                             (de notitie waaruit de kaart kwam, pad onder de Humboldt-map, of null): Wunderkammer
+                             hangt de kaart daarmee aan een college van het semesterplan.
 
 Na een wijziging seint Synoptikon `POST <Wunderkammer>/api/synoptikon/push` met hetzelfde token (services/wk.py), zodat
 Wunderkammer meteen ophaalt in plaats van bij de volgende cron.
@@ -133,7 +135,10 @@ def kaarten(profiel: str = "", db: Session = Depends(get_session)):
                             gewijzigd=k.gewijzigd.isoformat(), lees_url=lees_url(ref) if ref else None,
                             tegenhangers=bouwer.tegenhangers(ref) if ref else [],
                             # cloze: wettekst met het gat als {{c1::…}}; Wunderkammer maakt er een typkaart van
-                            cloze=bouwer.cloze(k)))
+                            cloze=bouwer.cloze(k),
+                            # de notitie waaruit de kaart kwam ('Zivilrecht 1A/4/4.1_Geschäftsfähigkeit.pdf.md'):
+                            # Wunderkammer leidt daar de collegeweek uit af
+                            herkomst=k.herkomst or None))
     return dict(format=FORMAT, version=2, exported=datetime.now(timezone.utc).replace(microsecond=0).isoformat(),
                 profiel=p.gebruikersnaam,
                 lijsten=[dict(id=l.id, naam=l.naam, vak=l.vak, examen=l.examen.isoformat() if l.examen else None,
