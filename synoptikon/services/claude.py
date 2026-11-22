@@ -22,7 +22,7 @@ from sqlalchemy import func, select
 from sqlalchemy.orm import Session
 
 from ..config import settings
-from ..models import Bron, LlmGebruik, Wettekst
+from ..models import Bron, LlmGebruik, Profiel, Wettekst
 from . import wetboek, zoeken
 from .artikelen import Ref, herken
 from .correspondentie import Context, wettekst_artikel
@@ -53,6 +53,18 @@ def _anthropic(api_key: str):
 
 
 client_factory: Callable = _anthropic
+
+
+def voor_wie(db: Session, profiel_id: int | None) -> str:
+    """Voor wie Claude werkt, voor in een systeemprompt: naam en wat het profiel over studie en achtergrond zegt."""
+    p = db.get(Profiel, profiel_id) if profiel_id else None
+    if p is None:
+        return "Je werkt voor een rechtenstudent."
+    over = (p.achtergrond or "").strip()
+    if not over:
+        return f"Je werkt voor {p.naam}, een rechtenstudent. Over studie en achtergrond is niets bekend."
+    return (f"Je werkt voor {p.naam}. Wat {p.naam} over studie en achtergrond opgeeft:\n<achtergrond>\n{over}\n</achtergrond>\n"
+            "Stem uitleg en voorbeelden daarop af, bijvoorbeeld door verschillen met het recht te noemen dat al bekend is.")
 
 
 def beschikbaar() -> bool:
@@ -123,7 +135,7 @@ TOOLS = [
     },
     {
         "name": "eigen_bronnen_doorzoeken",
-        "description": "Doorzoekt de bronnen die Pieter zelf in Synoptikon heeft vastgelegd: rechtspraak (met kernoverweging), literatuur en wetsbronnen.",
+        "description": "Doorzoekt de bronnen die in Synoptikon zijn vastgelegd: rechtspraak (met kernoverweging), literatuur en wetsbronnen.",
         "input_schema": {
             "type": "object",
             "properties": {"zoektermen": {"type": "string"}},
