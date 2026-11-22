@@ -722,7 +722,7 @@ KAARTSOORTEN: dict[str, tuple[str, str]] = {
     "kern": ("inhoud → artikel", "Welk artikel regelt dit?"),
     "plaats": ("waar staat het", "Plaats in de systematiek van de wet"),
     "tegenhanger": ("tegenhanger", "Het corresponderende artikel in een ander stelsel"),
-    "cloze": ("voorwaarde invullen", "Elke voorwaarde die je markeerde als gat in de tekst (typen in Wunderkammer)"),
+    "cloze": ("voorwaarde invullen", "Elke voorwaarde die je markeerde als gat in de tekst"),
     "arrest": ("arrest → rechtsregel", "Wat besliste de rechter?"),
     "feiten": ("feiten → arrest", "Welk arrest hoort bij deze feiten?"),
     "vrij": ("vrije kaart", "Eigen vraag en antwoord"),

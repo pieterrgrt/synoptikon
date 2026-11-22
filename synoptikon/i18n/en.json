@@ -857,7 +857,6 @@
  "(niet meer gevonden in de wettekst)": "(no longer found in the statute)",
  "Welke voorwaarde?": "Which requirement?",
  "voorwaarde invullen": "fill in the requirement",
- "Elke voorwaarde die je markeerde als gat in de tekst (typen in Wunderkammer)": "Each requirement you marked as a gap in the text (typing in Wunderkammer)",
  "over": "on",
  "Samen in een thema": "Together in a theme",
  "\"{wet}\" ken ik niet als wet, of die wet is niet ingelezen. Daarom staat hier geen artikel: een artikel uit een andere wet zou het verkeerde zijn.": "I don't know \"{wet}\" as a statute, or it hasn't been imported. So no article is shown: an article from another statute would be the wrong one.",
@@ -1064,5 +1063,7 @@
  "Je kunt jezelf niet verwijderen.": "You cannot delete yourself.",
  "Profiel verwijderd.": "Profile deleted.",
  "Profiel {naam} met al zijn gegevens definitief verwijderen?": "Permanently delete profile {naam} with all its data?",
- "Verwijderen": "Delete"
+ "Verwijderen": "Delete",
+ "Elke voorwaarde die je markeerde als gat in de tekst": "Each requirement you marked as a gap in the text",
+ "typen in Wunderkammer": "typing in Wunderkammer"
 }

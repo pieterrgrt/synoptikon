@@ -43,6 +43,7 @@
   <div class="acties"><button class="knop primair">{{ _('Opslaan') }}</button></div>
 </form>
 
+{% if wk_voor %}
 <h2 id="wunderkammer">{{ _('Koppeling met Wunderkammer') }}</h2>
 <p class="hint">{{ _('Wunderkammer is de herhaal-app. Met de koppeling aan haalt Wunderkammer de kaarten uit je leerlijsten op en plant de herhaling; de stand per kaart komt hier terug. Wunderkammer leest ook de wetteksten bij de normen in je eigen kaarten.') }}</p>
 {% if wk_ingesteld %}
@@ -53,6 +54,7 @@
 </form>
 {% else %}
 <p class="stil">{{ _('Nog niet beschikbaar: de beheerder moet eerst een token instellen (SYNOPTIKON_WK_TOKEN, en hetzelfde in Wunderkammer).') }}</p>
+{% endif %}
 {% endif %}
 
 <h2>{{ _('Wachtwoord wijzigen') }}</h2>

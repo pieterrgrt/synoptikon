@@ -857,7 +857,6 @@
  "(niet meer gevonden in de wettekst)": "(non più presente nel testo di legge)",
  "Welke voorwaarde?": "Quale requisito?",
  "voorwaarde invullen": "completare il requisito",
- "Elke voorwaarde die je markeerde als gat in de tekst (typen in Wunderkammer)": "Ogni requisito evidenziato come lacuna nel testo (da digitare in Wunderkammer)",
  "over": "su",
  "Samen in een thema": "Insieme in un tema",
  "\"{wet}\" ken ik niet als wet, of die wet is niet ingelezen. Daarom staat hier geen artikel: een artikel uit een andere wet zou het verkeerde zijn.": "Non conosco «{wet}» come legge, oppure la legge non è stata importata. Per questo non è mostrato alcun articolo: un articolo di un'altra legge sarebbe quello sbagliato.",
@@ -1064,5 +1063,7 @@
  "Je kunt jezelf niet verwijderen.": "Non puoi eliminare te stesso.",
  "Profiel verwijderd.": "Profilo eliminato.",
  "Profiel {naam} met al zijn gegevens definitief verwijderen?": "Eliminare definitivamente il profilo {naam} con tutti i suoi dati?",
- "Verwijderen": "Elimina"
+ "Verwijderen": "Elimina",
+ "Elke voorwaarde die je markeerde als gat in de tekst": "Ogni requisito evidenziato come lacuna nel testo",
+ "typen in Wunderkammer": "da digitare in Wunderkammer"
 }
