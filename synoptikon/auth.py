@@ -123,6 +123,13 @@ def huidig_profiel(request: Request) -> Profiel | None:
     return p
 
 
+def mag_bewerken(request: Request) -> bool:
+    """Mag dit verzoek gedeelde inhoud wijzigen (redacteur, beheerder; zonder profiel ook)? Een lezer houdt alleen eigen
+    spullen bij (main._LEZER_POST)."""
+    p = huidig_profiel(request)
+    return p is None or p.mag_bewerken
+
+
 def profiel_uit_sso(request: Request) -> Profiel | None:
     """Het profiel bij een geldige domeincookie (sso.py), als dat profiel bestaat en aan staat."""
     naam = sso.lees(request.cookies.get(sso.COOKIE), settings.sso_geheim)

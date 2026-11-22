@@ -19,7 +19,7 @@
     {% if g.ref %}<p class="klein" lang="de">{{ g.titels | join(' · ') }}</p>{% endif %}
     <p class="klein">{% for cid, titel in g.casussen.items() %}<a href="/klausur/poging/{{ g.pogingen[cid] }}#beoordeling">{{ titel }}</a>{% if not loop.last %} · {% endif %}{% endfor %}</p>
     {% if g.kaart_id %}<p class="klein kaartknop"><a href="/leren/kaart/{{ g.kaart_id }}">✓ {{ _('kaartvoorstel gemaakt') }}</a></p>
-    {% elif mag_bewerken and g.probleem_id %}<form method="post" action="/klausur/probleem/{{ g.probleem_id }}/kaart" class="kaartknop" data-kaartknop data-klaar="✓ {{ _('kaartvoorstel gemaakt') }}">
+    {% elif g.probleem_id %}<form method="post" action="/klausur/probleem/{{ g.probleem_id }}/kaart" class="kaartknop" data-kaartknop data-klaar="✓ {{ _('kaartvoorstel gemaakt') }}">
       <input type="hidden" name="terug" value="/klausur/problemen"><button class="knop klein">＋ {{ _('Kaartvoorstel') }}</button></form>{% endif %}
   </li>
 {% endfor %}

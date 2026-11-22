@@ -46,11 +46,9 @@
   <div class="sachverhalt" lang="de">{{ sachverhalt }}{% if c.fallfrage %}<h3>Fallfrage</h3>{{ fallfrage }}{% endif %}</div>
 </details>
 
-{% if mag_bewerken %}
 <div class="acties">
   <form method="post" action="/klausur/{{ c.id }}/start"><input type="hidden" name="modus" value="{{ p.modus }}"><button class="knop">{{ _('Nog een keer proberen') }}</button></form>
   <form method="post" action="/klausur/poging/{{ p.id }}/verwijder" data-bevestig="{{ _('Deze poging met haar beoordeling verwijderen?') }}"><button class="knop gevaar klein">{{ _('Poging verwijderen') }}</button></form>
 </div>
-{% endif %}
 {% endblock %}
 {% block scripts %}<script src="/static/js/bezig.js?v={{ sv }}"></script><script src="/static/js/klausur.js?v={{ sv }}"></script>{% endblock %}

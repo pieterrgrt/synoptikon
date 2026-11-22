@@ -19,7 +19,7 @@
   {% if r.toelichting %}<div class="toelichting">{{ r.toelichting | md }}</div>{% endif %}
   {% if r.zekerheid == 'laag' %}<p class="hint">{{ _('Claude is hier niet zeker van.') }}</p>{% endif %}
   <div class="acties">
-    {% if r.bron and r.bron != 'lokaal' and mag_bewerken %}<a class="knop klein" href="/opzoeken/{{ o.id }}/corrigeer">{{ _('Kloppend maken') }}</a>{% endif %}
+    {% if r.bron and r.bron != 'lokaal' %}<a class="knop klein" href="/opzoeken/{{ o.id }}/corrigeer">{{ _('Kloppend maken') }}</a>{% endif %}
     {% if o.kaart_id %}<span class="leren-ster bewaard">★ {{ _('Bewaard') }}{% if o.kaart and o.kaart.lijst.vak %} · {{ o.kaart.lijst.vak }}{% endif %}</span>
     {% if o.kaart %}<form method="post" action="/leren/vak" class="inline vak-wissel">
       <input type="hidden" name="kaarten" value="{{ o.kaart_id }}"><input type="hidden" name="terug" value="/opzoeken?o={{ o.id }}#opzoeking-{{ o.id }}">

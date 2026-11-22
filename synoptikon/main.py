@@ -121,8 +121,12 @@ app.mount("/static", StaticFiles(directory=str(HIER / "static")), name="static")
 # ze op vaste paden op, zonder sessiecookie.
 # /api/wk/ heeft een eigen token (routes/wunderkammer.py) in plaats van de sessiecookie.
 _OPEN_PADEN = ("/login", "/aanmelden", "/static/", "/gezond", "/favicon.ico", "/apple-touch-icon", "/api/wk/", "/taal")
-# Wat een lezer mag posten: zijn eigen profiel, taal, leerlijsten (ook delen, liken, reageren, overnemen) en uitloggen.
-_LEZER_POST = ("/logout", "/profiel/", "/taal", "/leren", "/gedeeld/")
+# Wat een lezer mag posten: zijn eigen spullen. Profiel, taal, leerlijsten (ook delen, liken, reageren, overnemen),
+# markeringen, Klausuren en opzoekingen, en uitloggen. Gedeelde inhoud (vragen, begrippen, bronnen, stelsels, thema's)
+# blijft voor een redacteur. Waar een eigen actie gedeelde inhoud raakt, kijkt de route zelf naar de rol: een
+# voorbeeldcasus (routes/klausur.py) en de Bron achter een opzoeking (routes/opzoeken.py). Het CSS-blok `.alleen-lezen`
+# (static/css/app.css) toont dezelfde formulieren.
+_LEZER_POST = ("/logout", "/profiel/", "/taal", "/leren", "/gedeeld/", "/markeringen", "/klausur/", "/opzoeken/")
 
 
 def _taal_van(request: Request) -> str:

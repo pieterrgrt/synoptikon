@@ -356,8 +356,10 @@ def regel_terugval(r: dict) -> str:
     return "" if r.get("bron") == "cellar" else (r.get("toelichting") or "")
 
 
-def bron_uit(db: Session, o: Opzoeking) -> Bron | None:
-    """Een uitspraak uit een opzoeking als Bron (rechtspraak), zodat er een arrestkaart van kan komen."""
+def bron_uit(db: Session, o: Opzoeking, bron_bijwerken: bool = True) -> Bron | None:
+    """Een uitspraak uit een opzoeking als Bron (rechtspraak), zodat er een arrestkaart van kan komen.
+
+    `bron_bijwerken=False` (een lezer): een bestaande Bron is gedeelde inhoud en blijft zoals ze is."""
     r = o.resultaat or {}
     if r.get("bron_id"):
         return db.get(Bron, r["bron_id"])
@@ -373,7 +375,7 @@ def bron_uit(db: Session, o: Opzoeking) -> Bron | None:
     vindplaats = (r.get("vindplaats") or "").strip() or None
     if vindplaats and (b := db.scalar(select(Bron).where(Bron.vindplaats == vindplaats))):
         # een eerdere, ongeverifieerde gok van Claude ('Niet vastgesteld') wordt bijgewerkt met wat nu wél vaststaat
-        if r.get("bron") in ("cellar", "rechtspraak", "eigen") and (b.opmerking or "").startswith(OPMERKING["claude"]):
+        if bron_bijwerken and r.get("bron") in ("cellar", "rechtspraak", "eigen") and (b.opmerking or "").startswith(OPMERKING["claude"]):
             b.citeertitel = (r.get("citeer") or b.citeertitel)[:200]
             b.titel = (r.get("titel") or None) and r["titel"][:300]
             b.url = r.get("url") or b.url
@@ -403,11 +405,12 @@ def _vindplaats_type(vindplaats: str | None) -> str | None:
 VELDEN = ("citeer", "titel", "vindplaats", "url", "plaats", "toelichting")
 
 
-def corrigeer(db: Session, o: Opzoeking, velden: dict[str, str], stelsel: str | None = None) -> Opzoeking:
+def corrigeer(db: Session, o: Opzoeking, velden: dict[str, str], stelsel: str | None = None, bron_bijwerken: bool = True) -> Opzoeking:
     """Zelf verbeteren: de opzoeking wordt `bron: "eigen"`, zodat 'niet geverifieerd' verdwijnt.
 
     Hoort er al een Bron bij (de uitspraak is eerder bewaard), dan wordt die bijgewerkt; anders komt ze er pas bij het
-    bewaren (`bron_uit`), met de gecorrigeerde gegevens."""
+    bewaren (`bron_uit`), met de gecorrigeerde gegevens. Een lezer (`bron_bijwerken=False`) verbetert alleen zijn eigen
+    opzoeking; de Bron is gedeelde inhoud."""
     r = dict(o.resultaat or {})
     for k in VELDEN:
         if k in velden:
@@ -416,7 +419,7 @@ def corrigeer(db: Session, o: Opzoeking, velden: dict[str, str], stelsel: str | 
         r["stelsel"] = stelsel.strip().upper()
     r.update(bron="eigen", zekerheid="hoog")
     o.resultaat, o.status, o.fout = r, "klaar", None
-    if o.bron_id and (b := db.get(Bron, o.bron_id)):
+    if bron_bijwerken and o.bron_id and (b := db.get(Bron, o.bron_id)):
         b.citeertitel = (r.get("citeer") or b.citeertitel)[:200]
         b.titel = (r.get("titel") or None) and r["titel"][:300]
         b.vindplaats = (r.get("vindplaats") or None) and r["vindplaats"][:200]

@@ -4,7 +4,7 @@
   {% if c.opdracht %}<pre class="stil klein opdracht">{{ c.opdracht }}</pre>{% endif %}
 {% elif c.status == 'fout' %}
   <p class="melding fout" role="alert">{{ _('Het schrijven van de casus is mislukt.') }} {{ c.fout }}</p>
-  {% if claude_aan and mag_bewerken %}<form method="post" action="/klausur/{{ c.id }}/opnieuw"><button class="knop">{{ _('Opnieuw proberen') }}</button></form>{% endif %}
+  {% if claude_aan and (c.profiel_id or mag_bewerken) %}<form method="post" action="/klausur/{{ c.id }}/opnieuw"><button class="knop">{{ _('Opnieuw proberen') }}</button></form>{% endif %}
 {% else %}
   <section class="sachverhalt" lang="de">
     <h2>Sachverhalt</h2>

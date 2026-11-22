@@ -5,7 +5,7 @@
 <h1>{{ _('Kloppend maken') }}</h1>
 <p class="stil"><span class="opzoeking-invoer">{{ o.invoer }}</span></p>
 {% if melding %}<p class="melding" role="status">{{ melding }}</p>{% endif %}
-<form method="post" class="formulier">
+<form method="post" action="/opzoeken/{{ o.id }}/corrigeer" class="formulier">
   <label>{{ _('Stelsel') }}
     <select name="stelsel">{% call(s) st.opties(stelsels, r.stelsel) %}<option value="{{ s.code }}" {% if r.stelsel == s.code %}selected{% endif %}>{{ s.code }} · {{ vt(s.naam) }}</option>{% endcall %}</select>
   </label>
