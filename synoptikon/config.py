@@ -50,10 +50,25 @@ class Settings:
     # container Wunderkammer intern moet bereiken (bijv. http://172.17.0.1:8093).
     wk_push: bool = field(default_factory=lambda: _env("SYNOPTIKON_WK_PUSH", "1") == "1")
     wk_push_url: str | None = field(default_factory=lambda: _env("SYNOPTIKON_WK_PUSH_URL"))
+    # Wunderkammer haalt de kaarten van één profiel op (WK_SYNOPTIKON_PROFIEL daar). Alleen dat profiel ziet de koppeling;
+    # leeg = profiel 1, net als in Wunderkammer.
+    wk_profiel: str | None = field(default_factory=lambda: _env("SYNOPTIKON_WK_PROFIEL"))
 
     @property
     def wk_ingesteld(self) -> bool:
         return len(self.wk_token or "") >= 24
+
+    def wk_voor(self, p) -> bool:
+        """Is dit het profiel dat Wunderkammer ophaalt? Alleen dan heeft de koppeling (en alles wat ernaar verwijst) zin."""
+        if p is None:
+            return False
+        if self.wk_profiel:
+            return (p.gebruikersnaam or "").lower() == self.wk_profiel.strip().lower()
+        return p.id == 1
+
+    def wk_aan(self, p) -> bool:
+        """Koppeling ingesteld, dit profiel is het profiel van Wunderkammer en het heeft hem aangezet."""
+        return self.wk_ingesteld and self.wk_voor(p) and bool(p.wunderkammer)
 
     # Eén aanmelding met de andere apps op het domein (sso.py): gedeeld geheim (≥ 32 tekens, hetzelfde als WK_SSO_SECRET
     # in Wunderkammer) en het cookiedomein, bijv. ".regoort.me". Leeg = uit.

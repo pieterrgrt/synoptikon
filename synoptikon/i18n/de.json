@@ -857,7 +857,6 @@
  "(niet meer gevonden in de wettekst)": "(nicht mehr im Gesetzestext gefunden)",
  "Welke voorwaarde?": "Welches Tatbestandsmerkmal?",
  "voorwaarde invullen": "Merkmal ergänzen",
- "Elke voorwaarde die je markeerde als gat in de tekst (typen in Wunderkammer)": "Jedes markierte Tatbestandsmerkmal als Lücke im Text (Tippen in Wunderkammer)",
  "over": "zu",
  "Samen in een thema": "Gemeinsam in einem Thema",
  "\"{wet}\" ken ik niet als wet, of die wet is niet ingelezen. Daarom staat hier geen artikel: een artikel uit een andere wet zou het verkeerde zijn.": "„{wet}“ kenne ich nicht als Gesetz, oder das Gesetz ist nicht eingelesen. Deshalb steht hier keine Vorschrift: eine aus einem anderen Gesetz wäre die falsche.",
@@ -1051,5 +1050,7 @@
  "passend": "angemessen",
  "niet passend": "verfehlt",
  "Gutachtenstil": "Gutachtenstil",
- "Urteilsstil": "Urteilsstil"
+ "Urteilsstil": "Urteilsstil",
+ "Elke voorwaarde die je markeerde als gat in de tekst": "Jedes markierte Tatbestandsmerkmal als Lücke im Text",
+ "typen in Wunderkammer": "Tippen in Wunderkammer"
 }
