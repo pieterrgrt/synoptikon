@@ -236,7 +236,7 @@ Uitgebreider gemotiveerd in de docstring van `synoptikon/models.py`.
    de echte kaarten (geen voorstellen), liken (♥), reageren (markdown) en nemen
    de lijst over: een eigen kopie, die via de koppeling in Wunderkammer komt.
    Medestudenten maken zelf een account met `SYNOPTIKON_AANMELDCODE` op
-   `/aanmelden` (rol lezer, geen limiet van vijf).
+   `/aanmelden` (rol lezer); hun profielen komen na plek 1–5.
 10. **Onderzoek door Claude** (bij een vraag, of meteen bij "Nieuwe vraag"): kies de
    stelsels; Claude leest de wetteksten via de lokale import (tools
    `artikel_lezen`, `wetteksten_doorzoeken`, `wet_zoeken`,
@@ -269,12 +269,17 @@ hoogstens 12 (meestal enkele dollars). Weigeringen gaan via server-side
 
 ## Profielen en talen
 
-**Profielen.** Vijf vaste plekken (`/beheer/profielen`, alleen de
-beheerder). Rollen: beheerder (alles), redacteur (lezen en invoeren), lezer
+**Profielen.** Plek 1–5 vult de beheerder in (`/beheer/profielen`);
+wie zich met de uitnodigingscode aanmeldt, krijgt een profiel daarna, zonder
+limiet. De beheerder ziet en beheert ze allemaal. Rollen: beheerder (alles), redacteur (lezen en invoeren), lezer
 (alleen lezen; de server weigert elke POST behalve profiel, taal en
 uitloggen). Een profiel gaat pas aan met een wachtwoord; een nieuw wachtwoord
 of uitzetten hoogt de sessieversie op, waardoor dat profiel overal wordt
-uitgelogd. Iedereen beheert zijn eigen naam, taal en wachtwoord op `/profiel`.
+uitgelogd. Iedereen beheert zijn eigen naam, taal en wachtwoord op `/profiel`. Een
+wachtwoord vergeten kan alleen de beheerder herstellen (nieuw wachtwoord op
+`/beheer/profielen` of met `synoptikon profiel`). Verwijderen (de beheerder bij
+elk profiel behalve het eigen, ieder ander op `/profiel` met zijn wachtwoord)
+wist het profiel en alles wat het bijhoudt; een van plek 1–5 komt leeg terug.
 Vanaf de server: `synoptikon profiel` (overzicht) en `synoptikon profiel 2
 --gebruikersnaam … --rol redacteur --wachtwoord --aan`.
 

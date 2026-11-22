@@ -308,22 +308,38 @@ def init_db() -> None:
     _voorbeeldcasussen()
 
 
+def lege_plek(i: int):
+    """Plek `i` (1–AANTAL_PROFIELEN) zoals bij de eerste start: profiel 1 is de beheerder en staat aan, de andere wachten
+    op een naam en wachtwoord. Ook na het verwijderen van een profiel op zo'n plek (routes/profielen.py)."""
+    from .models import Profiel
+
+    eerste = i == 1
+    return Profiel(
+        id=i,
+        gebruikersnaam="beheerder" if eerste else f"profiel{i}",
+        naam="Beheerder" if eerste else f"Profiel {i}",
+        rol="beheerder" if eerste else "lezer",
+        taal=settings.ui_lang if eerste else "nl",
+        actief=eerste,
+        sessie_versie=nieuwe_sessie_versie(),
+    )
+
+
+def nieuwe_sessie_versie() -> int:
+    """Willekeurig, niet 0: een cookie van een verwijderd profiel geldt dan niet voor wie daarna dezelfde id krijgt."""
+    import secrets
+
+    return 1 + secrets.randbelow(2**30)
+
+
 def _profielen() -> None:
-    """Vijf vaste plekken. Profiel 1 is de beheerder en staat aan; de andere wachten op een naam en wachtwoord."""
+    """De vaste plekken 1–5; wie zich aanmeldt (/aanmelden) krijgt een profiel daarna."""
     from .models import AANTAL_PROFIELEN, Profiel
 
     with session() as s:
         for i in range(1, AANTAL_PROFIELEN + 1):
             if s.get(Profiel, i) is None:
-                eerste = i == 1
-                s.add(Profiel(
-                    id=i,
-                    gebruikersnaam="beheerder" if eerste else f"profiel{i}",
-                    naam="Beheerder" if eerste else f"Profiel {i}",
-                    rol="beheerder" if eerste else "lezer",
-                    taal=settings.ui_lang if eerste else "nl",
-                    actief=eerste,
-                ))
+                s.add(lege_plek(i))
 
 
 def _voorbeeldcasussen() -> None:
