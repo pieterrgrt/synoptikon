@@ -246,6 +246,7 @@ _NIEUWE_KOLOMMEN = [
     ("profiel", "laatste_vak", "VARCHAR(60)"),
     ("profiel", "vak_sinds", "DATETIME"),
     ("kaart", "lid", "VARCHAR(8)"),
+    ("profiel", "achtergrond", "TEXT"),
 ]
 
 
@@ -266,6 +267,11 @@ _NA_KOLOM = {
     ("profiel", "wunderkammer"): "UPDATE profiel SET wunderkammer = 1 WHERE id IN (SELECT profiel_id FROM leerlijst WHERE naar_wk = 1)",
     ("leerlijst", "deelcode"): "CREATE UNIQUE INDEX IF NOT EXISTS ix_leerlijst_deelcode ON leerlijst(deelcode)",
     ("profiel", "stelsels"): _mijn_stelsels_sql,
+    # Wat tot 22-11-2026 vast in de prompts stond, was over profiel 1.
+    ("profiel", "achtergrond"): "UPDATE profiel SET achtergrond = 'Rechtenstudent aan de Humboldt-Universität zu Berlin "
+                                "(LL.M. Europäisches Recht und Rechtsvergleich) met een Nederlandse juridische achtergrond. "
+                                "Bereidt zich voor op de Klausur Zivilrecht Ia (BGB Allgemeiner Teil en Allgemeines "
+                                "Schuldrecht).' WHERE id = 1 AND achtergrond IS NULL",
 }
 
 
