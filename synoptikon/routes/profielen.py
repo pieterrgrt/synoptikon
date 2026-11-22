@@ -1,5 +1,8 @@
-"""Profielen: eigen profiel (naam, taal, mijn stelsels, wachtwoord), beheer van de vijf plekken, taalkeuze, en de
-stap /welkom bij de eerste keer inloggen (welke stelsels gebruik je?)."""
+"""Profielen: eigen profiel (naam, taal, mijn stelsels, wachtwoord, verwijderen), beheer van alle profielen, taalkeuze,
+en de stap /welkom bij de eerste keer inloggen (welke stelsels gebruik je?).
+
+Verwijderen wist het profiel en via ON DELETE CASCADE alles wat het bijhoudt. Een van de vaste plekken 1–5 komt meteen
+leeg terug (db.lege_plek)."""
 from __future__ import annotations
 
 from urllib.parse import quote
@@ -9,11 +12,11 @@ from fastapi.responses import RedirectResponse
 from sqlalchemy import func, select
 from sqlalchemy.orm import Session
 
-from .. import auth
+from .. import auth, sso
 from ..config import settings
-from ..db import get_session
+from ..db import get_session, lege_plek
 from ..i18n import TALEN, _
-from ..models import ROLLEN, Profiel
+from ..models import AANTAL_PROFIELEN, ROLLEN, Profiel
 from ..services import stelselkeuze
 from ..services.helpers import actieve_stelsels
 from . import render
@@ -173,6 +176,46 @@ def profiel_wachtwoord(request: Request, huidig: str = Form(...), nieuw: str = F
     resp = RedirectResponse("/profiel?klaar=wachtwoord", status_code=303)
     _cookie(resp, p)
     return resp
+
+
+def _verwijder(db: Session, p: Profiel) -> None:
+    pid = p.id
+    db.delete(p)
+    db.flush()
+    if pid <= AANTAL_PROFIELEN:
+        db.add(lege_plek(pid))
+        db.flush()
+
+
+@router.post("/profiel/verwijderen")
+def profiel_verwijderen(request: Request, wachtwoord: str = Form(""), db: Session = Depends(get_session)):
+    p = _mijn(request, db)
+    fout = None
+    if p.is_beheerder:
+        fout = _("Een beheerder kan zijn profiel niet zelf verwijderen.")
+    elif auth.controleer(db, p.gebruikersnaam, wachtwoord) is None:
+        fout = _("Het huidige wachtwoord klopt niet.")
+    if fout:
+        return render(request, "profiel.html", status_code=400, p=p, fout=None, fout_verwijderen=fout, klaar="",
+                      **_wk_stand(db, p), **_kiezer(db, p))
+    _verwijder(db, p)
+    resp = RedirectResponse("/login", status_code=303)
+    resp.delete_cookie(auth.COOKIE, path="/")
+    sso.wis(resp, settings.sso_domein)
+    return resp
+
+
+@router.post("/beheer/profielen/{pid}/verwijderen")
+def beheer_verwijderen(request: Request, pid: int, db: Session = Depends(get_session)):
+    _beheerder(request)
+    p = db.get(Profiel, pid)
+    if p is None:
+        raise HTTPException(404)
+    if pid == auth.huidig_profiel(request).id:
+        fout = _("Je kunt jezelf niet verwijderen.")
+        return RedirectResponse(f"/beheer/profielen?fout={quote(fout)}#p{pid}", status_code=303)
+    _verwijder(db, p)
+    return RedirectResponse("/beheer/profielen?klaar=verwijderd", status_code=303)
 
 
 @router.get("/beheer/profielen")

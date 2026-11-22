@@ -647,7 +647,7 @@ class InhoudVertaling(Base):
     gewijzigd: Mapped[datetime] = mapped_column(DateTime, default=now, onupdate=now)
 
 
-# Profielen: vast aantal plekken, elk met een eigen taal en wachtwoord.
+# Profielen: vijf vaste plekken die de beheerder invult (db._profielen), plus wie zich aanmeldt (/aanmelden).
 AANTAL_PROFIELEN = 5
 ROLLEN: dict[str, str] = {
     "beheerder": "beheerder",  # alles, ook profielen beheren

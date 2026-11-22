@@ -52,7 +52,7 @@ def cmd_profiel(args) -> int:
             return 0
         p = s.get(Profiel, args.id)
         if p is None:
-            print(f"Geen profiel {args.id}; er zijn plekken 1–5.", file=sys.stderr)
+            print(f"Geen profiel {args.id}; zie `synoptikon profiel` voor het overzicht.", file=sys.stderr)
             return 1
         if args.gebruikersnaam:
             p.gebruikersnaam = args.gebruikersnaam.strip().lower()
@@ -378,7 +378,7 @@ def main(argv: list[str] | None = None) -> int:
     s.add_argument("wachtwoord", nargs="?")
     s.set_defaults(fn=cmd_hash_password)
     s = sub.add_parser("profiel", help="profielen tonen of één profiel wijzigen (naam, rol, taal, wachtwoord, aan/uit)")
-    s.add_argument("id", type=int, nargs="?", help="plek 1–5; zonder id: overzicht")
+    s.add_argument("id", type=int, nargs="?", help="profiel-id (1–5 de vaste plekken, daarna wie zich aanmeldde); zonder id: overzicht")
     s.add_argument("--gebruikersnaam")
     s.add_argument("--naam")
     s.add_argument("--rol", help="beheerder · redacteur · lezer")
