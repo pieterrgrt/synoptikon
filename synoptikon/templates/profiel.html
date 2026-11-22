@@ -24,6 +24,10 @@
     </select>
     <span class="hint">{{ _('Welke taalversie van een verdrag je krijgt, hoe een wet wordt afgekort (VWEU of AEUV) en in welke taal je kaarten staan. Studeer je in Berlijn, dan zet je dit op Duits en blijft de interface Nederlands.') }}</span>
   </label>
+  <label>{{ _('Studie en achtergrond') }}
+    <textarea name="achtergrond" rows="3" maxlength="1000">{{ p.achtergrond or '' }}</textarea>
+    <span class="hint">{{ _('Claude krijgt dit mee bij casussen, beoordelingen en kaarten uit notities. Noem je studie, universiteit, welk recht je al kent en waarvoor je leert.') }}</span>
+  </label>
   <div class="acties"><button class="knop primair">{{ _('Opslaan') }}</button></div>
 </form>
 
@@ -59,4 +63,15 @@
   <label>{{ _('Nogmaals') }} <input type="password" name="nogmaals" required minlength="10" autocomplete="new-password"></label>
   <div class="acties"><button class="knop primair">{{ _('Wachtwoord wijzigen') }}</button></div>
 </form>
+
+{% if not p.is_beheerder %}
+<h2 id="verwijderen">{{ _('Profiel verwijderen') }}</h2>
+<p class="hint">{{ _('Wist je profiel en alles wat je bijhoudt: leerlijsten en kaarten, markeringen, leessets, Klausuren en opzoekingen. Dat is niet terug te draaien.') }}</p>
+{% if fout_verwijderen %}<p class="melding fout" role="alert">{{ fout_verwijderen }}</p>{% endif %}
+<form method="post" action="/profiel/verwijderen" class="formulier" data-bevestig="{{ _('Je profiel en al je gegevens definitief verwijderen?') }}">
+  <input type="text" name="gebruikersnaam" value="{{ p.gebruikersnaam }}" autocomplete="username" hidden>
+  <label>{{ _('Wachtwoord') }} <input type="password" name="wachtwoord" required autocomplete="current-password"></label>
+  <div class="acties"><button class="knop gevaar">{{ _('Profiel verwijderen') }}</button></div>
+</form>
+{% endif %}
 {% endblock %}

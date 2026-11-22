@@ -286,5 +286,5 @@ def muster_maak(request: Request, cid: int, db: Session = Depends(get_session)):
     if not claude.beschikbaar():
         raise HTTPException(503, _("Claude staat uit op deze installatie."))
     if c.muster_status not in ("wacht", "bezig"):
-        klausur.muster(db, c, interfacetaal())
+        klausur.muster(db, c, interfacetaal(), _pid(request))
     return RedirectResponse(f"/klausur/{cid}/muster", status_code=303)
