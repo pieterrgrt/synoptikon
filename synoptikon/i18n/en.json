@@ -1051,5 +1051,7 @@
  "passend": "appropriate",
  "niet passend": "off target",
  "Gutachtenstil": "Gutachtenstil",
- "Urteilsstil": "Urteilsstil"
+ "Urteilsstil": "Urteilsstil",
+ "Mijn vakken": "My subjects",
+ "Eén vak per regel. Deze vakken staan in de kiezers bij bewaren, Leren, Leessets en Klausur.": "One subject per line. These subjects appear in the pickers when saving, and under Study, Reading sets and Exam."
 }

@@ -142,6 +142,14 @@ def profiel_gegevens(request: Request, naam: str = Form(...), taal: str = Form(.
     return resp
 
 
+@router.post("/profiel/vakken")
+def profiel_vakken(request: Request, vakken: str = Form(""), db: Session = Depends(get_session)):
+    from ..services.vakken import lees
+
+    _mijn(request, db).vakken = lees(vakken)
+    return RedirectResponse("/profiel?klaar=vakken#vakken", status_code=303)
+
+
 @router.post("/profiel/wunderkammer")
 def profiel_wunderkammer(request: Request, aan: str = Form(""), db: Session = Depends(get_session)):
     p = _mijn(request, db)

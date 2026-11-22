@@ -29,6 +29,11 @@ def gevulde_db():
     database.init_db()
     with database.session() as s:
         seed(s)
+        # Zoals live: profiel 1 houdt de vakken waarmee het begon (db._NA_KOLOM), de andere profielen hebben er geen.
+        from synoptikon.models import Profiel
+        from synoptikon.services.vakken import START
+
+        s.get(Profiel, 1).vakken = ",".join(START)
     yield
     import shutil
 

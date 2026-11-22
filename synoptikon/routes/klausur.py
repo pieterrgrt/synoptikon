@@ -15,7 +15,7 @@ from ..db import get_session
 from ..i18n import _, taal as interfacetaal
 from ..models import ANSPRUCHSGRUPPEN, CASUS_NIVEAUS, Casus, CasusPoging, CasusProbleem
 from ..services import claude, klausur
-from ..services.vakken import VAKKEN
+from ..services.vakken import mijn as mijn_vakken
 from . import render
 
 router = APIRouter()
@@ -62,8 +62,8 @@ def overzicht(request: Request, db: Session = Depends(get_session)):
 
 
 @router.get("/klausur/nieuw")
-def nieuw(request: Request, onderwerp: str = "", normen: str = "", vak: str = ""):
-    return render(request, "klausur_nieuw.html", niveaus=CASUS_NIVEAUS, vakken=VAKKEN, claude_aan=claude.beschikbaar(),
+def nieuw(request: Request, onderwerp: str = "", normen: str = "", vak: str = "", db: Session = Depends(get_session)):
+    return render(request, "klausur_nieuw.html", niveaus=CASUS_NIVEAUS, vakken=mijn_vakken(db, _pid(request)), claude_aan=claude.beschikbaar(),
                   onderwerp=onderwerp[:200], normen=normen[:500], vak=vak[:60])
 
 
@@ -71,7 +71,7 @@ def nieuw(request: Request, onderwerp: str = "", normen: str = "", vak: str = ""
 def nieuw_opslaan(request: Request, titel: str = Form(""), sachverhalt: str = Form(""), fallfrage: str = Form(""), niveau: str = Form("ag"),
                   vak: str = Form(""), onderwerp: str = Form(""), normen: str = Form(""), db: Session = Depends(get_session)):
     if not sachverhalt.strip():
-        return render(request, "klausur_nieuw.html", status_code=400, niveaus=CASUS_NIVEAUS, vakken=VAKKEN, claude_aan=claude.beschikbaar(),
+        return render(request, "klausur_nieuw.html", status_code=400, niveaus=CASUS_NIVEAUS, vakken=mijn_vakken(db, _pid(request)), claude_aan=claude.beschikbaar(),
                       onderwerp=onderwerp, normen=normen, vak=vak, fout=_("Plak eerst een Sachverhalt."))
     c = klausur.maak(db, _pid(request), titel, sachverhalt, fallfrage, niveau, vak, onderwerp, normen)
     return RedirectResponse(f"/klausur/{c.id}", status_code=303)
@@ -83,7 +83,7 @@ def genereer(request: Request, onderwerp: str = Form(""), niveau: str = Form("ag
     if not claude.beschikbaar():
         raise HTTPException(503, _("Claude staat uit op deze installatie."))
     if not onderwerp.strip():
-        return render(request, "klausur_nieuw.html", status_code=400, niveaus=CASUS_NIVEAUS, vakken=VAKKEN, claude_aan=True,
+        return render(request, "klausur_nieuw.html", status_code=400, niveaus=CASUS_NIVEAUS, vakken=mijn_vakken(db, _pid(request)), claude_aan=True,
                       onderwerp=onderwerp, normen=normen, vak=vak, fout=_("Geef een onderwerp op."))
     c = klausur.genereer(db, _pid(request), onderwerp, niveau, vak, normen, aanwijzing, interfacetaal())
     return RedirectResponse(f"/klausur/{c.id}", status_code=303)
@@ -200,7 +200,7 @@ def casus(request: Request, cid: int, db: Session = Depends(get_session)):
     for p in eigen:
         klausur.sluit_als_tijd_om(p)
     return render(request, "klausur_casus.html", c=c, pogingen=list(reversed(eigen)), sachverhalt=k.md(c.sachverhalt), fallfrage=k.md(c.fallfrage),
-                  normen=k.normen(c.normen), niveaus=CASUS_NIVEAUS, vakken=VAKKEN, note=klausur.note, claude_aan=claude.beschikbaar(),
+                  normen=k.normen(c.normen), niveaus=CASUS_NIVEAUS, vakken=mijn_vakken(db, _pid(request)), note=klausur.note, claude_aan=claude.beschikbaar(),
                   mag_wijzigen=c.profiel_id == pid or _beheerder(request))
 
 

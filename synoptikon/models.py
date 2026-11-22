@@ -687,6 +687,9 @@ class Profiel(Base):
     # en de taal van de kaartzijden. Leeg = volg de interfacetaal. Wie in Berlijn recht studeert zet dit op 'de' en houdt
     # de interface in het Nederlands.
     rechtstaal: Mapped[str | None] = mapped_column(String(5))
+    # Mijn vakken (kommagescheiden, services/vakken.py): de kiezers bij bewaren, Leren, Leessets en Klausur, en de vakken
+    # die uit een onderwerp mogen volgen. Leeg = geen vakken; vakken van eigen lijsten staan dan nog wel in de kiezers.
+    vakken: Mapped[str | None] = mapped_column(Text)
 
     @property
     def stelsel_codes(self) -> list[str] | None:

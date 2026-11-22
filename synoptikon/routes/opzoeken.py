@@ -266,8 +266,9 @@ def snel_kies_vak(request: Request, stelsel: str = "", wet: str = "", nummer: st
     pid = _pid(request)
     ref = Ref(stelsel.upper(), nummer, wet or None) if stelsel and nummer else None
     onderwerp = (ref.stelsel, ref.wet, ref.nummer) if ref else (b.stelsel_code, None, None)
-    eigen = sorted({l.vak for l in leren.lijsten_van(db, pid) if l.vak and not l.naam.startswith(LIJST_PREFIX)} - set(vakken.VAKKEN))
-    return render(request, "vak_kiezen.html", ref=ref, bron=b, terug=_veilig(terug), vakken_lijst=[*vakken.VAKKEN, *eigen],
+    mijn = vakken.mijn(db, pid)
+    eigen = sorted({l.vak for l in leren.lijsten_van(db, pid) if l.vak and not l.naam.startswith(LIJST_PREFIX)} - set(mijn))
+    return render(request, "vak_kiezen.html", ref=ref, bron=b, terug=_veilig(terug), vakken_lijst=[*mijn, *eigen],
                   voorstel=vakken.kies(db, pid, "", *onderwerp))
 
 
