@@ -178,8 +178,10 @@ def herindeel(db: Session, profiel_id: int = 1) -> dict[str, int]:
 
 # --- Claude ---------------------------------------------------------------------------------------------------------
 
-SYSTEM = """Je maakt leerkaarten uit de collegeaantekeningen van Pieter, rechtenstudent aan de HU Berlin (LL.M.
-Europäisches Recht und Rechtsvergleich). Hij herhaalt ze met spaced repetition in Wunderkammer.
+SYSTEM = """{wie}
+
+Je maakt leerkaarten uit de collegeaantekeningen van deze student, die ze herhaalt met spaced repetition in
+Wunderkammer.
 
 Werkwijze:
 - Lees de notitie en kies wat examenstof is: centrale normen, definities, Tatbestandsmerkmale, Prüfungsschemata,
@@ -277,7 +279,7 @@ def _kaarten_uit(db: Session, lijst: Leerlijst, b: Bestand, voorstel: list[dict]
 
 def verwerk_notitie(db: Session, profiel_id: int, b: Bestand) -> list[Kaart]:
     lijst = lijst_voor(db, profiel_id, b.vak)
-    antwoord, _kosten = claude.loop(db, "notities", SYSTEM.format(max=MAX_KAARTEN), _opdracht(b, lijst), SCHEMA,
+    antwoord, _kosten = claude.loop(db, "notities", SYSTEM.format(wie=claude.voor_wie(db, profiel_id), max=MAX_KAARTEN), _opdracht(b, lijst), SCHEMA,
                                     effort="medium", max_rondes=15, max_zoekacties=0)
     return _kaarten_uit(db, lijst, b, antwoord.get("kaarten") or [])
 

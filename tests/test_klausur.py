@@ -313,3 +313,24 @@ def test_voorbeeldcasus_en_lege_toestanden(client, bgb, monkeypatch):
     assert "Claude staat uit" in r.text and "Geen skizze ingeleverd." in r.text and "Je noemt geen normen." in r.text
     assert client.post(f"{pad}/beoordeel").status_code == 503
     client.post(f"{pad}/verwijder")
+
+
+def test_prompt_volgt_het_profiel(client):
+    """De prompts noemen wie erom vraagt en wat dat profiel over studie en achtergrond opgeeft, niet een vaste persoon."""
+    from synoptikon.models import Profiel
+
+    r = client.post("/profiel/gegevens", data={"naam": "Marijn", "taal": "nl", "achtergrond": " Rechten in Leiden, derde jaar. "},
+                    follow_redirects=False)
+    assert r.status_code == 303
+    with database.session() as s:
+        p = s.get(Profiel, 1)
+        assert p.achtergrond == "Rechten in Leiden, derde jaar."
+        wie = claude.voor_wie(s, 1)
+        assert "Marijn" in wie and "Leiden" in wie
+        assert "rechtenstudent" in claude.voor_wie(s, None)
+        p.achtergrond = None
+        assert "niets bekend" in claude.voor_wie(s, 1)
+        s.rollback()
+    client.post("/profiel/gegevens", data={"naam": "Beheerder", "taal": "nl", "achtergrond": ""})
+    for prompt in (klausur._GENEREER, klausur._BEOORDEEL, klausur._MUSTER):
+        assert "Pieter" not in prompt and "{wie}" in prompt

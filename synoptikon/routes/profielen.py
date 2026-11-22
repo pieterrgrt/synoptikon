@@ -130,13 +130,15 @@ def welkom(request: Request, volgende: str = "/", db: Session = Depends(get_sess
 
 @router.post("/profiel/gegevens")
 def profiel_gegevens(request: Request, naam: str = Form(...), taal: str = Form(...), rechtstaal: str = Form(""),
-                     db: Session = Depends(get_session)):
+                     achtergrond: str | None = Form(None), db: Session = Depends(get_session)):
     p = _mijn(request, db)
     p.naam = naam.strip()[:80] or p.naam
     if taal in TALEN:
         p.taal = taal
     # Leeg = de rechtstaal volgt de interfacetaal; dat is het oude gedrag.
     p.rechtstaal = rechtstaal if rechtstaal in TALEN else None
+    if achtergrond is not None:  # een formulier zonder het veld laat het staan
+        p.achtergrond = achtergrond.strip()[:1000] or None
     resp = RedirectResponse("/profiel?klaar=gegevens", status_code=303)
     resp.set_cookie("taal", p.taal, max_age=365 * 86400, secure=settings.cookie_secure, samesite="lax", path="/")
     return resp

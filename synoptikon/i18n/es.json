@@ -1051,5 +1051,7 @@
  "passend": "adecuado",
  "niet passend": "inadecuado",
  "Gutachtenstil": "Gutachtenstil",
- "Urteilsstil": "Urteilsstil"
+ "Urteilsstil": "Urteilsstil",
+ "Studie en achtergrond": "Estudios y formación",
+ "Claude krijgt dit mee bij casussen, beoordelingen en kaarten uit notities. Noem je studie, universiteit, welk recht je al kent en waarvoor je leert.": "Claude lo recibe con los casos, las correcciones y las fichas de los apuntes. Indica tus estudios, tu universidad, qué derecho ya conoces y para qué estudias."
 }
