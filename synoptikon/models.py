@@ -647,7 +647,7 @@ class InhoudVertaling(Base):
     gewijzigd: Mapped[datetime] = mapped_column(DateTime, default=now, onupdate=now)
 
 
-# Profielen: vast aantal plekken, elk met een eigen taal en wachtwoord.
+# Profielen: vijf vaste plekken die de beheerder invult (db._profielen), plus wie zich aanmeldt (/aanmelden).
 AANTAL_PROFIELEN = 5
 ROLLEN: dict[str, str] = {
     "beheerder": "beheerder",  # alles, ook profielen beheren
@@ -687,6 +687,9 @@ class Profiel(Base):
     # en de taal van de kaartzijden. Leeg = volg de interfacetaal. Wie in Berlijn recht studeert zet dit op 'de' en houdt
     # de interface in het Nederlands.
     rechtstaal: Mapped[str | None] = mapped_column(String(5))
+    # Studie, universiteit en achtergrond in eigen woorden, te zetten op /profiel. Gaat mee in de prompts van de
+    # Klausurtrainer en van de kaarten uit notities (services/claude.voor_wie), zodat de uitleg bij deze gebruiker past.
+    achtergrond: Mapped[str | None] = mapped_column(Text)
 
     @property
     def stelsel_codes(self) -> list[str] | None:
