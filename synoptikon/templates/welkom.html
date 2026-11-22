@@ -2,6 +2,20 @@
 {% block titel %}{{ _('Welkom') }} · Synoptikon{% endblock %}
 {% block mainclass %}pagina smal{% endblock %}
 {% block inhoud %}
-<h1>{{ _('Welke stelsels gebruik je?') }}</h1>
+<h1>{{ _('Welkom') }}</h1>
+<h2>{{ _('Wat staat waar') }}</h2>
+<dl class="feiten welkom-overzicht">
+  <dt>{{ _('Opzoeken') }}</dt><dd>{{ _('Een artikel, wet of uitspraak intypen; je krijgt de tekst en de plaats in de wet. Wat je opzoekt, komt in een logboek.') }}</dd>
+  <dt>{{ _('Wetten') }}</dt><dd>{{ _('De wetteksten per stelsel en het Unierecht.') }}</dd>
+  <dt>{{ _('Vragen') }}</dt><dd>{{ _('Rechtsvragen met per stelsel een antwoord en de bronnen, geschreven door de redactie. Waar geen vertaling in jouw taal is, staat de oorspronkelijke tekst.') }}</dd>
+  <dt>{{ _('Bewaard') }}</dt><dd>{{ _('De artikelen en uitspraken die je hebt bewaard, per vak.') }}</dd>
+  <dt>{{ _('Vergelijken') }}</dt><dd>{{ _('Per thema de overeenkomende artikelen uit de verschillende stelsels.') }}</dd>
+  <dt>{{ _('Begrippen') }}</dt><dd>{{ _('Juridische begrippen per stelsel, met definitie en verwante begrippen.') }}</dd>
+  <dt>{{ _('Leren') }}</dt><dd>{{ _('Je eigen leerlijsten met kaarten bij artikelen en uitspraken, oefenen en leessets.') }}</dd>
+  <dt>Klausur</dt><dd>{{ _('Casussen uitwerken op een werkblad, met beoordeling en een overzicht van wat je steeds mist.') }}</dd>
+  <dt>{{ _('Gedeeld') }}</dt><dd>{{ _('Leerlijsten die anderen voor iedereen zichtbaar maakten; je kunt ze overnemen.') }}</dd>
+</dl>
+<p class="stil">{{ _('Taal, rechtstaal en stelsels wijzig je later in je profiel, onder ⋯ rechtsboven.') }}</p>
+<h2>{{ _('Welke stelsels gebruik je?') }}</h2>
 {% with kiezer_actie = '/profiel/stelsels', knop_tekst = _('Verder') %}{% include "_stelselkiezer.html" %}{% endwith %}
 {% endblock %}
