@@ -5,7 +5,7 @@
 {% elif not w %}
   {% if p.fout %}<p class="melding fout" role="alert">{{ _('De beoordeling is mislukt.') }} {{ p.fout }}</p>{% endif %}
   {% if not claude_aan %}<p class="stil">{{ _('Claude staat uit op deze installatie.') }}</p>
-  {% elif mag_bewerken %}
+  {% else %}
   <form method="post" action="/klausur/poging/{{ p.id }}/beoordeel">
     <button class="knop primair">{{ _('Laten beoordelen door Claude') }}</button>
     <span class="hint">{{ _('Per Prüfungspunkt, volgens een vast schema; meestal enkele dubbeltjes tot een euro.') }}</span>
@@ -59,6 +59,6 @@
   {% endfor %}
   </ul>
   {% endif %}
-  {% if claude_aan and mag_bewerken %}<form method="post" action="/klausur/poging/{{ p.id }}/beoordeel" class="klein" data-bevestig="{{ _('Opnieuw laten beoordelen? Dat kost opnieuw geld.') }}"><button class="knop-tekst">{{ _('Opnieuw laten beoordelen') }}</button></form>{% endif %}
+  {% if claude_aan %}<form method="post" action="/klausur/poging/{{ p.id }}/beoordeel" class="klein" data-bevestig="{{ _('Opnieuw laten beoordelen? Dat kost opnieuw geld.') }}"><button class="knop-tekst">{{ _('Opnieuw laten beoordelen') }}</button></form>{% endif %}
 {% endif %}
 </section>

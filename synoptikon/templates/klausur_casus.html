@@ -12,7 +12,7 @@
 
 {% include "_klausur_sachverhalt.html" %}
 
-{% if c.status == 'klaar' and mag_bewerken %}
+{% if c.status == 'klaar' %}
 <section class="blok" id="start">
   <h2>{{ _('Oplossen') }}</h2>
   <form method="post" action="/klausur/{{ c.id }}/start" class="formulier compact start-form">
@@ -44,7 +44,7 @@
 </section>
 {% endif %}
 
-{% if mag_wijzigen and mag_bewerken and c.status != 'wacht' and c.status != 'bezig' %}
+{% if mag_wijzigen and c.status != 'wacht' and c.status != 'bezig' %}
 <details class="blok">
   <summary>{{ _('Casus bewerken') }}</summary>
   <form method="post" action="/klausur/{{ c.id }}/bewerk" class="formulier compact">

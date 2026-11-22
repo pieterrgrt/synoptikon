@@ -313,25 +313,3 @@ def test_voorbeeldcasus_en_lege_toestanden(client, bgb, monkeypatch):
     assert "Claude staat uit" in r.text and "Geen skizze ingeleverd." in r.text and "Je noemt geen normen." in r.text
     assert client.post(f"{pad}/beoordeel").status_code == 503
     client.post(f"{pad}/verwijder")
-
-
-def test_lezer_mag_lezen_maar_niet_schrijven(anoniem, bgb):
-    from synoptikon.auth import hash_password
-    from synoptikon.models import Profiel
-
-    velden = ("gebruikersnaam", "rol", "actief", "wachtwoord_hash", "stelsels", "sessie_versie")
-    with database.session() as s:
-        p = s.get(Profiel, 4)
-        oud = {v: getattr(p, v) for v in velden}
-        p.gebruikersnaam, p.rol, p.actief, p.wachtwoord_hash, p.stelsels = "lezer-klausur", "lezer", True, hash_password("lees"), "NL,DE"
-        cid = s.query(Casus).filter_by(sleutel="vertippter-preis").one().id
-    try:
-        anoniem.post("/login", data={"gebruikersnaam": "lezer-klausur", "wachtwoord": "lees", "volgende": "/"})
-        r = anoniem.get(f"/klausur/{cid}")
-        assert r.status_code == 200 and "Beginnen" not in r.text
-        assert anoniem.post(f"/klausur/{cid}/start", data={"modus": "oefenen"}).status_code == 403
-    finally:  # de profielplek terug zoals ze was: andere tests rekenen daarop
-        with database.session() as s:
-            p = s.get(Profiel, 4)
-            for v in velden:
-                setattr(p, v, oud[v])

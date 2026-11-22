@@ -91,7 +91,7 @@
 {% endif %}
 
 {# Claude #}
-{% if (claude_aan or herkend) and mag_bewerken and not open_id %}
+{% if (claude_aan or herkend) and not open_id %}
 <form method="post" action="/opzoeken/claude" class="claude-vraag">
   <input type="hidden" name="q" value="{{ q }}">
   {% if not uitkomst.raak %}<p>{{ _('Synoptikon vindt hier zelf niets dat precies past.') }}</p>{% endif %}

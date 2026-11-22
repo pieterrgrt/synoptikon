@@ -652,7 +652,7 @@ AANTAL_PROFIELEN = 5
 ROLLEN: dict[str, str] = {
     "beheerder": "beheerder",  # alles, ook profielen beheren
     "redacteur": "redacteur",  # lezen en invoeren
-    "lezer": "lezer",  # alleen lezen
+    "lezer": "lezer",  # lezen en eigen spullen bijhouden (main._LEZER_POST)
 }
 
 

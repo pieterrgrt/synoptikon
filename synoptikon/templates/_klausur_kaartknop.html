@@ -1,3 +1,3 @@
 {% if pr.kaart_id %}<p class="klein kaartknop"><a href="/leren/voorstellen?lijst={{ pr.kaart.lijst_id }}">✓ {{ _('kaartvoorstel gemaakt') }}</a></p>
-{% elif mag_bewerken %}<form method="post" action="/klausur/probleem/{{ pr.id }}/kaart" class="kaartknop" data-kaartknop data-klaar="✓ {{ _('kaartvoorstel gemaakt') }}">
+{% else %}<form method="post" action="/klausur/probleem/{{ pr.id }}/kaart" class="kaartknop" data-kaartknop data-klaar="✓ {{ _('kaartvoorstel gemaakt') }}">
   <input type="hidden" name="terug" value="{{ terug_pad or '' }}"><button class="knop klein">＋ {{ _('Kaartvoorstel') }}</button></form>{% endif %}

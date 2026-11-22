@@ -14,7 +14,7 @@
 
 {% include "_klausur_muster.html" %}
 
-{% if mag_wijzigen and mag_bewerken and (verwacht or c.musterloesung) %}
+{% if mag_wijzigen and (verwacht or c.musterloesung) %}
 <form method="post" action="/klausur/{{ c.id }}/goedkeuren" class="blok">
   <input type="hidden" name="aan" value="{{ '0' if c.geverifieerd else '1' }}">
   <button class="knop">{{ _('Goedkeuring intrekken') if c.geverifieerd else _('Nagekeken: goedkeuren') }}</button>

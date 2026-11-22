@@ -1,7 +1,8 @@
 """Klausurtrainer (`/klausur`): casussen, het werkblad, de beoordeling en wat je steeds mist (services/klausur.py).
 
-Niet in `main._LEZER_POST`: een lezer kan de casussen lezen, maar pogingen bewaren en Claude laten beoordelen is voor
-wie mag bewerken (de beoordeling kost geld).
+Ook een lezer oefent hier (main._LEZER_POST): eigen casussen, pogingen, beoordelingen en kaartvoorstellen zijn eigen
+spullen. Een voorbeeldcasus (`profiel_id` leeg) is gedeelde inhoud: bewerken alleen door een beheerder, een Musterlösung
+laten schrijven alleen door een redacteur.
 """
 from __future__ import annotations
 
@@ -9,7 +10,7 @@ from fastapi import APIRouter, Depends, Form, HTTPException, Request
 from fastapi.responses import JSONResponse, RedirectResponse
 from sqlalchemy.orm import Session
 
-from ..auth import huidig_profiel
+from ..auth import huidig_profiel, mag_bewerken
 from ..db import get_session
 from ..i18n import _, taal as interfacetaal
 from ..models import ANSPRUCHSGRUPPEN, CASUS_NIVEAUS, Casus, CasusPoging, CasusProbleem
@@ -280,6 +281,8 @@ def muster_stand(request: Request, cid: int, db: Session = Depends(get_session))
 @router.post("/klausur/{cid}/muster")
 def muster_maak(request: Request, cid: int, db: Session = Depends(get_session)):
     c = _casus(request, db, cid)
+    if c.profiel_id is None and not mag_bewerken(request):
+        raise HTTPException(403)
     if not claude.beschikbaar():
         raise HTTPException(503, _("Claude staat uit op deze installatie."))
     if c.muster_status not in ("wacht", "bezig"):

@@ -12,7 +12,7 @@ from fastapi import APIRouter, Depends, Form, HTTPException, Request
 from fastapi.responses import RedirectResponse
 from sqlalchemy.orm import Session
 
-from ..auth import huidig_profiel
+from ..auth import huidig_profiel, mag_bewerken
 from ..db import get_session
 from ..i18n import _
 from ..models import Bron, Kaart, Leerlijst, Opzoeking
@@ -199,7 +199,7 @@ def corrigeer(request: Request, oid: int, citeer: str = Form(""), titel: str = F
         stelsel = feiten["stelsel"]
         return render(request, "opzoeking_corrigeer.html", o=o, r={**(o.resultaat or {}), **velden, "stelsel": stelsel},
                       stelsels=actieve_stelsels(db), herkend=i, melding=_("Opgehaald; controleer en bewaar."))
-    opzoeken.corrigeer(db, o, velden, stelsel)
+    opzoeken.corrigeer(db, o, velden, stelsel, bron_bijwerken=mag_bewerken(request))
     return RedirectResponse(f"/opzoeken?o={o.id}#opzoeking-{o.id}", status_code=303)
 
 
@@ -237,7 +237,7 @@ def opzoeking_bewaren(request: Request, oid: int, lijst: str = Form(""), vak: st
     if r.get("nummer") and r.get("stelsel"):
         kaarten = leren.maak_kaarten(db, l, ["artikel"], ref=Ref(r["stelsel"], r["nummer"], r.get("wet") or None), per_lid=True,
                                      notitie=r.get("toelichting") if r.get("bron") == "claude" else None)
-    elif bron := opzoeken.bron_uit(db, o):
+    elif bron := opzoeken.bron_uit(db, o, bron_bijwerken=mag_bewerken(request)):
         antwoord = regel.strip() or opzoeken.regel_terugval(r)
         if not (antwoord or bron.tekst or markeringen.kern_tekst(db, _pid(request), bron.id, l.vak)):
             # geen regel en niets om op terug te vallen: een kaart zonder antwoord heeft geen zin; eerst de regel invullen

@@ -483,15 +483,16 @@ h1 .vlag, h2 .vlag { height: .72em; }
 .profiel-kaart h2 { margin-top: 0; }
 .profiel-kaart.uit { opacity: .75; }
 
-/* Lezer: geen invoer tonen (de server weigert die ook) */
-.alleen-lezen main form[method="post"],
+/* Lezer: geen invoer in gedeelde inhoud tonen (de server weigert die ook). Eigen spullen wel: dezelfde paden als
+   main._LEZER_POST. */
+.alleen-lezen main form[method="post"]:not([action^="/leren"]):not([action^="/klausur/"]):not([action^="/markeringen"]):not([action^="/opzoeken/"]):not([action^="/gedeeld/"]):not([action^="/profiel/"]):not([action^="/taal"]),
 .alleen-lezen a[href$="/bewerken"],
-.alleen-lezen a[href$="/nieuw"],
-.alleen-lezen a[href*="/nieuw?"],
+.alleen-lezen a[href$="/nieuw"]:not([href^="/leren"]):not([href^="/klausur/"]),
+.alleen-lezen a[href*="/nieuw?"]:not([href^="/leren"]):not([href^="/klausur/"]),
 .alleen-lezen a[href^="/invoer"],
 .alleen-lezen .vraagkop-acties a[href*="/bewerken"],
 .alleen-lezen .kolomkop a.knop,
-.alleen-lezen details:has(> form[method="post"]),
+.alleen-lezen details:has(> form[method="post"]:not([action^="/leren"]):not([action^="/klausur/"]):not([action^="/opzoeken/"])),
 .alleen-lezen .kolomvoet,
 .alleen-lezen .inline-bewerk { display: none !important; }
 .alleen-lezen main form.inhoud-taal { display: flex !important; }
