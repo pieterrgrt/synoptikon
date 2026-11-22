@@ -19,7 +19,9 @@ def test_profiel_kiest_stelsels(client):
     assert r.status_code == 303
     r = client.get("/profiel")
     assert 'value="NL" checked' in r.text and 'value="FR" checked' not in r.text
-    assert client.get("/welkom").status_code == 200
+    r = client.get("/welkom")
+    # naast de stelselkiezer een korte uitleg per onderdeel van het menu
+    assert r.status_code == 200 and "data-stelselkiezer" in r.text and "welkom-overzicht" in r.text and "Klausur" in r.text
     _herstel(client)
 
 
