@@ -687,6 +687,9 @@ class Profiel(Base):
     # en de taal van de kaartzijden. Leeg = volg de interfacetaal. Wie in Berlijn recht studeert zet dit op 'de' en houdt
     # de interface in het Nederlands.
     rechtstaal: Mapped[str | None] = mapped_column(String(5))
+    # Studie, universiteit en achtergrond in eigen woorden, te zetten op /profiel. Gaat mee in de prompts van de
+    # Klausurtrainer en van de kaarten uit notities (services/claude.voor_wie), zodat de uitleg bij deze gebruiker past.
+    achtergrond: Mapped[str | None] = mapped_column(Text)
 
     @property
     def stelsel_codes(self) -> list[str] | None:
