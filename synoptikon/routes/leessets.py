@@ -19,7 +19,7 @@ from ..models import Bron, Leesset, Stelsel
 from ..services import leessets
 from ..services.artikelen import Ref
 from ..services.helpers import actieve_stelsels
-from ..services.vakken import VAKKEN
+from ..services.vakken import mijn as mijn_vakken
 from . import render
 
 router = APIRouter()
@@ -47,14 +47,15 @@ def _veilig(terug: str) -> str:
     return terug if terug.startswith("/") and not terug.startswith(("//", "/\\")) else ""
 
 
-def _vakken(sets: list[Leesset]) -> list[str]:
-    return sorted({*VAKKEN, *(s.vak for s in sets if s.vak)})
+def _vakken(db: Session, pid: int, sets: list[Leesset]) -> list[str]:
+    mijn = mijn_vakken(db, pid)
+    return [*mijn, *sorted({s.vak for s in sets if s.vak} - set(mijn))]
 
 
 @router.get("/leren/sets")
 def overzicht(request: Request, db: Session = Depends(get_session)):
     sets = leessets.van(db, _pid(request))
-    return render(request, "leessets.html", sets=sets, vakken=_vakken(sets))
+    return render(request, "leessets.html", sets=sets, vakken=_vakken(db, _pid(request), sets))
 
 
 @router.post("/leren/sets")
@@ -79,7 +80,7 @@ def kies(request: Request, stelsel: str = "", wet: str = "", nummer: str = "", b
     if ref is None and b is None:
         raise HTTPException(400)
     sets = leessets.van(db, _pid(request))
-    return render(request, "leesset_kies.html", sets=sets, ref=ref, bron=b, terug=_veilig(terug), vakken=_vakken(sets))
+    return render(request, "leesset_kies.html", sets=sets, ref=ref, bron=b, terug=_veilig(terug), vakken=_vakken(db, _pid(request), sets))
 
 
 @router.post("/leren/sets/toevoegen")
@@ -100,7 +101,7 @@ def leesset(request: Request, sid: int, db: Session = Depends(get_session)):
     s = _set(request, db, sid)
     families = {c: f for c, f in db.execute(select(Stelsel.code, Stelsel.familie)).all()}
     return render(request, "leesset.html", s=s, onderdelen=leessets.lezen(db, s), families=families,
-                  vakken=_vakken(leessets.van(db, _pid(request))), stelsels=actieve_stelsels(db))
+                  vakken=_vakken(db, _pid(request), leessets.van(db, _pid(request))), stelsels=actieve_stelsels(db))
 
 
 @router.post("/leren/sets/{sid}")

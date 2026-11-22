@@ -246,6 +246,7 @@ _NIEUWE_KOLOMMEN = [
     ("profiel", "laatste_vak", "VARCHAR(60)"),
     ("profiel", "vak_sinds", "DATETIME"),
     ("kaart", "lid", "VARCHAR(8)"),
+    ("profiel", "vakken", "TEXT"),
     ("profiel", "achtergrond", "TEXT"),
 ]
 
@@ -262,11 +263,19 @@ def _mijn_stelsels_sql() -> str:
             "WHERE id = 1 OR actief = 1 OR laatst_ingelogd IS NOT NULL")
 
 
+def _vakken_profiel_1_sql() -> str:
+    """Tot 22-11-2026 had iedereen de vakken van profiel 1 (Pieter); die houdt alleen hij."""
+    from .services.vakken import START
+
+    return f"UPDATE profiel SET vakken = '{','.join(START)}' WHERE id = 1"
+
+
 # Eenmalig na het toevoegen van een kolom (tekst, of een functie die de tekst geeft).
 _NA_KOLOM = {
     ("profiel", "wunderkammer"): "UPDATE profiel SET wunderkammer = 1 WHERE id IN (SELECT profiel_id FROM leerlijst WHERE naar_wk = 1)",
     ("leerlijst", "deelcode"): "CREATE UNIQUE INDEX IF NOT EXISTS ix_leerlijst_deelcode ON leerlijst(deelcode)",
     ("profiel", "stelsels"): _mijn_stelsels_sql,
+    ("profiel", "vakken"): _vakken_profiel_1_sql,
     # Wat tot 22-11-2026 vast in de prompts stond, was over profiel 1.
     ("profiel", "achtergrond"): "UPDATE profiel SET achtergrond = 'Rechtenstudent aan de Humboldt-Universität zu Berlin "
                                 "(LL.M. Europäisches Recht und Rechtsvergleich) met een Nederlandse juridische achtergrond. "

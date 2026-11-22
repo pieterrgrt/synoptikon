@@ -201,3 +201,49 @@ def test_lopende_keuze_kent_geen_grens():
     _keuze("Sachenrecht")
     with database.session() as s:
         assert vakken.kies(s, 1, "", "EU", "AEUV", "102") == "Sachenrecht"
+
+
+def test_een_ander_profiel_krijgt_niet_mijn_vakken():
+    """§ 929 BGB wordt alleen 'Sachenrecht' bij wie dat vak heeft; een eigen schrijfwijze blijft staan."""
+    with database.session() as s:
+        p = s.get(Profiel, 2)
+        p.vakken, p.laatste_vak, p.vak_sinds = None, None, None
+        s.flush()
+        assert vakken.kies(s, 2, "", "DE", "BGB", "929") is None
+        assert vakken.mijn(s, 2) == []
+        p.vakken = vakken.lees("Sachenrecht, Strafrecht\nsachenrecht\n  BGB   AT ")
+        assert p.vakken == "Sachenrecht,Strafrecht,BGB AT"
+        assert vakken.kies(s, 2, "", "DE", "BGB", "929") == "Sachenrecht"
+        p.vakken = "SACHENRECHT"
+        assert vakken.kies(s, 2, "", "DE", "BGB", "929") == "SACHENRECHT"
+        assert vakken.lees(" , \n") is None
+        s.rollback()
+
+
+def test_vakken_wijzigen_op_profiel(client):
+    with database.session() as s:
+        oud = s.get(Profiel, 1).vakken
+    try:
+        r = client.post("/profiel/vakken", data={"vakken": "ZR Ia\nSeminar Haftung"}, follow_redirects=False)
+        assert r.status_code == 303
+        html = client.get("/profiel").text
+        assert "ZR Ia\nSeminar Haftung</textarea>" in html
+        assert '<option value="Seminar Haftung">' in client.get("/klausur/nieuw").text
+        assert '<option value="KartR">' not in client.get("/klausur/nieuw").text
+    finally:
+        with database.session() as s:
+            s.get(Profiel, 1).vakken = oud
+            s.commit()
+
+
+def test_migratie_geeft_alleen_profiel_1_de_beginvakken():
+    from sqlalchemy import text
+
+    sql = database._NA_KOLOM[("profiel", "vakken")]()
+    assert "WHERE id = 1" in sql and ",".join(vakken.START) in sql
+    with database.engine().connect() as c:
+        c.execute(text("UPDATE profiel SET vakken = NULL"))
+        c.execute(text(sql))
+        rijen = dict(c.execute(text("SELECT id, vakken FROM profiel")).all())
+        c.rollback()
+    assert rijen[1] == ",".join(vakken.START) and all(v is None for i, v in rijen.items() if i != 1)
