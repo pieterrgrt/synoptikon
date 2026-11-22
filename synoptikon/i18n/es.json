@@ -1051,5 +1051,18 @@
  "passend": "adecuado",
  "niet passend": "inadecuado",
  "Gutachtenstil": "Gutachtenstil",
- "Urteilsstil": "Urteilsstil"
+ "Urteilsstil": "Urteilsstil",
+ "Claude, gestart door {naam}": "Claude, iniciado por {naam}",
+ "Deze versie terugzetten": "Restaurar esta versión",
+ "Deze versie terugzetten?": "¿Restaurar esta versión?",
+ "Geschiedenis": "Historial",
+ "Laatst gewijzigd door {naam} op {datum}.": "Última modificación de {naam} el {datum}.",
+ "Terugzetten lukte niet; misschien bestaat waar dit bij hoorde niet meer.": "No se pudo restaurar; quizá aquello a lo que pertenecía ya no existe.",
+ "Terugzetten naar wat hiervoor stond": "Restaurar lo que había antes",
+ "Wijzigingen": "Cambios",
+ "Wijzigingen in gedeelde inhoud: vragen, analyses, notities, begrippen, bronnen, thema's en omzettingen. Imports staan er niet in.": "Cambios en el contenido compartido: preguntas, análisis, notas, conceptos, fuentes, temas y transposiciones. Las importaciones no se incluyen.",
+ "geschiedenis": "historial",
+ "gewijzigd": "modificado",
+ "onbekend": "desconocido",
+ "verwijderd": "eliminado"
 }

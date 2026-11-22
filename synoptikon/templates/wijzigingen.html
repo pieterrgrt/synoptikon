@@ -1,0 +1,20 @@
+{% extends "base.html" %}
+{% import "_wijziging.html" as wz %}
+{% block titel %}{{ _('Wijzigingen') }} · Synoptikon{% endblock %}
+{% block inhoud %}
+<h1>{{ _('Wijzigingen') }}</h1>
+<p class="hint">{{ _('Wijzigingen in gedeelde inhoud: vragen, analyses, notities, begrippen, bronnen, thema\'s en omzettingen. Imports staan er niet in.') }}</p>
+{% if ws %}
+<table class="tabel">
+  {% for w in ws %}{% set l = labels[w.id] %}
+  <tr>
+    <td class="stil">{{ w.tijdstip.strftime('%d-%m-%Y %H:%M') }}</td>
+    <td>{% if w.profiel_id %}<a href="/wijzigingen?profiel={{ w.profiel_id }}">{{ w.wie }}</a>{% else %}{{ w.wie }}{% endif %}</td>
+    <td>{{ wz.actie(w) }}</td>
+    <td>{% if l[1] %}<a href="{{ l[1] }}">{{ l[0] }}</a>{% else %}{{ l[0] }}{% endif %}</td>
+    <td><a href="/geschiedenis/{{ w.soort }}/{{ w.rij_id }}">{{ _('geschiedenis') }}</a></td>
+  </tr>
+  {% endfor %}
+</table>
+{% else %}<p class="stil">{{ _('Nog niets.') }}</p>{% endif %}
+{% endblock %}

@@ -986,6 +986,8 @@ class Onderzoek(Base):
 
     id: Mapped[int] = mapped_column(primary_key=True)
     vraag_id: Mapped[int] = mapped_column(ForeignKey("vraag.id", ondelete="CASCADE"), index=True)
+    # Wie het onderzoek startte; wat Claude in de synopse zet, staat in de geschiedenis op naam van Claude en dit profiel.
+    profiel_id: Mapped[int | None] = mapped_column(ForeignKey("profiel.id", ondelete="SET NULL"))
     stelsels: Mapped[str] = mapped_column(String(200))  # kommagescheiden codes
     opdracht: Mapped[str | None] = mapped_column(Text)  # extra aanwijzingen
     status: Mapped[str] = mapped_column(String(12), default="wacht")  # wacht | bezig | klaar | fout
@@ -1130,3 +1132,28 @@ class CasusProbleem(Base):
     @property
     def status_label(self) -> str:
         return _(PROBLEEM_STATUS.get(self.status, self.status))
+
+
+# --- geschiedenis van gedeelde inhoud (services/wijzigingen.py) -----------------------------------------------------
+# Vragen, analyses, notities, begrippen, bronnen, thema's en omzettingen zijn van iedereen. Elke wijziging via de
+# website (of door Claudes onderzoek) komt hier, met wie en wanneer, zodat ze zichtbaar en terug te zetten is.
+
+
+class Wijziging(Base):
+    __tablename__ = "wijziging"
+
+    id: Mapped[int] = mapped_column(primary_key=True)
+    soort: Mapped[str] = mapped_column(String(20), index=True)  # sleutel uit wijzigingen.SOORTEN
+    rij_id: Mapped[int] = mapped_column(Integer, index=True)
+    actie: Mapped[str] = mapped_column(String(10))  # nieuw | gewijzigd | verwijderd
+    profiel_id: Mapped[int | None] = mapped_column(ForeignKey("profiel.id", ondelete="SET NULL"))
+    naam: Mapped[str | None] = mapped_column(String(80))  # naam van het profiel op dat moment (plekken worden hergebruikt)
+    door: Mapped[str | None] = mapped_column(String(20))  # "claude" bij een onderzoek, anders leeg
+    oud: Mapped[dict | None] = mapped_column(JSON)  # gewijzigd: de vorige waarden van wat veranderde; verwijderd: alles
+    nieuw: Mapped[dict | None] = mapped_column(JSON)  # nieuw en gewijzigd: alle kolommen daarna
+    tijdstip: Mapped[datetime] = mapped_column(DateTime, default=now, index=True)
+
+    @property
+    def wie(self) -> str:
+        naam = self.naam or _("onbekend")
+        return _("Claude, gestart door {naam}", naam=naam) if self.door == "claude" else naam

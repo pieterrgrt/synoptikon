@@ -246,6 +246,7 @@ _NIEUWE_KOLOMMEN = [
     ("profiel", "laatste_vak", "VARCHAR(60)"),
     ("profiel", "vak_sinds", "DATETIME"),
     ("kaart", "lid", "VARCHAR(8)"),
+    ("onderzoek", "profiel_id", "INTEGER REFERENCES profiel(id) ON DELETE SET NULL"),
 ]
 
 

@@ -3,6 +3,7 @@
 {% block inhoud %}
 <p class="kruimel"><a href="/vragen/{{ vraag.slug }}">{{ vt(vraag.titel) }}</a> › {{ vt(antwoord.stelsel.naam) }}</p>
 <h1>{{ _('Analyse') }} · {{ vt(antwoord.stelsel.naam) }}</h1>
+{% if w %}<p class="hint">{{ _('Laatst gewijzigd door {naam} op {datum}.', naam=w.wie, datum=w.tijdstip.strftime('%d-%m-%Y %H:%M')) }} <a href="/geschiedenis/antwoord/{{ antwoord.id }}">{{ _('geschiedenis') }}</a></p>{% endif %}
 {% if huidige_taal() != 'nl' %}<p class="hint">{{ _('Vul in het Nederlands in; vertalingen beheer je onder Vertalingen.') }}</p>{% endif %}
 <form method="post" class="formulier">
   <label>{{ _('Kern') }} <span class="hint">{{ _('één zin, bovenaan de kolom') }}</span>

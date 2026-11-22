@@ -1,0 +1,11 @@
+{# Eén wijziging: wie, wanneer, wat. w = Wijziging, vs = lijst van wijzigingen.Verschil #}
+{% macro actie(w) %}{% if w.actie == 'nieuw' %}{{ _('nieuw') }}{% elif w.actie == 'verwijderd' %}{{ _('verwijderd') }}{% else %}{{ _('gewijzigd') }}{% endif %}{% endmacro %}
+{% macro verschillen(vs) %}
+{% for v in vs %}
+<div class="verschil"><span class="label">{{ v.veld }}</span>
+  {% if v.regels %}<pre class="diff">{% for t, r in v.regels %}<span class="{{ {'-': 'weg', '+': 'bij', '@': 'stil'}.get(t, '') }}">{{ t if t != ' ' else ' ' }} {{ r }}</span>
+{% endfor %}</pre>
+  {% else %}{% if v.oud %}<del>{{ v.oud }}</del>{% endif %}{% if v.oud and v.nieuw %} → {% endif %}{% if v.nieuw %}<ins>{{ v.nieuw }}</ins>{% endif %}{% endif %}
+</div>
+{% endfor %}
+{% endmacro %}
