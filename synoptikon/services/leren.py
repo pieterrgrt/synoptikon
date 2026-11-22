@@ -102,7 +102,7 @@ def bewaarde_refs(db: Session, profiel_id: int) -> dict[tuple[str, str | None, s
     from ..config import settings
 
     p = db.get(Profiel, profiel_id)
-    wk_aan = settings.wk_ingesteld and p is not None and p.wunderkammer
+    wk_aan = settings.wk_aan(p)
     volgorde = list(FASEN)
     uit: dict[tuple[str, str | None, str], Bewaard] = {}
     for k in kaarten:
