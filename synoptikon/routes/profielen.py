@@ -94,7 +94,7 @@ def _wk_stand(db: Session, p: Profiel) -> dict:
     from ..models import Kaart, KaartStand, Leerlijst
 
     n = db.scalar(select(func.count()).select_from(KaartStand).join(Kaart).join(Leerlijst).where(Leerlijst.profiel_id == p.id)) or 0
-    return dict(wk_ingesteld=settings.wk_ingesteld, wk_url=settings.wk_url, wk_herhaling=n)
+    return dict(wk_ingesteld=settings.wk_ingesteld, wk_voor=settings.wk_voor(p), wk_url=settings.wk_url, wk_herhaling=n)
 
 
 def _kiezer(db: Session, p: Profiel) -> dict:
@@ -150,6 +150,8 @@ def profiel_gegevens(request: Request, naam: str = Form(...), taal: str = Form(.
 @router.post("/profiel/wunderkammer")
 def profiel_wunderkammer(request: Request, aan: str = Form(""), db: Session = Depends(get_session)):
     p = _mijn(request, db)
+    if not settings.wk_voor(p):
+        raise HTTPException(404)
     p.wunderkammer = aan == "1"
     if p.wunderkammer:
         from ..services import wk

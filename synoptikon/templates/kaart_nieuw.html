@@ -25,7 +25,7 @@
   <fieldset class="keuze">
     <legend>{{ _('Kaarten') }}</legend>
     {% if ref %}
-      {% for s in artikelsoorten if s != 'tegenhanger' %}<label class="vinkje"><input type="checkbox" name="soort" value="{{ s }}" {% if s == 'artikel' %}checked{% endif %}> <strong>{{ _(soorten[s][0]) }}</strong> <span class="stil klein">{{ _(soorten[s][1]) }}</span></label>{% endfor %}
+      {% for s in artikelsoorten if s != 'tegenhanger' %}<label class="vinkje"><input type="checkbox" name="soort" value="{{ s }}" {% if s == 'artikel' %}checked{% endif %}> <strong>{{ _(soorten[s][0]) }}</strong> <span class="stil klein">{{ _(soorten[s][1]) }}{% if s == 'cloze' and wk %} ({{ _('typen in Wunderkammer') }}){% endif %}</span></label>{% endfor %}
       {% if doelen %}
       <label class="vinkje"><input type="checkbox" name="soort" value="tegenhanger"> <strong>{{ _(soorten['tegenhanger'][0]) }}</strong> <span class="stil klein">{{ _(soorten['tegenhanger'][1]) }}</span></label>
       {% import "_stelsels.html" as st with context %}<div class="doelen">{% call(s) st.keuze(doelen) %}<label class="vinkje klein"><input type="checkbox" name="doel" value="{{ s.code }}"> {{ vlag(s.code) }}{{ vt(s.naam) }}</label>{% endcall %}</div>
