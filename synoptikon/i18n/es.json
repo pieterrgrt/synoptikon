@@ -1083,5 +1083,20 @@
  "Markdown of platte tekst, hooguit {n} tegelijk. Claude leest elke notitie en stelt kaarten voor; een bestand met dezelfde naam vervangt het vorige.": "Markdown o texto plano, como máximo {n} a la vez. Claude lee cada nota y propone tarjetas; un archivo con el mismo nombre sustituye al anterior.",
  "{naam}: alleen Markdown of platte tekst (.md, .txt).": "{naam}: solo Markdown o texto plano (.md, .txt).",
  "{naam}: groter dan 1 MB.": "{naam}: mayor de 1 MB.",
- "{naam}: te kort om kaarten uit te maken.": "{naam}: demasiado corto para sacar tarjetas."
+ "{naam}: te kort om kaarten uit te maken.": "{naam}: demasiado corto para sacar tarjetas.",
+ "Elke voorwaarde die je markeerde als gat in de tekst (typen in Wunderkammer)": "Cada requisito marcado como hueco en el texto (escribir en Wunderkammer)",
+ "Vijf plekken. Een beheerder mag alles, ook profielen beheren; een redacteur mag lezen en invoeren; een lezer leest en houdt alleen eigen spullen bij (markeringen, kaarten, Klausuren, opzoekingen). Een profiel kan pas aan als het een wachtwoord heeft. Een nieuw wachtwoord of uitzetten logt dat profiel overal uit.": "Cinco plazas. Un administrador puede hacerlo todo, también gestionar perfiles; un redactor puede leer e introducir; un lector lee y solo gestiona sus propias cosas (marcas, tarjetas, Klausuren, consultas). Un perfil solo puede activarse con contraseña. Una nueva contraseña o la desactivación cierra la sesión de ese perfil en todas partes.",
+ "Claude, gestart door {naam}": "Claude, iniciado por {naam}",
+ "Deze versie terugzetten": "Restaurar esta versión",
+ "Deze versie terugzetten?": "¿Restaurar esta versión?",
+ "Geschiedenis": "Historial",
+ "Laatst gewijzigd door {naam} op {datum}.": "Última modificación de {naam} el {datum}.",
+ "Terugzetten lukte niet; misschien bestaat waar dit bij hoorde niet meer.": "No se pudo restaurar; quizá aquello a lo que pertenecía ya no existe.",
+ "Terugzetten naar wat hiervoor stond": "Restaurar lo que había antes",
+ "Wijzigingen": "Cambios",
+ "Wijzigingen in gedeelde inhoud: vragen, analyses, notities, begrippen, bronnen, thema's en omzettingen. Imports staan er niet in.": "Cambios en el contenido compartido: preguntas, análisis, notas, conceptos, fuentes, temas y transposiciones. Las importaciones no se incluyen.",
+ "geschiedenis": "historial",
+ "gewijzigd": "modificado",
+ "onbekend": "desconocido",
+ "verwijderd": "eliminado"
 }

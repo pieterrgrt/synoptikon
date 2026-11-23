@@ -7,7 +7,7 @@ from sqlalchemy.orm import Session, selectinload
 
 from ..db import get_session
 from ..models import Antwoord, AntwoordBron, Begrip, Bron, Concordantie, Notitie, Stelsel, Vraag, VraagBegrip
-from ..services import bibliotheek, claude, export, onderzoek
+from ..services import bibliotheek, claude, export, onderzoek, wijzigingen
 from ..services.helpers import actieve_stelsels, leeg_naar_none, unieke_slug
 from ..services.stelselkeuze import ook_uit, stelselkeuze
 from . import render
@@ -156,6 +156,10 @@ def synopse(request: Request, slug: str, vertaling: str | None = None, db: Sessi
         alle_bronnen=[b for b in alle_bronnen if b.id not in gekoppeld],
         alle_begrippen=[g for g in alle_begrippen if g.id not in gekoppelde_begrippen],
         concordanties=_concordanties_voor(db, vraag),
+        # wie wat het laatst wijzigde (services/wijzigingen.py)
+        laatst=wijzigingen.laatste(db, "antwoord", [a.id for a in vraag.antwoorden]),
+        schrijvers=wijzigingen.eerste(db, "notitie", [n.id for n in vraag.notities]),
+        vraag_w=wijzigingen.laatste(db, "vraag", [vraag.id]).get(vraag.id),
         **_onderzoek_context(db, vraag, request),
     )
 
@@ -207,7 +211,8 @@ def antwoord_bewerken(request: Request, slug: str, code: str, db: Session = Depe
         antwoord = Antwoord(vraag=vraag, stelsel_code=code)
         db.add(antwoord)
         db.flush()
-    return render(request, "antwoord_form.html", vraag=vraag, antwoord=antwoord)
+    w = wijzigingen.laatste(db, "antwoord", [antwoord.id]).get(antwoord.id)
+    return render(request, "antwoord_form.html", vraag=vraag, antwoord=antwoord, w=w)
 
 
 @router.post("/vragen/{slug}/antwoord/{code}")

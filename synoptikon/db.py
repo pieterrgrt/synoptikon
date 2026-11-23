@@ -248,6 +248,7 @@ _NIEUWE_KOLOMMEN = [
     ("kaart", "lid", "VARCHAR(8)"),
     ("profiel", "vakken", "TEXT"),
     ("profiel", "achtergrond", "TEXT"),
+    ("onderzoek", "profiel_id", "INTEGER REFERENCES profiel(id) ON DELETE SET NULL"),
 ]
 
 
