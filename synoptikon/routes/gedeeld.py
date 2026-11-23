@@ -16,7 +16,7 @@ from sqlalchemy.orm import Session
 
 from .. import auth
 from ..config import settings
-from ..db import get_session
+from ..db import get_session, nieuwe_sessie_versie
 from ..i18n import TALEN, _, taal as huidige_taal
 from ..models import ZICHTBAAR, Leerlijst, LijstLike, LijstReactie, Profiel, now
 from ..services import delen, leren
@@ -145,7 +145,8 @@ def aanmelden(request: Request, code: str = Form(...), gebruikersnaam: str = For
         return render(request, "aanmelden.html", status_code=400, fout=fout, velden=velden, min_lengte=MIN_LENGTE)
     taal = huidige_taal() if huidige_taal() in TALEN else "nl"
     p = Profiel(gebruikersnaam=gebruikersnaam, naam=naam.strip()[:80] or gebruikersnaam, rol="lezer", taal=taal, actief=True,
-                wachtwoord_hash=auth.hash_password(wachtwoord), laatst_ingelogd=now(), zelf_aangemeld=True)
+                wachtwoord_hash=auth.hash_password(wachtwoord), laatst_ingelogd=now(), zelf_aangemeld=True,
+                sessie_versie=nieuwe_sessie_versie())
     db.add(p)
     db.flush()
     resp = RedirectResponse("/gedeeld", status_code=303)

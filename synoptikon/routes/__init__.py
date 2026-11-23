@@ -17,16 +17,24 @@ def render(request: Request, naam: str, status_code: int = 200, **context: Any) 
     profiel = getattr(request.state, "profiel", None)
     context.setdefault("profiel", profiel)
     context.setdefault("mag_bewerken", profiel is None or profiel.mag_bewerken)
-    # Koppeling met Wunderkammer aan voor dit profiel: dan pas verwijzen de pagina's ernaar.
-    context.setdefault("wk", settings.wk_ingesteld and (profiel is None or profiel.wunderkammer))
+    # Koppeling met Wunderkammer aan voor dit profiel: dan pas verwijzen de pagina's ernaar. Zonder profiel
+    # (AUTH_MODE=none) is het de eigenaar.
+    context.setdefault("wk", settings.wk_ingesteld if profiel is None else settings.wk_aan(profiel))
     context.setdefault("aanmelden", bool(settings.aanmeldcode))
     # Mijn stelsels (services/stelselkeuze.py): de macro's in _stelsels.html zetten de rest onder 'meer stelsels…'.
     context.setdefault("mijn", profiel.stelsel_codes if profiel is not None else None)
     context.setdefault("wk_url", settings.wk_url)
-    from ..services.vakken import VAKKEN
-
+    from ..services import vakken
     from ..services.vakken import actief_van
 
+    if profiel is None:  # zonder inloggen (AUTH_MODE=none) is het profiel 1, net als in de routes (_pid)
+        from ..db import session
+
+        with session() as s:
+            mijn_vakken = vakken.mijn(s, 1)
+    else:
+        mijn_vakken = vakken.van(profiel)
+
     context.setdefault("vak_nu", actief_van(profiel))  # de lopende keuze: ☆ bewaart daar zonder te vragen
-    context.setdefault("vakken_keuze", VAKKEN)  # voor het vak wisselen onder 'bewaard' (routes/opzoeken.py)
+    context.setdefault("vakken_keuze", mijn_vakken)  # voor het vak wisselen onder 'bewaard' (routes/opzoeken.py)
     return templates.TemplateResponse(request, naam, context, status_code=status_code)

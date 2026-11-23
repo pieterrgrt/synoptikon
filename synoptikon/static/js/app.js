@@ -15,8 +15,9 @@
     });
   }
   document.addEventListener('submit', function (e) {
-    var f = e.target;
-    if (f.dataset && f.dataset.bevestig && !window.confirm(f.dataset.bevestig)) e.preventDefault();
+    // data-bevestig op het formulier, of op de knop waarmee het verzonden wordt (een tweede knop met formaction).
+    var b = e.submitter && e.submitter.dataset && e.submitter.dataset.bevestig ? e.submitter : e.target;
+    if (b.dataset && b.dataset.bevestig && !window.confirm(b.dataset.bevestig)) e.preventDefault();
   });
   // Formulieren die bij wijziging direct verzenden (filters, keuzelijsten).
   document.addEventListener('change', function (e) {

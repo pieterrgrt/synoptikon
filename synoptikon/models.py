@@ -647,7 +647,7 @@ class InhoudVertaling(Base):
     gewijzigd: Mapped[datetime] = mapped_column(DateTime, default=now, onupdate=now)
 
 
-# Profielen: vast aantal plekken, elk met een eigen taal en wachtwoord.
+# Profielen: vijf vaste plekken die de beheerder invult (db._profielen), plus wie zich aanmeldt (/aanmelden).
 AANTAL_PROFIELEN = 5
 ROLLEN: dict[str, str] = {
     "beheerder": "beheerder",  # alles, ook profielen beheren
@@ -690,6 +690,9 @@ class Profiel(Base):
     # Grens voor Claude per kalendermaand in $ (services/claude.py), naast het totaal voor iedereen samen. Leeg = de
     # standaardgrens (config.llm_profiel_usd); een beheerder zonder eigen grens heeft alleen het totaal.
     llm_grens_usd: Mapped[float | None] = mapped_column()
+    # Mijn vakken (kommagescheiden, services/vakken.py): de kiezers bij bewaren, Leren, Leessets en Klausur, en de vakken
+    # die uit een onderwerp mogen volgen. Leeg = geen vakken; vakken van eigen lijsten staan dan nog wel in de kiezers.
+    vakken: Mapped[str | None] = mapped_column(Text)
     # Studie, universiteit en achtergrond in eigen woorden, te zetten op /profiel. Gaat mee in de prompts van de
     # Klausurtrainer en van de kaarten uit notities (services/claude.voor_wie), zodat de uitleg bij deze gebruiker past.
     achtergrond: Mapped[str | None] = mapped_column(Text)
@@ -722,7 +725,7 @@ KAARTSOORTEN: dict[str, tuple[str, str]] = {
     "kern": ("inhoud → artikel", "Welk artikel regelt dit?"),
     "plaats": ("waar staat het", "Plaats in de systematiek van de wet"),
     "tegenhanger": ("tegenhanger", "Het corresponderende artikel in een ander stelsel"),
-    "cloze": ("voorwaarde invullen", "Elke voorwaarde die je markeerde als gat in de tekst (typen in Wunderkammer)"),
+    "cloze": ("voorwaarde invullen", "Elke voorwaarde die je markeerde als gat in de tekst"),
     "arrest": ("arrest → rechtsregel", "Wat besliste de rechter?"),
     "feiten": ("feiten → arrest", "Welk arrest hoort bij deze feiten?"),
     "vrij": ("vrije kaart", "Eigen vraag en antwoord"),

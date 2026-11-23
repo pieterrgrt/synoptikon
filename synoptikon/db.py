@@ -246,6 +246,7 @@ _NIEUWE_KOLOMMEN = [
     ("profiel", "laatste_vak", "VARCHAR(60)"),
     ("profiel", "vak_sinds", "DATETIME"),
     ("kaart", "lid", "VARCHAR(8)"),
+    ("profiel", "vakken", "TEXT"),
     ("profiel", "achtergrond", "TEXT"),
     ("profiel", "llm_grens_usd", "FLOAT"),
     ("llm_gebruik", "profiel_id", "INTEGER REFERENCES profiel(id) ON DELETE SET NULL"),
@@ -265,12 +266,20 @@ def _mijn_stelsels_sql() -> str:
             "WHERE id = 1 OR actief = 1 OR laatst_ingelogd IS NOT NULL")
 
 
+def _vakken_profiel_1_sql() -> str:
+    """Tot 22-11-2026 had iedereen de vakken van profiel 1 (Pieter); die houdt alleen hij."""
+    from .services.vakken import START
+
+    return f"UPDATE profiel SET vakken = '{','.join(START)}' WHERE id = 1"
+
+
 # Eenmalig na het toevoegen van een kolom (tekst, of een functie die de tekst geeft).
 _NA_KOLOM = {
     ("profiel", "wunderkammer"): "UPDATE profiel SET wunderkammer = 1 WHERE id IN (SELECT profiel_id FROM leerlijst WHERE naar_wk = 1)",
     ("leerlijst", "deelcode"): "CREATE UNIQUE INDEX IF NOT EXISTS ix_leerlijst_deelcode ON leerlijst(deelcode)",
     ("profiel", "stelsels"): _mijn_stelsels_sql,
     ("llm_gebruik", "profiel_id"): "CREATE INDEX IF NOT EXISTS ix_llm_gebruik_profiel_id ON llm_gebruik(profiel_id)",
+    ("profiel", "vakken"): _vakken_profiel_1_sql,
     # Wat tot 22-11-2026 vast in de prompts stond, was over profiel 1.
     ("profiel", "achtergrond"): "UPDATE profiel SET achtergrond = 'Rechtenstudent aan de Humboldt-Universität zu Berlin "
                                 "(LL.M. Europäisches Recht und Rechtsvergleich) met een Nederlandse juridische achtergrond. "
@@ -312,22 +321,38 @@ def init_db() -> None:
     _voorbeeldcasussen()
 
 
+def lege_plek(i: int):
+    """Plek `i` (1–AANTAL_PROFIELEN) zoals bij de eerste start: profiel 1 is de beheerder en staat aan, de andere wachten
+    op een naam en wachtwoord. Ook na het verwijderen van een profiel op zo'n plek (routes/profielen.py)."""
+    from .models import Profiel
+
+    eerste = i == 1
+    return Profiel(
+        id=i,
+        gebruikersnaam="beheerder" if eerste else f"profiel{i}",
+        naam="Beheerder" if eerste else f"Profiel {i}",
+        rol="beheerder" if eerste else "lezer",
+        taal=settings.ui_lang if eerste else "nl",
+        actief=eerste,
+        sessie_versie=nieuwe_sessie_versie(),
+    )
+
+
+def nieuwe_sessie_versie() -> int:
+    """Willekeurig, niet 0: een cookie van een verwijderd profiel geldt dan niet voor wie daarna dezelfde id krijgt."""
+    import secrets
+
+    return 1 + secrets.randbelow(2**30)
+
+
 def _profielen() -> None:
-    """Vijf vaste plekken. Profiel 1 is de beheerder en staat aan; de andere wachten op een naam en wachtwoord."""
+    """De vaste plekken 1–5; wie zich aanmeldt (/aanmelden) krijgt een profiel daarna."""
     from .models import AANTAL_PROFIELEN, Profiel
 
     with session() as s:
         for i in range(1, AANTAL_PROFIELEN + 1):
             if s.get(Profiel, i) is None:
-                eerste = i == 1
-                s.add(Profiel(
-                    id=i,
-                    gebruikersnaam="beheerder" if eerste else f"profiel{i}",
-                    naam="Beheerder" if eerste else f"Profiel {i}",
-                    rol="beheerder" if eerste else "lezer",
-                    taal=settings.ui_lang if eerste else "nl",
-                    actief=eerste,
-                ))
+                s.add(lege_plek(i))
 
 
 def _voorbeeldcasussen() -> None:
