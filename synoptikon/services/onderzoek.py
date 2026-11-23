@@ -94,8 +94,9 @@ def laatste(db: Session, vraag: Vraag) -> Onderzoek | None:
     return db.scalar(select(Onderzoek).where(Onderzoek.vraag_id == vraag.id).order_by(Onderzoek.id.desc()).limit(1))
 
 
-def start(db: Session, vraag: Vraag, codes: list[str], opdracht: str = "", achtergrond: bool = True) -> Onderzoek:
-    o = Onderzoek(vraag_id=vraag.id, stelsels=",".join(codes), opdracht=opdracht.strip() or None, status="wacht")
+def start(db: Session, vraag: Vraag, codes: list[str], opdracht: str = "", achtergrond: bool = True,
+          profiel_id: int | None = None) -> Onderzoek:
+    o = Onderzoek(vraag_id=vraag.id, profiel_id=profiel_id, stelsels=",".join(codes), opdracht=opdracht.strip() or None, status="wacht")
     db.add(o)
     db.commit()
     if achtergrond:
@@ -145,7 +146,7 @@ def _voer_uit(oid: int, db: Session | None = None) -> None:
 
         try:
             r, usd = claude.loop(db, "onderzoek", SYSTEEM, _prompt(db, vraag, codes, o.opdracht), SCHEMA, effort="high",
-                                 max_rondes=30, max_zoekacties=12, max_tokens=64000, voortgang=voortgang)
+                                 max_rondes=30, max_zoekacties=12, max_tokens=64000, voortgang=voortgang, profiel_id=o.profiel_id)
             o.resultaat, o.usd = r, usd
             verwerk(db, vraag, r, codes)
             o.status, o.voortgang = "klaar", None

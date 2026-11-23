@@ -1053,5 +1053,11 @@
  "Gutachtenstil": "Gutachtenstil",
  "Urteilsstil": "Urteilsstil",
  "Studie en achtergrond": "Études et parcours",
- "Claude krijgt dit mee bij casussen, beoordelingen en kaarten uit notities. Noem je studie, universiteit, welk recht je al kent en waarvoor je leert.": "Claude le reçoit avec les cas, les corrections et les cartes tirées des notes. Indiquez vos études, votre université, le droit que vous connaissez déjà et ce que vous préparez."
+ "Claude krijgt dit mee bij casussen, beoordelingen en kaarten uit notities. Noem je studie, universiteit, welk recht je al kent en waarvoor je leert.": "Claude le reçoit avec les cas, les corrections et les cartes tirées des notes. Indiquez vos études, votre université, le droit que vous connaissez déjà et ce que vous préparez.",
+ "Claude deze maand: ${u} van ${g}": "Claude ce mois-ci : ${u} sur ${g}",
+ "Claude deze maand: ${u}, geen eigen grens": "Claude ce mois-ci : ${u}, pas de limite propre",
+ "Grens voor Claude per maand ($)": "Limite mensuelle pour Claude ($)",
+ "alle profielen samen": "tous les profils ensemble",
+ "leeg: ${g}; een beheerder heeft dan geen eigen grens, alleen het totaal": "vide : ${g} ; un administrateur n'a alors pas de limite propre, seulement le total",
+ "zonder profiel": "sans profil"
 }

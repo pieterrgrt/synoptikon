@@ -65,6 +65,8 @@ class Settings:
     anthropic_api_key: str | None = field(default_factory=lambda: _env("SYNOPTIKON_ANTHROPIC_API_KEY") or _env("ANTHROPIC_API_KEY"))
     claude_model: str = field(default_factory=lambda: _env("SYNOPTIKON_CLAUDE_MODEL", "claude-opus-5-5"))
     llm_budget_usd: float = field(default_factory=lambda: float(_env("SYNOPTIKON_LLM_BUDGET_USD", "20")))
+    # Grens per profiel per maand, als de beheerder op /beheer/profielen geen andere instelt (een beheerder zelf: geen).
+    llm_profiel_usd: float = field(default_factory=lambda: float(_env("SYNOPTIKON_LLM_PROFIEL_USD", "5")))
 
     # Kaarten uit notities (services/notities.py): een kopie van de notitiemap (scripts/notities.sh zet die in
     # data/notities) en per map het vak in Wunderkammer, "Zivilrecht 1A=ZR Ia; Kapitalmarktrecht=W". Mappen zonder vak

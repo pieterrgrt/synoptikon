@@ -280,7 +280,7 @@ def _kaarten_uit(db: Session, lijst: Leerlijst, b: Bestand, voorstel: list[dict]
 def verwerk_notitie(db: Session, profiel_id: int, b: Bestand) -> list[Kaart]:
     lijst = lijst_voor(db, profiel_id, b.vak)
     antwoord, _kosten = claude.loop(db, "notities", SYSTEM.format(wie=claude.voor_wie(db, profiel_id), max=MAX_KAARTEN), _opdracht(b, lijst), SCHEMA,
-                                    effort="medium", max_rondes=15, max_zoekacties=0)
+                                    effort="medium", max_rondes=15, max_zoekacties=0, profiel_id=profiel_id)
     return _kaarten_uit(db, lijst, b, antwoord.get("kaarten") or [])
 
 

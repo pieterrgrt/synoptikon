@@ -5,6 +5,7 @@ from fastapi.responses import PlainTextResponse, RedirectResponse, Response
 from sqlalchemy import select
 from sqlalchemy.orm import Session, selectinload
 
+from .. import auth
 from ..db import get_session
 from ..models import Antwoord, AntwoordBron, Begrip, Bron, Concordantie, Notitie, Stelsel, Vraag, VraagBegrip
 from ..services import bibliotheek, claude, export, onderzoek
@@ -87,12 +88,17 @@ def vraag_maak(
     if laat_onderzoeken == "1" and claude.beschikbaar():
         actief = {s.code for s in actieve_stelsels(db)}
         codes = [c for c in stelsel if c in actief] or _standaard(db, request)
-        onderzoek.start(db, vraag, codes)
+        onderzoek.start(db, vraag, codes, profiel_id=_ik(request))
         return RedirectResponse(f"/vragen/{vraag.slug}#onderzoek", status_code=303)
     return RedirectResponse(f"/vragen/{vraag.slug}", status_code=303)
 
 
 STANDAARD = ("NL", "DE", "FR", "EU")
+
+
+def _ik(request: Request) -> int | None:
+    p = auth.huidig_profiel(request)
+    return p.id if p else None
 
 
 def _standaard(db: Session, request: Request) -> list[str]:
@@ -116,7 +122,7 @@ async def onderzoek_start(request: Request, slug: str, db: Session = Depends(get
     if lopend is None or lopend.status not in ("wacht", "bezig"):
         actief = {s.code for s in actieve_stelsels(db)}
         codes = [str(c) for c in form.getlist("stelsel") if str(c) in actief] or _standaard(db, request)
-        onderzoek.start(db, vraag, codes, str(form.get("opdracht") or ""))
+        onderzoek.start(db, vraag, codes, str(form.get("opdracht") or ""), profiel_id=_ik(request))
     return RedirectResponse(f"/vragen/{vraag.slug}#onderzoek", status_code=303)
 
 

@@ -6,8 +6,10 @@ uit de geïmporteerde officiële versies; rechtspraak en literatuur zoekt het op
 eindresultaat is JSON volgens een schema (`output_config.format`).
 
 - Sleutel en model: `SYNOPTIKON_ANTHROPIC_API_KEY`, `SYNOPTIKON_CLAUDE_MODEL` (standaard claude-opus-5-5).
-- Budget: `SYNOPTIKON_LLM_BUDGET_USD` per kalendermaand (standaard 20). Elke aanroep komt in `llm_gebruik`; is het
-  budget op, dan weigert `loop` vóór de volgende aanroep.
+- Budget: `SYNOPTIKON_LLM_BUDGET_USD` per kalendermaand (standaard 20) voor iedereen samen, en per profiel een grens
+  (`Profiel.llm_grens_usd`, anders `SYNOPTIKON_LLM_PROFIEL_USD`, standaard 5; een beheerder zonder eigen grens heeft
+  alleen het totaal). Elke aanroep komt in `llm_gebruik` op naam van het profiel dat erom vroeg; is het totaal of de
+  grens van dat profiel op, dan weigert `loop` vóór de volgende aanroep.
 - Weigeringen: server-side `fallbacks: "default"`; blijft het een weigering, dan een nette fout.
 - Testen: zet `client_factory` op een nep-client.
 """
@@ -76,13 +78,44 @@ def kosten(model: str, tokens_in: int, tokens_uit: int, zoekacties: int = 0) -> 
     return tokens_in / 1e6 * p_in + tokens_uit / 1e6 * p_uit + zoekacties * ZOEKPRIJS
 
 
-def maand_uitgaven(db: Session) -> float:
-    begin = datetime.now(timezone.utc).replace(day=1, hour=0, minute=0, second=0, microsecond=0, tzinfo=None)
-    return float(db.scalar(select(func.coalesce(func.sum(LlmGebruik.usd), 0.0)).where(LlmGebruik.aangemaakt >= begin)) or 0.0)
+def _maandbegin() -> datetime:
+    return datetime.now(timezone.utc).replace(day=1, hour=0, minute=0, second=0, microsecond=0, tzinfo=None)
+
+
+def maand_uitgaven(db: Session, profiel_id: int | None = None) -> float:
+    """Uitgegeven deze kalendermaand: alles samen, of (met `profiel_id`) door dat profiel."""
+    q = select(func.coalesce(func.sum(LlmGebruik.usd), 0.0)).where(LlmGebruik.aangemaakt >= _maandbegin())
+    if profiel_id is not None:
+        q = q.where(LlmGebruik.profiel_id == profiel_id)
+    return float(db.scalar(q) or 0.0)
+
+
+def per_profiel(db: Session) -> dict[int | None, float]:
+    """Uitgaven deze maand per profiel (None: zonder profiel, zoals de CLI), voor het overzicht van de beheerder."""
+    return {pid: float(usd) for pid, usd in db.execute(select(LlmGebruik.profiel_id, func.sum(LlmGebruik.usd))
+                                                       .where(LlmGebruik.aangemaakt >= _maandbegin()).group_by(LlmGebruik.profiel_id))}
+
+
+def grens(p: Profiel | None) -> float | None:
+    """De maandgrens van dit profiel in $; None = geen eigen grens (alleen het totaal)."""
+    if p is None:
+        return None
+    if p.llm_grens_usd is not None:
+        return p.llm_grens_usd
+    return None if p.is_beheerder else settings.llm_profiel_usd
 
 
 def budget_over(db: Session) -> float:
     return max(0.0, settings.llm_budget_usd - maand_uitgaven(db))
+
+
+def controleer_budget(db: Session, profiel_id: int | None) -> None:
+    """ClaudeFout als het totaal of de grens van het profiel op is."""
+    if budget_over(db) <= 0:
+        raise ClaudeFout(f"Het maandbudget voor Claude (${settings.llm_budget_usd:.0f}) is op.")
+    g = grens(db.get(Profiel, profiel_id)) if profiel_id else None
+    if g is not None and maand_uitgaven(db, profiel_id) >= g:
+        raise ClaudeFout(f"Je maandgrens voor Claude (${g:.2f}) is op.")
 
 
 # --- gereedschap ----------------------------------------------------------------------------------------------------
@@ -220,11 +253,11 @@ def voer_uit(db: Session, naam: str, invoer: dict) -> dict:
 # --- de loop --------------------------------------------------------------------------------------------------------
 
 
-def _noteer(db: Session, doel: str, model: str, usage) -> float:
+def _noteer(db: Session, doel: str, model: str, usage, profiel_id: int | None = None) -> float:
     zoek = getattr(getattr(usage, "server_tool_use", None), "web_search_requests", 0) or 0
     t_in = (usage.input_tokens or 0) + (getattr(usage, "cache_creation_input_tokens", 0) or 0) + (getattr(usage, "cache_read_input_tokens", 0) or 0)
     usd = kosten(model, t_in, usage.output_tokens or 0, zoek)
-    db.add(LlmGebruik(doel=doel, model=model, tokens_in=t_in, tokens_uit=usage.output_tokens or 0, zoekacties=zoek, usd=usd))
+    db.add(LlmGebruik(profiel_id=profiel_id, doel=doel, model=model, tokens_in=t_in, tokens_uit=usage.output_tokens or 0, zoekacties=zoek, usd=usd))
     db.commit()
     return usd
 
@@ -240,8 +273,10 @@ def loop(
     max_zoekacties: int = 5,
     max_tokens: int = 32000,
     voortgang: Callable[[str], None] | None = None,
+    profiel_id: int | None = None,
 ) -> tuple[dict, float]:
-    """Laat Claude met de tools werken tot het een antwoord volgens `schema` geeft. → (antwoord, kosten in $)."""
+    """Laat Claude met de tools werken tot het een antwoord volgens `schema` geeft. → (antwoord, kosten in $).
+    `profiel_id`: wie erom vroeg; daarop wordt geboekt en diens grens geldt (None: alleen het totaal, zoals de CLI)."""
     if not beschikbaar():
         raise ClaudeFout("Claude staat uit: er is geen SYNOPTIKON_ANTHROPIC_API_KEY ingesteld.")
     client = client_factory(settings.anthropic_api_key)
@@ -250,8 +285,7 @@ def loop(
     berichten: list[dict] = [{"role": "user", "content": prompt}]
     totaal = 0.0
     for ronde in range(max_rondes + 1):
-        if budget_over(db) <= 0:
-            raise ClaudeFout(f"Het maandbudget voor Claude (${settings.llm_budget_usd:.0f}) is op.")
+        controleer_budget(db, profiel_id)
         laatste = ronde == max_rondes
         params = dict(
             model=model, max_tokens=max_tokens, system=system, messages=berichten,
@@ -261,7 +295,7 @@ def loop(
         )
         with client.beta.messages.stream(**params) as stream:
             antwoord = stream.get_final_message()
-        totaal += _noteer(db, doel, model, antwoord.usage)
+        totaal += _noteer(db, doel, model, antwoord.usage, profiel_id)
         if antwoord.stop_reason == "refusal":
             raise ClaudeFout("Claude weigerde deze opdracht.")
         if antwoord.stop_reason == "max_tokens":
