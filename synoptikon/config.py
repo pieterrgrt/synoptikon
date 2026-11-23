@@ -90,6 +90,14 @@ class Settings:
     notities_vakken: str = field(default_factory=lambda: _env("SYNOPTIKON_NOTITIES_VAKKEN", ""))
 
     # Standaardtaal voor vertalingen in de synopse.
+    # Uitgaande mail, alleen voor `synoptikon wachtlijst --doen` (het bericht bij de opening). Poort 465 is SSL,
+    # elke andere poort STARTTLS.
+    smtp_host: str | None = field(default_factory=lambda: _env("SYNOPTIKON_SMTP_HOST"))
+    smtp_port: int = field(default_factory=lambda: int(_env("SYNOPTIKON_SMTP_PORT", "587")))
+    smtp_user: str | None = field(default_factory=lambda: _env("SYNOPTIKON_SMTP_USER"))
+    smtp_password: str | None = field(default_factory=lambda: _env("SYNOPTIKON_SMTP_PASSWORD"))
+    smtp_van: str | None = field(default_factory=lambda: _env("SYNOPTIKON_SMTP_FROM"))
+
     ui_lang: str = field(default_factory=lambda: _env("SYNOPTIKON_UI_LANG", "nl"))
 
     @property
