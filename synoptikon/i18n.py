@@ -14,9 +14,11 @@ Twee lagen, bewust gescheiden:
   Duitse verdragstekst met een Nederlandse interface. Leeg = volg de interface.
 
 * **Inhoud** (`vt`): vragen, analyses, definities, toelichtingen, thema's.
-  Die worden in het Nederlands ingevoerd. Vertalingen staan in het
-  vertaalgeheugen (`InhoudVertaling`), met als sleutel de hash van de
-  Nederlandse tekst. Wijzigt de bron, dan past de hash niet meer en valt de
+  Die worden in het Nederlands ingevoerd, tenzij een redacteur een andere
+  `Profiel.inhoudstaal` heeft: dan staat de taal van de tekst in `InhoudTaal`,
+  en ziet een lezer met die taal de tekst zoals hij geschreven is. Vertalingen
+  staan in het vertaalgeheugen (`InhoudVertaling`), met als sleutel de hash
+  van de brontekst. Wijzigt de bron, dan past de hash niet meer en valt de
   weergave terug op het Nederlands: een verouderde vertaling verschijnt nooit
   stilzwijgend. Wetteksten, termen en citeertitels worden nooit vertaald.
 
@@ -132,7 +134,7 @@ def sleutel(tekst: str) -> str:
 
 
 class _Geheugen:
-    """Vertaalgeheugen in het werkgeheugen: {(hash, taal): tekst}.
+    """Vertaalgeheugen in het werkgeheugen: {(hash, taal): tekst}, en {hash: taal} voor niet-Nederlandse bronnen.
 
     Een paar duizend korte teksten; opnieuw laden na een eigen schrijfactie
     of na een minuut (voor wijzigingen uit de CLI in een ander proces).
@@ -140,24 +142,37 @@ class _Geheugen:
 
     def __init__(self) -> None:
         self.data: dict[tuple[str, str], str] = {}
+        self.bron: dict[str, str] = {}
         self.geladen = 0.0
 
     def ongeldig(self) -> None:
         self.geladen = 0.0
 
-    def get(self, h: str, t: str) -> str | None:
+    def _vers(self) -> None:
         if time.monotonic() - self.geladen > 60:
             self._laad()
+
+    def get(self, h: str, t: str) -> str | None:
+        self._vers()
         return self.data.get((h, t))
+
+    def taal_van(self, h: str) -> str:
+        self._vers()
+        return self.bron.get(h, BRONTAAL)
+
+    def alles_nederlands(self) -> bool:
+        self._vers()
+        return not self.bron
 
     def _laad(self) -> None:
         from sqlalchemy import select
 
         from .db import session_factory
-        from .models import InhoudVertaling
+        from .models import InhoudTaal, InhoudVertaling
 
         with session_factory()() as s:
             self.data = {(v.hash, v.taal): v.tekst for v in s.scalars(select(InhoudVertaling))}
+            self.bron = {r.hash: r.taal for r in s.scalars(select(InhoudTaal))}
         self.geladen = time.monotonic()
 
 
@@ -165,13 +180,18 @@ geheugen = _Geheugen()
 
 
 def vt(tekst: str | None) -> str | None:
-    """Inhoud in de taal van het verzoek, of de Nederlandse tekst als er (nog) geen geldige vertaling is."""
+    """Inhoud in de taal van het verzoek, of de tekst zoals geschreven als er (nog) geen geldige vertaling is."""
     t = taal()
-    if not tekst or t == BRONTAAL or toont_origineel():
+    if not tekst or toont_origineel() or (t == BRONTAAL and geheugen.alles_nederlands()):
         return tekst
-    return geheugen.get(sleutel(tekst), t) or tekst
+    h = sleutel(tekst)
+    if geheugen.taal_van(h) == t:
+        return tekst
+    return geheugen.get(h, t) or tekst
 
 
 def is_vertaald(tekst: str | None) -> bool:
-    t = taal()
-    return bool(tekst) and t != BRONTAAL and geheugen.get(sleutel(tekst), t) is not None
+    if not tekst or (taal() == BRONTAAL and geheugen.alles_nederlands()):
+        return False
+    h = sleutel(tekst)
+    return geheugen.taal_van(h) != taal() and geheugen.get(h, taal()) is not None

@@ -647,6 +647,19 @@ class InhoudVertaling(Base):
     gewijzigd: Mapped[datetime] = mapped_column(DateTime, default=now, onupdate=now)
 
 
+class InhoudTaal(Base):
+    """In welke taal een tekst van eigen inhoud geschreven is, als dat niet het Nederlands is (zie `i18n.vt`).
+
+    Gevuld bij het opslaan door een redacteur met een andere `Profiel.inhoudstaal` (services/vertalen.py). Sleutel is
+    de hash van de tekst, net als in het vertaalgeheugen: een gewijzigde tekst krijgt een nieuwe rij.
+    """
+
+    __tablename__ = "inhoud_taal"
+
+    hash: Mapped[str] = mapped_column(String(40), primary_key=True)
+    taal: Mapped[str] = mapped_column(String(5))
+
+
 # Profielen: vijf vaste plekken die de beheerder invult (db._profielen), plus wie zich aanmeldt (/aanmelden).
 AANTAL_PROFIELEN = 5
 ROLLEN: dict[str, str] = {
@@ -687,6 +700,9 @@ class Profiel(Base):
     # en de taal van de kaartzijden. Leeg = volg de interfacetaal. Wie in Berlijn recht studeert zet dit op 'de' en houdt
     # de interface in het Nederlands.
     rechtstaal: Mapped[str | None] = mapped_column(String(5))
+    # De taal waarin deze redacteur eigen inhoud schrijft (vragen, analyses, definities …). Leeg = Nederlands. Wat hij
+    # opslaat, krijgt die taal in `InhoudTaal`; een lezer met dezelfde taal ziet het dan zoals het geschreven is.
+    inhoudstaal: Mapped[str | None] = mapped_column(String(5))
     # Grens voor Claude per kalendermaand in $ (services/claude.py), naast het totaal voor iedereen samen. Leeg = de
     # standaardgrens (config.llm_profiel_usd); een beheerder zonder eigen grens heeft alleen het totaal.
     llm_grens_usd: Mapped[float | None] = mapped_column()
