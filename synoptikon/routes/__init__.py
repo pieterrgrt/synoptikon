@@ -24,10 +24,17 @@ def render(request: Request, naam: str, status_code: int = 200, **context: Any) 
     # Mijn stelsels (services/stelselkeuze.py): de macro's in _stelsels.html zetten de rest onder 'meer stelsels…'.
     context.setdefault("mijn", profiel.stelsel_codes if profiel is not None else None)
     context.setdefault("wk_url", settings.wk_url)
-    from ..services.vakken import VAKKEN
-
+    from ..services import vakken
     from ..services.vakken import actief_van
 
+    if profiel is None:  # zonder inloggen (AUTH_MODE=none) is het profiel 1, net als in de routes (_pid)
+        from ..db import session
+
+        with session() as s:
+            mijn_vakken = vakken.mijn(s, 1)
+    else:
+        mijn_vakken = vakken.van(profiel)
+
     context.setdefault("vak_nu", actief_van(profiel))  # de lopende keuze: ☆ bewaart daar zonder te vragen
-    context.setdefault("vakken_keuze", VAKKEN)  # voor het vak wisselen onder 'bewaard' (routes/opzoeken.py)
+    context.setdefault("vakken_keuze", mijn_vakken)  # voor het vak wisselen onder 'bewaard' (routes/opzoeken.py)
     return templates.TemplateResponse(request, naam, context, status_code=status_code)

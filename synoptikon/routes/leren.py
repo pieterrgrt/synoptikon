@@ -20,7 +20,7 @@ from ..services import leren, notities
 from ..services.artikelen import Ref, herken
 from ..services.correspondentie import thema_s_voor, wettekst_artikel
 from ..services.helpers import actieve_stelsels, leeg_naar_none
-from ..services.vakken import VAKKEN
+from ..services.vakken import mijn as mijn_vakken
 from . import render
 
 router = APIRouter()
@@ -57,8 +57,10 @@ def _veilig(terug: str, anders: str) -> str:
     return terug if terug.startswith("/") and not terug.startswith("//") else anders
 
 
-def _vakken(lijsten: list[Leerlijst]) -> list[str]:
-    return sorted({*VAKKEN, *(l.vak for l in lijsten if l.vak)})
+def _vakken(db: Session, pid: int, lijsten: list[Leerlijst]) -> list[str]:
+    """Mijn vakken (volgorde van /profiel), daarna de vakken van eigen lijsten die daar niet in staan."""
+    mijn = mijn_vakken(db, pid)
+    return [*mijn, *sorted({l.vak for l in lijsten if l.vak} - set(mijn))]
 
 
 @router.get("/leren")
@@ -68,7 +70,7 @@ def overzicht(request: Request, db: Session = Depends(get_session)):
     bouwer = leren.Bouwer(db)
     zwak = [(k, bouwer.zijden(k)) for k in leren.zwakke_kaarten(db, pid, limiet=8)]
     voorstellen = sum(1 for l in lijsten for k in l.kaarten if k.status == "voorstel")
-    return render(request, "leren.html", lijsten=lijsten, vakken=_vakken(lijsten), vandaag=date.today(),
+    return render(request, "leren.html", lijsten=lijsten, vakken=_vakken(db, pid, lijsten), vandaag=date.today(),
                   standen={l.id: leren.lijst_stand(l) for l in lijsten}, zwak=zwak, voorstellen=voorstellen, fasen=FASEN)
 
 
@@ -109,7 +111,7 @@ def nieuw(request: Request, stelsel: str = "", wet: str = "", nummer: str = "", 
         lijsten=lijsten,
         gekozen=lijst or (lijsten[0].id if len(lijsten) == 1 else None),
         doelen=doelen,
-        vakken=_vakken(lijsten),
+        vakken=_vakken(db, _pid(request), lijsten),
         terug=_veilig(terug, ref.url if ref and ref.url else "/leren"),
         soorten=KAARTSOORTEN,
         artikelsoorten=ARTIKELSOORTEN,
@@ -253,7 +255,7 @@ def lijst(request: Request, lid: int, db: Session = Depends(get_session)):
     per_notitie: dict[str, int] = {}
     for k, _z in voorstellen:
         per_notitie[k.herkomst or ""] = per_notitie.get(k.herkomst or "", 0) + 1
-    return render(request, "leerlijst.html", lijst=lijst, kaarten=kaarten, voorstellen=voorstellen, vakken=_vakken(lijsten),
+    return render(request, "leerlijst.html", lijst=lijst, kaarten=kaarten, voorstellen=voorstellen, vakken=_vakken(db, _pid(request), lijsten),
                   vandaag=date.today(), stand=leren.lijst_stand(lijst), fasen=FASEN, fase=leren.fase, welke=welke,
                   per_notitie=per_notitie, ZICHTBAAR=ZICHTBAAR)
 
