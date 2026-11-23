@@ -19,8 +19,8 @@ from .config import settings
 from .db import init_db
 from .models import RECHTSFAMILIES, RELATIE_TYPES
 from .routes import auth as auth_routes
-from .routes import artikelen, begrippen, bewaard, bronnen, eu, gedeeld, invoer, klausur, leessets, leren, markeringen as markeringen_routes, opzoeken, profielen, stelsels, vertalingen, vragen, wachtlijst, wetteksten, wunderkammer
-from .services import citeren, export, markeringen, stelselkeuze, wetboek
+from .routes import artikelen, begrippen, bewaard, bronnen, eu, gedeeld, geschiedenis, invoer, klausur, leessets, leren, markeringen as markeringen_routes, opzoeken, profielen, stelsels, vertalingen, vragen, wachtlijst, wetteksten, wunderkammer
+from .services import citeren, export, markeringen, stelselkeuze, wetboek, wijzigingen
 from .services.artikelen import ref_uit_bron, wetnaam
 from .services.helpers import extra_titel, per_familie
 
@@ -163,6 +163,8 @@ class AuthMiddleware(BaseHTTPMiddleware):
         profiel = getattr(request.state, "profiel", None)
         # Juridische inhoud mag een andere taal hebben dan de interface (Profiel.rechtstaal).
         i18n.zet_rechtstaal(getattr(profiel, "rechtstaal", None))
+        if ingelogd:
+            wijzigingen.zet_auteur(profiel)  # wie gedeelde inhoud wijzigt, komt in de geschiedenis
         if ingelogd and request.method not in ("GET", "HEAD") and not pad.startswith(_LEZER_POST) \
                 and profiel is not None and not profiel.mag_bewerken:
             response = PlainTextResponse(i18n._("Dit profiel mag alleen lezen."), status_code=403)
@@ -209,5 +211,5 @@ def apple_touch_icon():
     return FileResponse(HIER / "static" / "apple-touch-icon.png")
 
 
-for router in (auth_routes.router, profielen.router, vragen.router, bewaard.router, bronnen.router, begrippen.router, stelsels.router, artikelen.router, opzoeken.router, invoer.router, wetteksten.router, eu.router, vertalingen.router, gedeeld.router, klausur.router, leessets.router, leren.router, markeringen_routes.router, wunderkammer.router, wachtlijst.router):
+for router in (auth_routes.router, profielen.router, vragen.router, bewaard.router, bronnen.router, begrippen.router, stelsels.router, artikelen.router, opzoeken.router, invoer.router, wetteksten.router, eu.router, vertalingen.router, gedeeld.router, geschiedenis.router, klausur.router, leessets.router, leren.router, markeringen_routes.router, wunderkammer.router, wachtlijst.router):
     app.include_router(router)

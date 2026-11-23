@@ -847,3 +847,14 @@ main.pagina.breed { max-width: 90rem; }
 .skizze-boom .niv-4 { padding-left: 3rem; }
 .skizze-inhoud { display: block; font-weight: 400; color: var(--inkt-2); }
 .skizze-normen { display: block; font-weight: 400; }
+
+/* geschiedenis van gedeelde inhoud */
+.geschiedenis { list-style: none; padding: 0; }
+.geschiedenis > li { border-top: 1px solid var(--lijn); padding: .6rem 0; }
+.verschil { margin: .3rem 0; font-family: var(--sans); font-size: .9rem; }
+.verschil del { color: var(--fout); }
+.verschil ins { color: var(--ok); text-decoration: none; }
+pre.diff { white-space: pre-wrap; font-size: .82rem; margin: .2rem 0; }
+pre.diff .weg { background: color-mix(in srgb, var(--fout) 14%, transparent); }
+pre.diff .bij { background: color-mix(in srgb, var(--ok) 14%, transparent); }
+p.wijziging { margin: .3rem 0 0; font-family: var(--sans); }

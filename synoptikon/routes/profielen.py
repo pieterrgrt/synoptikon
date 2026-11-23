@@ -17,7 +17,7 @@ from ..config import settings
 from ..db import get_session, lege_plek
 from ..i18n import TALEN, _
 from ..models import AANTAL_PROFIELEN, ROLLEN, Profiel
-from ..services import stelselkeuze
+from ..services import claude, stelselkeuze
 from ..services.helpers import actieve_stelsels
 from . import render
 
@@ -231,12 +231,25 @@ def beheer(request: Request, db: Session = Depends(get_session), klaar: str = ""
     _beheerder(request)
     profielen = db.scalars(select(Profiel).order_by(Profiel.id)).all()
     return render(request, "profielen.html", profielen=profielen, ROLLEN=ROLLEN, klaar=klaar, fout=fout,
-                  ik=auth.huidig_profiel(request).id, min_lengte=MIN_LENGTE)
+                  ik=auth.huidig_profiel(request).id, min_lengte=MIN_LENGTE, uitgaven=claude.per_profiel(db),
+                  totaal=claude.maand_uitgaven(db), budget=settings.llm_budget_usd, standaardgrens=settings.llm_profiel_usd,
+                  grens=claude.grens)
+
+
+def _grens(waarde: str, oud: float | None) -> float | None:
+    """Leeg: de standaard; een ongeldig of negatief getal laat de oude grens staan."""
+    if not waarde.strip():
+        return None
+    try:
+        g = float(waarde.replace(",", "."))
+    except ValueError:
+        return oud
+    return round(g, 2) if g >= 0 else oud
 
 
 @router.post("/beheer/profielen/{pid}")
 def beheer_opslaan(request: Request, pid: int, gebruikersnaam: str = Form(...), naam: str = Form(...), rol: str = Form(...),
-                   taal: str = Form(...), actief: str = Form(""), wachtwoord: str = Form(""),
+                   taal: str = Form(...), actief: str = Form(""), wachtwoord: str = Form(""), llm_grens: str = Form(""),
                    db: Session = Depends(get_session)):
     _beheerder(request)
     p = db.get(Profiel, pid)
@@ -259,6 +272,7 @@ def beheer_opslaan(request: Request, pid: int, gebruikersnaam: str = Form(...), 
         return RedirectResponse(f"/beheer/profielen?fout={quote(fout)}#p{pid}", status_code=303)
     was_actief = p.actief
     p.gebruikersnaam, p.naam, p.rol, p.taal, p.actief = gebruikersnaam, naam.strip()[:80] or gebruikersnaam, rol, taal, bool(actief)
+    p.llm_grens_usd = _grens(llm_grens, p.llm_grens_usd)
     if wachtwoord:
         p.wachtwoord_hash = auth.hash_password(wachtwoord)
         p.sessie_versie += 1

@@ -226,3 +226,34 @@ def test_hernoemde_map_is_geen_nieuwe_notitie(map_, nep):
     assert u.notities == 0 and len(nep.verzoeken) == vragen
     assert "Zivilrecht 1A/1 Einführung und Grundlagen/Vorlesung.md" in herkomst & paden
     assert not any(p.startswith("Zivilrecht 1A/1 Einführung/") for p in herkomst | paden)
+
+
+def test_notities_aanleveren(map_, nep, client, monkeypatch, tmp_path):
+    """Zonder vault: een notitie uploaden op /leren/notities, Claude stelt kaarten voor in 'Notities · <vak>'."""
+    monkeypatch.setattr(settings, "data_dir", tmp_path / "data")
+    _wettekst()
+    assert 'href="/leren/notities"' in client.get("/leren").text
+    r = client.post("/leren/notities", data={"vak": "Seminar Haftung"}, follow_redirects=False, files=[
+        ("bestand", ("../../Sitzung 1.md", ("---\ntitel: x\n---\n" + LANG).encode(), "text/markdown")),
+        ("bestand", ("kort.txt", b"te kort", "text/plain")),
+        ("bestand", ("slides.pdf", b"%PDF-1.4", "application/pdf")),
+    ])
+    assert r.status_code == 303 and r.headers["location"].count("fout=") == 2
+    assert (tmp_path / "data" / "notities_upload" / "1" / "Sitzung 1.md").is_file(), "geen pad buiten de map"
+    with database.session() as s:
+        n = s.scalar(select(NotitieBestand).where(NotitieBestand.profiel_id == 1, NotitieBestand.pad == "upload/Sitzung 1.md"))
+        assert n.vak == "Seminar Haftung" and n.hash and n.voorstellen > 0 and not n.fout, "de achtergrondtaak liep"
+        lijst = s.scalar(select(Leerlijst).where(Leerlijst.profiel_id == 1, Leerlijst.naam == notities.LIJST_PREFIX + "Seminar Haftung"))
+        assert {k.status for k in lijst.kaarten} == {"voorstel"} and {k.herkomst for k in lijst.kaarten} == {"upload/Sitzung 1.md"}
+    html = client.get(r.headers["location"]).text
+    assert "Sitzung 1" in html and "kort.txt: te kort" in html and "slides.pdf: alleen Markdown" in html
+    with database.session() as s:  # de vault-ronde laat aangeleverde notities met rust
+        notities.herindeel(s, 1)
+        assert s.scalar(select(func.count()).select_from(Kaart).where(Kaart.herkomst == "upload/Sitzung 1.md")) == len(lijst.kaarten)
+
+
+def test_aanleveren_zonder_claude(client, monkeypatch):
+    monkeypatch.setattr(settings, "anthropic_api_key", "")
+    assert "Claude staat uit" in client.get("/leren/notities").text
+    r = client.post("/leren/notities", data={"vak": "X"}, files=[("bestand", ("a.md", LANG.encode(), "text/markdown"))])
+    assert r.status_code == 503
