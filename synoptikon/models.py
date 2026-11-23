@@ -687,6 +687,9 @@ class Profiel(Base):
     # en de taal van de kaartzijden. Leeg = volg de interfacetaal. Wie in Berlijn recht studeert zet dit op 'de' en houdt
     # de interface in het Nederlands.
     rechtstaal: Mapped[str | None] = mapped_column(String(5))
+    # Grens voor Claude per kalendermaand in $ (services/claude.py), naast het totaal voor iedereen samen. Leeg = de
+    # standaardgrens (config.llm_profiel_usd); een beheerder zonder eigen grens heeft alleen het totaal.
+    llm_grens_usd: Mapped[float | None] = mapped_column()
     # Mijn vakken (kommagescheiden, services/vakken.py): de kiezers bij bewaren, Leren, Leessets en Klausur, en de vakken
     # die uit een onderwerp mogen volgen. Leeg = geen vakken; vakken van eigen lijsten staan dan nog wel in de kiezers.
     vakken: Mapped[str | None] = mapped_column(Text)
@@ -876,11 +879,12 @@ class NotitieBestand(Base):
 
 
 class LlmGebruik(Base):
-    """Eén aanroep van de API: voor het maandbudget (config.llm_budget_usd)."""
+    """Eén aanroep van de API: voor het maandbudget (config.llm_budget_usd) en de grens van het profiel dat erom vroeg."""
 
     __tablename__ = "llm_gebruik"
 
     id: Mapped[int] = mapped_column(primary_key=True)
+    profiel_id: Mapped[int | None] = mapped_column(ForeignKey("profiel.id", ondelete="SET NULL"), index=True)  # leeg: CLI
     doel: Mapped[str] = mapped_column(String(20))  # opzoeken | onderzoek
     model: Mapped[str] = mapped_column(String(60))
     tokens_in: Mapped[int] = mapped_column(Integer, default=0)

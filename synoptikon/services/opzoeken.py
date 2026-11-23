@@ -331,7 +331,7 @@ def _vul(oid: int, db: Session | None = None) -> None:
             return
         try:
             r, _usd = claude.loop(db, "opzoeken", SYSTEEM, f"Opzoeken: {o.invoer}", SCHEMA, effort="low", max_rondes=6,
-                                  max_zoekacties=3, max_tokens=16000)
+                                  max_zoekacties=3, max_tokens=16000, profiel_id=o.profiel_id)
             r = _verrijk(db, r)
             r["bron"] = "claude"
             o.resultaat, o.status = r, "klaar"

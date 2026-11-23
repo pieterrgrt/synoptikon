@@ -149,7 +149,7 @@ def _voer_uit(oid: int, db: Session | None = None) -> None:
 
         try:
             r, usd = claude.loop(db, "onderzoek", SYSTEEM, _prompt(db, vraag, codes, o.opdracht), SCHEMA, effort="high",
-                                 max_rondes=30, max_zoekacties=12, max_tokens=64000, voortgang=voortgang)
+                                 max_rondes=30, max_zoekacties=12, max_tokens=64000, voortgang=voortgang, profiel_id=o.profiel_id)
             o.resultaat, o.usd = r, usd
             verwerk(db, vraag, r, codes)
             o.status, o.voortgang = "klaar", None

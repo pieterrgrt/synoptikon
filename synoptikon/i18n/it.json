@@ -1091,5 +1091,11 @@
  "geschiedenis": "cronologia",
  "gewijzigd": "modificato",
  "onbekend": "sconosciuto",
- "verwijderd": "eliminato"
+ "verwijderd": "eliminato",
+ "Claude deze maand: ${u} van ${g}": "Claude questo mese: ${u} su ${g}",
+ "Claude deze maand: ${u}, geen eigen grens": "Claude questo mese: ${u}, nessun limite proprio",
+ "Grens voor Claude per maand ($)": "Limite mensile per Claude ($)",
+ "alle profielen samen": "tutti i profili insieme",
+ "leeg: ${g}; een beheerder heeft dan geen eigen grens, alleen het totaal": "vuoto: ${g}; un amministratore non ha allora un limite proprio, solo il totale",
+ "zonder profiel": "senza profilo"
 }

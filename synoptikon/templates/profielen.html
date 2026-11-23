@@ -5,10 +5,13 @@
 <p class="hint">{{ _('Plek 1–5 vult de beheerder in; wie zich aanmeldt krijgt een profiel daarna. Een beheerder mag alles, ook profielen beheren; een redacteur mag lezen en invoeren; een lezer leest en houdt alleen eigen spullen bij (markeringen, kaarten, Klausuren, opzoekingen). Een profiel kan pas aan als het een wachtwoord heeft. Een nieuw wachtwoord of uitzetten logt dat profiel overal uit. Verwijderen wist het profiel met alles wat het bijhoudt; plek 1–5 komt dan leeg terug.') }}</p>
 {% if fout %}<p class="melding fout" role="alert">{{ fout }}</p>{% endif %}
 {% if klaar == 'verwijderd' %}<p class="melding ok" role="status">{{ _('Profiel verwijderd.') }}</p>{% elif klaar %}<p class="melding ok" role="status">{{ _('Opgeslagen.') }}</p>{% endif %}
+<p>{{ _('Claude deze maand: ${u} van ${g}', u='%.2f' % totaal, g='%.2f' % budget) }} ({{ _('alle profielen samen') }}{% if uitgaven.get(None) %}; {{ _('zonder profiel') }}: ${{ '%.2f' % uitgaven[None] }}{% endif %})</p>
 <div class="profielen">
 {% for p in profielen %}
 <form method="post" action="/beheer/profielen/{{ p.id }}" class="formulier blok profiel-kaart {% if not p.actief %}uit{% endif %}" id="p{{ p.id }}">
   <h2>{{ p.id }} · {{ p.naam }}{% if p.id == ik %} <span class="stil">({{ _('jij') }})</span>{% endif %}</h2>
+  {% set g = grens(p) %}
+  <p class="klein">{% if g is none %}{{ _('Claude deze maand: ${u}, geen eigen grens', u='%.2f' % uitgaven.get(p.id, 0)) }}{% else %}{{ _('Claude deze maand: ${u} van ${g}', u='%.2f' % uitgaven.get(p.id, 0), g='%.2f' % g) }}{% endif %}</p>
   <p class="stil klein">{% if p.actief %}{{ _('actief') }}{% else %}{{ _('uit') }}{% endif %}{% if p.laatst_ingelogd %} · {{ _('laatst ingelogd {datum}', datum=p.laatst_ingelogd.strftime('%d-%m-%Y %H:%M')) }}{% endif %}{% if not p.wachtwoord_hash %} · {{ _('nog geen eigen wachtwoord') }}{% endif %}</p>
   <div class="rij">
     <label>{{ _('Gebruikersnaam') }} <input name="gebruikersnaam" value="{{ p.gebruikersnaam }}" required maxlength="40" autocapitalize="none" autocorrect="off" spellcheck="false"></label>
@@ -20,6 +23,8 @@
   </div>
   <label>{{ _('Nieuw wachtwoord') }} <span class="hint">{{ _('leeg laten om het huidige te houden; minstens {n} tekens', n=min_lengte) }}</span>
     <input type="password" name="wachtwoord" minlength="{{ min_lengte }}" autocomplete="new-password"></label>
+  <label>{{ _('Grens voor Claude per maand ($)') }} <span class="hint">{{ _('leeg: ${g}; een beheerder heeft dan geen eigen grens, alleen het totaal', g='%.2f' % standaardgrens) }}</span>
+    <input type="number" name="llm_grens" min="0" step="0.01" inputmode="decimal" value="{{ '%.2f' % p.llm_grens_usd if p.llm_grens_usd is not none else '' }}"></label>
   <label class="vinkje"><input type="checkbox" name="actief" value="1" {% if p.actief %}checked{% endif %}> {{ _('Profiel staat aan') }}</label>
   <div class="acties"><button class="knop primair">{{ _('Opslaan') }}</button>
     {% if p.id != ik %}<button class="knop gevaar" formaction="/beheer/profielen/{{ p.id }}/verwijderen" formnovalidate data-bevestig="{{ _('Profiel {naam} met al zijn gegevens definitief verwijderen?', naam=p.gebruikersnaam) }}">{{ _('Verwijderen') }}</button>{% endif %}</div>

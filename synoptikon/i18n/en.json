@@ -1091,5 +1091,11 @@
  "geschiedenis": "history",
  "gewijzigd": "changed",
  "onbekend": "unknown",
- "verwijderd": "deleted"
+ "verwijderd": "deleted",
+ "Claude deze maand: ${u} van ${g}": "Claude this month: ${u} of ${g}",
+ "Claude deze maand: ${u}, geen eigen grens": "Claude this month: ${u}, no own limit",
+ "Grens voor Claude per maand ($)": "Monthly limit for Claude ($)",
+ "alle profielen samen": "all profiles together",
+ "leeg: ${g}; een beheerder heeft dan geen eigen grens, alleen het totaal": "empty: ${g}; an administrator then has no own limit, only the total",
+ "zonder profiel": "without profile"
 }

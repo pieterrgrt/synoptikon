@@ -535,13 +535,13 @@ def _schoon_skizze(skizze) -> list[dict]:
     return uit
 
 
-def _in_thread(functie, rij_id: int, taal: str, db: Session, wie: str = "") -> None:
+def _in_thread(functie, rij_id: int, taal: str, db: Session, wie: str = "", **extra) -> None:
     """Op de achtergrond met een eigen sessie; zonder `ACHTERGROND` (tests) meteen, in de sessie van de aanroeper.
     `wie`: voor wie Claude werkt (claude.voor_wie), hier al opgehaald zodat de thread het profiel niet hoeft te kennen."""
     if ACHTERGROND:
-        threading.Thread(target=functie, args=(rij_id, taal), kwargs={"wie": wie}, daemon=True).start()
+        threading.Thread(target=functie, args=(rij_id, taal), kwargs={"wie": wie, **extra}, daemon=True).start()
     else:
-        functie(rij_id, taal, db, wie=wie)
+        functie(rij_id, taal, db, wie=wie, **extra)
 
 
 def _sessie(db: Session | None):
@@ -578,7 +578,7 @@ def _genereer(cid: int, taal: str = "nl", db: Session | None = None, wie: str = 
         db.commit()
         try:
             r, usd = claude.loop(db, "casus", _GENEREER.format(wie=wie or claude.voor_wie(db, c.profiel_id), taal=_taalnaam(taal), niveau=CASUS_NIVEAUS[c.niveau][0]), c.opdracht or c.titel,
-                                 GENEREER, effort="high", max_rondes=20, max_zoekacties=0)
+                                 GENEREER, effort="high", max_rondes=20, max_zoekacties=0, profiel_id=c.profiel_id)
             c = db.get(Casus, cid)
             if not str(r.get("sachverhalt") or "").strip():
                 raise claude.ClaudeFout(_("Claude gaf geen Sachverhalt."))
@@ -636,7 +636,7 @@ def _beoordeel(pid: int, taal: str = "nl", db: Session | None = None, wie: str =
         db.commit()
         try:
             r, usd = claude.loop(db, "klausur", _BEOORDEEL.format(wie=wie or claude.voor_wie(db, p.profiel_id), taal=_taalnaam(taal)), _beoordeel_prompt(p), BEOORDELING,
-                                 effort="high", max_rondes=20, max_zoekacties=0)
+                                 effort="high", max_rondes=20, max_zoekacties=0, profiel_id=p.profiel_id)
             p = db.get(CasusPoging, pid)
             verwerk_beoordeling(db, p, r)
             p.model, p.usd, p.status, p.fout = settings.claude_model, (p.usd or 0) + usd, "beoordeeld", None
@@ -692,13 +692,14 @@ def verwerk_beoordeling(db: Session, p: CasusPoging, r: dict) -> None:
 
 def muster(db: Session, c: Casus, taal: str = "nl", profiel_id: int | None = None) -> None:
     """Laat Claude de Musterlösung schrijven (op de achtergrond; de pagina toont de stand). `profiel_id`: wie erom vraagt;
-    bij een gedeelde voorbeeldcasus is dat iemand anders dan de eigenaar (die er niet is)."""
+    bij een gedeelde voorbeeldcasus is dat iemand anders dan de eigenaar (die er niet is). Het gaat van diens budget af."""
     c.muster_status, c.muster_fout = "wacht", None
     db.commit()
-    _in_thread(_muster, c.id, taal, db, claude.voor_wie(db, profiel_id or c.profiel_id))
+    _in_thread(_muster, c.id, taal, db, claude.voor_wie(db, profiel_id or c.profiel_id),
+               profiel_id=profiel_id or c.profiel_id)
 
 
-def _muster(cid: int, taal: str = "nl", db: Session | None = None, wie: str = "") -> None:
+def _muster(cid: int, taal: str = "nl", db: Session | None = None, wie: str = "", profiel_id: int | None = None) -> None:
     db, eigen = _sessie(db)
     try:
         c = db.get(Casus, cid)
@@ -711,7 +712,7 @@ def _muster(cid: int, taal: str = "nl", db: Session | None = None, wie: str = ""
             if c.skizze:
                 prompt += f"\n\n<loesungsskizze>\n{_skizze_tekst(c.skizze)}\n</loesungsskizze>"
             r, usd = claude.loop(db, "muster", _MUSTER.format(wie=wie or claude.voor_wie(db, c.profiel_id), taal=_taalnaam(taal)), prompt, MUSTER, effort="high", max_rondes=20,
-                                 max_zoekacties=0, max_tokens=48000)
+                                 max_zoekacties=0, max_tokens=48000, profiel_id=profiel_id or c.profiel_id)
             c = db.get(Casus, cid)
             tekst = str(r.get("musterloesung") or "").strip()
             if not tekst:
