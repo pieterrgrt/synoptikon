@@ -1,0 +1,90 @@
+/* Wachtlijst (/wachtlijst): de pagina voor wie nog geen account heeft. Alle beweging is CSS en valt weg bij
+   prefers-reduced-motion. */
+
+.wl { min-height: 100vh; overflow-x: hidden; position: relative; }
+.wl-main { position: relative; z-index: 1; width: min(60rem, 92vw); margin: 0 auto; padding: 4rem 0 2rem;
+  display: flex; flex-direction: column; gap: 1.6rem; }
+
+/* Achtergrond: vage tekens die langzaam drijven */
+.wl-achter { position: fixed; inset: 0; pointer-events: none; overflow: hidden; z-index: 0; }
+.wl-achter span { position: absolute; left: var(--x); top: var(--y); font-family: var(--serif); font-size: clamp(2.5rem, 7vw, 6rem);
+  white-space: nowrap; color: var(--inkt); opacity: .045; animation: wl-drijf 24s ease-in-out var(--d) infinite alternate; }
+@keyframes wl-drijf {
+  0%   { transform: translate(0, 0) rotate(-4deg); }
+  50%  { transform: translate(2.5vw, -3vh) rotate(3deg); }
+  100% { transform: translate(-2vw, 2vh) rotate(-2deg); }
+}
+
+/* Kop */
+.wl-titel { font-size: clamp(2.2rem, 6vw, 3.4rem); margin: 0; animation: wl-op .8s cubic-bezier(.2, .7, .2, 1) both; }
+.wl-sigma { display: inline-block; animation: wl-sigma 1.1s cubic-bezier(.3, 1.6, .5, 1) both; }
+@keyframes wl-sigma {
+  0%   { opacity: 0; transform: scale(.3) rotate(-90deg); }
+  100% { opacity: 1; transform: none; }
+}
+.wl-uitleg { font-family: var(--serif); font-size: 1.15rem; line-height: 1.55; max-width: 40rem; margin: 0; color: var(--inkt-2);
+  animation: wl-op .8s .15s cubic-bezier(.2, .7, .2, 1) both; }
+@keyframes wl-op {
+  from { opacity: 0; transform: translateY(14px); }
+  to   { opacity: 1; transform: none; }
+}
+
+/* Synopse: drie kolommen die na elkaar opkomen; daarna licht het kenmerk van elk stelsel om de beurt op */
+.wl-synopse { margin: 0; border: 1px solid var(--lijn); border-radius: 10px; background: var(--papier);
+  box-shadow: 0 12px 40px -24px rgba(0, 0, 0, .35); overflow: hidden; animation: wl-op .8s .3s cubic-bezier(.2, .7, .2, 1) both; }
+.wl-synopse figcaption { position: relative; padding: .7rem 1rem; font-weight: 600; background: var(--papier-2); border-bottom: 1px solid var(--lijn); }
+.wl-synopse figcaption::after { content: ""; position: absolute; left: 0; bottom: -1px; height: 2px; width: 100%; background: var(--accent);
+  transform-origin: left; animation: wl-streep 1.2s .9s cubic-bezier(.6, 0, .2, 1) both; }
+@keyframes wl-streep { from { transform: scaleX(0); } to { transform: scaleX(1); } }
+.wl-kolommen { display: grid; grid-template-columns: repeat(auto-fit, minmax(14rem, 1fr)); }
+.wl-kolom { padding: 1rem; display: flex; flex-direction: column; gap: .6rem; border-left: 1px solid var(--lijn);
+  animation: wl-kolom .7s calc(.6s + var(--i) * .22s) cubic-bezier(.2, .7, .2, 1) both; }
+.wl-kolom:first-child { border-left: 0; }
+@keyframes wl-kolom {
+  from { opacity: 0; transform: translateY(24px) scale(.98); }
+  to   { opacity: 1; transform: none; }
+}
+.wl-kolom h2 { font-size: .95rem; margin: 0; display: flex; align-items: center; gap: .4rem; flex-wrap: wrap; }
+.wl-kolom .vlag { width: 1.2em; height: auto; border-radius: 2px; }
+.wl-ref { font-weight: 400; color: var(--inkt-3); font-size: .85rem; }
+.wl-kolom p { font-family: var(--serif); margin: 0; line-height: 1.45; flex: 1; }
+.wl-label { align-self: flex-start; font-size: .8rem; padding: .15rem .55rem; border-radius: 99px; border: 1px solid var(--lijn);
+  color: var(--inkt-2); animation: wl-uitlicht 7.5s calc(1.8s + var(--i) * 2.5s) infinite; }
+@keyframes wl-uitlicht {
+  0%, 36%, 100% { background: transparent; border-color: var(--lijn); color: var(--inkt-2); }
+  6%, 28%       { background: var(--accent-zacht); border-color: var(--accent); color: var(--accent); }
+}
+
+/* Aanmelden */
+.wl-aanmelden { display: flex; flex-direction: column; gap: .8rem; max-width: 34rem; animation: wl-op .8s 1.2s cubic-bezier(.2, .7, .2, 1) both; }
+.wl-aanmelden p { margin: 0; }
+.wl-form { display: flex; flex-direction: column; gap: .7rem; }
+.wl-veld { display: flex; flex-direction: column; gap: .3rem; }
+.wl-knoppen { display: flex; gap: 1rem; align-items: center; flex-wrap: wrap; }
+.wl-knoppen .knop.primair { position: relative; overflow: hidden; }
+.wl-knoppen .knop.primair::after { content: ""; position: absolute; inset: 0; transform: translateX(-120%);
+  background: linear-gradient(100deg, transparent 30%, rgba(255, 255, 255, .35) 50%, transparent 70%); }
+.wl-knoppen .knop.primair:hover::after, .wl-knoppen .knop.primair:focus-visible::after { animation: wl-glans .9s ease; }
+@keyframes wl-glans { to { transform: translateX(120%); } }
+.wl-honing { position: absolute; left: -9999px; width: 1px; height: 1px; overflow: hidden; }
+
+.wl-klaar { display: flex; gap: .7rem; align-items: center; font-size: 1.05rem; }
+.wl-klaar svg { flex: none; width: 2rem; height: 2rem; fill: none; stroke: var(--accent); stroke-width: 2.4; stroke-linecap: round;
+  stroke-linejoin: round; stroke-dasharray: 26; stroke-dashoffset: 26; animation: wl-vink .6s .2s ease-out forwards; }
+@keyframes wl-vink { to { stroke-dashoffset: 0; } }
+
+.wl-voet { display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 1rem;
+  padding-top: 1rem; border-top: 1px solid var(--lijn); font-size: .9rem; }
+.wl-voet .taalkeuze { padding: 0; }
+
+@media (max-width: 40rem) {
+  .wl-main { padding-top: 2.5rem; }
+  .wl-kolom { border-left: 0; border-top: 1px solid var(--lijn); }
+  .wl-kolom:first-child { border-top: 0; }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .wl *, .wl *::after { animation: none !important; }
+  .wl-synopse figcaption::after { transform: none; }
+  .wl-klaar svg { stroke-dashoffset: 0; }
+}

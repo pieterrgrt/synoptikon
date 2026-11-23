@@ -359,6 +359,71 @@ def cmd_rebuild_fts(_args) -> int:
     return 0
 
 
+def cmd_wachtlijst(args) -> int:
+    """Wachtlijst tonen, of het bericht van de opening sturen en elk adres na verzending wissen.
+
+    Het bericht staat in een tekstbestand: de eerste regel is het onderwerp, de rest de tekst. Staat er naast
+    `opening.txt` een `opening.de.txt`, dan krijgt wie zich in het Duits aanmeldde die versie."""
+    import smtplib
+    from email.message import EmailMessage
+    from pathlib import Path
+
+    from sqlalchemy import select
+
+    from .config import settings
+    from .db import init_db, session
+    from .models import Wachtlijst
+
+    init_db()
+    with session() as s:
+        rijen = s.scalars(select(Wachtlijst).order_by(Wachtlijst.aangemeld)).all()
+        if not args.tekst:
+            for r in rijen:
+                print(f"{r.aangemeld:%Y-%m-%d}\t{r.taal}\t{r.email}")
+            print(f"{len(rijen)} adres(sen)", file=sys.stderr)
+            return 0
+        basis = Path(args.tekst)
+        if not basis.is_file():
+            print(f"{basis} bestaat niet", file=sys.stderr)
+            return 1
+
+        def bericht(taal: str) -> tuple[str, str]:
+            pad = basis.with_name(f"{basis.stem}.{taal}{basis.suffix}")
+            onderwerp, _, tekst = (pad if pad.is_file() else basis).read_text(encoding="utf-8").partition("\n")
+            return onderwerp.strip(), tekst.lstrip("\n")
+
+        if not args.doen:
+            for r in rijen:
+                print(f"{r.email}\t{bericht(r.taal)[0]}")
+            print(f"proef: {len(rijen)} bericht(en); met --doen versturen en de adressen wissen", file=sys.stderr)
+            return 0
+        if not (settings.smtp_host and settings.smtp_van):
+            print("SYNOPTIKON_SMTP_HOST en SYNOPTIKON_SMTP_FROM ontbreken", file=sys.stderr)
+            return 1
+        klasse = smtplib.SMTP_SSL if settings.smtp_port == 465 else smtplib.SMTP
+        verstuurd = 0
+        with klasse(settings.smtp_host, settings.smtp_port, timeout=30) as smtp:
+            if klasse is smtplib.SMTP:
+                smtp.starttls()
+            if settings.smtp_user:
+                smtp.login(settings.smtp_user, settings.smtp_password or "")
+            for r in rijen:
+                onderwerp, tekst = bericht(r.taal)
+                m = EmailMessage()
+                m["From"], m["To"], m["Subject"] = settings.smtp_van, r.email, onderwerp
+                m.set_content(tekst)
+                try:
+                    smtp.send_message(m)
+                except smtplib.SMTPException as e:  # dit adres blijft staan voor een volgende ronde
+                    print(f"{r.email}: {e}", file=sys.stderr)
+                    continue
+                s.delete(r)
+                s.commit()
+                verstuurd += 1
+        print(f"{verstuurd} van {len(rijen)} verstuurd en gewist", file=sys.stderr)
+        return 0 if verstuurd == len(rijen) else 1
+
+
 def cmd_serve(args) -> int:
     import uvicorn
 
@@ -456,6 +521,10 @@ def main(argv: list[str] | None = None) -> int:
     s.add_argument("--doen", action="store_true", help="opslaan; zonder deze vlag een proef")
     s.set_defaults(fn=cmd_hertaal)
     sub.add_parser("rebuild-fts", help="zoekindex opnieuw opbouwen").set_defaults(fn=cmd_rebuild_fts)
+    s = sub.add_parser("wachtlijst", help="wachtlijst tonen; met --tekst het bericht van de opening (proef, met --doen versturen en wissen)")
+    s.add_argument("--tekst", help="bestand: eerste regel onderwerp, daarna de tekst; per taal naast elkaar als naam.de.txt")
+    s.add_argument("--doen", action="store_true", help="echt versturen en elk verstuurd adres wissen")
+    s.set_defaults(fn=cmd_wachtlijst)
     s = sub.add_parser("serve", help="ontwikkelserver starten")
     s.add_argument("--host", default="127.0.0.1")
     s.add_argument("--port", type=int, default=8000)

@@ -1136,3 +1136,15 @@ class CasusProbleem(Base):
     @property
     def status_label(self) -> str:
         return _(PROBLEEM_STATUS.get(self.status, self.status))
+
+
+class Wachtlijst(Base):
+    """Wie bericht wil als Synoptikon opengaat (/wachtlijst). `synoptikon wachtlijst --doen` stuurt dat ene bericht
+    en wist daarna het adres; meer wordt er niet mee gedaan."""
+
+    __tablename__ = "wachtlijst"
+
+    id: Mapped[int] = mapped_column(Integer, primary_key=True)
+    email: Mapped[str] = mapped_column(String(254), unique=True)
+    taal: Mapped[str] = mapped_column(String(5), default="nl")  # taal van de pagina bij het aanmelden
+    aangemeld: Mapped[datetime] = mapped_column(DateTime, default=now)
