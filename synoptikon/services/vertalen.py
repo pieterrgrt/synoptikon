@@ -16,7 +16,8 @@ import json
 from dataclasses import dataclass
 from pathlib import Path
 
-from sqlalchemy import select
+from sqlalchemy import event, inspect, select
+from sqlalchemy.dialects.sqlite import insert as sqlite_insert
 from sqlalchemy.orm import Session, selectinload
 
 from ..i18n import BRONTAAL, TALEN, geheugen, sleutel
@@ -29,12 +30,14 @@ from ..models import (
     Concordantie,
     Correspondentie,
     CorrespondentieArtikel,
+    InhoudTaal,
     InhoudVertaling,
     Notitie,
     Omzetting,
     Stelsel,
     Vraag,
 )
+from .wijzigingen import huidige_auteur
 
 DOELTALEN = [t for t in TALEN if t != BRONTAAL]
 SEED = Path(__file__).resolve().parents[1] / "seed" / "vertalingen"
@@ -98,6 +101,62 @@ def bronteksten(db: Session) -> list[Brontekst]:
     for c in db.scalars(select(Concordantie).order_by(Concordantie.id)):
         neem(c.toelichting, "concordantie", f"{c.oud} {c.wet}", "/concordantie")
     return list(uit.values())
+
+
+# Per model de velden die `bronteksten` neemt: daarvan wordt bij het opslaan de taal van de schrijver vastgelegd.
+TALIGE_VELDEN: dict[type, tuple[str, ...]] = {
+    Stelsel: ("naam", "toelichting"),
+    Vraag: ("titel", "rechtsgebied", "tags", "omschrijving"),
+    Notitie: ("tekst",),
+    Antwoord: ("kern", "analyse"),
+    AntwoordBron: ("rol", "notitie"),
+    Bron: ("opmerking",),
+    Begrip: ("definitie",),
+    BegripRelatie: ("toelichting",),
+    Correspondentie: ("titel", "rechtsgebied", "toelichting"),
+    CorrespondentieArtikel: ("rol", "opmerking"),
+    Omzetting: ("opmerking",),
+    Concordantie: ("toelichting",),
+}
+
+
+def _teksten(veld: str, waarde: str) -> list[str]:
+    return [t.strip() for t in waarde.split(",") if t.strip()] if veld == "tags" else [waarde]
+
+
+@event.listens_for(Session, "after_flush")
+def _taal_na_flush(session: Session, _ctx) -> None:
+    """Wat een redacteur met een andere inhoudstaal dan het Nederlands opslaat, krijgt die taal in `InhoudTaal`.
+
+    Alleen nieuwe en gewijzigde velden; Nederlands wordt niet vastgelegd (dat is de standaard). Zonder auteur (CLI,
+    seed) of als Claude schrijft (in het Nederlands, services/onderzoek.py) gebeurt er niets.
+    """
+    auteur = huidige_auteur()
+    taal = auteur and auteur.taal
+    if not taal or taal == BRONTAAL or taal not in TALEN:
+        return
+    hashes = set()
+    for obj in (*session.new, *session.dirty):
+        velden = TALIGE_VELDEN.get(type(obj))
+        if not velden:
+            continue
+        staat = inspect(obj)
+        for v in velden:
+            waarde = getattr(obj, v)
+            if isinstance(waarde, str) and waarde.strip() and (obj in session.new or staat.attrs[v].history.has_changes()):
+                hashes.update(sleutel(t) for t in _teksten(v, waarde))
+    if hashes:
+        stmt = sqlite_insert(InhoudTaal.__table__).values([{"hash": h, "taal": taal} for h in sorted(hashes)])
+        session.connection().execute(stmt.on_conflict_do_update(index_elements=["hash"], set_={"taal": taal}))
+        geheugen.bron.update(dict.fromkeys(hashes, taal))
+        session.info["inhoud_taal"] = True
+
+
+@event.listens_for(Session, "after_commit")
+def _taal_na_commit(session: Session) -> None:
+    # Een herlaadbeurt tussen flush en commit kon de nieuwe talen nog missen.
+    if session.info.pop("inhoud_taal", False):
+        geheugen.ongeldig()
 
 
 def vertalingen(db: Session, taal: str) -> dict[str, InhoudVertaling]:

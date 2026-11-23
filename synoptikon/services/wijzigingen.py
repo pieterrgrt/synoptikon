@@ -52,13 +52,16 @@ class Auteur:
     profiel_id: int | None
     naam: str | None
     door: str | None = None  # "claude"
+    taal: str | None = None  # Profiel.inhoudstaal: in welke taal deze auteur schrijft (services/vertalen.py)
 
 
 _auteur: ContextVar[Auteur | None] = ContextVar("wijziging_auteur", default=None)
 
 
 def zet_auteur(profiel: Profiel | None, door: str | None = None):
-    return _auteur.set(Auteur(getattr(profiel, "id", None), getattr(profiel, "naam", None), door))
+    # Claude schrijft in het Nederlands, ongeacht wie het onderzoek startte.
+    taal = None if door else getattr(profiel, "inhoudstaal", None)
+    return _auteur.set(Auteur(getattr(profiel, "id", None), getattr(profiel, "naam", None), door, taal))
 
 
 def zet_auteur_id(db: Session, profiel_id: int | None, door: str | None = None):

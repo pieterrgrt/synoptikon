@@ -15,7 +15,7 @@ from sqlalchemy.orm import Session
 from .. import auth, sso
 from ..config import settings
 from ..db import get_session, lege_plek
-from ..i18n import TALEN, _
+from ..i18n import BRONTAAL, TALEN, _
 from ..models import AANTAL_PROFIELEN, ROLLEN, Profiel
 from ..services import claude, stelselkeuze
 from ..services.helpers import actieve_stelsels
@@ -133,13 +133,15 @@ def welkom(request: Request, volgende: str = "/", db: Session = Depends(get_sess
 
 @router.post("/profiel/gegevens")
 def profiel_gegevens(request: Request, naam: str = Form(...), taal: str = Form(...), rechtstaal: str = Form(""),
-                     achtergrond: str | None = Form(None), db: Session = Depends(get_session)):
+                     inhoudstaal: str | None = Form(None), achtergrond: str | None = Form(None), db: Session = Depends(get_session)):
     p = _mijn(request, db)
     p.naam = naam.strip()[:80] or p.naam
     if taal in TALEN:
         p.taal = taal
     # Leeg = de rechtstaal volgt de interfacetaal; dat is het oude gedrag.
     p.rechtstaal = rechtstaal if rechtstaal in TALEN else None
+    if inhoudstaal is not None and p.mag_bewerken:
+        p.inhoudstaal = inhoudstaal if inhoudstaal in TALEN and inhoudstaal != BRONTAAL else None
     if achtergrond is not None:  # een formulier zonder het veld laat het staan
         p.achtergrond = achtergrond.strip()[:1000] or None
     resp = RedirectResponse("/profiel?klaar=gegevens", status_code=303)

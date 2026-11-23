@@ -24,6 +24,14 @@
     </select>
     <span class="hint">{{ _('Welke taalversie van een verdrag je krijgt, hoe een wet wordt afgekort (VWEU of AEUV) en in welke taal je kaarten staan. Studeer je in Berlijn, dan zet je dit op Duits en blijft de interface Nederlands.') }}</span>
   </label>
+  {% if p.mag_bewerken %}
+  <label>{{ _('Ik schrijf inhoud in') }}
+    <select name="inhoudstaal">
+      {% for k, v in TALEN.items() %}<option value="{{ k }}" lang="{{ k }}" {% if k == (p.inhoudstaal or 'nl') %}selected{% endif %}>{{ v }}</option>{% endfor %}
+    </select>
+    <span class="hint">{{ _('De taal van wat je invoert: vragen, analyses, definities, toelichtingen. Een lezer met deze taal ziet je tekst zoals je hem schreef; andere lezers krijgen een vertaling als die er is. Geldt voor wat je vanaf nu opslaat.') }}</span>
+  </label>
+  {% endif %}
   <label>{{ _('Studie en achtergrond') }}
     <textarea name="achtergrond" rows="3" maxlength="1000">{{ p.achtergrond or '' }}</textarea>
     <span class="hint">{{ _('Claude krijgt dit mee bij casussen, beoordelingen en kaarten uit notities. Noem je studie, universiteit, welk recht je al kent en waarvoor je leert.') }}</span>
