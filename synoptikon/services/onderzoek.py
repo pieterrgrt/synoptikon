@@ -22,7 +22,7 @@ from sqlalchemy.orm import Session, selectinload
 
 from ..config import settings
 from ..models import Antwoord, AntwoordBron, Bron, Onderzoek, Stelsel, Vraag, now
-from . import claude
+from . import claude, wijzigingen
 from .artikelen import herken
 from .correspondentie import Context, wettekst_artikel
 
@@ -94,9 +94,10 @@ def laatste(db: Session, vraag: Vraag) -> Onderzoek | None:
     return db.scalar(select(Onderzoek).where(Onderzoek.vraag_id == vraag.id).order_by(Onderzoek.id.desc()).limit(1))
 
 
-def start(db: Session, vraag: Vraag, codes: list[str], opdracht: str = "", achtergrond: bool = True,
-          profiel_id: int | None = None) -> Onderzoek:
-    o = Onderzoek(vraag_id=vraag.id, profiel_id=profiel_id, stelsels=",".join(codes), opdracht=opdracht.strip() or None, status="wacht")
+def start(db: Session, vraag: Vraag, codes: list[str], opdracht: str = "", achtergrond: bool = True) -> Onderzoek:
+    auteur = wijzigingen.huidige_auteur()
+    o = Onderzoek(vraag_id=vraag.id, profiel_id=auteur.profiel_id if auteur else None, stelsels=",".join(codes),
+                  opdracht=opdracht.strip() or None, status="wacht")
     db.add(o)
     db.commit()
     if achtergrond:
@@ -132,8 +133,10 @@ def _voer_uit(oid: int, db: Session | None = None) -> None:
 
     eigen = db is None
     db = db or session_factory()()
+    token = None
     try:
         o = db.get(Onderzoek, oid)
+        token = wijzigingen.zet_auteur_id(db, o.profiel_id, "claude")
         vraag = db.scalar(select(Vraag).where(Vraag.id == o.vraag_id).options(
             selectinload(Vraag.antwoorden).selectinload(Antwoord.bronnen).selectinload(AntwoordBron.bron)))
         codes = [c for c in o.stelsels.split(",") if c]
@@ -158,6 +161,8 @@ def _voer_uit(oid: int, db: Session | None = None) -> None:
         o.klaar = now()
         db.commit()
     finally:
+        if token is not None:
+            wijzigingen.herstel_auteur(token)
         if eigen:
             db.close()
 

@@ -5,10 +5,9 @@ from fastapi.responses import PlainTextResponse, RedirectResponse, Response
 from sqlalchemy import select
 from sqlalchemy.orm import Session, selectinload
 
-from .. import auth
 from ..db import get_session
 from ..models import Antwoord, AntwoordBron, Begrip, Bron, Concordantie, Notitie, Stelsel, Vraag, VraagBegrip
-from ..services import bibliotheek, claude, export, onderzoek
+from ..services import bibliotheek, claude, export, onderzoek, wijzigingen
 from ..services.helpers import actieve_stelsels, leeg_naar_none, unieke_slug
 from ..services.stelselkeuze import ook_uit, stelselkeuze
 from . import render
@@ -88,17 +87,12 @@ def vraag_maak(
     if laat_onderzoeken == "1" and claude.beschikbaar():
         actief = {s.code for s in actieve_stelsels(db)}
         codes = [c for c in stelsel if c in actief] or _standaard(db, request)
-        onderzoek.start(db, vraag, codes, profiel_id=_ik(request))
+        onderzoek.start(db, vraag, codes)
         return RedirectResponse(f"/vragen/{vraag.slug}#onderzoek", status_code=303)
     return RedirectResponse(f"/vragen/{vraag.slug}", status_code=303)
 
 
 STANDAARD = ("NL", "DE", "FR", "EU")
-
-
-def _ik(request: Request) -> int | None:
-    p = auth.huidig_profiel(request)
-    return p.id if p else None
 
 
 def _standaard(db: Session, request: Request) -> list[str]:
@@ -122,7 +116,7 @@ async def onderzoek_start(request: Request, slug: str, db: Session = Depends(get
     if lopend is None or lopend.status not in ("wacht", "bezig"):
         actief = {s.code for s in actieve_stelsels(db)}
         codes = [str(c) for c in form.getlist("stelsel") if str(c) in actief] or _standaard(db, request)
-        onderzoek.start(db, vraag, codes, str(form.get("opdracht") or ""), profiel_id=_ik(request))
+        onderzoek.start(db, vraag, codes, str(form.get("opdracht") or ""))
     return RedirectResponse(f"/vragen/{vraag.slug}#onderzoek", status_code=303)
 
 
@@ -162,6 +156,10 @@ def synopse(request: Request, slug: str, vertaling: str | None = None, db: Sessi
         alle_bronnen=[b for b in alle_bronnen if b.id not in gekoppeld],
         alle_begrippen=[g for g in alle_begrippen if g.id not in gekoppelde_begrippen],
         concordanties=_concordanties_voor(db, vraag),
+        # wie wat het laatst wijzigde (services/wijzigingen.py)
+        laatst=wijzigingen.laatste(db, "antwoord", [a.id for a in vraag.antwoorden]),
+        schrijvers=wijzigingen.eerste(db, "notitie", [n.id for n in vraag.notities]),
+        vraag_w=wijzigingen.laatste(db, "vraag", [vraag.id]).get(vraag.id),
         **_onderzoek_context(db, vraag, request),
     )
 
@@ -213,7 +211,8 @@ def antwoord_bewerken(request: Request, slug: str, code: str, db: Session = Depe
         antwoord = Antwoord(vraag=vraag, stelsel_code=code)
         db.add(antwoord)
         db.flush()
-    return render(request, "antwoord_form.html", vraag=vraag, antwoord=antwoord)
+    w = wijzigingen.laatste(db, "antwoord", [antwoord.id]).get(antwoord.id)
+    return render(request, "antwoord_form.html", vraag=vraag, antwoord=antwoord, w=w)
 
 
 @router.post("/vragen/{slug}/antwoord/{code}")
