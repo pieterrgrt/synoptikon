@@ -19,7 +19,7 @@ from .config import settings
 from .db import init_db
 from .models import RECHTSFAMILIES, RELATIE_TYPES
 from .routes import auth as auth_routes
-from .routes import artikelen, begrippen, bewaard, bronnen, eu, gedeeld, geschiedenis, invoer, klausur, leessets, leren, markeringen as markeringen_routes, opzoeken, profielen, stelsels, vertalingen, vragen, wetteksten, wunderkammer
+from .routes import artikelen, begrippen, bewaard, bronnen, eu, gedeeld, geschiedenis, invoer, klausur, leessets, leren, markeringen as markeringen_routes, opzoeken, profielen, stelsels, vertalingen, vragen, wachtlijst, wetteksten, wunderkammer
 from .services import citeren, export, markeringen, stelselkeuze, wetboek, wijzigingen
 from .services.artikelen import ref_uit_bron, wetnaam
 from .services.helpers import extra_titel, per_familie
@@ -120,7 +120,7 @@ app.mount("/static", StaticFiles(directory=str(HIER / "static")), name="static")
 # Pictogrammen ook zonder login: startpagina's, dashboards en telefoons halen
 # ze op vaste paden op, zonder sessiecookie.
 # /api/wk/ heeft een eigen token (routes/wunderkammer.py) in plaats van de sessiecookie.
-_OPEN_PADEN = ("/login", "/aanmelden", "/static/", "/gezond", "/favicon.ico", "/apple-touch-icon", "/api/wk/", "/taal")
+_OPEN_PADEN = ("/login", "/aanmelden", "/wachtlijst", "/static/", "/gezond", "/favicon.ico", "/apple-touch-icon", "/api/wk/", "/taal")
 # Wat een lezer mag posten: zijn eigen spullen. Profiel, taal, leerlijsten (ook delen, liken, reageren, overnemen),
 # markeringen, Klausuren en opzoekingen, en uitloggen. Gedeelde inhoud (vragen, begrippen, bronnen, stelsels, thema's)
 # blijft voor een redacteur. Waar een eigen actie gedeelde inhoud raakt, kijkt de route zelf naar de rol: een
@@ -173,6 +173,8 @@ class AuthMiddleware(BaseHTTPMiddleware):
             response = RedirectResponse(f"/welkom?volgende={quote(volgende)}", status_code=303)
         elif open_pad or ingelogd:
             response = await call_next(request)
+        elif pad == "/" and not request.url.query:
+            response = RedirectResponse("/wachtlijst", status_code=303)  # wie nog geen account heeft
         else:
             volgende = pad + (f"?{request.url.query}" if request.url.query else "")
             response = RedirectResponse(f"/login?volgende={volgende}", status_code=303)
@@ -209,5 +211,5 @@ def apple_touch_icon():
     return FileResponse(HIER / "static" / "apple-touch-icon.png")
 
 
-for router in (auth_routes.router, profielen.router, vragen.router, bewaard.router, bronnen.router, begrippen.router, stelsels.router, artikelen.router, opzoeken.router, invoer.router, wetteksten.router, eu.router, vertalingen.router, gedeeld.router, geschiedenis.router, klausur.router, leessets.router, leren.router, markeringen_routes.router, wunderkammer.router):
+for router in (auth_routes.router, profielen.router, vragen.router, bewaard.router, bronnen.router, begrippen.router, stelsels.router, artikelen.router, opzoeken.router, invoer.router, wetteksten.router, eu.router, vertalingen.router, gedeeld.router, geschiedenis.router, klausur.router, leessets.router, leren.router, markeringen_routes.router, wunderkammer.router, wachtlijst.router):
     app.include_router(router)

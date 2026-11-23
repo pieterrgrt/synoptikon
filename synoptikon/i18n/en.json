@@ -1105,6 +1105,17 @@
  "alle profielen samen": "all profiles together",
  "leeg: ${g}; een beheerder heeft dan geen eigen grens, alleen het totaal": "empty: ${g}; an administrator then has no own limit, only the total",
  "zonder profiel": "without profile",
+ "Wachtlijst": "Waiting list",
+ "Synoptikon zet het recht van verschillende stelsels naast elkaar: per rechtsvraag de wetsartikelen, uitspraken en begrippen van elk stelsel in een eigen kolom, in de oorspronkelijke taal en vertaald.": "Synoptikon sets the law of different legal systems side by side: for each legal question, the statutory provisions, judgments and concepts of each system in a column of their own, in the original language and in translation.",
+ "Eigendomsoverdracht van roerende zaken": "Transfer of ownership of movables",
+ "Je staat op de wachtlijst. Je krijgt één bericht zodra Synoptikon opengaat.": "You are on the waiting list. You will receive one message as soon as Synoptikon opens.",
+ "Dit adres staat niet (meer) op de wachtlijst.": "This address is not (or no longer) on the waiting list.",
+ "De app is nog niet voor iedereen open. Laat je e-mailadres achter; je krijgt één bericht zodra hij opengaat.": "The app is not yet open to everyone. Leave your email address and you will receive one message as soon as it opens.",
+ "E-mailadres": "Email address",
+ "Op de wachtlijst": "Join the waiting list",
+ "Van de lijst halen": "Remove from the list",
+ "Je adres wordt alleen voor dat ene bericht gebruikt en daarna gewist.": "Your address is used only for that one message and deleted afterwards.",
+ "Ongeldig e-mailadres.": "Invalid email address.",
  "Ik schrijf inhoud in": "I write content in",
  "De taal van wat je invoert: vragen, analyses, definities, toelichtingen. Een lezer met deze taal ziet je tekst zoals je hem schreef; andere lezers krijgen een vertaling als die er is. Geldt voor wat je vanaf nu opslaat.": "The language of what you enter: questions, analyses, definitions, notes. Readers with this language see your text as you wrote it; other readers get a translation if there is one. Applies to what you save from now on."
 }

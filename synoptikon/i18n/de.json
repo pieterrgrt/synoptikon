@@ -1105,6 +1105,17 @@
  "alle profielen samen": "alle Profile zusammen",
  "leeg: ${g}; een beheerder heeft dan geen eigen grens, alleen het totaal": "leer: ${g}; ein Administrator hat dann keine eigene Grenze, nur die Gesamtsumme",
  "zonder profiel": "ohne Profil",
+ "Wachtlijst": "Warteliste",
+ "Synoptikon zet het recht van verschillende stelsels naast elkaar: per rechtsvraag de wetsartikelen, uitspraken en begrippen van elk stelsel in een eigen kolom, in de oorspronkelijke taal en vertaald.": "Synoptikon stellt das Recht verschiedener Rechtsordnungen nebeneinander: zu jeder Rechtsfrage die Normen, Entscheidungen und Begriffe jeder Rechtsordnung in einer eigenen Spalte, in der Originalsprache und übersetzt.",
+ "Eigendomsoverdracht van roerende zaken": "Eigentumsübertragung an beweglichen Sachen",
+ "Je staat op de wachtlijst. Je krijgt één bericht zodra Synoptikon opengaat.": "Du stehst auf der Warteliste. Du bekommst eine Nachricht, sobald Synoptikon öffnet.",
+ "Dit adres staat niet (meer) op de wachtlijst.": "Diese Adresse steht nicht (mehr) auf der Warteliste.",
+ "De app is nog niet voor iedereen open. Laat je e-mailadres achter; je krijgt één bericht zodra hij opengaat.": "Die App ist noch nicht für alle offen. Hinterlasse deine E-Mail-Adresse; du bekommst eine Nachricht, sobald sie öffnet.",
+ "E-mailadres": "E-Mail-Adresse",
+ "Op de wachtlijst": "Auf die Warteliste",
+ "Van de lijst halen": "Von der Liste nehmen",
+ "Je adres wordt alleen voor dat ene bericht gebruikt en daarna gewist.": "Deine Adresse wird nur für diese eine Nachricht verwendet und danach gelöscht.",
+ "Ongeldig e-mailadres.": "Ungültige E-Mail-Adresse.",
  "Ik schrijf inhoud in": "Ich schreibe Inhalte auf",
  "De taal van wat je invoert: vragen, analyses, definities, toelichtingen. Een lezer met deze taal ziet je tekst zoals je hem schreef; andere lezers krijgen een vertaling als die er is. Geldt voor wat je vanaf nu opslaat.": "Die Sprache deiner Eingaben: Fragen, Analysen, Definitionen, Erläuterungen. Wer diese Sprache eingestellt hat, sieht deinen Text so, wie du ihn geschrieben hast; andere bekommen eine Übersetzung, wenn es eine gibt. Gilt für alles, was du ab jetzt speicherst."
 }

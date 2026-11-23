@@ -1105,6 +1105,17 @@
  "alle profielen samen": "tutti i profili insieme",
  "leeg: ${g}; een beheerder heeft dan geen eigen grens, alleen het totaal": "vuoto: ${g}; un amministratore non ha allora un limite proprio, solo il totale",
  "zonder profiel": "senza profilo",
+ "Wachtlijst": "Lista d’attesa",
+ "Synoptikon zet het recht van verschillende stelsels naast elkaar: per rechtsvraag de wetsartikelen, uitspraken en begrippen van elk stelsel in een eigen kolom, in de oorspronkelijke taal en vertaald.": "Synoptikon affianca il diritto di ordinamenti diversi: per ogni questione giuridica, le norme, le sentenze e i concetti di ciascun ordinamento in una colonna propria, nella lingua originale e in traduzione.",
+ "Eigendomsoverdracht van roerende zaken": "Trasferimento della proprietà di beni mobili",
+ "Je staat op de wachtlijst. Je krijgt één bericht zodra Synoptikon opengaat.": "Sei nella lista d’attesa. Riceverai un solo messaggio appena Synoptikon apre.",
+ "Dit adres staat niet (meer) op de wachtlijst.": "Questo indirizzo non è (più) nella lista d’attesa.",
+ "De app is nog niet voor iedereen open. Laat je e-mailadres achter; je krijgt één bericht zodra hij opengaat.": "L’app non è ancora aperta a tutti. Lascia il tuo indirizzo e-mail; riceverai un solo messaggio appena apre.",
+ "E-mailadres": "Indirizzo e-mail",
+ "Op de wachtlijst": "Iscrivimi alla lista",
+ "Van de lijst halen": "Togli dalla lista",
+ "Je adres wordt alleen voor dat ene bericht gebruikt en daarna gewist.": "Il tuo indirizzo serve solo per quel messaggio e poi viene cancellato.",
+ "Ongeldig e-mailadres.": "Indirizzo e-mail non valido.",
  "Ik schrijf inhoud in": "Scrivo i contenuti in",
  "De taal van wat je invoert: vragen, analyses, definities, toelichtingen. Een lezer met deze taal ziet je tekst zoals je hem schreef; andere lezers krijgen een vertaling als die er is. Geldt voor wat je vanaf nu opslaat.": "La lingua di ciò che inserisci: domande, analisi, definizioni, commenti. Chi legge in questa lingua vede il testo come l’hai scritto; gli altri ricevono una traduzione, se c’è. Vale per ciò che salvi da ora in poi."
 }

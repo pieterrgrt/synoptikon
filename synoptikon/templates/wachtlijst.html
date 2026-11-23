@@ -1,0 +1,79 @@
+<!doctype html>
+<html lang="{{ huidige_taal() }}" data-theme="auto">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<meta name="color-scheme" content="light dark">
+<title>{{ _('Wachtlijst') }} · Synoptikon</title>
+<link rel="stylesheet" href="/static/css/app.css?v={{ sv }}">
+<link rel="stylesheet" href="/static/css/wachtlijst.css?v={{ sv }}">
+{% include "_iconen.html" %}
+<script src="/static/js/thema.js?v={{ sv }}"></script>
+</head>
+<body class="wl">
+<div class="wl-achter" aria-hidden="true">
+  <span style="--x:8%;--y:12%;--d:0s">§</span><span style="--x:82%;--y:8%;--d:-6s">Σ</span>
+  <span style="--x:70%;--y:62%;--d:-12s">Art.</span><span style="--x:14%;--y:70%;--d:-3s">BGB</span>
+  <span style="--x:44%;--y:88%;--d:-9s">BW</span><span style="--x:90%;--y:36%;--d:-15s">C. civ.</span>
+  <span style="--x:30%;--y:30%;--d:-18s">§</span>
+</div>
+<main class="wl-main">
+  <h1 class="wl-titel"><span class="merk-teken wl-sigma" aria-hidden="true">Σ</span> Synoptikon</h1>
+  <p class="wl-uitleg">{{ _('Synoptikon zet het recht van verschillende stelsels naast elkaar: per rechtsvraag de wetsartikelen, uitspraken en begrippen van elk stelsel in een eigen kolom, in de oorspronkelijke taal en vertaald.') }}</p>
+
+  <figure class="wl-synopse">
+    <figcaption>{{ _('Eigendomsoverdracht van roerende zaken') }}</figcaption>
+    <div class="wl-kolommen">
+      <section class="wl-kolom" lang="nl" style="--i:0">
+        <h2>{{ vlag('nl') }} NL <span class="wl-ref">art. 3:84 lid 1 BW</span></h2>
+        <p>„levering krachtens geldige titel, verricht door hem die bevoegd is over het goed te beschikken”</p>
+        <span class="wl-label">causaal stelsel</span>
+      </section>
+      <section class="wl-kolom" lang="de" style="--i:1">
+        <h2>{{ vlag('de') }} DE <span class="wl-ref">§ 929 S. 1 BGB</span></h2>
+        <p>„dass der Eigentümer die Sache dem Erwerber übergibt und beide darüber einig sind, dass das Eigentum übergehen soll”</p>
+        <span class="wl-label">Abstraktionsprinzip</span>
+      </section>
+      <section class="wl-kolom" lang="fr" style="--i:2">
+        <h2>{{ vlag('fr') }} FR <span class="wl-ref">art. 1196 C. civ.</span></h2>
+        <p>« le transfert s’opère lors de la conclusion du contrat »</p>
+        <span class="wl-label">consensualisme</span>
+      </section>
+    </div>
+  </figure>
+
+  <section class="wl-aanmelden" id="aanmelden">
+    {% if stand == 'op' %}
+    <p class="wl-klaar" role="status"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M4 12.5l5 5L20 6.5"/></svg>
+      {{ _('Je staat op de wachtlijst. Je krijgt één bericht zodra Synoptikon opengaat.') }}</p>
+    {% else %}
+    {% if stand == 'af' %}<p class="melding" role="status">{{ _('Dit adres staat niet (meer) op de wachtlijst.') }}</p>{% endif %}
+    <p>{{ _('De app is nog niet voor iedereen open. Laat je e-mailadres achter; je krijgt één bericht zodra hij opengaat.') }}</p>
+    {% if fout %}<p class="melding fout" role="alert">{{ fout }}</p>{% endif %}
+    <form method="post" action="/wachtlijst" class="wl-form">
+      <label class="wl-veld">{{ _('E-mailadres') }}
+        <input type="email" name="email" value="{{ email }}" required maxlength="254" autocomplete="email" autocapitalize="none" spellcheck="false"></label>
+      <label class="wl-honing" aria-hidden="true">Website <input name="website" tabindex="-1" autocomplete="off"></label>
+      <div class="wl-knoppen">
+        <button type="submit" name="actie" value="op" class="knop primair">{{ _('Op de wachtlijst') }}</button>
+        <button type="submit" name="actie" value="af" class="knop-tekst">{{ _('Van de lijst halen') }}</button>
+      </div>
+    </form>
+    {% endif %}
+    <p class="stil klein">{{ _('Je adres wordt alleen voor dat ene bericht gebruikt en daarna gewist.') }}</p>
+  </section>
+
+  <footer class="wl-voet">
+    <a href="/login">{{ _('Al een account? Inloggen') }}</a>
+    <form method="post" action="/taal" class="taalkeuze">
+      <input type="hidden" name="terug" value="/wachtlijst">
+      <label>{{ _('Taal') }}
+        <select name="taal" class="auto-submit">{% for k, v in TALEN.items() %}<option value="{{ k }}" lang="{{ k }}" {% if k == huidige_taal() %}selected{% endif %}>{{ v }}</option>{% endfor %}</select>
+      </label>
+      <noscript><button class="knop klein">OK</button></noscript>
+    </form>
+  </footer>
+</main>
+<script src="/static/js/app.js?v={{ sv }}"></script>
+</body>
+</html>

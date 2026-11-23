@@ -1105,6 +1105,17 @@
  "alle profielen samen": "tous les profils ensemble",
  "leeg: ${g}; een beheerder heeft dan geen eigen grens, alleen het totaal": "vide : ${g} ; un administrateur n'a alors pas de limite propre, seulement le total",
  "zonder profiel": "sans profil",
+ "Wachtlijst": "Liste d’attente",
+ "Synoptikon zet het recht van verschillende stelsels naast elkaar: per rechtsvraag de wetsartikelen, uitspraken en begrippen van elk stelsel in een eigen kolom, in de oorspronkelijke taal en vertaald.": "Synoptikon met côte à côte le droit de différents systèmes juridiques : pour chaque question de droit, les articles de loi, les décisions et les notions de chaque système dans une colonne propre, dans la langue d’origine et en traduction.",
+ "Eigendomsoverdracht van roerende zaken": "Transfert de propriété des biens meubles",
+ "Je staat op de wachtlijst. Je krijgt één bericht zodra Synoptikon opengaat.": "Vous êtes sur la liste d’attente. Vous recevrez un seul message dès l’ouverture de Synoptikon.",
+ "Dit adres staat niet (meer) op de wachtlijst.": "Cette adresse ne figure pas (ou plus) sur la liste d’attente.",
+ "De app is nog niet voor iedereen open. Laat je e-mailadres achter; je krijgt één bericht zodra hij opengaat.": "L’application n’est pas encore ouverte à tous. Laissez votre adresse e-mail ; vous recevrez un seul message dès son ouverture.",
+ "E-mailadres": "Adresse e-mail",
+ "Op de wachtlijst": "M’inscrire sur la liste",
+ "Van de lijst halen": "Retirer de la liste",
+ "Je adres wordt alleen voor dat ene bericht gebruikt en daarna gewist.": "Votre adresse sert uniquement à ce message et est ensuite effacée.",
+ "Ongeldig e-mailadres.": "Adresse e-mail invalide.",
  "Ik schrijf inhoud in": "J’écris le contenu en",
  "De taal van wat je invoert: vragen, analyses, definities, toelichtingen. Een lezer met deze taal ziet je tekst zoals je hem schreef; andere lezers krijgen een vertaling als die er is. Geldt voor wat je vanaf nu opslaat.": "La langue de ce que tu saisis : questions, analyses, définitions, commentaires. Un lecteur qui a choisi cette langue voit ton texte tel que tu l’as écrit ; les autres reçoivent une traduction s’il y en a une. S’applique à ce que tu enregistres à partir de maintenant."
 }
