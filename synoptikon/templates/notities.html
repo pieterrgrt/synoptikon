@@ -1,0 +1,35 @@
+{% extends "base.html" %}
+{% block titel %}{{ _('Notities') }} · {{ _('Leren') }} · Synoptikon{% endblock %}
+{% block inhoud %}
+<p class="kruimel"><a href="/leren">{{ _('Leren') }}</a></p>
+<h1>{{ _('Notities') }}</h1>
+{% for f in fouten %}<p class="melding fout" role="alert">{{ f }}</p>{% endfor %}
+{% if not claude_aan %}
+<p class="stil">{{ _('Claude staat uit op deze installatie.') }}</p>
+{% else %}
+<form method="post" action="/leren/notities" enctype="multipart/form-data" class="formulier">
+  <label>{{ _('Bestanden') }} <input type="file" name="bestand" multiple required accept=".md,.markdown,.txt,text/markdown,text/plain">
+    <span class="hint">{{ _('Markdown of platte tekst, hooguit {n} tegelijk. Claude leest elke notitie en stelt kaarten voor; een bestand met dezelfde naam vervangt het vorige.', n=max_bestanden) }}</span>
+  </label>
+  <label>{{ _('Vak') }} <input name="vak" list="vakken" required maxlength="60" value="{{ vakken[0] if vakken | length == 1 else '' }}"></label>
+  <datalist id="vakken">{% for v in vakken %}<option value="{{ v }}">{% endfor %}</datalist>
+  <div class="acties"><button class="knop primair">{{ _('Toevoegen') }}</button></div>
+</form>
+{% endif %}
+
+{% if notities %}
+<table class="tabel">
+  <thead><tr><th>{{ _('Notitie') }}</th><th>{{ _('Vak') }}</th><th></th></tr></thead>
+  <tbody>
+  {% for n in notities %}
+  <tr>
+    <td>{{ n.pad.split('/', 1)[1] | replace('.md', '') }}</td>
+    <td>{{ n.vak }}</td>
+    <td>{% if n.fout %}<strong>{{ _('mislukt') }}</strong>{% elif not n.hash %}<span class="stil">{{ _('Claude leest…') }}</span>{% else %}<a href="/leren/voorstellen">{{ n_('{n} voorstel uit je notities', '{n} voorstellen uit je notities', n.voorstellen) }}</a>{% endif %}</td>
+  </tr>
+  {% endfor %}
+  </tbody>
+</table>
+{% if notities | selectattr('hash', 'equalto', '') | list %}<p class="hint">{{ _('Een notitie kost Claude een tot enkele minuten. Ververs de pagina om de stand te zien.') }}</p>{% endif %}
+{% endif %}
+{% endblock %}
