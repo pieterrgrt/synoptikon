@@ -9,6 +9,10 @@ norm met `artikel_lezen` en stelt kaarten voor: artikel → inhoud, inhoud → a
 kaarten voor begrippen, schema's en Streitstände. Ze komen als *voorstel* (inactief) in de leerlijst
 "Notities · <vak>"; pas wat je overneemt gaat naar Wunderkammer. Wat er al is (ook afgewezen) gaat mee in de opdracht,
 zodat een gewijzigde notitie alleen nieuwe kaarten oplevert.
+
+Wie geen vault op de server heeft (elk ander profiel dan 1), levert notities aan op /leren/notities: ze komen in
+`upload_map(profiel)` en heten in `NotitieBestand.pad` "upload/<bestandsnaam>"; het vak kies je bij het uploaden.
+`verwerk_upload` haalt ze door dezelfde verwerking; de vault-ronde (`verwerk`, `herindeel`) raakt ze niet.
 """
 from __future__ import annotations
 
@@ -312,28 +316,102 @@ def verwerk(db: Session, profiel_id: int = 1, maximum: int = 10, droog: bool = F
         if droog:
             print(f"  {b.vak:<12} {b.pad}")
             continue
-        if n is None:
-            n = NotitieBestand(profiel_id=profiel_id, pad=b.pad, hash=b.hash)
-            db.add(n)
-        n.vak, n.hash, n.verwerkt = b.vak, b.hash, now()
         try:
-            kaarten = verwerk_notitie(db, profiel_id, b)
-            n.voorstellen, n.fout = len(kaarten), None
-            uit.voorstellen += len(kaarten)
-        except Exception as e:  # ClaudeFout, of de API zelf; de volgende ronde probeert het opnieuw
-            log.exception("notitie %s", b.pad)
-            db.rollback()
-            n = db.scalar(select(NotitieBestand).where(NotitieBestand.profiel_id == profiel_id, NotitieBestand.pad == b.pad)) or NotitieBestand(
-                profiel_id=profiel_id, pad=b.pad, vak=b.vak)
-            n.hash, n.fout, n.verwerkt = b.hash, str(e)[:2000] or type(e).__name__, now()
-            db.add(n)
-            db.commit()
+            uit.voorstellen += _een(db, profiel_id, n, b)
+        except Exception as e:
             uit.fouten += 1
             if isinstance(e, claude.ClaudeFout) and "budget" in str(e):
                 break
-            continue
-        db.commit()
     return uit
+
+
+def _een(db: Session, profiel_id: int, n: NotitieBestand | None, b: Bestand) -> int:
+    """Eén notitie door Claude; geeft het aantal voorstellen. Bij een fout (ClaudeFout of de API zelf) staat die bij de
+    notitie, zodat de volgende ronde het opnieuw probeert, en gaat de fout door naar de aanroeper."""
+    if n is None:
+        n = NotitieBestand(profiel_id=profiel_id, pad=b.pad, hash=b.hash)
+        db.add(n)
+    n.vak, n.hash, n.verwerkt = b.vak, b.hash, now()
+    try:
+        kaarten = verwerk_notitie(db, profiel_id, b)
+    except Exception as e:
+        log.exception("notitie %s", b.pad)
+        db.rollback()
+        n = db.scalar(select(NotitieBestand).where(NotitieBestand.profiel_id == profiel_id, NotitieBestand.pad == b.pad)) or NotitieBestand(
+            profiel_id=profiel_id, pad=b.pad, vak=b.vak)
+        n.hash, n.fout, n.verwerkt = b.hash, str(e)[:2000] or type(e).__name__, now()
+        db.add(n)
+        db.commit()
+        raise
+    n.voorstellen, n.fout = len(kaarten), None
+    db.commit()
+    return len(kaarten)
+
+
+# --- Aangeleverde notities (/leren/notities) --------------------------------------------------------------------------
+
+UPLOAD = "upload/"
+UPLOAD_SOORTEN = (".md", ".markdown", ".txt")
+MAX_BESTANDEN = 10
+MAX_BYTES = 1_000_000
+
+
+def upload_map(profiel_id: int) -> Path:
+    return settings.data_dir / "notities_upload" / str(profiel_id)
+
+
+def _bestandsnaam(naam: str) -> str:
+    """Alleen de naam, zonder map en zonder tekens die in een pad iets betekenen; altijd eindigend op .md."""
+    naam = re.sub(r"[^\w .,()&+-]", "_", Path(naam.replace("\\", "/")).name).strip(" .")[:150] or "notitie"
+    if naam.lower().endswith((".txt", ".markdown")):
+        naam = naam.rsplit(".", 1)[0]
+    return naam if naam.lower().endswith(".md") else naam + ".md"
+
+
+def aanleveren(db: Session, profiel_id: int, naam: str, inhoud: bytes, vak: str) -> tuple[str | None, str | None]:
+    """Bewaart een aangeleverde notitie en zet haar klaar voor `verwerk_upload`. Geeft (pad, None) of (None, fout).
+    Dezelfde naam nog eens vervangt de oude versie; de kaarten die er al zijn gaan mee in de opdracht."""
+    if not naam.lower().endswith(UPLOAD_SOORTEN):
+        return None, "soort"
+    if len(inhoud) > MAX_BYTES:
+        return None, "groot"
+    try:
+        ruw = inhoud.decode("utf-8-sig").replace("\r\n", "\n")
+    except UnicodeDecodeError:
+        return None, "soort"
+    if len(_frontmatter(ruw)[1].strip()) < MIN_TEKENS:
+        return None, "kort"
+    bestand = _bestandsnaam(naam)
+    map_ = upload_map(profiel_id)
+    map_.mkdir(parents=True, exist_ok=True)
+    (map_ / bestand).write_text(ruw, encoding="utf-8")
+    pad = UPLOAD + bestand
+    n = db.scalar(select(NotitieBestand).where(NotitieBestand.profiel_id == profiel_id, NotitieBestand.pad == pad))
+    if n is None:
+        n = NotitieBestand(profiel_id=profiel_id, pad=pad)
+        db.add(n)
+    n.vak, n.hash, n.fout, n.voorstellen = vak.strip()[:60], "", None, 0  # lege hash = wacht op Claude
+    db.flush()
+    return pad, None
+
+
+def aangeleverd(db: Session, profiel_id: int) -> list[NotitieBestand]:
+    return list(db.scalars(select(NotitieBestand).where(
+        NotitieBestand.profiel_id == profiel_id, NotitieBestand.pad.startswith(UPLOAD)).order_by(NotitieBestand.verwerkt.desc())))
+
+
+def verwerk_upload(db: Session, profiel_id: int, pad: str) -> int:
+    """Een aangeleverde notitie door Claude (na `aanleveren`, op de achtergrond). Geeft het aantal voorstellen."""
+    n = db.scalar(select(NotitieBestand).where(NotitieBestand.profiel_id == profiel_id, NotitieBestand.pad == pad))
+    if n is None or not pad.startswith(UPLOAD):
+        return 0
+    ruw = (upload_map(profiel_id) / pad[len(UPLOAD):]).read_text(encoding="utf-8")
+    tekst = _frontmatter(ruw)[1].strip()
+    b = Bestand(pad, n.vak or "", tekst, hashlib.sha256(ruw.encode()).hexdigest())
+    try:
+        return _een(db, profiel_id, n, b)
+    except Exception:
+        return 0
 
 
 def besluit(k: Kaart, wat: str) -> None:

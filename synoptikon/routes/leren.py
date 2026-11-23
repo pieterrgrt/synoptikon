@@ -8,9 +8,10 @@ import json
 from datetime import date
 from urllib.parse import quote
 
-from fastapi import APIRouter, Depends, Form, HTTPException, Request
+from fastapi import APIRouter, BackgroundTasks, Depends, Form, HTTPException, Request
 from fastapi.responses import JSONResponse, PlainTextResponse, RedirectResponse
 from sqlalchemy.orm import Session
+from starlette.datastructures import UploadFile
 
 from ..auth import huidig_profiel
 from ..db import get_session
@@ -154,6 +155,58 @@ async def nieuw_opslaan(request: Request, db: Session = Depends(get_session)):
         terug, anker = terug.split("#", 1)
         return RedirectResponse(f"{terug}{teken}bewaard={len(nieuw)}#{anker}", status_code=303)
     return RedirectResponse(f"{terug}{teken}bewaard={len(nieuw)}", status_code=303)
+
+
+def _upload_fout(fout: str, naam: str) -> str:
+    if fout == "groot":
+        return _("{naam}: groter dan 1 MB.", naam=naam)
+    if fout == "kort":
+        return _("{naam}: te kort om kaarten uit te maken.", naam=naam)
+    return _("{naam}: alleen Markdown of platte tekst (.md, .txt).", naam=naam)
+
+
+def _notities_verwerken(pid: int, paden: list[str]) -> None:
+    from ..db import session
+
+    for pad in paden:
+        with session() as s:
+            notities.verwerk_upload(s, pid, pad)
+
+
+@router.get("/leren/notities")
+def notities_pagina(request: Request, db: Session = Depends(get_session)):
+    """Notities aanleveren: Claude stelt er kaarten uit voor, net als uit de vault van profiel 1."""
+    from ..services import claude
+
+    pid = _pid(request)
+    return render(request, "notities.html", notities=notities.aangeleverd(db, pid), vakken=mijn_vakken(db, pid),
+                  claude_aan=claude.beschikbaar(), fouten=request.query_params.getlist("fout"), max_bestanden=notities.MAX_BESTANDEN)
+
+
+@router.post("/leren/notities")
+async def notities_aanleveren(request: Request, achtergrond: BackgroundTasks, db: Session = Depends(get_session)):
+    from ..services import claude
+
+    if not claude.beschikbaar():
+        raise HTTPException(503, _("Claude staat uit op deze installatie."))
+    form = await request.form()
+    vak = str(form.get("vak") or "").strip()
+    bestanden = [b for b in form.getlist("bestand") if isinstance(b, UploadFile) and b.filename][:notities.MAX_BESTANDEN]
+    if not vak or not bestanden:
+        raise HTTPException(400)
+    pid = _pid(request)
+    paden, fouten = [], []
+    for b in bestanden:
+        pad, fout = notities.aanleveren(db, pid, b.filename or "", await b.read(notities.MAX_BYTES + 1), vak)
+        if pad:
+            paden.append(pad)
+        else:
+            fouten.append(_upload_fout(fout or "", b.filename or ""))
+    db.commit()
+    if paden:
+        achtergrond.add_task(_notities_verwerken, pid, paden)
+    return RedirectResponse("/leren/notities" + "".join(("&" if i else "?") + "fout=" + quote(f) for i, f in enumerate(fouten)),
+                            status_code=303)
 
 
 @router.get("/leren/voorstellen")

@@ -1076,5 +1076,12 @@
  "Je eigen leerlijsten met kaarten bij artikelen en uitspraken, oefenen en leessets.": "Tes propres listes d'apprentissage avec des fiches sur des articles et des décisions, l'entraînement et les lectures groupées.",
  "Casussen uitwerken op een werkblad, met beoordeling en een overzicht van wat je steeds mist.": "Résoudre des cas pratiques sur une feuille de travail, avec une évaluation et un aperçu de ce qui t'échappe régulièrement.",
  "Leerlijsten die anderen voor iedereen zichtbaar maakten; je kunt ze overnemen.": "Des listes d'apprentissage que d'autres ont rendues visibles à tous ; tu peux les reprendre.",
- "Taal, rechtstaal en stelsels wijzig je later in je profiel, onder ⋯ rechtsboven.": "Tu pourras modifier la langue, la langue juridique et les systèmes dans ton profil, sous ⋯ en haut à droite."
+ "Taal, rechtstaal en stelsels wijzig je later in je profiel, onder ⋯ rechtsboven.": "Tu pourras modifier la langue, la langue juridique et les systèmes dans ton profil, sous ⋯ en haut à droite.",
+ "Bestanden": "Fichiers",
+ "Claude leest…": "Claude lit…",
+ "Een notitie kost Claude een tot enkele minuten. Ververs de pagina om de stand te zien.": "Une note prend à Claude une à quelques minutes. Rechargez la page pour voir l’état.",
+ "Markdown of platte tekst, hooguit {n} tegelijk. Claude leest elke notitie en stelt kaarten voor; een bestand met dezelfde naam vervangt het vorige.": "Markdown ou texte brut, {n} au plus à la fois. Claude lit chaque note et propose des cartes ; un fichier du même nom remplace le précédent.",
+ "{naam}: alleen Markdown of platte tekst (.md, .txt).": "{naam} : uniquement Markdown ou texte brut (.md, .txt).",
+ "{naam}: groter dan 1 MB.": "{naam} : plus de 1 Mo.",
+ "{naam}: te kort om kaarten uit te maken.": "{naam} : trop court pour en tirer des cartes."
 }
