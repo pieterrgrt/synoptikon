@@ -14,6 +14,7 @@
   </div>
   <div class="vraagkop-acties">
     <a class="knop klein" href="/vragen/{{ vraag.slug }}/bewerken">{{ _('Bewerken') }}</a>
+    {% if vraag_w %}<a class="knop-tekst klein" href="/geschiedenis/vraag/{{ vraag.id }}">{{ _('geschiedenis') }}</a>{% endif %}
     <a class="knop klein" href="/begrippen?vraag={{ vraag.slug }}">{{ _('Begrippenkaart') }}</a>
     <details class="menu">
       <summary class="knop klein">{{ _('Exporteren') }}</summary>
@@ -72,10 +73,12 @@
     {% elif a %}
     <p class="stil leeg analyse"><a href="/vragen/{{ vraag.slug }}/antwoord/{{ s.code }}">{{ _('Analyse schrijven') }}</a></p>
     {% endif %}
+    {% set w = laatst.get(a.id) if a else none %}
+    {% if w %}<p class="stil klein wijziging">{{ w.wie }} · {{ w.tijdstip.strftime('%d-%m-%Y') }} · <a href="/geschiedenis/antwoord/{{ a.id }}">{{ _('geschiedenis') }}</a></p>{% endif %}
     {% set kolomnotities = vraag.notities | selectattr('stelsel_code', 'equalto', s.code) | list %}
     {% if kolomnotities %}
     <div class="notities-kolom">
-      {% for n in kolomnotities %}<div class="annotatie notitie"><span class="label">{{ n.aangemaakt.strftime('%d-%m-%Y') }}</span>{{ vt(n.tekst) | md }}</div>{% endfor %}
+      {% for n in kolomnotities %}<div class="annotatie notitie"><span class="label">{{ n.aangemaakt.strftime('%d-%m-%Y') }}{% if schrijvers.get(n.id) %} · {{ schrijvers[n.id].wie }}{% endif %}</span>{{ vt(n.tekst) | md }}</div>{% endfor %}
     </div>
     {% endif %}
     <footer class="kolomvoet">
@@ -139,7 +142,7 @@
     <h2>{{ _('Notities') }}</h2>
     {% set algemeen = vraag.notities | rejectattr('stelsel_code') | list %}
     {% for n in algemeen %}
-    <div class="annotatie notitie"><span class="label">{{ n.aangemaakt.strftime('%d-%m-%Y') }}</span>{{ vt(n.tekst) | md }}
+    <div class="annotatie notitie"><span class="label">{{ n.aangemaakt.strftime('%d-%m-%Y') }}{% if schrijvers.get(n.id) %} · {{ schrijvers[n.id].wie }}{% endif %}</span>{{ vt(n.tekst) | md }}
       <form method="post" action="/vragen/{{ vraag.slug }}/notitie/{{ n.id }}/verwijderen" class="inline" data-bevestig="{{ _('Notitie verwijderen?') }}"><button class="knop-tekst">{{ _('verwijderen') }}</button></form></div>
     {% endfor %}
     <form method="post" action="/vragen/{{ vraag.slug }}/notitie" class="formulier compact">

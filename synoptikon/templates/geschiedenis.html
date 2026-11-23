@@ -1,0 +1,27 @@
+{% extends "base.html" %}
+{% import "_wijziging.html" as wz %}
+{% block titel %}{{ _('Geschiedenis') }} · {{ label[0] }}{% endblock %}
+{% block inhoud %}
+<p class="kruimel"><a href="/wijzigingen">{{ _('Wijzigingen') }}</a></p>
+<h1>{{ _('Geschiedenis') }}: {% if label[1] and bestaat %}<a href="{{ label[1] }}">{{ label[0] }}</a>{% else %}{{ label[0] }}{% endif %}</h1>
+{% if fout %}<p class="melding fout" role="alert">{{ _('Terugzetten lukte niet; misschien bestaat waar dit bij hoorde niet meer.') }}</p>{% endif %}
+<ol class="geschiedenis">
+{% for w in ws %}
+  <li>
+    <p><strong>{{ w.wie }}</strong> · {{ w.tijdstip.strftime('%d-%m-%Y %H:%M') }} UTC · {{ wz.actie(w) }}</p>
+    {{ wz.verschillen(verschillen[w.id]) }}
+    {% if mag_bewerken %}
+      {% if w.actie != 'verwijderd' and (not loop.first or not bestaat) %}
+      <form method="post" action="/geschiedenis/{{ soort }}/{{ rij_id }}/terugzetten" class="inline" data-bevestig="{{ _('Deze versie terugzetten?') }}">
+        <input type="hidden" name="wijziging" value="{{ w.id }}"><button class="knop klein">{{ _('Deze versie terugzetten') }}</button></form>
+      {% endif %}
+      {% if loop.last and w.actie != 'nieuw' %}
+      <form method="post" action="/geschiedenis/{{ soort }}/{{ rij_id }}/terugzetten" class="inline" data-bevestig="{{ _('Deze versie terugzetten?') }}">
+        <input type="hidden" name="wijziging" value="{{ w.id }}"><input type="hidden" name="ervoor" value="1">
+        <button class="knop klein">{{ _('Terugzetten naar wat hiervoor stond') }}</button></form>
+      {% endif %}
+    {% endif %}
+  </li>
+{% endfor %}
+</ol>
+{% endblock %}

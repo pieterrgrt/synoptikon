@@ -1076,5 +1076,20 @@
  "Je eigen leerlijsten met kaarten bij artikelen en uitspraken, oefenen en leessets.": "Le tue liste di studio con schede su articoli e decisioni, esercitazione e set di lettura.",
  "Casussen uitwerken op een werkblad, met beoordeling en een overzicht van wat je steeds mist.": "Risolvere casi su un foglio di lavoro, con valutazione e un riepilogo di ciò che ti sfugge spesso.",
  "Leerlijsten die anderen voor iedereen zichtbaar maakten; je kunt ze overnemen.": "Liste di studio che altri hanno reso visibili a tutti; puoi riprenderle.",
- "Taal, rechtstaal en stelsels wijzig je later in je profiel, onder ⋯ rechtsboven.": "Lingua, lingua giuridica e ordinamenti si cambiano in seguito nel tuo profilo, sotto ⋯ in alto a destra."
+ "Taal, rechtstaal en stelsels wijzig je later in je profiel, onder ⋯ rechtsboven.": "Lingua, lingua giuridica e ordinamenti si cambiano in seguito nel tuo profilo, sotto ⋯ in alto a destra.",
+ "Elke voorwaarde die je markeerde als gat in de tekst (typen in Wunderkammer)": "Ogni requisito evidenziato come lacuna nel testo (da digitare in Wunderkammer)",
+ "Vijf plekken. Een beheerder mag alles, ook profielen beheren; een redacteur mag lezen en invoeren; een lezer leest en houdt alleen eigen spullen bij (markeringen, kaarten, Klausuren, opzoekingen). Een profiel kan pas aan als het een wachtwoord heeft. Een nieuw wachtwoord of uitzetten logt dat profiel overal uit.": "Cinque posti. Un amministratore può fare tutto, anche gestire i profili; un redattore può leggere e inserire; un lettore legge e gestisce solo le proprie cose (evidenziazioni, schede, Klausuren, ricerche). Un profilo si attiva solo con una password. Una nuova password o la disattivazione disconnette quel profilo ovunque.",
+ "Claude, gestart door {naam}": "Claude, avviato da {naam}",
+ "Deze versie terugzetten": "Ripristina questa versione",
+ "Deze versie terugzetten?": "Ripristinare questa versione?",
+ "Geschiedenis": "Cronologia",
+ "Laatst gewijzigd door {naam} op {datum}.": "Ultima modifica di {naam} il {datum}.",
+ "Terugzetten lukte niet; misschien bestaat waar dit bij hoorde niet meer.": "Ripristino non riuscito; forse ciò a cui apparteneva non esiste più.",
+ "Terugzetten naar wat hiervoor stond": "Ripristina lo stato precedente",
+ "Wijzigingen": "Modifiche",
+ "Wijzigingen in gedeelde inhoud: vragen, analyses, notities, begrippen, bronnen, thema's en omzettingen. Imports staan er niet in.": "Modifiche ai contenuti condivisi: questioni, analisi, note, concetti, fonti, temi e recepimenti. Le importazioni non sono incluse.",
+ "geschiedenis": "cronologia",
+ "gewijzigd": "modificato",
+ "onbekend": "sconosciuto",
+ "verwijderd": "eliminato"
 }
